@@ -1,0 +1,17 @@
+# Dependencias
+/vendor/
+
+# Configuración con credenciales — NUNCA subir
+/config/db.php
+/config/mail.php
+
+# Comprobantes de pago — datos privados de clientes
+/uploads/comprobantes/*
+!/uploads/comprobantes/.htaccess
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

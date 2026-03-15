@@ -1,0 +1,245 @@
+<?php
+require_once "../config/db.php";
+require_once "auth_check.php";
+
+$id_pedido = isset($_GET["id"]) ? (int)$_GET["id"] : 0;
+
+if ($id_pedido <= 0) {
+    die("No se recibió un pedido válido.");
+}
+
+/*
+    1. Obtener pedido principal
+*/
+$sqlPedido = "SELECT
+                p.*,
+                h.hora_entrega,
+                u.nombre_ubicacion,
+                u.tipo AS tipo_ubicacion
+              FROM pedidos p
+              INNER JOIN horarios_ubicacion h ON p.id_horario = h.id_horario
+              INNER JOIN ubicaciones u ON h.id_ubicacion = u.id_ubicacion
+              WHERE p.id_pedido = :id_pedido
+              LIMIT 1";
+$stmtPedido = $conexion->prepare($sqlPedido);
+$stmtPedido->bindParam(":id_pedido", $id_pedido, PDO::PARAM_INT);
+$stmtPedido->execute();
+$pedido = $stmtPedido->fetch(PDO::FETCH_ASSOC);
+
+if (!$pedido) {
+    die("No se encontró el pedido.");
+}
+
+/*
+    2. Obtener menús del pedido
+*/
+$sqlMenus = "SELECT *
+             FROM pedido_menus
+             WHERE id_pedido = :id_pedido
+             ORDER BY numero_menu ASC";
+$stmtMenus = $conexion->prepare($sqlMenus);
+$stmtMenus->bindParam(":id_pedido", $id_pedido, PDO::PARAM_INT);
+$stmtMenus->execute();
+$menusPedido = $stmtMenus->fetchAll(PDO::FETCH_ASSOC);
+
+/*
+    3. Obtener detalle por menú
+*/
+$detallePorMenu = [];
+
+$sqlDetalle = "SELECT *
+               FROM detalle_pedido
+               WHERE id_pedido_menu = :id_pedido_menu
+               ORDER BY id_detalle ASC";
+$stmtDetalle = $conexion->prepare($sqlDetalle);
+
+foreach ($menusPedido as $menu) {
+    $stmtDetalle->bindParam(":id_pedido_menu", $menu["id_pedido_menu"], PDO::PARAM_INT);
+    $stmtDetalle->execute();
+    $detallePorMenu[$menu["id_pedido_menu"]] = $stmtDetalle->fetchAll(PDO::FETCH_ASSOC);
+}
+
+function obtenerTextoEstadoPago($estadoPago)
+{
+    switch ($estadoPago) {
+        case "Pendiente de validación":
+            return "Pago en revisión";
+        case "Pago en efectivo":
+            return "Pago al recibir";
+        case "Pagado":
+            return "Pago confirmado";
+        default:
+            return $estadoPago ?: "Pendiente";
+    }
+}
+
+function obtenerClaseEstadoPago($estadoPago)
+{
+    switch ($estadoPago) {
+        case "Pendiente de validación":
+            return "estado estado-revision";
+        case "Pago en efectivo":
+            return "estado estado-efectivo";
+        case "Pagado":
+            return "estado estado-pagado";
+        default:
+            return "estado estado-pendiente";
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle del pedido | Zabisu</title>
+    <link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+
+<div class="contenedor">
+    <div class="hero-zabisu">
+        <div class="hero-zabisu__glow"></div>
+        <div class="hero-zabisu__contenido">
+            <p class="hero-zabisu__eyebrow">RESTAURANTE</p>
+            <h1 class="hero-zabisu__titulo">Detalle del pedido</h1>
+            <p class="hero-zabisu__texto">
+                Folio: <?php echo htmlspecialchars($pedido["folio"]); ?>
+            </p>
+        </div>
+    </div>
+
+    <div class="bloque-formulario resumen-total">
+        <h2>Información general</h2>
+
+        <div class="ticket-resumen">
+            <div class="ticket-menu">
+                <div class="ticket-linea">
+                    <span>Cliente</span>
+                    <span><?php echo htmlspecialchars($pedido["nombre_cliente"]); ?></span>
+                </div>
+
+                <div class="ticket-linea">
+                    <span>Teléfono</span>
+                    <span><?php echo htmlspecialchars($pedido["telefono"]); ?></span>
+                </div>
+
+                <?php if (!empty($pedido["correo_cliente"])): ?>
+                    <div class="ticket-linea">
+                        <span>Correo</span>
+                        <span><?php echo htmlspecialchars($pedido["correo_cliente"]); ?></span>
+                    </div>
+                <?php endif; ?>
+
+                <div class="ticket-linea">
+                    <span>Ubicación</span>
+                    <span><?php echo htmlspecialchars($pedido["nombre_ubicacion"]); ?> (<?php echo htmlspecialchars($pedido["tipo_ubicacion"]); ?>)</span>
+                </div>
+
+                <div class="ticket-linea">
+                    <span>Hora</span>
+                    <span><?php echo date("g:i A", strtotime($pedido["hora_entrega"])); ?></span>
+                </div>
+
+                <div class="ticket-linea">
+                    <span>Método de pago</span>
+                    <span><?php echo htmlspecialchars($pedido["metodo_pago"]); ?></span>
+                </div>
+
+                <div class="ticket-linea">
+                    <span>Estado del pago</span>
+                    <span class="<?php echo obtenerClaseEstadoPago($pedido["estado_pago"]); ?>">
+                        <?php echo htmlspecialchars(obtenerTextoEstadoPago($pedido["estado_pago"])); ?>
+                    </span>
+                </div>
+
+                <?php if (isset($pedido["correo_enviado"])): ?>
+                    <div class="ticket-linea">
+                        <span>Correo enviado</span>
+                        <span><?php echo ((int)$pedido["correo_enviado"] === 1) ? "Sí" : "No"; ?></span>
+                    </div>
+                <?php endif; ?>
+
+                <div class="ticket-linea">
+                    <span>Observaciones</span>
+                    <span>
+                        <?php echo $pedido["observaciones"] !== "" ? htmlspecialchars($pedido["observaciones"]) : "Sin observaciones"; ?>
+                    </span>
+                </div>
+
+                <div class="ticket-subtotal">
+                    <span>Total</span>
+                    <strong>$<?php echo number_format((float)$pedido["total"], 2); ?></strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <?php foreach ($menusPedido as $menu): ?>
+        <div class="bloque-formulario">
+            <h2>Menú <?php echo (int)$menu["numero_menu"]; ?> — <?php echo htmlspecialchars($menu["tipo_menu"]); ?></h2>
+
+            <div class="ticket-resumen">
+                <div class="ticket-menu">
+                    <?php if (!empty($detallePorMenu[$menu["id_pedido_menu"]])): ?>
+                        <?php foreach ($detallePorMenu[$menu["id_pedido_menu"]] as $detalle): ?>
+                            <div class="ticket-linea">
+                                <span><?php echo htmlspecialchars($detalle["categoria"]); ?></span>
+                                <span><?php echo htmlspecialchars($detalle["nombre_producto"]); ?></span>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <p class="ticket-vacio">No hay productos registrados en este menú.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    <?php endforeach; ?>
+
+    <?php if (!empty($pedido["comprobante_pago"])): ?>
+        <?php
+        $rutaComprobanteFisica = __DIR__ . "/../uploads/comprobantes/" . $pedido["comprobante_pago"];
+        $rutaComprobanteWeb = "../uploads/comprobantes/" . rawurlencode($pedido["comprobante_pago"]);
+        ?>
+        <div class="bloque-formulario">
+            <h2>Comprobante de pago</h2>
+
+            <p class="nota-formulario">
+                Archivo cargado por el cliente:
+            </p>
+
+            <?php if (file_exists($rutaComprobanteFisica)): ?>
+                <a class="btn-link" target="_blank" href="<?php echo htmlspecialchars($rutaComprobanteWeb); ?>">
+                    Ver comprobante
+                </a>
+            <?php else: ?>
+                <p class="nota-formulario" style="color:#ffb3b3;">
+                    El comprobante no se encontró en la carpeta de archivos.
+                </p>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
+
+    <div class="bloque-formulario acciones-panel">
+        <h2>Acciones</h2>
+
+        <div class="acciones-panel__botones">
+            <?php if ($pedido["metodo_pago"] === "Transferencia" && $pedido["estado_pago"] === "Pendiente de validación"): ?>
+                <a class="btn-tabla" href="confirmar_pago.php?id=<?php echo (int)$pedido["id_pedido"]; ?>">
+                    Confirmar pago
+                </a>
+            <?php endif; ?>
+
+            <?php if ($pedido["metodo_pago"] === "Efectivo" || $pedido["estado_pago"] === "Pagado"): ?>
+                <a class="btn-tabla" target="_blank" href="imprimir_y_notificar.php?id=<?php echo (int)$pedido["id_pedido"]; ?>">
+                    Imprimir ticket
+                </a>
+            <?php endif; ?>
+
+            <a class="btn-link" href="pedidos.php">Volver a pedidos</a>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

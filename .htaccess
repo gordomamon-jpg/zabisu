@@ -1,0 +1,36 @@
+# ============================================================
+#  Zabisu — Configuración Apache
+# ============================================================
+
+Options -Indexes
+RewriteEngine On
+
+# ── Forzar HTTPS (activar en producción) ─────────────────────
+# Descomenta estas dos líneas cuando tengas SSL en el servidor:
+# RewriteCond %{HTTPS} off
+# RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# ── Página de inicio ──────────────────────────────────────────
+# Redirige la raíz del sitio al menú del cliente
+RewriteRule ^$ /cliente/menu.php [L,R=302]
+
+# ── Proteger archivos de configuración ───────────────────────
+<Files "db.php">
+    Order allow,deny
+    Deny from all
+</Files>
+<Files "mail.php">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# ── Proteger carpeta config/ completa ────────────────────────
+<FilesMatch "^.*$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# ── Ocultar errores PHP en producción ────────────────────────
+# Descomenta estas líneas en el servidor:
+# php_flag display_errors off
+# php_value error_reporting 0
