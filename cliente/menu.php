@@ -36,8 +36,27 @@ $stmtProductos = $conexion->prepare($sqlProductos);
 $stmtProductos->bindParam(":id_menu", $menuActivo["id_menu"], PDO::PARAM_INT);
 $stmtProductos->execute();
 
+$sqlConteos = "SELECT dp.id_producto, COUNT(*) AS total_pedidos
+               FROM detalle_pedido dp
+               INNER JOIN pedido_menus pm ON dp.id_pedido_menu = pm.id_pedido_menu
+               INNER JOIN pedidos p ON pm.id_pedido = p.id_pedido
+               INNER JOIN productos pr ON dp.id_producto = pr.id_producto
+               WHERE p.estado != 'Cancelado'
+                 AND pr.id_menu = :id_menu
+               GROUP BY dp.id_producto";
+$stmtConteos = $conexion->prepare($sqlConteos);
+$stmtConteos->bindParam(":id_menu", $menuActivo["id_menu"], PDO::PARAM_INT);
+$stmtConteos->execute();
+$conteosProductos = [];
+foreach ($stmtConteos->fetchAll(PDO::FETCH_ASSOC) as $fila) {
+    $conteosProductos[$fila["id_producto"]] = (int)$fila["total_pedidos"];
+}
+
 $menusPorTipo = [];
 foreach ($stmtProductos->fetchAll(PDO::FETCH_ASSOC) as $p) {
+    $totalActual = $conteosProductos[(int)$p["id_producto"]] ?? 0;
+    $limite = isset($p["limite_pedidos"]) ? (int)$p["limite_pedidos"] : 0;
+    $p["agotado"] = ($p["categoria"] === "Plato fuerte" && $limite > 0 && $totalActual >= $limite);
     $menusPorTipo[$p["tipo_menu"]][$p["categoria"]][] = $p;
 }
 
@@ -121,40 +140,71 @@ $iconosCat = ["Plato fuerte"=>"🍽️","Sopa"=>"🥣","Complemento"=>"🥗","Ag
         <div class="md-tab-panel <?php echo $i === 0 ? 'md-tab-panel--activo' : ''; ?>"
              id="panel-<?php echo $tipoMenu; ?>">
 
+            <?php
+            // Renderizar Agua y Postre juntos en una fila
+            $tieneAgua   = !empty($menusPorTipo[$tipoMenu]["Agua"]);
+            $tienePostre = !empty($menusPorTipo[$tipoMenu]["Postre"]);
+            $simplesMostradas = false;
+            ?>
+
             <?php foreach ($ordenCat as $cat):
                 if (empty($menusPorTipo[$tipoMenu][$cat])) continue;
-                $items  = $menusPorTipo[$tipoMenu][$cat];
-                $icono  = $iconosCat[$cat] ?? "•";
+                $items   = $menusPorTipo[$tipoMenu][$cat];
+                $icono   = $iconosCat[$cat] ?? "•";
                 $esPlato = ($cat === "Plato fuerte");
                 $esChip  = ($cat === "Complemento");
                 $esSimple = in_array($cat, ["Agua","Postre"]);
+
+                // Agua y Postre se renderizan juntas, solo una vez
+                if ($esSimple && $simplesMostradas) continue;
+                if ($esSimple) $simplesMostradas = true;
             ?>
+
+            <?php if ($esSimple): ?>
+            <div class="md-seccion">
+                <div class="md-fila-simple">
+                    <?php foreach (["Agua","Postre"] as $catSimple):
+                        if (empty($menusPorTipo[$tipoMenu][$catSimple])) continue;
+                    ?>
+                    <div class="md-fila-simple__col">
+                        <div class="md-seccion__cabecera">
+                            <span class="md-seccion__icono"><?php echo $iconosCat[$catSimple]; ?></span>
+                            <h2 class="md-seccion__titulo"><?php echo $catSimple; ?></h2>
+                        </div>
+                        <div class="md-chips">
+                            <?php foreach ($menusPorTipo[$tipoMenu][$catSimple] as $item): ?>
+                                <span class="md-chip <?php echo !empty($item['agotado']) ? 'md-chip--agotado' : ''; ?>">
+                                    <?php echo htmlspecialchars($item["nombre"]); ?>
+                                    <?php if (!empty($item["descripcion"])): ?>
+                                        <span class="md-chip__desc"><?php echo htmlspecialchars($item["descripcion"]); ?></span>
+                                    <?php endif; ?>
+                                    <?php if (!empty($item["agotado"])): ?><span class="md-badge-agotado">Agotado</span><?php endif; ?>
+                                </span>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <?php else: ?>
             <div class="md-seccion">
                 <div class="md-seccion__cabecera">
                     <span class="md-seccion__icono"><?php echo $icono; ?></span>
                     <h2 class="md-seccion__titulo">
                         <?php echo $cat === "Complemento" ? "Complementos" : htmlspecialchars($cat); ?>
                     </h2>
-                    <?php if ($esPlato && count($items) > 1): ?>
-                        <span class="md-seccion__hint">Elige 1</span>
-                    <?php endif; ?>
                 </div>
 
                 <?php if ($esChip): ?>
                     <div class="md-chips">
                         <?php foreach ($items as $item): ?>
-                            <span class="md-chip"><?php echo htmlspecialchars($item["nombre"]); ?></span>
-                        <?php endforeach; ?>
-                    </div>
-
-                <?php elseif ($esSimple): ?>
-                    <div class="md-lista-simple">
-                        <?php foreach ($items as $item): ?>
-                            <span class="md-lista-simple__item">
+                            <span class="md-chip <?php echo !empty($item['agotado']) ? 'md-chip--agotado' : ''; ?>">
                                 <?php echo htmlspecialchars($item["nombre"]); ?>
                                 <?php if (!empty($item["descripcion"])): ?>
-                                    <em><?php echo htmlspecialchars($item["descripcion"]); ?></em>
+                                    <span class="md-chip__desc"><?php echo htmlspecialchars($item["descripcion"]); ?></span>
                                 <?php endif; ?>
+                                <?php if (!empty($item["agotado"])): ?><span class="md-badge-agotado">Agotado</span><?php endif; ?>
                             </span>
                         <?php endforeach; ?>
                     </div>
@@ -162,7 +212,7 @@ $iconosCat = ["Plato fuerte"=>"🍽️","Sopa"=>"🥣","Complemento"=>"🥗","Ag
                 <?php elseif ($esPlato): ?>
                     <div class="md-platos">
                         <?php foreach ($items as $j => $item): ?>
-                            <div class="md-plato">
+                            <div class="md-plato <?php echo !empty($item['agotado']) ? 'md-plato--agotado' : ''; ?>">
                                 <span class="md-plato__num"><?php echo $j+1; ?></span>
                                 <div class="md-plato__info">
                                     <strong class="md-plato__nombre"><?php echo htmlspecialchars($item["nombre"]); ?></strong>
@@ -170,6 +220,9 @@ $iconosCat = ["Plato fuerte"=>"🍽️","Sopa"=>"🥣","Complemento"=>"🥗","Ag
                                         <p class="md-plato__desc"><?php echo htmlspecialchars($item["descripcion"]); ?></p>
                                     <?php endif; ?>
                                 </div>
+                                <?php if (!empty($item["agotado"])): ?>
+                                    <span class="md-badge-agotado">Agotado</span>
+                                <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
                     </div>
@@ -177,18 +230,23 @@ $iconosCat = ["Plato fuerte"=>"🍽️","Sopa"=>"🥣","Complemento"=>"🥗","Ag
                 <?php else: ?>
                     <div class="md-platos">
                         <?php foreach ($items as $item): ?>
-                            <div class="md-plato md-plato--sin-num">
+                            <div class="md-plato md-plato--sin-num <?php echo !empty($item['agotado']) ? 'md-plato--agotado' : ''; ?>">
                                 <div class="md-plato__info">
                                     <strong class="md-plato__nombre"><?php echo htmlspecialchars($item["nombre"]); ?></strong>
                                     <?php if (!empty($item["descripcion"])): ?>
                                         <p class="md-plato__desc"><?php echo htmlspecialchars($item["descripcion"]); ?></p>
                                     <?php endif; ?>
                                 </div>
+                                <?php if (!empty($item["agotado"])): ?>
+                                    <span class="md-badge-agotado">Agotado</span>
+                                <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
             </div>
+            <?php endif; ?>
+
             <?php endforeach; ?>
 
         </div>
@@ -216,7 +274,7 @@ document.querySelectorAll(".md-tab").forEach(function (tab) {
 </script>
 
 <footer class="cliente-footer">
-    <span class="cliente-footer__slogan">Sabor y Servicio</span>
+    <span class="cliente-footer__slogan">© 2026 Zabisu - Sabor y Servicio. Todos los derechos reservados.</span>
 </footer>
 
 </body>

@@ -24,11 +24,6 @@ RewriteRule ^$ /cliente/menu.php [L,R=302]
     Deny from all
 </Files>
 
-# ── Proteger carpeta config/ completa ────────────────────────
-<FilesMatch "^.*$">
-    Order allow,deny
-    Deny from all
-</FilesMatch>
 
 # ── Ocultar errores PHP en producción ────────────────────────
 # Descomenta estas líneas en el servidor:

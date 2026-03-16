@@ -193,7 +193,7 @@ function agruparDetallePorCategoria($detalles)
 </div>
 
 <footer class="cliente-footer">
-    <span class="cliente-footer__slogan">Sabor y Servicio</span>
+    <span class="cliente-footer__slogan">© 2026 Zabisu - Sabor y Servicio. Todos los derechos reservados.</span>
 </footer>
 
 </body>
