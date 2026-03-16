@@ -1619,6 +1619,39 @@ input[type="checkbox"] {
     box-shadow: 0 14px 24px rgba(255, 122, 0, 0.24);
 }
 
+.btn-tabla--confirmar {
+    background: linear-gradient(135deg, #7b2d8b 0%, #4a1060 100%);
+    box-shadow: 0 10px 20px rgba(123, 45, 139, 0.2);
+}
+
+.btn-tabla--confirmar:hover {
+    box-shadow: 0 14px 24px rgba(123, 45, 139, 0.3);
+}
+
+.btn-tabla--imprimir {
+    background: linear-gradient(135deg, #2d6a4f 0%, #1b4332 100%);
+    box-shadow: 0 10px 20px rgba(45, 106, 79, 0.2);
+}
+
+.btn-tabla--imprimir:hover {
+    box-shadow: 0 14px 24px rgba(45, 106, 79, 0.3);
+}
+
+.btn-tabla--comprobante {
+    background: linear-gradient(135deg, #1d3557 0%, #0d1b2a 100%);
+    box-shadow: 0 10px 20px rgba(29, 53, 87, 0.2);
+}
+
+.btn-tabla--comprobante:hover {
+    box-shadow: 0 14px 24px rgba(29, 53, 87, 0.3);
+}
+
+.acciones-fila {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
 .acciones-panel__botones {
     display: flex;
     gap: 12px;

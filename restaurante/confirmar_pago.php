@@ -29,7 +29,7 @@ if (($pedido["metodo_pago"] ?? "") !== "Transferencia") {
 }
 
 if (($pedido["estado_pago"] ?? "") !== "Pendiente de validación") {
-    header("Location: ver_pedido.php?id=" . urlencode($id_pedido));
+    header("Location: pedidos.php?scroll=1");
     exit;
 }
 
@@ -47,7 +47,7 @@ try {
     $stmtUpdate->bindParam(":id_pedido", $id_pedido, PDO::PARAM_INT);
     $stmtUpdate->execute();
 
-    header("Location: ver_pedido.php?id=" . urlencode($id_pedido));
+    header("Location: pedidos.php?scroll=1");
     exit;
 
 } catch (Exception $e) {

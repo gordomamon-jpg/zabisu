@@ -16,6 +16,7 @@ $sqlPedidos = "SELECT
                     p.estado_pago,
                     p.fecha_pedido,
                     p.visto,
+                    p.comprobante_pago,
                     h.hora_entrega,
                     u.nombre_ubicacion,
                     u.tipo AS tipo_ubicacion
@@ -372,7 +373,8 @@ function formatearFechaBonita($fecha)
                             </thead>
                             <tbody>
                                 <?php foreach ($listaPedidos as $pedido): ?>
-                                    <tr class="<?php echo ((int)$pedido["visto"] === 0) ? 'fila-pedido-nuevo' : 'fila-pedido-visto'; ?> fila-pedido"
+                                    <tr id="pedido-<?php echo (int)$pedido["id_pedido"]; ?>"
+                                        class="<?php echo ((int)$pedido["visto"] === 0) ? 'fila-pedido-nuevo' : 'fila-pedido-visto'; ?> fila-pedido"
                                         data-folio="<?php echo strtolower(htmlspecialchars($pedido["folio"])); ?>"
                                         data-id="<?php echo (int)$pedido["id_pedido"]; ?>"
                                         data-ubicacion="<?php echo htmlspecialchars($pedido["nombre_ubicacion"]); ?>"
@@ -411,9 +413,29 @@ function formatearFechaBonita($fecha)
                                             <strong>$<?php echo number_format((float)$pedido["total"], 2); ?></strong>
                                         </td>
                                         <td>
-                                            <a class="btn-tabla" href="ver_pedido.php?id=<?php echo urlencode($pedido["id_pedido"]); ?>">
-                                                Ver detalle
-                                            </a>
+                                            <div class="acciones-fila">
+                                                <a class="btn-tabla" href="ver_pedido.php?id=<?php echo urlencode($pedido["id_pedido"]); ?>">
+                                                    Ver detalle
+                                                </a>
+                                                <?php if ($pedido["metodo_pago"] === "Transferencia" && $pedido["estado_pago"] === "Pendiente de validación"): ?>
+                                                    <a class="btn-tabla btn-tabla--confirmar" href="confirmar_pago.php?id=<?php echo (int)$pedido["id_pedido"]; ?>">
+                                                        Confirmar pago
+                                                    </a>
+                                                <?php endif; ?>
+                                                <?php if ($pedido["metodo_pago"] === "Efectivo" || $pedido["estado_pago"] === "Pagado"): ?>
+                                                    <a class="btn-tabla btn-tabla--imprimir" target="_blank" href="imprimir_y_notificar.php?id=<?php echo (int)$pedido["id_pedido"]; ?>">
+                                                        Imprimir ticket
+                                                    </a>
+                                                <?php endif; ?>
+                                                <?php if (!empty($pedido["comprobante_pago"])): ?>
+                                                    <?php $rutaComp = __DIR__ . "/../uploads/comprobantes/" . $pedido["comprobante_pago"]; ?>
+                                                    <?php if (file_exists($rutaComp)): ?>
+                                                        <a class="btn-tabla btn-tabla--comprobante" target="_blank" href="../uploads/comprobantes/<?php echo rawurlencode($pedido["comprobante_pago"]); ?>">
+                                                            Ver comprobante
+                                                        </a>
+                                                    <?php endif; ?>
+                                                <?php endif; ?>
+                                            </div>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -532,6 +554,35 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     setInterval(revisarNuevosPedidos, 10000);
+
+    // Restaurar posición de scroll al volver de confirmar pago
+    <?php if (!empty($_GET['scroll'])): ?>
+    var scrollGuardado = sessionStorage.getItem("pedidos_scroll");
+    if (scrollGuardado !== null) {
+        window.scrollTo(0, parseInt(scrollGuardado, 10));
+        sessionStorage.removeItem("pedidos_scroll");
+    }
+    <?php endif; ?>
+
+    // Guardar posición de scroll al confirmar pago
+    document.querySelectorAll(".btn-tabla--confirmar").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            sessionStorage.setItem("pedidos_scroll", window.scrollY);
+        });
+    });
+
+    // Marcar fila como vista al hacer click en Imprimir ticket
+    document.querySelectorAll(".btn-tabla--imprimir").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            var fila = btn.closest("tr");
+            if (fila) {
+                fila.classList.remove("fila-pedido-nuevo");
+                fila.classList.add("fila-pedido-visto");
+                var badge = fila.querySelector(".badge-nuevo");
+                if (badge) badge.remove();
+            }
+        });
+    });
 
     // ============================================================
     // NOTIFICACIÓN DE LLEGADA AL PUNTO
