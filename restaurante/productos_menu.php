@@ -356,40 +356,29 @@ document.addEventListener("DOMContentLoaded", function () {
     if (btnCopiar) {
         btnCopiar.addEventListener("click", function () {
 
-            // Categorías a copiar (todas menos Plato fuerte)
             var categoriasCopiar = ["Sopa", "Complemento", "Agua", "Postre"];
 
+            var tabZabisu   = document.getElementById("tab-Zabisu");
+            var tabEjecutivo = document.getElementById("tab-Ejecutivo");
+
+            var inputsZabisu    = Array.from(tabZabisu.querySelectorAll("input[type='text']"));
+            var textareasZabisu = Array.from(tabZabisu.querySelectorAll("textarea"));
+            var inputsEjec      = Array.from(tabEjecutivo.querySelectorAll("input[type='text']"));
+            var textareasEjec   = Array.from(tabEjecutivo.querySelectorAll("textarea"));
+
             categoriasCopiar.forEach(function (cat) {
-                var catEncoded = encodeURIComponent(cat);
+                var marcador = "[" + cat + "]";
 
-                // Obtener inputs del menú Zabisu para esta categoría
-                var nombresZabisu = document.querySelectorAll(
-                    "#tab-Zabisu input.zabisu-nombre-\\d*-" + catEncoded
-                );
+                var zNombres = inputsZabisu.filter(function (el) { return el.name.indexOf(marcador) !== -1; });
+                var zDescs   = textareasZabisu.filter(function (el) { return el.name.indexOf(marcador) !== -1; });
+                var eNombres = inputsEjec.filter(function (el) { return el.name.indexOf(marcador) !== -1; });
+                var eDescs   = textareasEjec.filter(function (el) { return el.name.indexOf(marcador) !== -1; });
 
-                // Buscar todos los inputs de Zabisu para esta categoría por name
-                var allZabisuNombres = document.querySelectorAll(
-                    "#tab-Zabisu input[name^='productos[Zabisu][" + cat + "]']"
-                );
-                var allZabisuDescs = document.querySelectorAll(
-                    "#tab-Zabisu textarea[name^='productos[Zabisu][" + cat + "]']"
-                );
-                var allEjecNombres = document.querySelectorAll(
-                    "#tab-Ejecutivo input[name^='productos[Ejecutivo][" + cat + "]']"
-                );
-                var allEjecDescs = document.querySelectorAll(
-                    "#tab-Ejecutivo textarea[name^='productos[Ejecutivo][" + cat + "]']"
-                );
-
-                allZabisuNombres.forEach(function (input, idx) {
-                    if (allEjecNombres[idx]) {
-                        allEjecNombres[idx].value = input.value;
-                    }
+                zNombres.forEach(function (input, idx) {
+                    if (eNombres[idx]) eNombres[idx].value = input.value;
                 });
-                allZabisuDescs.forEach(function (textarea, idx) {
-                    if (allEjecDescs[idx]) {
-                        allEjecDescs[idx].value = textarea.value;
-                    }
+                zDescs.forEach(function (textarea, idx) {
+                    if (eDescs[idx]) eDescs[idx].value = textarea.value;
                 });
             });
 
