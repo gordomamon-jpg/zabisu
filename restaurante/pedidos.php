@@ -19,11 +19,20 @@ $sqlPedidos = "SELECT
                     p.comprobante_pago,
                     h.hora_entrega,
                     u.nombre_ubicacion,
-                    u.tipo AS tipo_ubicacion
+                    u.tipo AS tipo_ubicacion,
+                    COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) AS fecha_grupo_menu
                FROM pedidos p
                INNER JOIN horarios_ubicacion h ON p.id_horario = h.id_horario
                INNER JOIN ubicaciones u ON h.id_ubicacion = u.id_ubicacion
-               ORDER BY DATE(p.fecha_pedido) DESC, p.visto ASC, p.fecha_pedido DESC, p.id_pedido DESC";
+               LEFT JOIN (
+                   SELECT pm2.id_pedido, MIN(md2.fecha) AS fecha_menu
+                   FROM pedido_menus pm2
+                   INNER JOIN detalle_pedido dp2 ON dp2.id_pedido_menu = pm2.id_pedido_menu
+                   INNER JOIN productos pr2 ON pr2.id_producto = dp2.id_producto
+                   INNER JOIN menu_dia md2 ON md2.id_menu = pr2.id_menu
+                   GROUP BY pm2.id_pedido
+               ) AS mi ON mi.id_pedido = p.id_pedido
+               ORDER BY COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) DESC, p.visto ASC, p.fecha_pedido DESC, p.id_pedido DESC";
 $stmtPedidos = $conexion->prepare($sqlPedidos);
 $stmtPedidos->execute();
 $pedidos = $stmtPedidos->fetchAll(PDO::FETCH_ASSOC);
@@ -41,7 +50,7 @@ $totalNuevosActual = count(array_filter($pedidos, function ($pedido) {
 $pedidosPorFecha = [];
 
 foreach ($pedidos as $pedido) {
-    $fechaGrupo = date("Y-m-d", strtotime($pedido["fecha_pedido"]));
+    $fechaGrupo = $pedido["fecha_grupo_menu"];
     $pedidosPorFecha[$fechaGrupo][] = $pedido;
 }
 
@@ -49,15 +58,17 @@ foreach ($pedidos as $pedido) {
     Obtener resumen de platos fuertes por fecha
 */
 $sqlResumenPlatos = "SELECT
-                        DATE(p.fecha_pedido) AS fecha_grupo,
+                        COALESCE(md.fecha, DATE(p.fecha_pedido)) AS fecha_grupo,
                         dp.nombre_producto,
                         COUNT(*) AS total
                      FROM detalle_pedido dp
                      INNER JOIN pedido_menus pm ON dp.id_pedido_menu = pm.id_pedido_menu
                      INNER JOIN pedidos p ON pm.id_pedido = p.id_pedido
+                     INNER JOIN productos pr ON pr.id_producto = dp.id_producto
+                     LEFT JOIN menu_dia md ON md.id_menu = pr.id_menu
                      WHERE dp.categoria = 'Plato fuerte'
-                     GROUP BY DATE(p.fecha_pedido), dp.nombre_producto
-                     ORDER BY DATE(p.fecha_pedido) DESC, dp.nombre_producto ASC";
+                     GROUP BY COALESCE(md.fecha, DATE(p.fecha_pedido)), dp.nombre_producto
+                     ORDER BY COALESCE(md.fecha, DATE(p.fecha_pedido)) DESC, dp.nombre_producto ASC";
 $stmtResumenPlatos = $conexion->prepare($sqlResumenPlatos);
 $stmtResumenPlatos->execute();
 $resumenPlatosDB = $stmtResumenPlatos->fetchAll(PDO::FETCH_ASSOC);
@@ -76,15 +87,17 @@ foreach ($resumenPlatosDB as $fila) {
     Obtener resumen de complementos por fecha
 */
 $sqlResumenComplementos = "SELECT
-                              DATE(p.fecha_pedido) AS fecha_grupo,
+                              COALESCE(md.fecha, DATE(p.fecha_pedido)) AS fecha_grupo,
                               dp.nombre_producto,
                               COUNT(*) AS total
                            FROM detalle_pedido dp
                            INNER JOIN pedido_menus pm ON dp.id_pedido_menu = pm.id_pedido_menu
                            INNER JOIN pedidos p ON pm.id_pedido = p.id_pedido
+                           INNER JOIN productos pr ON pr.id_producto = dp.id_producto
+                           LEFT JOIN menu_dia md ON md.id_menu = pr.id_menu
                            WHERE dp.categoria = 'Complemento'
-                           GROUP BY DATE(p.fecha_pedido), dp.nombre_producto
-                           ORDER BY DATE(p.fecha_pedido) DESC, dp.nombre_producto ASC";
+                           GROUP BY COALESCE(md.fecha, DATE(p.fecha_pedido)), dp.nombre_producto
+                           ORDER BY COALESCE(md.fecha, DATE(p.fecha_pedido)) DESC, dp.nombre_producto ASC";
 $stmtResumenComplementos = $conexion->prepare($sqlResumenComplementos);
 $stmtResumenComplementos->execute();
 $resumenComplementosDB = $stmtResumenComplementos->fetchAll(PDO::FETCH_ASSOC);
