@@ -423,9 +423,9 @@ function formatearFechaBonita($fecha)
                                                     </a>
                                                 <?php endif; ?>
                                                 <?php if ($pedido["metodo_pago"] === "Efectivo" || $pedido["estado_pago"] === "Pagado"): ?>
-                                                    <a class="btn-tabla btn-tabla--imprimir" target="_blank" href="imprimir_y_notificar.php?id=<?php echo (int)$pedido["id_pedido"]; ?>">
+                                                    <button class="btn-tabla btn-tabla--imprimir" data-id="<?php echo (int)$pedido["id_pedido"]; ?>">
                                                         Imprimir ticket
-                                                    </a>
+                                                    </button>
                                                 <?php endif; ?>
                                                 <?php if (!empty($pedido["comprobante_pago"])): ?>
                                                     <?php $rutaComp = __DIR__ . "/../uploads/comprobantes/" . $pedido["comprobante_pago"]; ?>
@@ -447,6 +447,8 @@ function formatearFechaBonita($fecha)
         <?php endif; ?>
     </div>
 </div>
+
+<iframe id="iframe-ticket" style="display:none;"></iframe>
 
 <audio id="audio-alerta-pedido" preload="auto">
     <source src="../assets/audio/notificacion.mp3" type="audio/mpeg">
@@ -571,16 +573,31 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    // Marcar fila como vista al hacer click en Imprimir ticket
+    // Imprimir ticket directo sin abrir nueva pestaña
+    var iframeTicket = document.getElementById("iframe-ticket");
+
     document.querySelectorAll(".btn-tabla--imprimir").forEach(function (btn) {
         btn.addEventListener("click", function () {
+            var id = btn.dataset.id;
             var fila = btn.closest("tr");
+
+            // Marcar fila como vista visualmente
             if (fila) {
                 fila.classList.remove("fila-pedido-nuevo");
                 fila.classList.add("fila-pedido-visto");
                 var badge = fila.querySelector(".badge-nuevo");
                 if (badge) badge.remove();
             }
+
+            // Llamar imprimir_y_notificar para marcar visto y enviar correo
+            fetch("imprimir_y_notificar.php?id=" + id, { cache: "no-store" });
+
+            // Cargar ticket en iframe oculto y disparar print
+            iframeTicket.onload = function () {
+                iframeTicket.contentWindow.focus();
+                iframeTicket.contentWindow.print();
+            };
+            iframeTicket.src = "ticket.php?id=" + id;
         });
     });
 
