@@ -723,20 +723,43 @@ document.addEventListener("DOMContentLoaded", function () {
         if (n === 4) actualizarResumenTotal();
     }
 
+    // ── Toast ─────────────────────────────────────────────────
+    var stack = document.getElementById("pedido-toast-stack");
+
+    function mostrarToast(mensajes) {
+        if (!stack) return;
+
+        // Limpiar toasts anteriores
+        stack.innerHTML = "";
+
+        mensajes.forEach(function (m, idx) {
+            var item = document.createElement("div");
+            item.className = "pedido-toast-item";
+            item.innerHTML =
+                "<span class='pedido-toast-item__icono'>⚠️</span>" +
+                "<span class='pedido-toast-item__texto'>" + m + "</span>";
+            stack.appendChild(item);
+
+            // Animar entrada con pequeño delay escalonado
+            setTimeout(function () {
+                item.classList.add("pedido-toast-item--visible");
+            }, idx * 80);
+
+            // Salida automática
+            setTimeout(function () {
+                item.classList.remove("pedido-toast-item--visible");
+                setTimeout(function () { if (item.parentNode) item.parentNode.removeChild(item); }, 250);
+            }, 3500 + idx * 80);
+        });
+    }
+
     function mostrarErroresPaso(mensajes, pasoNum) {
         const contenedor = document.querySelector(".paso-stepper[data-paso='" + pasoNum + "'] .paso-stepper__errores");
-        if (!contenedor) return;
-
-        if (!mensajes.length) {
+        if (contenedor) {
             contenedor.style.display = "none";
             contenedor.innerHTML = "";
-            return;
         }
-
-        contenedor.innerHTML = "<ul>" + mensajes.map(function (m) {
-            return "<li>" + m + "</li>";
-        }).join("") + "</ul>";
-        contenedor.style.display = "block";
+        if (mensajes.length) mostrarToast(mensajes);
     }
 
     function validarPaso(n) {
@@ -870,6 +893,15 @@ document.addEventListener("DOMContentLoaded", function () {
             this.value = this.value.replace(/\D/g, "").slice(0, 10);
         });
     }
+
+    // Evitar que Enter envíe el form en pasos intermedios
+    document.getElementById("formulario-pedido").addEventListener("keydown", function (e) {
+        if (e.key !== "Enter") return;
+        if (pasoActual >= 4) return; // en el último paso sí se permite submit
+        e.preventDefault();
+        var btnSig = document.querySelector(".paso-stepper[data-paso='" + pasoActual + "'] .btn-stepper--siguiente");
+        if (btnSig) btnSig.click();
+    });
 
     // ============================================================
     // UBICACIONES Y HORARIOS
@@ -1078,6 +1110,8 @@ function actualizarOpcionesMenu(numeroMenu) {
     });
 }
 </script>
+
+<div id="pedido-toast-stack"></div>
 
 <footer class="cliente-footer">
     <span class="cliente-footer__slogan">© 2026 Zabisu - Sabor y Servicio. Todos los derechos reservados.</span>
