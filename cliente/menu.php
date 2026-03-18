@@ -271,6 +271,21 @@ document.querySelectorAll(".md-tab").forEach(function (tab) {
         if (panel) panel.classList.add("md-tab-panel--activo");
     });
 });
+
+// Al tocar cualquier ítem del menú, bajar al botón y animarlo
+var cta = document.querySelector(".md-cta");
+
+function llamarCta() {
+    if (!cta) return;
+    cta.scrollIntoView({ behavior: "smooth", block: "center" });
+    cta.classList.remove("md-cta--pulso");
+    void cta.offsetWidth; // forzar reflow para reiniciar animación
+    cta.classList.add("md-cta--pulso");
+}
+
+document.querySelectorAll(".md-plato:not(.md-plato--agotado), .md-chip:not(.md-chip--agotado)").forEach(function (el) {
+    el.addEventListener("click", llamarCta);
+});
 </script>
 
 <footer class="cliente-footer">
