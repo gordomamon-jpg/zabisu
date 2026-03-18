@@ -3,6 +3,37 @@ require_once "../config/db.php";
 require_once "auth_check.php";
 
 /*
+    Eliminar menú
+*/
+$mensajeEliminar = "";
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["eliminar_menu"])) {
+    $idEliminar = (int)($_POST["id_menu"] ?? 0);
+    if ($idEliminar > 0) {
+        $sqlCheck = "SELECT activo FROM menu_dia WHERE id_menu = :id LIMIT 1";
+        $stmtCheck = $conexion->prepare($sqlCheck);
+        $stmtCheck->execute([":id" => $idEliminar]);
+        $menuCheck = $stmtCheck->fetch(PDO::FETCH_ASSOC);
+
+        if (!$menuCheck) {
+            $mensajeEliminar = "error:Menú no encontrado.";
+        } elseif ((int)$menuCheck["activo"] === 1) {
+            $mensajeEliminar = "error:No puedes eliminar un menú activo. Desactívalo primero.";
+        } else {
+            try {
+                $conexion->beginTransaction();
+                $conexion->prepare("DELETE FROM productos WHERE id_menu = :id")->execute([":id" => $idEliminar]);
+                $conexion->prepare("DELETE FROM menu_dia WHERE id_menu = :id")->execute([":id" => $idEliminar]);
+                $conexion->commit();
+                $mensajeEliminar = "ok:Menú eliminado correctamente.";
+            } catch (Exception $e) {
+                $conexion->rollBack();
+                $mensajeEliminar = "error:Error al eliminar: " . $e->getMessage();
+            }
+        }
+    }
+}
+
+/*
     Obtener menús registrados
 */
 $sqlMenus = "SELECT
@@ -78,6 +109,13 @@ function formatearFechaBonita($fecha)
         </div>
     </div>
 
+    <?php if ($mensajeEliminar): ?>
+        <?php [$tipo, $texto] = explode(":", $mensajeEliminar, 2); ?>
+        <div class="<?php echo $tipo === 'ok' ? 'nm-exito' : 'mensaje-error'; ?>">
+            <?php echo htmlspecialchars($texto); ?>
+        </div>
+    <?php endif; ?>
+
     <div class="bloque-formulario">
         <div class="cabecera-modulo">
             <h2>Menús registrados</h2>
@@ -96,7 +134,7 @@ function formatearFechaBonita($fecha)
                             <th>Pedido hasta</th>
                             <th>Estado</th>
                             <th>Creado</th>
-                            <th>Acción</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -135,6 +173,22 @@ function formatearFechaBonita($fecha)
                                         <?php echo htmlspecialchars(date("d/m/Y g:i A", strtotime($menu["creado_en"]))); ?>
                                     </span>
                                 </td>
+                                <td>
+                                    <div class="acciones-fila">
+                                        <a class="btn-tabla" href="productos_menu.php?id_menu=<?php echo (int)$menu["id_menu"]; ?>&editar=1">
+                                            Editar
+                                        </a>
+                                        <?php if ((int)$menu["activo"] !== 1): ?>
+                                        <form method="POST" action="" class="form-eliminar-menu"
+                                              data-fecha="<?php echo htmlspecialchars(formatearFechaBonita($menu["fecha"])); ?>">
+                                            <input type="hidden" name="id_menu" value="<?php echo (int)$menu["id_menu"]; ?>">
+                                            <button type="submit" name="eliminar_menu" class="btn-tabla btn-tabla--eliminar">
+                                                Eliminar
+                                            </button>
+                                        </form>
+                                        <?php endif; ?>
+                                    </div>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -151,6 +205,17 @@ function formatearFechaBonita($fecha)
         </div>
     </div>
 </div>
+
+<script>
+document.querySelectorAll(".form-eliminar-menu").forEach(function (form) {
+    form.addEventListener("submit", function (e) {
+        var fecha = form.dataset.fecha;
+        if (!confirm("¿Eliminar el menú del " + fecha + "?\nEsta acción también borrará todos sus productos y no se puede deshacer.")) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
 
 </body>
 </html>

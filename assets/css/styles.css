@@ -553,9 +553,27 @@ h1 {
 
 
 
+.bloque-formulario label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    margin-top: 18px;
+}
+
+.bloque-formulario label:first-of-type {
+    margin-top: 0;
+}
+
 .formulario-pedido input:not([type="radio"]):not([type="checkbox"]),
 .formulario-pedido textarea,
-.formulario-pedido select {
+.formulario-pedido select,
+.bloque-formulario input:not([type="radio"]):not([type="checkbox"]):not([type="number"]):not([type="submit"]):not([type="checkbox"]),
+.bloque-formulario textarea,
+.bloque-formulario select {
     width: 100%;
     padding: 16px 18px;
     border-radius: 18px;
@@ -565,11 +583,15 @@ h1 {
     font-size: 16px;
     outline: none;
     transition: all 0.25s ease;
+    box-sizing: border-box;
 }
 
 .formulario-pedido input:not([type="radio"]):not([type="checkbox"]):focus,
 .formulario-pedido textarea:focus,
-.formulario-pedido select:focus {
+.formulario-pedido select:focus,
+.bloque-formulario input:not([type="radio"]):not([type="checkbox"]):not([type="number"]):not([type="submit"]):focus,
+.bloque-formulario textarea:focus,
+.bloque-formulario select:focus {
     border-color: rgba(255, 122, 0, 0.65);
     box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.12);
 }
@@ -635,6 +657,8 @@ label {
 }
 
 input[type="text"],
+input[type="password"],
+input[type="email"],
 select,
 textarea {
     width: 100%;
@@ -650,6 +674,8 @@ textarea {
 }
 
 input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="email"]:focus,
 select:focus,
 textarea:focus {
     border-color: rgba(255, 122, 0, 0.45);
@@ -930,6 +956,8 @@ input[type="checkbox"] {
     }
 
     input[type="text"],
+    input[type="password"],
+    input[type="email"],
     select,
     textarea {
         border-radius: 14px;
@@ -1628,6 +1656,15 @@ input[type="checkbox"] {
 .btn-tabla:hover {
     transform: translateY(-1px);
     box-shadow: 0 14px 24px rgba(255, 122, 0, 0.24);
+}
+
+.btn-tabla--eliminar {
+    background: linear-gradient(135deg, #7f1d1d 0%, #450a0a 100%);
+    box-shadow: 0 10px 20px rgba(127, 29, 29, 0.2);
+}
+
+.btn-tabla--eliminar:hover {
+    box-shadow: 0 14px 24px rgba(127, 29, 29, 0.35);
 }
 
 .btn-tabla--confirmar {
