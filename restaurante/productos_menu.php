@@ -48,40 +48,101 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         try {
             $conexion->beginTransaction();
 
-            // Borrar productos anteriores
-            $conexion->prepare("DELETE FROM productos WHERE id_menu = :id_menu")
-                     ->execute([":id_menu" => $id_menu]);
+            // Cargar productos existentes ordenados por posición de inserción
+            $stmtEx = $conexion->prepare(
+                "SELECT id_producto, tipo_menu, categoria, nombre, descripcion, limite_pedidos
+                 FROM productos WHERE id_menu = :id_menu
+                 ORDER BY tipo_menu, categoria, id_producto"
+            );
+            $stmtEx->execute([":id_menu" => $id_menu]);
+            $existentesRaw = $stmtEx->fetchAll(PDO::FETCH_ASSOC);
 
-            // Insertar nuevos
-            $sqlInsert = "INSERT INTO productos
-                          (id_menu, tipo_menu, categoria, nombre, descripcion, disponible, limite_pedidos)
-                          VALUES
-                          (:id_menu, :tipo_menu, :categoria, :nombre, :descripcion, 1, :limite_pedidos)";
-            $stmtInsert = $conexion->prepare($sqlInsert);
+            // Mapa posicional: [tipo_menu][categoria][índice] => fila completa
+            $exMap = [];
+            foreach ($existentesRaw as $e) {
+                $exMap[$e["tipo_menu"]][$e["categoria"]][] = $e;
+            }
+
+            // IDs referenciados en detalle_pedido (no se pueden eliminar)
+            $stmtRef = $conexion->prepare(
+                "SELECT DISTINCT dp.id_producto FROM detalle_pedido dp
+                 INNER JOIN productos pr ON dp.id_producto = pr.id_producto
+                 WHERE pr.id_menu = :id_menu"
+            );
+            $stmtRef->execute([":id_menu" => $id_menu]);
+            $idsRef = array_flip(array_column($stmtRef->fetchAll(PDO::FETCH_ASSOC), "id_producto"));
+
+            $idsUsados = [];
+
+            $stmtUpdate = $conexion->prepare(
+                "UPDATE productos SET nombre=:nombre, descripcion=:descripcion,
+                 disponible=:disponible, limite_pedidos=:limite_pedidos
+                 WHERE id_producto=:id"
+            );
+            $stmtInsert = $conexion->prepare(
+                "INSERT INTO productos (id_menu, tipo_menu, categoria, nombre, descripcion, disponible, limite_pedidos)
+                 VALUES (:id_menu, :tipo_menu, :categoria, :nombre, :descripcion, 1, :limite_pedidos)"
+            );
 
             foreach ($productos as $tipo_menu => $categorias) {
                 foreach ($categorias as $categoria => $items) {
-                    foreach ($items as $item) {
-                        $nombre      = trim($item["nombre"]       ?? "");
-                        $descripcion = trim($item["descripcion"]  ?? "");
+                    foreach ($items as $i => $item) {
+                        $nombre      = trim($item["nombre"]         ?? "");
+                        $descripcion = trim($item["descripcion"]    ?? "");
                         $limite      = trim($item["limite_pedidos"] ?? "");
-
-                        if ($nombre === "") continue;
 
                         $limiteFinal = null;
                         if ($categoria === "Plato fuerte" && $limite !== "" && is_numeric($limite)) {
                             $limiteFinal = (int)$limite;
                         }
 
-                        $stmtInsert->execute([
-                            ":id_menu"        => $id_menu,
-                            ":tipo_menu"      => $tipo_menu,
-                            ":categoria"      => $categoria,
-                            ":nombre"         => $nombre,
-                            ":descripcion"    => $descripcion,
-                            ":limite_pedidos" => $limiteFinal,
-                        ]);
+                        $exDato = $exMap[$tipo_menu][$categoria][$i] ?? null;
+                        $idEx   = $exDato ? (int)$exDato["id_producto"] : null;
+
+                        if ($idEx !== null) {
+                            if ($nombre !== "") {
+                                // Actualizar con los nuevos valores
+                                $idsUsados[] = $idEx;
+                                $stmtUpdate->execute([
+                                    ":nombre"         => $nombre,
+                                    ":descripcion"    => $descripcion,
+                                    ":disponible"     => 1,
+                                    ":limite_pedidos" => $limiteFinal,
+                                    ":id"             => $idEx,
+                                ]);
+                            } elseif (isset($idsRef[$idEx])) {
+                                // Slot vacío pero referenciado: marcar no disponible con nombre original
+                                $idsUsados[] = $idEx;
+                                $stmtUpdate->execute([
+                                    ":nombre"         => $exDato["nombre"],
+                                    ":descripcion"    => $exDato["descripcion"],
+                                    ":disponible"     => 0,
+                                    ":limite_pedidos" => $exDato["limite_pedidos"],
+                                    ":id"             => $idEx,
+                                ]);
+                            }
+                            // Si slot vacío y no referenciado: no se agrega a $idsUsados → se elimina abajo
+                        } elseif ($nombre !== "") {
+                            // Insertar nuevo producto
+                            $stmtInsert->execute([
+                                ":id_menu"        => $id_menu,
+                                ":tipo_menu"      => $tipo_menu,
+                                ":categoria"      => $categoria,
+                                ":nombre"         => $nombre,
+                                ":descripcion"    => $descripcion,
+                                ":limite_pedidos" => $limiteFinal,
+                            ]);
+                        }
                     }
+                }
+            }
+
+            // Eliminar solo los que no se usaron y no están referenciados
+            foreach ($existentesRaw as $e) {
+                $id = (int)$e["id_producto"];
+                if (!in_array($id, $idsUsados) && !isset($idsRef[$id])) {
+                    $conexion->prepare("DELETE FROM productos WHERE id_producto = :id")
+                             ->execute([":id" => $id]);
                 }
             }
 
