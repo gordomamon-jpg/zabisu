@@ -2,43 +2,32 @@
 require_once "../config/db.php";
 session_start();
 
-/*  Modo prueba  */
+/*
+    Modo prueba: omite restricción de horario para poder simular pedidos
+*/
 $stmtMP = $conexion->prepare("SELECT valor FROM configuracion WHERE clave = 'modo_prueba' LIMIT 1");
 $stmtMP->execute();
-if ((int)($stmtMP->fetchColumn() ?? 0) === 1) { ?>
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zabisu</title>
-    <link rel="stylesheet" href="../assets/css/styles.css">
-</head>
-<body>
-<div class="contenedor">
-    <div class="md-hero">
-        <div class="md-hero__glow-top"></div>
-        <div class="md-hero__glow-bottom"></div>
-        <p class="md-hero__eyebrow">ZABISU</p>
-        <h1 class="md-hero__marca" style="font-size:clamp(1.6rem,5vw,2.4rem);">En mantenimiento</h1>
-        <p class="md-hero__fecha">Estamos haciendo mejoras. Vuelve en unos momentos.</p>
-    </div>
-</div>
-</body>
-</html>
-<?php exit; }
+$modoPrueba = (int)($stmtMP->fetchColumn() ?? 0);
 
 /*
     1. Obtener menú activo
 */
-$sqlMenu = "SELECT *
-            FROM menu_dia
-            WHERE activo = 1
-              AND publicado_desde IS NOT NULL
-              AND pedido_hasta IS NOT NULL
-              AND NOW() BETWEEN publicado_desde AND pedido_hasta
-            ORDER BY fecha ASC
-            LIMIT 1";
+if ($modoPrueba) {
+    $sqlMenu = "SELECT *
+                FROM menu_dia
+                WHERE activo = 1
+                ORDER BY fecha DESC
+                LIMIT 1";
+} else {
+    $sqlMenu = "SELECT *
+                FROM menu_dia
+                WHERE activo = 1
+                  AND publicado_desde IS NOT NULL
+                  AND pedido_hasta IS NOT NULL
+                  AND NOW() BETWEEN publicado_desde AND pedido_hasta
+                ORDER BY fecha ASC
+                LIMIT 1";
+}
 $stmtMenu = $conexion->prepare($sqlMenu);
 $stmtMenu->execute();
 $menuActivo = $stmtMenu->fetch(PDO::FETCH_ASSOC);
