@@ -12,7 +12,7 @@ $recibiendoPedidos = (int)($stmtEstado->fetchColumn() ?? 1);
 /*
     Obtener pedidos con ubicación y horario
 */
-$sqlPedidos = "SELECT
+$sqlBase = "SELECT
                     p.id_pedido,
                     p.folio,
                     p.nombre_cliente,
@@ -24,6 +24,7 @@ $sqlPedidos = "SELECT
                     p.fecha_pedido,
                     p.visto,
                     p.comprobante_pago,
+                    p.es_prueba,
                     h.hora_entrega,
                     u.nombre_ubicacion,
                     u.tipo AS tipo_ubicacion,
@@ -38,11 +39,19 @@ $sqlPedidos = "SELECT
                    INNER JOIN productos pr2 ON pr2.id_producto = dp2.id_producto
                    INNER JOIN menu_dia md2 ON md2.id_menu = pr2.id_menu
                    GROUP BY pm2.id_pedido
-               ) AS mi ON mi.id_pedido = p.id_pedido
+               ) AS mi ON mi.id_pedido = p.id_pedido";
+
+$sqlPedidos = $sqlBase . " WHERE p.es_prueba = 0
                ORDER BY COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) DESC, p.visto ASC, p.fecha_pedido DESC, p.id_pedido DESC";
 $stmtPedidos = $conexion->prepare($sqlPedidos);
 $stmtPedidos->execute();
 $pedidos = $stmtPedidos->fetchAll(PDO::FETCH_ASSOC);
+
+$sqlPedidosPrueba = $sqlBase . " WHERE p.es_prueba = 1
+               ORDER BY COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) DESC, p.fecha_pedido DESC, p.id_pedido DESC";
+$stmtPrueba = $conexion->prepare($sqlPedidosPrueba);
+$stmtPrueba->execute();
+$pedidosPrueba = $stmtPrueba->fetchAll(PDO::FETCH_ASSOC);
 
 /*
     Contar pedidos nuevos actuales
@@ -318,6 +327,62 @@ function formatearFechaBonita($fecha)
     </div>
     <?php endif; ?>
 
+    <?php if (!empty($pedidosPrueba)): ?>
+    <div class="bloque-formulario">
+        <div class="cabecera-modulo">
+            <h2>🧪 Pedidos de prueba</h2>
+            <button type="button" id="btn-toggle-prueba" class="btn-tabla">Mostrar</button>
+        </div>
+        <div id="seccion-prueba" style="display:none;">
+            <p class="nota-formulario" style="margin-bottom:16px;">
+                Estos pedidos fueron generados con el modo prueba activo. No afectan las estadísticas reales.
+            </p>
+            <div class="tabla-pedidos-wrapper">
+                <table class="tabla-pedidos">
+                    <thead>
+                        <tr>
+                            <th>Folio</th>
+                            <th>Cliente</th>
+                            <th>Ubicación</th>
+                            <th>Hora</th>
+                            <th>Pago</th>
+                            <th>Total</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($pedidosPrueba as $pedido): ?>
+                            <tr>
+                                <td><strong><?php echo htmlspecialchars($pedido["folio"]); ?></strong></td>
+                                <td>
+                                    <strong><?php echo htmlspecialchars($pedido["nombre_cliente"]); ?></strong><br>
+                                    <span class="texto-secundario"><?php echo htmlspecialchars($pedido["telefono"]); ?></span>
+                                </td>
+                                <td>
+                                    <?php echo htmlspecialchars($pedido["nombre_ubicacion"]); ?><br>
+                                    <span class="texto-secundario"><?php echo ucfirst(htmlspecialchars($pedido["tipo_ubicacion"])); ?></span>
+                                </td>
+                                <td><?php echo date("g:i A", strtotime($pedido["hora_entrega"])); ?></td>
+                                <td>
+                                    <span class="<?php echo obtenerClaseEstadoPago($pedido["estado_pago"]); ?>">
+                                        <?php echo htmlspecialchars(obtenerTextoEstadoPago($pedido["estado_pago"])); ?>
+                                    </span>
+                                </td>
+                                <td><strong>$<?php echo number_format((float)$pedido["total"], 2); ?></strong></td>
+                                <td>
+                                    <a class="btn-tabla" href="ver_pedido.php?id=<?php echo urlencode($pedido["id_pedido"]); ?>">
+                                        Ver detalle
+                                    </a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <div class="bloque-formulario">
         <h2>Pedidos registrados</h2>
 
@@ -486,6 +551,20 @@ function formatearFechaBonita($fecha)
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+
+    // ============================================================
+    // TOGGLE PEDIDOS DE PRUEBA
+    // ============================================================
+    var btnTogglePrueba = document.getElementById("btn-toggle-prueba");
+    var seccionPrueba   = document.getElementById("seccion-prueba");
+
+    if (btnTogglePrueba && seccionPrueba) {
+        btnTogglePrueba.addEventListener("click", function () {
+            var visible = seccionPrueba.style.display !== "none";
+            seccionPrueba.style.display = visible ? "none" : "block";
+            btnTogglePrueba.textContent = visible ? "Mostrar" : "Ocultar";
+        });
+    }
 
     // ============================================================
     // FILTROS DE PEDIDOS

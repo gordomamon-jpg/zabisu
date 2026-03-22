@@ -8,6 +8,11 @@ if (empty($_SESSION["pedido_temporal"])) {
 
 $pedidoTemporal = $_SESSION["pedido_temporal"];
 
+/*  Modo prueba  */
+$stmtMP = $conexion->prepare("SELECT valor FROM configuracion WHERE clave = 'modo_prueba' LIMIT 1");
+$stmtMP->execute();
+$esPrueba = (int)($stmtMP->fetchColumn() ?? 0);
+
 $nombre_cliente = $pedidoTemporal["nombre_cliente"] ?? "";
 $telefono = $pedidoTemporal["telefono"] ?? "";
 $correo_cliente = $pedidoTemporal["correo_cliente"] ?? "";
@@ -119,9 +124,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
                 Insertar pedido general
             */
             $sqlPedido = "INSERT INTO pedidos
-              (folio, nombre_cliente, telefono, correo_cliente, id_horario, metodo_pago, observaciones, total, estado, id_repartidor, estado_pago, comprobante_pago, referencia_pago, fecha_pago)
+              (folio, nombre_cliente, telefono, correo_cliente, id_horario, metodo_pago, observaciones, total, estado, id_repartidor, estado_pago, comprobante_pago, referencia_pago, fecha_pago, es_prueba)
               VALUES
-              (:folio, :nombre_cliente, :telefono, :correo_cliente, :id_horario, :metodo_pago, :observaciones, :total, 'Pendiente', NULL, :estado_pago, :comprobante_pago, :referencia_pago, :fecha_pago)";
+              (:folio, :nombre_cliente, :telefono, :correo_cliente, :id_horario, :metodo_pago, :observaciones, :total, 'Pendiente', NULL, :estado_pago, :comprobante_pago, :referencia_pago, :fecha_pago, :es_prueba)";
             $stmtPedido = $conexion->prepare($sqlPedido);
             $stmtPedido->bindParam(":folio", $folio);
             $stmtPedido->bindParam(":nombre_cliente", $nombre_cliente);
@@ -135,6 +140,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
             $stmtPedido->bindParam(":comprobante_pago", $comprobante_pago);
             $stmtPedido->bindParam(":referencia_pago", $referencia_pago);
             $stmtPedido->bindParam(":fecha_pago", $fecha_pago);
+            $stmtPedido->bindParam(":es_prueba", $esPrueba, PDO::PARAM_INT);
             $stmtPedido->execute();
 
             $id_pedido = $conexion->lastInsertId();
