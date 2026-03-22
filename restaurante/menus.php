@@ -21,10 +21,55 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["eliminar_menu"])) {
         } else {
             try {
                 $conexion->beginTransaction();
-                $conexion->prepare("DELETE FROM productos WHERE id_menu = :id")->execute([":id" => $idEliminar]);
-                $conexion->prepare("DELETE FROM menu_dia WHERE id_menu = :id")->execute([":id" => $idEliminar]);
-                $conexion->commit();
-                $mensajeEliminar = "ok:Menú eliminado correctamente.";
+
+                /*
+                    Verificar si hay pedidos REALES (no de prueba) que referencian productos de este menú.
+                    Si los hay, bloqueamos la eliminación para proteger el historial real.
+                */
+                $stmtReal = $conexion->prepare(
+                    "SELECT COUNT(*) FROM pedidos p
+                     INNER JOIN pedido_menus pm ON pm.id_pedido = p.id_pedido
+                     INNER JOIN detalle_pedido dp ON dp.id_pedido_menu = pm.id_pedido_menu
+                     INNER JOIN productos pr ON pr.id_producto = dp.id_producto
+                     WHERE pr.id_menu = :id AND p.es_prueba = 0"
+                );
+                $stmtReal->execute([":id" => $idEliminar]);
+                $tieneReales = (int)$stmtReal->fetchColumn();
+
+                if ($tieneReales > 0) {
+                    $conexion->rollBack();
+                    $mensajeEliminar = "error:Este menú tiene pedidos reales asociados y no puede eliminarse.";
+                } else {
+                    /*
+                        Solo hay pedidos de prueba: los eliminamos en cascada antes de borrar el menú.
+                    */
+                    // IDs de pedidos de prueba ligados a este menú
+                    $stmtIds = $conexion->prepare(
+                        "SELECT DISTINCT p.id_pedido FROM pedidos p
+                         INNER JOIN pedido_menus pm ON pm.id_pedido = p.id_pedido
+                         INNER JOIN detalle_pedido dp ON dp.id_pedido_menu = pm.id_pedido_menu
+                         INNER JOIN productos pr ON pr.id_producto = dp.id_producto
+                         WHERE pr.id_menu = :id AND p.es_prueba = 1"
+                    );
+                    $stmtIds->execute([":id" => $idEliminar]);
+                    $idsPrueba = $stmtIds->fetchAll(PDO::FETCH_COLUMN);
+
+                    if (!empty($idsPrueba)) {
+                        $in = implode(",", array_map("intval", $idsPrueba));
+
+                        $conexion->exec("DELETE pe FROM pedido_extras pe WHERE pe.id_pedido IN ($in)");
+                        $conexion->exec("DELETE dp FROM detalle_pedido dp
+                                         INNER JOIN pedido_menus pm ON pm.id_pedido_menu = dp.id_pedido_menu
+                                         WHERE pm.id_pedido IN ($in)");
+                        $conexion->exec("DELETE FROM pedido_menus WHERE id_pedido IN ($in)");
+                        $conexion->exec("DELETE FROM pedidos WHERE id_pedido IN ($in)");
+                    }
+
+                    $conexion->prepare("DELETE FROM productos WHERE id_menu = :id")->execute([":id" => $idEliminar]);
+                    $conexion->prepare("DELETE FROM menu_dia WHERE id_menu = :id")->execute([":id" => $idEliminar]);
+                    $conexion->commit();
+                    $mensajeEliminar = "ok:Menú eliminado correctamente.";
+                }
             } catch (Exception $e) {
                 $conexion->rollBack();
                 $mensajeEliminar = "error:Error al eliminar: " . $e->getMessage();
