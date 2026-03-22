@@ -69,6 +69,14 @@ foreach ($menusPedido as $menu) {
     $detallePorMenu[$menu["id_pedido_menu"]] = $stmtDetalle->fetchAll(PDO::FETCH_ASSOC);
 }
 
+$sqlPrecios = "SELECT nombre_menu, precio FROM tipos_menu WHERE activo = 1";
+$stmtPrecios = $conexion->prepare($sqlPrecios);
+$stmtPrecios->execute();
+$preciosMenus = [];
+foreach ($stmtPrecios->fetchAll(PDO::FETCH_ASSOC) as $r) {
+    $preciosMenus[$r["nombre_menu"]] = (float)$r["precio"];
+}
+
 function agruparDetallePorCategoria($detalles)
 {
     $agrupado = [];
@@ -167,8 +175,10 @@ function agruparDetallePorCategoria($detalles)
                     <?php $agrupado = agruparDetallePorCategoria($detallePorMenu[$menu["id_pedido_menu"]] ?? []); ?>
                     <div class="ticket-menu" style="margin-bottom: 18px;">
                         <div class="ticket-menu__header">
-                            <span>Menú <?php echo (int)$menu["numero_menu"]; ?></span>
-                            <strong><?php echo htmlspecialchars($menu["tipo_menu"]); ?></strong>
+                            <span>Menú <?php echo (int)$menu["numero_menu"]; ?> — <?php echo htmlspecialchars($menu["tipo_menu"]); ?></span>
+                            <?php if (isset($preciosMenus[$menu["tipo_menu"]])): ?>
+                                <strong style="color:var(--naranja);">$<?php echo number_format($preciosMenus[$menu["tipo_menu"]], 2); ?></strong>
+                            <?php endif; ?>
                         </div>
 
                         <?php foreach ($agrupado as $categoria => $items): ?>
@@ -193,7 +203,7 @@ function agruparDetallePorCategoria($detalles)
                             <span><?php echo htmlspecialchars($extra["categoria"]); ?></span>
                             <span>
                                 <?php echo htmlspecialchars($extra["nombre"]); ?> ×<?php echo (int)$extra["cantidad"]; ?>
-                                <small style="color:var(--texto-secundario);margin-left:6px;">$<?php echo number_format($extra["cantidad"] * $extra["precio_unitario"], 2); ?></small>
+                                <strong style="color:var(--naranja);margin-left:8px;">$<?php echo number_format($extra["cantidad"] * $extra["precio_unitario"], 2); ?></strong>
                             </span>
                         </div>
                     <?php endforeach; ?>
