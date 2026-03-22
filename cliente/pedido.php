@@ -330,19 +330,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
         }
 
         $extrasSeleccionados = [];
-        $PRECIO_EXTRA = 25.00;
+        $PRECIOS_EXTRA_SERVER = ["Sopa" => 25.00, "Complemento" => 25.00, "Agua" => 20.00];
         foreach ($_POST["extras"] ?? [] as $idProducto => $cantidad) {
             $cantidad = min((int)$cantidad, 5);
             if ($cantidad <= 0 || !isset($productosIndexados[$idProducto])) continue;
-            $prod = $productosIndexados[$idProducto];
+            $prod        = $productosIndexados[$idProducto];
+            $precioExtra = $PRECIOS_EXTRA_SERVER[$prod["categoria"]] ?? 25.00;
             $extrasSeleccionados[] = [
                 "id_producto"     => (int)$idProducto,
                 "nombre"          => $prod["nombre"],
                 "categoria"       => $prod["categoria"],
                 "cantidad"        => $cantidad,
-                "precio_unitario" => $PRECIO_EXTRA,
+                "precio_unitario" => $precioExtra,
             ];
-            $totalPedido += $cantidad * $PRECIO_EXTRA;
+            $totalPedido += $cantidad * $precioExtra;
         }
 
         $_SESSION["pedido_temporal"] = [
@@ -623,7 +624,7 @@ if ($scrollDestino === "bloque-entrega") {
 
             <?php
             // Extras disponibles (deduplicados por nombre)
-            $PRECIO_EXTRA_FORM = 25;
+            $PRECIOS_EXTRA = ["Sopa" => 25, "Complemento" => 25, "Agua" => 20];
             $extrasForm        = [];
             $nombresExtrasForm = [];
             foreach (["Sopa", "Complemento", "Agua"] as $catEx) {
@@ -645,20 +646,17 @@ if ($scrollDestino === "bloque-entrega") {
                 <button type="button" class="extras-toggle" id="btn-extras-toggle">
                     <span class="extras-toggle__icono">+</span>
                     <span class="extras-toggle__texto">¿Quieres agregar algo extra?</span>
-                    <span class="extras-toggle__precio">$<?php echo $PRECIO_EXTRA_FORM; ?> c/u</span>
                 </button>
 
                 <div class="extras-contenido" id="extras-contenido" style="display:none;">
-                    <p class="nota-formulario" style="margin-top:14px;">
-                        Cada extra tiene un costo adicional de <strong>$<?php echo $PRECIO_EXTRA_FORM; ?>.00</strong>.
-                    </p>
                     <?php foreach ($extrasForm as $cat => $items): ?>
                     <div class="grupo-categoria">
                         <h3><?php echo $iconosExtra[$cat]; ?> <?php echo htmlspecialchars($cat === "Complemento" ? "Complemento extra" : $cat . " extra"); ?></h3>
                         <?php foreach ($items as $item): ?>
-                        <div class="extra-item <?php echo (int)($_POST["extras"][$item["id_producto"]] ?? 0) > 0 ? 'extra-item--activo' : ''; ?>" data-precio="<?php echo $PRECIO_EXTRA_FORM; ?>">
+                        <?php $precioItem = $PRECIOS_EXTRA[$cat] ?? 25; ?>
+                        <div class="extra-item <?php echo (int)($_POST["extras"][$item["id_producto"]] ?? 0) > 0 ? 'extra-item--activo' : ''; ?>" data-precio="<?php echo $precioItem; ?>">
                             <span class="extra-item__nombre"><?php echo htmlspecialchars($item["nombre"]); ?></span>
-                            <span class="extra-item__precio-hint">$<?php echo $PRECIO_EXTRA_FORM; ?> c/u</span>
+                            <span class="extra-item__precio-hint">$<?php echo $precioItem; ?> c/u</span>
                             <div class="extra-item__contador">
                                 <button type="button" class="extra-btn-menos">−</button>
                                 <input type="number"
