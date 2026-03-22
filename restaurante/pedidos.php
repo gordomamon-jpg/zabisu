@@ -9,6 +9,10 @@ $stmtEstado = $conexion->prepare("SELECT valor FROM configuracion WHERE clave = 
 $stmtEstado->execute();
 $recibiendoPedidos = (int)($stmtEstado->fetchColumn() ?? 1);
 
+$stmtMP = $conexion->prepare("SELECT valor FROM configuracion WHERE clave = 'modo_prueba' LIMIT 1");
+$stmtMP->execute();
+$modoPrueba = (int)($stmtMP->fetchColumn() ?? 0);
+
 /*
     Obtener pedidos con ubicación y horario
 */
@@ -327,7 +331,7 @@ function formatearFechaBonita($fecha)
     </div>
     <?php endif; ?>
 
-    <?php if (!empty($pedidosPrueba)): ?>
+    <?php if ($modoPrueba && !empty($pedidosPrueba)): ?>
     <div class="bloque-formulario">
         <div class="cabecera-modulo">
             <h2>🧪 Pedidos de prueba</h2>
