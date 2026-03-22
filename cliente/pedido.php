@@ -535,7 +535,7 @@ if ($scrollDestino === "bloque-entrega") {
 
                             <?php if (!empty($menusPorTipo[$tipoMenu]["Plato fuerte"])): ?>
                                 <div class="grupo-categoria">
-                                    <h3>Plato fuerte (elige 1)</h3>
+                                    <h3>🍽️ Plato fuerte <span class="cat-hint">· elige 1</span></h3>
                                     <?php foreach ($menusPorTipo[$tipoMenu]["Plato fuerte"] as $item): ?>
                                         <label class="opcion-producto <?php echo !empty($item["agotado"]) ? 'producto-agotado' : ''; ?>">
                                             <input type="radio"
@@ -555,7 +555,7 @@ if ($scrollDestino === "bloque-entrega") {
 
                             <?php if (!empty($menusPorTipo[$tipoMenu]["Sopa"])): ?>
                                 <div class="grupo-categoria">
-                                    <h3>Sopa (elige 1)</h3>
+                                    <h3>🥣 Sopa <span class="cat-hint">· elige 1</span></h3>
                                     <?php foreach ($menusPorTipo[$tipoMenu]["Sopa"] as $item): ?>
                                         <label class="opcion-producto">
                                             <input type="radio"
@@ -571,7 +571,7 @@ if ($scrollDestino === "bloque-entrega") {
 
                             <?php if (!empty($menusPorTipo[$tipoMenu]["Complemento"])): ?>
                                 <div class="grupo-categoria">
-                                    <h3>Complementos (elige hasta 2)</h3>
+                                    <h3>🥗 Complementos <span class="cat-hint">· elige hasta 2</span></h3>
                                     <?php foreach ($menusPorTipo[$tipoMenu]["Complemento"] as $item): ?>
                                         <label class="opcion-producto">
                                             <input type="checkbox"
@@ -587,7 +587,7 @@ if ($scrollDestino === "bloque-entrega") {
 
                             <?php if (!empty($menusPorTipo[$tipoMenu]["Agua"])): ?>
                                 <div class="grupo-categoria">
-                                    <h3>Agua (elige 1)</h3>
+                                    <h3>💧 Agua <span class="cat-hint">· elige 1</span></h3>
                                     <?php foreach ($menusPorTipo[$tipoMenu]["Agua"] as $item): ?>
                                         <label class="opcion-producto">
                                             <input type="radio"
@@ -603,7 +603,7 @@ if ($scrollDestino === "bloque-entrega") {
 
                             <?php if (!empty($menusPorTipo[$tipoMenu]["Postre"])): ?>
                                 <div class="grupo-categoria">
-                                    <h3>Postre (elige 1)</h3>
+                                    <h3>🍮 Postre <span class="cat-hint">· elige 1</span></h3>
                                     <?php foreach ($menusPorTipo[$tipoMenu]["Postre"] as $item): ?>
                                         <label class="opcion-producto">
                                             <input type="radio"
@@ -1222,6 +1222,29 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll("input[type='radio'][name*='menus['], input[type='checkbox'][name*='menus[']").forEach(function (input) {
         input.addEventListener("change", actualizarResumenTotal);
     });
+
+    // Highlight opción seleccionada
+    function actualizarSeleccionVisual() {
+        document.querySelectorAll(".opcion-producto").forEach(function (label) {
+            var input = label.querySelector("input");
+            if (input) label.classList.toggle("opcion-seleccionada", input.checked && !input.disabled);
+        });
+    }
+
+    document.querySelectorAll(".opcion-producto input").forEach(function (input) {
+        input.addEventListener("change", function () {
+            if (this.type === "radio") {
+                document.querySelectorAll("input[name='" + this.name + "']").forEach(function (r) {
+                    var lbl = r.closest(".opcion-producto");
+                    if (lbl) lbl.classList.remove("opcion-seleccionada");
+                });
+            }
+            var lbl = this.closest(".opcion-producto");
+            if (lbl) lbl.classList.toggle("opcion-seleccionada", this.checked);
+        });
+    });
+
+    actualizarSeleccionVisual();
 
 
     actualizarResumenTotal();

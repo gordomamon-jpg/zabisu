@@ -3712,3 +3712,21 @@ input[type="checkbox"] {
     margin-right: 4px;
     white-space: nowrap;
 }
+
+/* ─── MEJORAS VISUALES PASO 2 ─────────────────────────────────────── */
+.grupo-categoria h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--texto-principal);
+}
+.cat-hint {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--texto-secundario);
+    margin-left: 2px;
+}
+.opcion-seleccionada {
+    border-color: rgba(255, 122, 0, 0.5) !important;
+    background: rgba(255, 122, 0, 0.08) !important;
+    box-shadow: 0 0 0 1px rgba(255, 122, 0, 0.15);
+}
