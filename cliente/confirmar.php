@@ -198,15 +198,21 @@ function agruparDetallePorCategoria($detalles)
             <h2>Extras</h2>
             <div class="ticket-resumen">
                 <div class="ticket-menu">
+                    <?php $totalExtras = 0; ?>
                     <?php foreach ($extrasConfirmar as $extra): ?>
+                        <?php $subtotalExtra = $extra["cantidad"] * $extra["precio_unitario"]; $totalExtras += $subtotalExtra; ?>
                         <div class="ticket-linea">
                             <span><?php echo htmlspecialchars($extra["categoria"]); ?></span>
                             <span>
                                 <?php echo htmlspecialchars($extra["nombre"]); ?> ×<?php echo (int)$extra["cantidad"]; ?>
-                                <strong style="color:var(--naranja);margin-left:8px;">$<?php echo number_format($extra["cantidad"] * $extra["precio_unitario"], 2); ?></strong>
+                                <strong style="color:var(--naranja);margin-left:8px;">$<?php echo number_format($subtotalExtra, 2); ?></strong>
                             </span>
                         </div>
                     <?php endforeach; ?>
+                    <div class="ticket-subtotal">
+                        <span>Total extras</span>
+                        <strong style="color:var(--naranja);">$<?php echo number_format($totalExtras, 2); ?></strong>
+                    </div>
                 </div>
             </div>
         </div>
