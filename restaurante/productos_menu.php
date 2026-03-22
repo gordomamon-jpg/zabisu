@@ -24,8 +24,25 @@ $errores       = [];
 $mensajeExito  = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $productos    = $_POST["productos"] ?? [];
-    $activarMenu  = isset($_POST["activar_menu"]) ? 1 : 0;
+    $productos         = $_POST["productos"] ?? [];
+    $activarMenu       = isset($_POST["activar_menu"]) ? 1 : 0;
+    $nuevaFecha        = trim($_POST["fecha"] ?? "");
+    $nuevoPublicado    = trim($_POST["publicado_desde"] ?? "");
+    $nuevoPedidoHasta  = trim($_POST["pedido_hasta"] ?? "");
+
+    // Validar fechas y horarios
+    if ($nuevaFecha === "" || !strtotime($nuevaFecha)) {
+        $errores[] = "La fecha del menú es obligatoria.";
+    }
+    if ($nuevoPublicado === "" || !strtotime($nuevoPublicado)) {
+        $errores[] = "La fecha y hora de publicación son obligatorias.";
+    }
+    if ($nuevoPedidoHasta === "" || !strtotime($nuevoPedidoHasta)) {
+        $errores[] = "La fecha y hora de cierre de pedidos son obligatorias.";
+    }
+    if (empty($errores) && strtotime($nuevoPedidoHasta) <= strtotime($nuevoPublicado)) {
+        $errores[] = "El cierre de pedidos debe ser posterior a la hora de publicación.";
+    }
 
     // Validar que al menos un producto tenga nombre
     $hayAlguno = false;
@@ -146,9 +163,24 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 }
             }
 
-            // Actualizar estado del menú
-            $conexion->prepare("UPDATE menu_dia SET activo = :activo WHERE id_menu = :id_menu")
-                     ->execute([":activo" => $activarMenu, ":id_menu" => $id_menu]);
+            // Actualizar estado y fechas del menú
+            $conexion->prepare(
+                "UPDATE menu_dia SET activo = :activo, fecha = :fecha,
+                 publicado_desde = :publicado_desde, pedido_hasta = :pedido_hasta
+                 WHERE id_menu = :id_menu"
+            )->execute([
+                ":activo"          => $activarMenu,
+                ":fecha"           => date("Y-m-d", strtotime($nuevaFecha)),
+                ":publicado_desde" => date("Y-m-d H:i:s", strtotime($nuevoPublicado)),
+                ":pedido_hasta"    => date("Y-m-d H:i:s", strtotime($nuevoPedidoHasta)),
+                ":id_menu"         => $id_menu,
+            ]);
+
+            // Refrescar datos del menú para mostrar valores actualizados
+            $stmtRef = $conexion->prepare("SELECT * FROM menu_dia WHERE id_menu = :id_menu LIMIT 1");
+            $stmtRef->bindParam(":id_menu", $id_menu, PDO::PARAM_INT);
+            $stmtRef->execute();
+            $menu = $stmtRef->fetch(PDO::FETCH_ASSOC);
 
             $conexion->commit();
             $mensajeExito = "true";
@@ -284,6 +316,35 @@ $esCreacion = !isset($_GET["editar"]) && empty($productosGuardados);
     <?php endif; ?>
 
     <form action="" method="POST" id="form-productos">
+
+        <!-- FECHA Y HORARIOS -->
+        <div class="bloque-formulario nm-seccion">
+            <div class="nm-seccion__header">
+                <span class="nm-seccion__icono">📅</span>
+                <div>
+                    <h2>Fecha y horarios</h2>
+                    <p class="nota-formulario" style="margin:0;">Modifica la fecha del menú y el horario de publicación y cierre.</p>
+                </div>
+            </div>
+
+            <div class="nm-campos-fecha">
+                <div class="nm-campo">
+                    <label for="campo-fecha">Fecha del menú</label>
+                    <input type="date" id="campo-fecha" name="fecha"
+                           value="<?php echo htmlspecialchars($_POST["fecha"] ?? date("Y-m-d", strtotime($menu["fecha"]))); ?>">
+                </div>
+                <div class="nm-campo">
+                    <label for="campo-publicado">Publicado desde</label>
+                    <input type="datetime-local" id="campo-publicado" name="publicado_desde"
+                           value="<?php echo htmlspecialchars($_POST["publicado_desde"] ?? date("Y-m-d\TH:i", strtotime($menu["publicado_desde"]))); ?>">
+                </div>
+                <div class="nm-campo">
+                    <label for="campo-cierre">Pedidos hasta</label>
+                    <input type="datetime-local" id="campo-cierre" name="pedido_hasta"
+                           value="<?php echo htmlspecialchars($_POST["pedido_hasta"] ?? date("Y-m-d\TH:i", strtotime($menu["pedido_hasta"]))); ?>">
+                </div>
+            </div>
+        </div>
 
         <!-- TABS -->
         <div class="pm-tabs">

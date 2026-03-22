@@ -3677,3 +3677,25 @@ input[type="checkbox"] {
     color: var(--naranja) !important;
     margin-top: 6px !important;
 }
+
+/* ─── CAMPOS FECHA EN PRODUCTOS MENU ──────────────────────────────── */
+.nm-campos-fecha {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 18px;
+}
+.nm-campo label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--texto-secundario);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+@media (max-width: 640px) {
+    .nm-campos-fecha {
+        grid-template-columns: 1fr;
+    }
+}
