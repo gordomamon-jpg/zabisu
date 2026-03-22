@@ -190,8 +190,11 @@ function agruparDetallePorCategoria($detalles)
                 <div class="ticket-menu">
                     <?php foreach ($extrasConfirmar as $extra): ?>
                         <div class="ticket-linea">
-                            <span><?php echo htmlspecialchars($extra["categoria"]); ?> — <?php echo htmlspecialchars($extra["nombre"]); ?> ×<?php echo (int)$extra["cantidad"]; ?></span>
-                            <span>$<?php echo number_format($extra["cantidad"] * $extra["precio_unitario"], 2); ?></span>
+                            <span><?php echo htmlspecialchars($extra["categoria"]); ?></span>
+                            <span>
+                                <?php echo htmlspecialchars($extra["nombre"]); ?> ×<?php echo (int)$extra["cantidad"]; ?>
+                                <small style="color:var(--texto-secundario);margin-left:6px;">$<?php echo number_format($extra["cantidad"] * $extra["precio_unitario"], 2); ?></small>
+                            </span>
                         </div>
                     <?php endforeach; ?>
                 </div>
