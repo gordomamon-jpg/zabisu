@@ -59,6 +59,15 @@ foreach ($menusPedido as $menu) {
     $detallePorMenu[$menu["id_pedido_menu"]] = $stmtDetalle->fetchAll(PDO::FETCH_ASSOC);
 }
 
+/*
+    4. Obtener extras del pedido
+*/
+$sqlExtras = "SELECT * FROM pedido_extras WHERE id_pedido = :id_pedido ORDER BY id_extra ASC";
+$stmtExtras = $conexion->prepare($sqlExtras);
+$stmtExtras->bindParam(":id_pedido", $id_pedido, PDO::PARAM_INT);
+$stmtExtras->execute();
+$extrasVer = $stmtExtras->fetchAll(PDO::FETCH_ASSOC);
+
 function obtenerTextoEstadoPago($estadoPago)
 {
     switch ($estadoPago) {
@@ -195,6 +204,26 @@ function obtenerClaseEstadoPago($estadoPago)
             </div>
         </div>
     <?php endforeach; ?>
+
+    <?php if (!empty($extrasVer)): ?>
+        <div class="bloque-formulario">
+            <h2>Extras</h2>
+            <div class="ticket-resumen">
+                <div class="ticket-menu">
+                    <?php foreach ($extrasVer as $extra): ?>
+                        <div class="ticket-linea">
+                            <span><?php echo htmlspecialchars($extra["categoria"]); ?> — <?php echo htmlspecialchars($extra["nombre"]); ?> ×<?php echo (int)$extra["cantidad"]; ?></span>
+                            <span>$<?php echo number_format($extra["cantidad"] * $extra["precio_unitario"], 2); ?></span>
+                        </div>
+                    <?php endforeach; ?>
+                    <div class="ticket-subtotal">
+                        <span>Subtotal extras</span>
+                        <strong>$<?php echo number_format(array_sum(array_map(fn($e) => $e["cantidad"] * $e["precio_unitario"], $extrasVer)), 2); ?></strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
 
     <?php if (!empty($pedido["comprobante_pago"])): ?>
         <?php
