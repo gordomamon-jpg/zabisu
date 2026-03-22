@@ -3592,3 +3592,32 @@ input[type="checkbox"] {
 .extra-cantidad::-webkit-inner-spin-button {
     -webkit-appearance: none;
 }
+
+/* ─── TOGGLE RECEPCIÓN DE PEDIDOS ─────────────────────────────────── */
+.btn-toggle-pedidos {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 10px 20px;
+    border-radius: 50px;
+    border: none;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    transition: opacity 0.2s;
+}
+.btn-toggle-pedidos:hover {
+    opacity: 0.85;
+}
+.btn-toggle-pedidos--activo {
+    background: rgba(74, 200, 110, 0.15);
+    border: 1px solid rgba(74, 200, 110, 0.4);
+    color: #4ac86e;
+}
+.btn-toggle-pedidos--pausado {
+    background: rgba(255, 80, 80, 0.15);
+    border: 1px solid rgba(255, 80, 80, 0.4);
+    color: #ff6060;
+}

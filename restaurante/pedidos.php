@@ -3,6 +3,13 @@ require_once "../config/db.php";
 require_once "auth_check.php";
 
 /*
+    Estado de recepción de pedidos
+*/
+$stmtEstado = $conexion->prepare("SELECT valor FROM configuracion WHERE clave = 'recibir_pedidos' LIMIT 1");
+$stmtEstado->execute();
+$recibiendoPedidos = (int)($stmtEstado->fetchColumn() ?? 1);
+
+/*
     Obtener pedidos con ubicación y horario
 */
 $sqlPedidos = "SELECT
@@ -219,6 +226,16 @@ function formatearFechaBonita($fecha)
                 Visualiza, revisa y administra los pedidos registrados.
             </p>
             <a href="panel_general.php" class="btn-volver-panel">← Panel general</a>
+
+            <form method="POST" action="toggle_pedidos.php" style="display:inline;">
+                <button type="submit" class="btn-toggle-pedidos <?php echo $recibiendoPedidos ? 'btn-toggle-pedidos--activo' : 'btn-toggle-pedidos--pausado'; ?>">
+                    <?php if ($recibiendoPedidos): ?>
+                        ✅ Recibiendo pedidos — Pausar
+                    <?php else: ?>
+                        ⏸ Pedidos pausados — Reanudar
+                    <?php endif; ?>
+                </button>
+            </form>
             <button type="button" id="btn-toggle-notificacion" class="btn-notificar-ruta">
                 📍 Notificar llegada al punto
             </button>

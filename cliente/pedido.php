@@ -53,6 +53,49 @@ if (!$menuActivo) {
     exit;
 }
 
+/*
+    Verificar si se están recibiendo pedidos
+*/
+$stmtConfig = $conexion->prepare("SELECT valor FROM configuracion WHERE clave = 'recibir_pedidos' LIMIT 1");
+$stmtConfig->execute();
+$recibiendoPedidos = (int)($stmtConfig->fetchColumn() ?? 1);
+
+if (!$recibiendoPedidos) {
+    ?>
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Pedidos pausados | Zabisu</title>
+        <link rel="stylesheet" href="../assets/css/styles.css">
+    </head>
+    <body>
+    <div class="contenedor">
+        <div class="md-hero">
+            <div class="md-hero__glow-top"></div>
+            <div class="md-hero__glow-bottom"></div>
+            <p class="md-hero__eyebrow">ZABISU</p>
+            <div class="md-hero__marca-grupo">
+                <img class="md-hero__logo" src="../assets/img/LOGO_BLANCO.png" alt="Zabisu">
+                <h1 class="md-hero__marca">Zabisu</h1>
+            </div>
+            <p class="md-hero__fecha">Pedidos temporalmente pausados</p>
+        </div>
+        <div class="bloque-formulario resumen-total">
+            <h2>No estamos recibiendo pedidos</h2>
+            <p class="nota-formulario">
+                En este momento no estamos aceptando nuevos pedidos. Por favor intenta más tarde o contáctanos directamente.
+            </p>
+            <a href="menu.php" class="btn-link">← Ver menú del día</a>
+        </div>
+    </div>
+    </body>
+    </html>
+    <?php
+    exit;
+}
+
 setlocale(LC_TIME, 'es_MX.UTF-8', 'es_ES.UTF-8', 'spanish');
 
 $fechaMenuFormateada = "";
