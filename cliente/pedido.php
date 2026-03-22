@@ -535,24 +535,16 @@ if ($scrollDestino === "bloque-entrega") {
 
                             <?php if (!empty($menusPorTipo[$tipoMenu]["Plato fuerte"])): ?>
                                 <div class="grupo-categoria">
-                                    <div class="sel-cat-header">
-                                        <span class="sel-cat-header__icono">🍽️</span>
-                                        <h3>Plato fuerte <span class="sel-cat-header__hint">· elige 1</span></h3>
-                                    </div>
-                                    <?php foreach ($menusPorTipo[$tipoMenu]["Plato fuerte"] as $j => $item): ?>
-                                        <label class="opcion-producto sel-plato <?php echo !empty($item["agotado"]) ? 'producto-agotado' : ''; ?>">
-                                            <span class="sel-plato__num"><?php echo $j + 1; ?></span>
+                                    <h3>Plato fuerte (elige 1)</h3>
+                                    <?php foreach ($menusPorTipo[$tipoMenu]["Plato fuerte"] as $item): ?>
+                                        <label class="opcion-producto <?php echo !empty($item["agotado"]) ? 'producto-agotado' : ''; ?>">
                                             <input type="radio"
                                                    name="menus[<?php echo $i; ?>][plato_fuerte]"
                                                    value="<?php echo $item["id_producto"]; ?>"
                                                    <?php echo (($_POST["menus"][$i]["plato_fuerte"] ?? "") == $item["id_producto"]) ? "checked" : ""; ?>
                                                    <?php echo !empty($item["agotado"]) ? 'disabled' : ''; ?>>
-                                            <div class="sel-plato__info">
-                                                <strong><?php echo htmlspecialchars($item["nombre"]); ?></strong>
-                                                <?php if (!empty($item["descripcion"])): ?>
-                                                    <span class="sel-plato__desc"><?php echo htmlspecialchars($item["descripcion"]); ?></span>
-                                                <?php endif; ?>
-                                            </div>
+                                            <strong><?php echo htmlspecialchars($item["nombre"]); ?></strong>
+                                            — <?php echo htmlspecialchars($item["descripcion"]); ?>
                                             <?php if (!empty($item["agotado"])): ?>
                                                 <span class="badge-agotado">Agotado</span>
                                             <?php endif; ?>
@@ -563,22 +555,15 @@ if ($scrollDestino === "bloque-entrega") {
 
                             <?php if (!empty($menusPorTipo[$tipoMenu]["Sopa"])): ?>
                                 <div class="grupo-categoria">
-                                    <div class="sel-cat-header">
-                                        <span class="sel-cat-header__icono">🥣</span>
-                                        <h3>Sopa <span class="sel-cat-header__hint">· elige 1</span></h3>
-                                    </div>
+                                    <h3>Sopa (elige 1)</h3>
                                     <?php foreach ($menusPorTipo[$tipoMenu]["Sopa"] as $item): ?>
-                                        <label class="opcion-producto sel-plato">
+                                        <label class="opcion-producto">
                                             <input type="radio"
                                                    name="menus[<?php echo $i; ?>][sopa]"
                                                    value="<?php echo $item["id_producto"]; ?>"
                                                    <?php echo (($_POST["menus"][$i]["sopa"] ?? "") == $item["id_producto"]) ? "checked" : ""; ?>>
-                                            <div class="sel-plato__info">
-                                                <strong><?php echo htmlspecialchars($item["nombre"]); ?></strong>
-                                                <?php if (!empty($item["descripcion"])): ?>
-                                                    <span class="sel-plato__desc"><?php echo htmlspecialchars($item["descripcion"]); ?></span>
-                                                <?php endif; ?>
-                                            </div>
+                                            <strong><?php echo htmlspecialchars($item["nombre"]); ?></strong> —
+                                            <?php echo htmlspecialchars($item["descripcion"]); ?>
                                         </label>
                                     <?php endforeach; ?>
                                 </div>
@@ -586,42 +571,31 @@ if ($scrollDestino === "bloque-entrega") {
 
                             <?php if (!empty($menusPorTipo[$tipoMenu]["Complemento"])): ?>
                                 <div class="grupo-categoria">
-                                    <div class="sel-cat-header">
-                                        <span class="sel-cat-header__icono">🥗</span>
-                                        <h3>Complementos <span class="sel-cat-header__hint">· elige hasta 2</span></h3>
-                                    </div>
-                                    <div class="sel-chips">
-                                        <?php foreach ($menusPorTipo[$tipoMenu]["Complemento"] as $item): ?>
-                                            <label class="sel-chip <?php echo (in_array($item["id_producto"], $_POST["menus"][$i]["complementos"] ?? [])) ? 'sel-chip--activo' : ''; ?>">
-                                                <input type="checkbox"
-                                                       name="menus[<?php echo $i; ?>][complementos][]"
-                                                       value="<?php echo $item["id_producto"]; ?>"
-                                                       <?php echo (in_array($item["id_producto"], $_POST["menus"][$i]["complementos"] ?? [])) ? "checked" : ""; ?>>
-                                                <?php echo htmlspecialchars($item["nombre"]); ?>
-                                            </label>
-                                        <?php endforeach; ?>
-                                    </div>
+                                    <h3>Complementos (elige hasta 2)</h3>
+                                    <?php foreach ($menusPorTipo[$tipoMenu]["Complemento"] as $item): ?>
+                                        <label class="opcion-producto">
+                                            <input type="checkbox"
+                                                   name="menus[<?php echo $i; ?>][complementos][]"
+                                                   value="<?php echo $item["id_producto"]; ?>"
+                                                   <?php echo (in_array($item["id_producto"], $_POST["menus"][$i]["complementos"] ?? [])) ? "checked" : ""; ?>>
+                                            <strong><?php echo htmlspecialchars($item["nombre"]); ?></strong> —
+                                            <?php echo htmlspecialchars($item["descripcion"]); ?>
+                                        </label>
+                                    <?php endforeach; ?>
                                 </div>
                             <?php endif; ?>
 
                             <?php if (!empty($menusPorTipo[$tipoMenu]["Agua"])): ?>
                                 <div class="grupo-categoria">
-                                    <div class="sel-cat-header">
-                                        <span class="sel-cat-header__icono">💧</span>
-                                        <h3>Agua <span class="sel-cat-header__hint">· elige 1</span></h3>
-                                    </div>
+                                    <h3>Agua (elige 1)</h3>
                                     <?php foreach ($menusPorTipo[$tipoMenu]["Agua"] as $item): ?>
-                                        <label class="opcion-producto sel-plato">
+                                        <label class="opcion-producto">
                                             <input type="radio"
                                                    name="menus[<?php echo $i; ?>][agua]"
                                                    value="<?php echo $item["id_producto"]; ?>"
                                                    <?php echo (($_POST["menus"][$i]["agua"] ?? "") == $item["id_producto"]) ? "checked" : ""; ?>>
-                                            <div class="sel-plato__info">
-                                                <strong><?php echo htmlspecialchars($item["nombre"]); ?></strong>
-                                                <?php if (!empty($item["descripcion"])): ?>
-                                                    <span class="sel-plato__desc"><?php echo htmlspecialchars($item["descripcion"]); ?></span>
-                                                <?php endif; ?>
-                                            </div>
+                                            <strong><?php echo htmlspecialchars($item["nombre"]); ?></strong> —
+                                            <?php echo htmlspecialchars($item["descripcion"]); ?>
                                         </label>
                                     <?php endforeach; ?>
                                 </div>
@@ -629,22 +603,15 @@ if ($scrollDestino === "bloque-entrega") {
 
                             <?php if (!empty($menusPorTipo[$tipoMenu]["Postre"])): ?>
                                 <div class="grupo-categoria">
-                                    <div class="sel-cat-header">
-                                        <span class="sel-cat-header__icono">🍮</span>
-                                        <h3>Postre <span class="sel-cat-header__hint">· elige 1</span></h3>
-                                    </div>
+                                    <h3>Postre (elige 1)</h3>
                                     <?php foreach ($menusPorTipo[$tipoMenu]["Postre"] as $item): ?>
-                                        <label class="opcion-producto sel-plato">
+                                        <label class="opcion-producto">
                                             <input type="radio"
                                                    name="menus[<?php echo $i; ?>][postre]"
                                                    value="<?php echo $item["id_producto"]; ?>"
                                                    <?php echo (($_POST["menus"][$i]["postre"] ?? "") == $item["id_producto"]) ? "checked" : ""; ?>>
-                                            <div class="sel-plato__info">
-                                                <strong><?php echo htmlspecialchars($item["nombre"]); ?></strong>
-                                                <?php if (!empty($item["descripcion"])): ?>
-                                                    <span class="sel-plato__desc"><?php echo htmlspecialchars($item["descripcion"]); ?></span>
-                                                <?php endif; ?>
-                                            </div>
+                                            <strong><?php echo htmlspecialchars($item["nombre"]); ?></strong> —
+                                            <?php echo htmlspecialchars($item["descripcion"]); ?>
                                         </label>
                                     <?php endforeach; ?>
                                 </div>
@@ -1256,12 +1223,6 @@ document.addEventListener("DOMContentLoaded", function () {
         input.addEventListener("change", actualizarResumenTotal);
     });
 
-    // Toggle visual chips complementos
-    document.querySelectorAll(".sel-chip input[type='checkbox']").forEach(function (input) {
-        input.addEventListener("change", function () {
-            this.closest(".sel-chip").classList.toggle("sel-chip--activo", this.checked);
-        });
-    });
 
     actualizarResumenTotal();
 
