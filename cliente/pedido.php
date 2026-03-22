@@ -332,7 +332,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
         $extrasSeleccionados = [];
         $PRECIO_EXTRA = 25.00;
         foreach ($_POST["extras"] ?? [] as $idProducto => $cantidad) {
-            $cantidad = (int)$cantidad;
+            $cantidad = min((int)$cantidad, 5);
             if ($cantidad <= 0 || !isset($productosIndexados[$idProducto])) continue;
             $prod = $productosIndexados[$idProducto];
             $extrasSeleccionados[] = [
@@ -661,7 +661,7 @@ if ($scrollDestino === "bloque-entrega") {
                                        name="extras[<?php echo (int)$item["id_producto"]; ?>]"
                                        class="extra-cantidad"
                                        value="<?php echo (int)($_POST["extras"][$item["id_producto"]] ?? 0); ?>"
-                                       min="0" max="10" readonly>
+                                       min="0" max="5" readonly>
                                 <button type="button" class="extra-btn-mas">+</button>
                             </div>
                         </div>
@@ -1256,7 +1256,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
         mas.addEventListener("click", function () {
             var v = parseInt(input.value) || 0;
-            if (v < 10) { input.value = v + 1; actualizarResumenTotal(); }
+            if (v < 5) { input.value = v + 1; actualizarResumenTotal(); }
         });
     });
 });
