@@ -455,6 +455,9 @@ if ($scrollDestino === "bloque-entrega") {
                 <input type="email" name="correo_cliente" id="correo_cliente"
                        maxlength="150" autocomplete="email"
                        value="<?php echo htmlspecialchars($_POST["correo_cliente"] ?? ""); ?>">
+                <p class="nota-formulario nota-correo">
+                    ✉️ Aquí recibirás la confirmación y todos los detalles de tu pedido. Asegúrate de que sea correcto.
+                </p>
             </section>
 
             <div class="stepper-nav">

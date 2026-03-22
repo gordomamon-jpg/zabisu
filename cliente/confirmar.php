@@ -186,6 +186,14 @@ function agruparDetallePorCategoria($detalles)
             </p>
         <?php endif; ?>
 
+        <div class="aviso-correo-confirmacion">
+            <span class="aviso-correo-confirmacion__icono">✉️</span>
+            <p>
+                Recibirás un correo en <strong><?php echo htmlspecialchars($pedido["correo_cliente"]); ?></strong> con la información completa de tu pedido.
+                Si no lo ves en unos minutos, revisa tu carpeta de spam.
+            </p>
+        </div>
+
         <div class="acciones-panel__botones">
             <a href="pedido.php" class="btn-link">Hacer otro pedido</a>
         </div>
