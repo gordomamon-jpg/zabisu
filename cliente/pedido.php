@@ -643,6 +643,7 @@ if ($scrollDestino === "bloque-entrega") {
             ?>
 
             <section class="bloque-formulario" id="bloque-extras">
+                <h2>Extras</h2>
                 <button type="button" class="extras-toggle" id="btn-extras-toggle">
                     <span class="extras-toggle__icono">+</span>
                     <span class="extras-toggle__texto">¿Quieres agregar algo extra?</span>
