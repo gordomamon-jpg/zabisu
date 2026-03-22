@@ -286,6 +286,22 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
             $totalPedido += $preciosMenus[$menu["tipo_menu"] ?? ""] ?? 0;
         }
 
+        $extrasSeleccionados = [];
+        $PRECIO_EXTRA = 25.00;
+        foreach ($_POST["extras"] ?? [] as $idProducto => $cantidad) {
+            $cantidad = (int)$cantidad;
+            if ($cantidad <= 0 || !isset($productosIndexados[$idProducto])) continue;
+            $prod = $productosIndexados[$idProducto];
+            $extrasSeleccionados[] = [
+                "id_producto"     => (int)$idProducto,
+                "nombre"          => $prod["nombre"],
+                "categoria"       => $prod["categoria"],
+                "cantidad"        => $cantidad,
+                "precio_unitario" => $PRECIO_EXTRA,
+            ];
+            $totalPedido += $cantidad * $PRECIO_EXTRA;
+        }
+
         $_SESSION["pedido_temporal"] = [
             "nombre_cliente"  => $nombre_cliente,
             "telefono"        => $telefono,
@@ -293,6 +309,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
             "observaciones"   => $observaciones,
             "id_horario"      => $id_horario,
             "menus"           => $menusRecibidos,
+            "extras"          => $extrasSeleccionados,
             "total"           => $totalPedido,
             "fecha_menu"      => $menuActivo["fecha"] ?? null,
             "creado_en"       => date("Y-m-d H:i:s")
@@ -557,6 +574,59 @@ if ($scrollDestino === "bloque-entrega") {
                     <?php endforeach; ?>
                 </section>
             <?php endfor; ?>
+
+            <?php
+            // Extras disponibles (deduplicados por nombre)
+            $PRECIO_EXTRA_FORM = 25;
+            $extrasForm        = [];
+            $nombresExtrasForm = [];
+            foreach (["Sopa", "Complemento", "Agua"] as $catEx) {
+                foreach ($menusPorTipo as $tipoMenu => $cats) {
+                    if (!empty($cats[$catEx])) {
+                        foreach ($cats[$catEx] as $prod) {
+                            if (!in_array($prod["nombre"], $nombresExtrasForm)) {
+                                $nombresExtrasForm[] = $prod["nombre"];
+                                $extrasForm[$catEx][] = $prod;
+                            }
+                        }
+                    }
+                }
+            }
+            $iconosExtra = ["Sopa" => "🥣", "Complemento" => "🥗", "Agua" => "💧"];
+            ?>
+
+            <section class="bloque-formulario" id="bloque-extras">
+                <button type="button" class="extras-toggle" id="btn-extras-toggle">
+                    <span class="extras-toggle__icono">+</span>
+                    <span class="extras-toggle__texto">¿Quieres agregar algo extra?</span>
+                    <span class="extras-toggle__precio">$<?php echo $PRECIO_EXTRA_FORM; ?> c/u</span>
+                </button>
+
+                <div class="extras-contenido" id="extras-contenido" style="display:none;">
+                    <p class="nota-formulario" style="margin-top:14px;">
+                        Cada extra tiene un costo adicional de <strong>$<?php echo $PRECIO_EXTRA_FORM; ?>.00</strong>.
+                    </p>
+                    <?php foreach ($extrasForm as $cat => $items): ?>
+                    <div class="grupo-categoria">
+                        <h3><?php echo $iconosExtra[$cat]; ?> <?php echo htmlspecialchars($cat === "Complemento" ? "Complemento extra" : $cat . " extra"); ?></h3>
+                        <?php foreach ($items as $item): ?>
+                        <div class="extra-item" data-precio="<?php echo $PRECIO_EXTRA_FORM; ?>">
+                            <span class="extra-item__nombre"><?php echo htmlspecialchars($item["nombre"]); ?></span>
+                            <div class="extra-item__contador">
+                                <button type="button" class="extra-btn-menos">−</button>
+                                <input type="number"
+                                       name="extras[<?php echo (int)$item["id_producto"]; ?>]"
+                                       class="extra-cantidad"
+                                       value="<?php echo (int)($_POST["extras"][$item["id_producto"]] ?? 0); ?>"
+                                       min="0" max="10" readonly>
+                                <button type="button" class="extra-btn-mas">+</button>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </section>
 
             <div class="stepper-nav">
                 <button type="button" class="btn-stepper btn-stepper--anterior" data-anterior="1">← Anterior</button>
@@ -1071,6 +1141,23 @@ document.addEventListener("DOMContentLoaded", function () {
             `;
         });
 
+        // Extras
+        var totalExtras = 0;
+        var htmlExtras  = "";
+        document.querySelectorAll(".extra-item").forEach(function (item) {
+            var cant   = parseInt(item.querySelector(".extra-cantidad").value) || 0;
+            if (cant > 0) {
+                var precio = parseFloat(item.dataset.precio) || 25;
+                var nombre = item.querySelector(".extra-item__nombre").textContent;
+                totalExtras += cant * precio;
+                htmlExtras  += "<div class='ticket-linea'><span>" + nombre + " ×" + cant + "</span><span>$" + (cant * precio).toFixed(2) + "</span></div>";
+            }
+        });
+        if (htmlExtras) {
+            htmlResumen += "<div class='ticket-menu'><div class='ticket-menu__header'><span>Extras</span><strong>$" + totalExtras.toFixed(2) + "</strong></div>" + htmlExtras + "</div>";
+        }
+        total += totalExtras;
+
         if (resumenMenus) {
             resumenMenus.innerHTML = htmlResumen || '<p class="ticket-vacio">Selecciona tus menús para ver el resumen.</p>';
         }
@@ -1092,6 +1179,43 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     actualizarResumenTotal();
+
+    // ── EXTRAS ──────────────────────────────────────────────────────
+    var btnExtrasToggle  = document.getElementById("btn-extras-toggle");
+    var extrasContenido  = document.getElementById("extras-contenido");
+
+    if (btnExtrasToggle && extrasContenido) {
+        btnExtrasToggle.addEventListener("click", function () {
+            var abierto = extrasContenido.style.display !== "none";
+            extrasContenido.style.display = abierto ? "none" : "block";
+            btnExtrasToggle.querySelector(".extras-toggle__icono").textContent = abierto ? "+" : "−";
+        });
+
+        // Si hay extras pre-seleccionados (vuelta de POST con errores), abrir el panel
+        var hayExtras = false;
+        document.querySelectorAll(".extra-cantidad").forEach(function (inp) {
+            if (parseInt(inp.value) > 0) hayExtras = true;
+        });
+        if (hayExtras) {
+            extrasContenido.style.display = "block";
+            btnExtrasToggle.querySelector(".extras-toggle__icono").textContent = "−";
+        }
+    }
+
+    document.querySelectorAll(".extra-item").forEach(function (item) {
+        var menos = item.querySelector(".extra-btn-menos");
+        var mas   = item.querySelector(".extra-btn-mas");
+        var input = item.querySelector(".extra-cantidad");
+
+        menos.addEventListener("click", function () {
+            var v = parseInt(input.value) || 0;
+            if (v > 0) { input.value = v - 1; actualizarResumenTotal(); }
+        });
+        mas.addEventListener("click", function () {
+            var v = parseInt(input.value) || 0;
+            if (v < 10) { input.value = v + 1; actualizarResumenTotal(); }
+        });
+    });
 });
 
 function actualizarOpcionesMenu(numeroMenu) {

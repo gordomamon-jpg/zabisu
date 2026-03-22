@@ -14,7 +14,8 @@ $correo_cliente = $pedidoTemporal["correo_cliente"] ?? "";
 $observaciones = $pedidoTemporal["observaciones"] ?? "";
 $id_horario = $pedidoTemporal["id_horario"] ?? "";
 $menusRecibidos = $pedidoTemporal["menus"] ?? [];
-$totalPedido = (float)($pedidoTemporal["total"] ?? 0);
+$totalPedido    = (float)($pedidoTemporal["total"] ?? 0);
+$extrasSession  = $pedidoTemporal["extras"] ?? [];
 
 /*
     Obtener productos para reconstruir nombres/categorías
@@ -193,6 +194,24 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
                 }
             }
 
+            // Insertar extras
+            if (!empty($extrasSession)) {
+                $sqlExtra = "INSERT INTO pedido_extras
+                             (id_pedido, id_producto, nombre, categoria, cantidad, precio_unitario)
+                             VALUES (:id_pedido, :id_producto, :nombre, :categoria, :cantidad, :precio)";
+                $stmtExtra = $conexion->prepare($sqlExtra);
+                foreach ($extrasSession as $extra) {
+                    $stmtExtra->execute([
+                        ":id_pedido"  => $id_pedido,
+                        ":id_producto"=> $extra["id_producto"],
+                        ":nombre"     => $extra["nombre"],
+                        ":categoria"  => $extra["categoria"],
+                        ":cantidad"   => $extra["cantidad"],
+                        ":precio"     => $extra["precio_unitario"],
+                    ]);
+                }
+            }
+
             $conexion->commit();
 
 
@@ -253,6 +272,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
                     <span>Teléfono</span>
                     <span><?php echo htmlspecialchars($telefono); ?></span>
                 </div>
+                <?php if (!empty($extrasSession)): ?>
+                <div class="ticket-linea">
+                    <span>Extras</span>
+                    <span>
+                        <?php foreach ($extrasSession as $ex): ?>
+                            <?php echo htmlspecialchars($ex["nombre"]); ?> ×<?php echo (int)$ex["cantidad"]; ?><br>
+                        <?php endforeach; ?>
+                    </span>
+                </div>
+                <?php endif; ?>
                 <div class="ticket-linea">
                     <span>Total</span>
                     <span>$<?php echo number_format($totalPedido, 2); ?></span>

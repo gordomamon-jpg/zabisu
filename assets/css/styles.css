@@ -3495,3 +3495,100 @@ input[type="checkbox"] {
         grid-template-columns: 1fr;
     }
 }
+/* ─── EXTRAS (pedido.php paso 2) ──────────────────────────────────── */
+.extras-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--superficie-card);
+    border: 1px solid var(--borde);
+    border-radius: 14px;
+    padding: 14px 18px;
+    cursor: pointer;
+    text-align: left;
+    color: var(--texto-principal);
+    font-size: 15px;
+    font-weight: 600;
+    transition: border-color 0.2s;
+}
+.extras-toggle:hover {
+    border-color: var(--naranja);
+}
+.extras-toggle__icono {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--naranja);
+    min-width: 20px;
+    text-align: center;
+}
+.extras-toggle__texto {
+    flex: 1;
+}
+.extras-toggle__precio {
+    font-size: 13px;
+    color: var(--naranja);
+    background: rgba(255, 140, 0, 0.12);
+    padding: 3px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+.extras-contenido {
+    margin-top: 4px;
+}
+.extra-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--borde);
+}
+.extra-item:last-child {
+    border-bottom: none;
+}
+.extra-item__nombre {
+    flex: 1;
+    font-size: 14px;
+    color: var(--texto-principal);
+}
+.extra-item__contador {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.extra-btn-menos,
+.extra-btn-mas {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--borde);
+    background: var(--superficie);
+    color: var(--texto-principal);
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    flex-shrink: 0;
+}
+.extra-btn-mas {
+    background: var(--naranja);
+    color: #fff;
+    border-color: var(--naranja);
+}
+.extra-cantidad {
+    width: 32px;
+    text-align: center;
+    border: none;
+    background: transparent;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--texto-principal);
+    -moz-appearance: textfield;
+}
+.extra-cantidad::-webkit-outer-spin-button,
+.extra-cantidad::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+}
