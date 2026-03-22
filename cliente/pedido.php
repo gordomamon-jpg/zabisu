@@ -656,8 +656,9 @@ if ($scrollDestino === "bloque-entrega") {
                     <div class="grupo-categoria">
                         <h3><?php echo $iconosExtra[$cat]; ?> <?php echo htmlspecialchars($cat === "Complemento" ? "Complemento extra" : $cat . " extra"); ?></h3>
                         <?php foreach ($items as $item): ?>
-                        <div class="extra-item" data-precio="<?php echo $PRECIO_EXTRA_FORM; ?>">
+                        <div class="extra-item <?php echo (int)($_POST["extras"][$item["id_producto"]] ?? 0) > 0 ? 'extra-item--activo' : ''; ?>" data-precio="<?php echo $PRECIO_EXTRA_FORM; ?>">
                             <span class="extra-item__nombre"><?php echo htmlspecialchars($item["nombre"]); ?></span>
+                            <span class="extra-item__precio-hint">$<?php echo $PRECIO_EXTRA_FORM; ?> c/u</span>
                             <div class="extra-item__contador">
                                 <button type="button" class="extra-btn-menos">−</button>
                                 <input type="number"
@@ -1255,11 +1256,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
         menos.addEventListener("click", function () {
             var v = parseInt(input.value) || 0;
-            if (v > 0) { input.value = v - 1; actualizarResumenTotal(); }
+            if (v > 0) {
+                input.value = v - 1;
+                item.classList.toggle("extra-item--activo", (v - 1) > 0);
+                actualizarResumenTotal();
+            }
         });
         mas.addEventListener("click", function () {
             var v = parseInt(input.value) || 0;
-            if (v < 5) { input.value = v + 1; actualizarResumenTotal(); }
+            if (v < 5) {
+                input.value = v + 1;
+                item.classList.add("extra-item--activo");
+                actualizarResumenTotal();
+            }
         });
     });
 });
