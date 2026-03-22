@@ -2,6 +2,32 @@
 require_once "../config/db.php";
 session_start();
 
+/*  Modo prueba  */
+$stmtMP = $conexion->prepare("SELECT valor FROM configuracion WHERE clave = 'modo_prueba' LIMIT 1");
+$stmtMP->execute();
+if ((int)($stmtMP->fetchColumn() ?? 0) === 1) { ?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zabisu</title>
+    <link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+<div class="contenedor">
+    <div class="md-hero">
+        <div class="md-hero__glow-top"></div>
+        <div class="md-hero__glow-bottom"></div>
+        <p class="md-hero__eyebrow">ZABISU</p>
+        <h1 class="md-hero__marca" style="font-size:clamp(1.6rem,5vw,2.4rem);">En mantenimiento</h1>
+        <p class="md-hero__fecha">Estamos haciendo mejoras. Vuelve en unos momentos.</p>
+    </div>
+</div>
+</body>
+</html>
+<?php exit; }
+
 /*
     1. Obtener menú activo
 */

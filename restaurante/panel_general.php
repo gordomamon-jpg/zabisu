@@ -94,6 +94,13 @@ $mesesNombres = [
     '09'=>'septiembre','10'=>'octubre','11'=>'noviembre','12'=>'diciembre'
 ];
 $mesActualNombre = $mesesNombres[date("m")] ?? date("m");
+
+/*
+    Modo prueba
+*/
+$stmtModoPrueba = $conexion->prepare("SELECT valor FROM configuracion WHERE clave = 'modo_prueba' LIMIT 1");
+$stmtModoPrueba->execute();
+$modoPrueba = (int)($stmtModoPrueba->fetchColumn() ?? 0);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -124,6 +131,17 @@ $mesActualNombre = $mesesNombres[date("m")] ?? date("m");
                     👤 <?php echo htmlspecialchars($_SESSION["restaurante_nombre"] ?? "Admin"); ?>
                 </span>
                 <a href="logout.php" class="btn-volver-panel">Cerrar sesión →</a>
+            </div>
+            <div style="margin-top:14px;">
+                <form method="POST" action="toggle_modo_prueba.php">
+                    <button type="submit" class="btn-toggle-pedidos <?php echo $modoPrueba ? 'btn-toggle-pedidos--pausado' : 'btn-toggle-pedidos--activo'; ?>">
+                        <?php if ($modoPrueba): ?>
+                            🧪 Modo prueba activo — Desactivar
+                        <?php else: ?>
+                            🧪 Modo prueba inactivo — Activar
+                        <?php endif; ?>
+                    </button>
+                </form>
             </div>
         </div>
     </div>
