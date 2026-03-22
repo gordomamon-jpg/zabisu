@@ -44,7 +44,16 @@ $stmtMenus->execute();
 $menusPedido = $stmtMenus->fetchAll(PDO::FETCH_ASSOC);
 
 /*
-    3. Obtener detalle de cada menú
+    3. Obtener extras del pedido
+*/
+$sqlExtras = "SELECT * FROM pedido_extras WHERE id_pedido = :id_pedido ORDER BY id_extra ASC";
+$stmtExtras = $conexion->prepare($sqlExtras);
+$stmtExtras->bindParam(":id_pedido", $id_pedido, PDO::PARAM_INT);
+$stmtExtras->execute();
+$extrasConfirmar = $stmtExtras->fetchAll(PDO::FETCH_ASSOC);
+
+/*
+    4. Obtener detalle de cada menú
 */
 $detallePorMenu = [];
 
@@ -170,6 +179,22 @@ function agruparDetallePorCategoria($detalles)
                         <?php endforeach; ?>
                     </div>
                 <?php endforeach; ?>
+            </div>
+        </div>
+    <?php endif; ?>
+
+    <?php if (!empty($extrasConfirmar)): ?>
+        <div class="bloque-formulario">
+            <h2>Extras</h2>
+            <div class="ticket-resumen">
+                <div class="ticket-menu">
+                    <?php foreach ($extrasConfirmar as $extra): ?>
+                        <div class="ticket-linea">
+                            <span><?php echo htmlspecialchars($extra["categoria"]); ?> — <?php echo htmlspecialchars($extra["nombre"]); ?> ×<?php echo (int)$extra["cantidad"]; ?></span>
+                            <span>$<?php echo number_format($extra["cantidad"] * $extra["precio_unitario"], 2); ?></span>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
             </div>
         </div>
     <?php endif; ?>

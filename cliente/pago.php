@@ -259,41 +259,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
         </div>
     <?php endif; ?>
 
-    <div class="bloque-formulario resumen-total">
-        <h2>Resumen previo</h2>
-
-        <div class="ticket-resumen">
-            <div class="ticket-menu">
-                <div class="ticket-linea">
-                    <span>Cliente</span>
-                    <span><?php echo htmlspecialchars($nombre_cliente); ?></span>
-                </div>
-                <div class="ticket-linea">
-                    <span>Teléfono</span>
-                    <span><?php echo htmlspecialchars($telefono); ?></span>
-                </div>
-                <?php if (!empty($extrasSession)): ?>
-                <div class="ticket-linea">
-                    <span>Extras</span>
-                    <span>
-                        <?php foreach ($extrasSession as $ex): ?>
-                            <?php echo htmlspecialchars($ex["nombre"]); ?> ×<?php echo (int)$ex["cantidad"]; ?><br>
-                        <?php endforeach; ?>
-                    </span>
-                </div>
-                <?php endif; ?>
-                <div class="ticket-linea">
-                    <span>Total</span>
-                    <span>$<?php echo number_format($totalPedido, 2); ?></span>
-                </div>
-                <div class="ticket-linea">
-                    <span>Referencia</span>
-                    <span>Se generará al finalizar</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <form action="" method="POST" enctype="multipart/form-data" class="formulario-pedido">
         <section class="bloque-formulario">
             <h2>Método de pago</h2>
