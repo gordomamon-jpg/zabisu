@@ -108,7 +108,7 @@ $modoPrueba = (int)($stmtModoPrueba->fetchColumn() ?? 0);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel general | Restaurante Zabisu</title>
-    <link rel="icon" type="image/png" href="../assets/img/LOGO_N.png">
+    <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
     <link rel="stylesheet" href="../assets/css/styles.css">
 </head>
 <body>

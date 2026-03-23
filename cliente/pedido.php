@@ -40,12 +40,12 @@ if (!$menuActivo) {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Sin menú disponible | Zabisu</title>
-        <link rel="icon" type="image/png" href="../assets/img/LOGO_N.png">
+        <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
     <link rel="manifest" href="../manifest.json">
     <meta name="theme-color" content="#FF7A00">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Zabisu">
-    <link rel="apple-touch-icon" href="../assets/img/LOGO_N.png">
+    <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
     <link rel="stylesheet" href="../assets/css/styles.css">
     </head>
     <body>
@@ -89,12 +89,12 @@ if (!$recibiendoPedidos) {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Pedidos pausados | Zabisu</title>
-        <link rel="icon" type="image/png" href="../assets/img/LOGO_N.png">
+        <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
     <link rel="manifest" href="../manifest.json">
     <meta name="theme-color" content="#FF7A00">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Zabisu">
-    <link rel="apple-touch-icon" href="../assets/img/LOGO_N.png">
+    <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
     <link rel="stylesheet" href="../assets/css/styles.css">
     </head>
     <body>
@@ -407,12 +407,12 @@ if ($scrollDestino === "bloque-entrega") {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Realizar pedido | Zabisu</title>
-    <link rel="icon" type="image/png" href="../assets/img/LOGO_N.png">
+    <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
     <link rel="manifest" href="../manifest.json">
     <meta name="theme-color" content="#FF7A00">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Zabisu">
-    <link rel="apple-touch-icon" href="../assets/img/LOGO_N.png">
+    <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
     <link rel="stylesheet" href="../assets/css/styles.css">
 </head>
 <body>

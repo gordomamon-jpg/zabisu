@@ -1,7 +1,7 @@
 const CACHE = "zabisu-v1";
 const ASSETS = [
   "/assets/css/styles.css",
-  "/assets/img/LOGO_N.png",
+  "/assets/img/LOGO_NARA.png",
   "/assets/img/LOGO_BLANCO.png"
 ];
 
