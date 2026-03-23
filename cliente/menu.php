@@ -14,6 +14,11 @@ if (!$menuActivo) { ?>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_N.png">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#FF7A00">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Zabisu">
+    <link rel="apple-touch-icon" href="../assets/img/LOGO_N.png">
     <link rel="stylesheet" href="../assets/css/styles.css">
 </head>
 <body>
@@ -84,6 +89,11 @@ $iconosCat = ["Plato fuerte"=>"🍽️","Sopa"=>"🥣","Complemento"=>"🥗","Ag
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Menú del día · Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_N.png">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#FF7A00">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Zabisu">
+    <link rel="apple-touch-icon" href="../assets/img/LOGO_N.png">
     <link rel="stylesheet" href="../assets/css/styles.css">
 </head>
 <body>
@@ -293,6 +303,12 @@ document.querySelectorAll(".md-plato:not(.md-plato--agotado), .md-chip:not(.md-c
 <footer class="cliente-footer">
     <span class="cliente-footer__slogan">© 2026 Zabisu - Sabor y Servicio. Todos los derechos reservados.</span>
 </footer>
+
+<script>
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("../sw.js");
+}
+</script>
 
 </body>
 </html>
