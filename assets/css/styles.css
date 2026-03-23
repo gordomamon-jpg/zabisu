@@ -3680,6 +3680,54 @@ input[type="checkbox"] {
     color: var(--naranja);
 }
 
+/* ─── CARD SIN MENÚ PRÓXIMO ───────────────────────────────────────── */
+.sinmenu-card {
+    text-align: center;
+    padding: 28px 20px 24px;
+    margin-top: 18px;
+    background: linear-gradient(135deg, rgba(255,122,0,0.06) 0%, rgba(255,122,0,0.02) 100%);
+    border: 1px solid rgba(255,122,0,0.2);
+    border-radius: 20px;
+}
+.sinmenu-card__icono {
+    font-size: 44px;
+    margin-bottom: 12px;
+}
+.sinmenu-card__titulo {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--texto-principal);
+    margin: 0 0 8px;
+}
+.sinmenu-card__texto {
+    font-size: 14px;
+    color: var(--texto-secundario);
+    line-height: 1.7;
+    margin: 0 0 22px;
+}
+.sinmenu-card__pasos {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    text-align: left;
+    background: rgba(255,255,255,0.03);
+    border-radius: 14px;
+    padding: 14px 16px;
+}
+.sinmenu-card__paso {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    color: var(--texto-secundario);
+}
+.sinmenu-card__paso-icono {
+    font-size: 20px;
+    flex-shrink: 0;
+    width: 32px;
+    text-align: center;
+}
+
 .aviso-correo-confirmacion {
     display: flex;
     align-items: flex-start;
