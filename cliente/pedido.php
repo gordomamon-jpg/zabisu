@@ -103,10 +103,10 @@ if (!$menuActivo) {
                 <?php else: ?>
                     <div class="sinmenu-card">
                         <div class="sinmenu-card__icono">🍳</div>
-                        <h3 class="sinmenu-card__titulo">Vuelve mañana</h3>
+                        <h3 class="sinmenu-card__titulo">Vuelve más tarde</h3>
                         <p class="sinmenu-card__texto">
-                            Estamos preparando el menú del siguiente día.<br>
-                            Regresa por la mañana y tendremos algo delicioso para ti.
+                            El menú del día se publica a las <strong style="color:var(--naranja);">6:00 PM</strong>.<br>
+                            Regresa en ese horario para hacer tu pedido.
                         </p>
                         <div class="sinmenu-card__divider"></div>
                         <p class="sinmenu-card__slogan">Sabor y Servicio — Zabisu 🧡</p>
