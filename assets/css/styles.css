@@ -3606,6 +3606,8 @@ input[type="checkbox"] {
     font-size: 16px;
     font-weight: 700;
     color: var(--texto-principal);
+    -webkit-text-fill-color: var(--texto-principal);
+    opacity: 1;
     -moz-appearance: textfield;
 }
 .extra-cantidad::-webkit-outer-spin-button,
