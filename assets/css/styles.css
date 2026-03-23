@@ -3570,11 +3570,13 @@ input[type="checkbox"] {
     border-radius: 20px;
     margin-right: 4px;
     white-space: nowrap;
+    flex-shrink: 0;
 }
 .extra-item__contador {
     display: flex;
     align-items: center;
     gap: 8px;
+    flex-shrink: 0;
 }
 .extra-btn-menos,
 .extra-btn-mas {
