@@ -33,6 +33,19 @@ $stmtMenu->execute();
 $menuActivo = $stmtMenu->fetch(PDO::FETCH_ASSOC);
 
 if (!$menuActivo) {
+    // Buscar el próximo menú programado
+    $stmtProximo = $conexion->prepare(
+        "SELECT fecha, publicado_desde, pedido_hasta
+         FROM menu_dia
+         WHERE activo = 1 AND publicado_desde > NOW()
+         ORDER BY publicado_desde ASC
+         LIMIT 1"
+    );
+    $stmtProximo->execute();
+    $proximoMenu = $stmtProximo->fetch(PDO::FETCH_ASSOC);
+
+    $diasES = ["Sunday"=>"domingo","Monday"=>"lunes","Tuesday"=>"martes","Wednesday"=>"miércoles","Thursday"=>"jueves","Friday"=>"viernes","Saturday"=>"sábado"];
+    $mesesES = ["01"=>"enero","02"=>"febrero","03"=>"marzo","04"=>"abril","05"=>"mayo","06"=>"junio","07"=>"julio","08"=>"agosto","09"=>"septiembre","10"=>"octubre","11"=>"noviembre","12"=>"diciembre"];
     ?>
     <!DOCTYPE html>
     <html lang="es">
@@ -41,31 +54,61 @@ if (!$menuActivo) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Sin menú disponible | Zabisu</title>
         <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
-    <link rel="manifest" href="../manifest.json">
-    <meta name="theme-color" content="#FF7A00">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="Zabisu">
-    <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
-    <link rel="stylesheet" href="../assets/css/styles.css">
+        <link rel="manifest" href="../manifest.json">
+        <meta name="theme-color" content="#FF7A00">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-title" content="Zabisu">
+        <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
+        <link rel="stylesheet" href="../assets/css/styles.css">
     </head>
     <body>
         <div class="contenedor">
-            <div class="hero-zabisu">
-                <div class="hero-zabisu__glow"></div>
-                <div class="hero-zabisu__contenido">
-                    <p class="hero-zabisu__eyebrow">ZABISU</p>
-                    <h1 class="hero-zabisu__titulo">Por el momento no hay menú disponible</h1>
-                    <p class="hero-zabisu__texto">
-                        Los pedidos están disponibles únicamente cuando el menú del día se encuentra publicado dentro del horario correspondiente.
-                    </p>
+            <div class="md-hero">
+                <div class="md-hero__glow-top"></div>
+                <div class="md-hero__glow-bottom"></div>
+                <p class="md-hero__eyebrow">ZABISU</p>
+                <div class="md-hero__marca-grupo">
+                    <img class="md-hero__logo" src="../assets/img/LOGO_BLANCO.png" alt="Zabisu">
+                    <h1 class="md-hero__marca">Zabisu</h1>
                 </div>
+                <p class="md-hero__fecha">Ya cerramos por hoy 🍽️</p>
             </div>
 
             <div class="bloque-formulario resumen-total">
-                <h2>Horario de pedidos</h2>
-                <p class="nota-formulario">
-                    Los menús se publican conforme al calendario operativo de Zabisu. Revisa nuevamente dentro del horario de apertura del siguiente menú.
+                <h2>Pedidos cerrados</h2>
+                <p class="nota-formulario" style="font-size:15px;line-height:1.6;">
+                    El horario de pedidos de hoy ya terminó. ¡Gracias por tu interés en Zabisu!
                 </p>
+
+                <?php if ($proximoMenu): ?>
+                    <?php
+                        $ts = strtotime($proximoMenu["publicado_desde"]);
+                        $tsCierre = strtotime($proximoMenu["pedido_hasta"]);
+                        $diaSemana = $diasES[date("l", $ts)] ?? "";
+                        $dia = date("j", $ts);
+                        $mes = $mesesES[date("m", $ts)] ?? "";
+                        $horaAbre = date("g:i A", $ts);
+                        $horaCierra = date("g:i A", $tsCierre);
+                    ?>
+                    <div class="aviso-proximo-menu">
+                        <span class="aviso-proximo-menu__icono">🕐</span>
+                        <div>
+                            <strong>Próxima apertura de pedidos</strong>
+                            <p>
+                                <?php echo ucfirst($diaSemana) . " " . $dia . " de " . $mes; ?>
+                                de <strong><?php echo $horaAbre; ?></strong> a <strong><?php echo $horaCierra; ?></strong>
+                            </p>
+                        </div>
+                    </div>
+                <?php else: ?>
+                    <div class="aviso-proximo-menu">
+                        <span class="aviso-proximo-menu__icono">📅</span>
+                        <div>
+                            <strong>Vuelve pronto</strong>
+                            <p>En cuanto haya un nuevo menú disponible podrás hacer tu pedido.</p>
+                        </div>
+                    </div>
+                <?php endif; ?>
             </div>
         </div>
     </body>
