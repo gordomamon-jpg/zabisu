@@ -225,6 +225,7 @@ function formatearFechaBonita($fecha)
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pedidos | Restaurante Zabisu</title>
+    <link rel="icon" type="image/png" href="../assets/img/LOGO_N.png">
     <link rel="stylesheet" href="../assets/css/styles.css">
 </head>
 <body>

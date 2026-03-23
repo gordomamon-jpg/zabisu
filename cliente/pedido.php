@@ -40,7 +40,8 @@ if (!$menuActivo) {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Sin menú disponible | Zabisu</title>
-        <link rel="stylesheet" href="../assets/css/styles.css">
+        <link rel="icon" type="image/png" href="../assets/img/LOGO_N.png">
+    <link rel="stylesheet" href="../assets/css/styles.css">
     </head>
     <body>
         <div class="contenedor">
@@ -83,7 +84,8 @@ if (!$recibiendoPedidos) {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Pedidos pausados | Zabisu</title>
-        <link rel="stylesheet" href="../assets/css/styles.css">
+        <link rel="icon" type="image/png" href="../assets/img/LOGO_N.png">
+    <link rel="stylesheet" href="../assets/css/styles.css">
     </head>
     <body>
     <div class="contenedor">
@@ -395,6 +397,7 @@ if ($scrollDestino === "bloque-entrega") {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Realizar pedido | Zabisu</title>
+    <link rel="icon" type="image/png" href="../assets/img/LOGO_N.png">
     <link rel="stylesheet" href="../assets/css/styles.css">
 </head>
 <body>

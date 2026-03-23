@@ -175,6 +175,7 @@ function fmtFecha($fecha)
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Estadísticas | Restaurante Zabisu</title>
+    <link rel="icon" type="image/png" href="../assets/img/LOGO_N.png">
     <link rel="stylesheet" href="../assets/css/styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 </head>
