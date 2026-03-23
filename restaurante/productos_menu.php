@@ -20,6 +20,16 @@ if (!$menu) {
     exit;
 }
 
+/*
+    Cargar precios actuales de tipos_menu
+*/
+$stmtPrecios = $conexion->prepare("SELECT nombre_menu, precio FROM tipos_menu WHERE activo = 1 ORDER BY nombre_menu");
+$stmtPrecios->execute();
+$preciosActuales = [];
+foreach ($stmtPrecios->fetchAll(PDO::FETCH_ASSOC) as $r) {
+    $preciosActuales[$r["nombre_menu"]] = (float)$r["precio"];
+}
+
 $errores       = [];
 $mensajeExito  = "";
 
@@ -29,6 +39,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $nuevaFecha        = trim($_POST["fecha"] ?? "");
     $nuevoPublicado    = trim($_POST["publicado_desde"] ?? "");
     $nuevoPedidoHasta  = trim($_POST["pedido_hasta"] ?? "");
+    $nuevosPrecios     = $_POST["precios"] ?? [];
 
     // Validar fechas y horarios
     if ($nuevaFecha === "" || !strtotime($nuevaFecha)) {
@@ -161,6 +172,25 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     $conexion->prepare("DELETE FROM productos WHERE id_producto = :id")
                              ->execute([":id" => $id]);
                 }
+            }
+
+            // Actualizar precios de tipos_menu
+            $stmtPrecio = $conexion->prepare(
+                "UPDATE tipos_menu SET precio = :precio WHERE nombre_menu = :nombre AND activo = 1"
+            );
+            foreach ($nuevosPrecios as $nombreMenu => $precio) {
+                $precioFloat = (float)str_replace(",", ".", $precio);
+                if ($precioFloat > 0) {
+                    $stmtPrecio->execute([":precio" => $precioFloat, ":nombre" => $nombreMenu]);
+                }
+            }
+
+            // Refrescar precios para mostrar valores actualizados
+            $stmtPrecios2 = $conexion->prepare("SELECT nombre_menu, precio FROM tipos_menu WHERE activo = 1");
+            $stmtPrecios2->execute();
+            $preciosActuales = [];
+            foreach ($stmtPrecios2->fetchAll(PDO::FETCH_ASSOC) as $r) {
+                $preciosActuales[$r["nombre_menu"]] = (float)$r["precio"];
             }
 
             // Actualizar estado y fechas del menú
@@ -343,6 +373,18 @@ $esCreacion = !isset($_GET["editar"]) && empty($productosGuardados);
                     <input type="datetime-local" id="campo-cierre" name="pedido_hasta"
                            value="<?php echo htmlspecialchars($_POST["pedido_hasta"] ?? date("Y-m-d\TH:i", strtotime($menu["pedido_hasta"]))); ?>">
                 </div>
+            </div>
+
+            <h3 style="font-size:14px;color:var(--texto-secundario);margin:20px 0 10px;font-weight:600;">Precios por tipo de menú</h3>
+            <div class="nm-campos-fecha">
+                <?php foreach ($preciosActuales as $nombreMenu => $precio): ?>
+                <div class="nm-campo">
+                    <label>Precio — <?php echo htmlspecialchars($nombreMenu); ?></label>
+                    <input type="number" min="1" step="0.50"
+                           name="precios[<?php echo htmlspecialchars($nombreMenu); ?>]"
+                           value="<?php echo number_format(isset($_POST["precios"][$nombreMenu]) ? (float)$_POST["precios"][$nombreMenu] : $precio, 2, '.', ''); ?>">
+                </div>
+                <?php endforeach; ?>
             </div>
         </div>
 
