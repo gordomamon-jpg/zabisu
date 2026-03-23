@@ -3705,27 +3705,19 @@ input[type="checkbox"] {
     line-height: 1.7;
     margin: 0 0 22px;
 }
-.sinmenu-card__pasos {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    text-align: left;
-    background: rgba(255,255,255,0.03);
-    border-radius: 14px;
-    padding: 14px 16px;
+.sinmenu-card__divider {
+    width: 40px;
+    height: 2px;
+    background: rgba(255,122,0,0.3);
+    border-radius: 2px;
+    margin: 18px auto 14px;
 }
-.sinmenu-card__paso {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 14px;
-    color: var(--texto-secundario);
-}
-.sinmenu-card__paso-icono {
-    font-size: 20px;
-    flex-shrink: 0;
-    width: 32px;
-    text-align: center;
+.sinmenu-card__slogan {
+    font-size: 13px;
+    color: var(--naranja);
+    font-weight: 600;
+    margin: 0;
+    opacity: 0.85;
 }
 
 .aviso-correo-confirmacion {

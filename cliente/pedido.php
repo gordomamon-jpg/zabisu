@@ -102,26 +102,14 @@ if (!$menuActivo) {
                     </div>
                 <?php else: ?>
                     <div class="sinmenu-card">
-                        <div class="sinmenu-card__icono">📅</div>
-                        <h3 class="sinmenu-card__titulo">Vuelve pronto</h3>
+                        <div class="sinmenu-card__icono">🍳</div>
+                        <h3 class="sinmenu-card__titulo">Vuelve mañana</h3>
                         <p class="sinmenu-card__texto">
-                            Aún no tenemos programado el siguiente menú.<br>
-                            En cuanto esté listo podrás hacer tu pedido aquí mismo.
+                            Estamos preparando el menú del siguiente día.<br>
+                            Regresa por la mañana y tendremos algo delicioso para ti.
                         </p>
-                        <div class="sinmenu-card__pasos">
-                            <div class="sinmenu-card__paso">
-                                <span class="sinmenu-card__paso-icono">🔔</span>
-                                <span>Regresa al inicio del día</span>
-                            </div>
-                            <div class="sinmenu-card__paso">
-                                <span class="sinmenu-card__paso-icono">🍽️</span>
-                                <span>Elige tu menú del día</span>
-                            </div>
-                            <div class="sinmenu-card__paso">
-                                <span class="sinmenu-card__paso-icono">✅</span>
-                                <span>Confirma tu pedido</span>
-                            </div>
-                        </div>
+                        <div class="sinmenu-card__divider"></div>
+                        <p class="sinmenu-card__slogan">Sabor y Servicio — Zabisu 🧡</p>
                     </div>
                 <?php endif; ?>
             </div>
