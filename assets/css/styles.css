@@ -1328,6 +1328,22 @@ input[type="checkbox"] {
     opacity: 1;
 }
 
+.aviso-concepto__toque-hint {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--naranja);
+    font-weight: 600;
+    margin: 8px 0 12px;
+    opacity: 0.9;
+    animation: pulso-hint 2s ease-in-out infinite;
+}
+@keyframes pulso-hint {
+    0%, 100% { opacity: 0.9; }
+    50% { opacity: 0.5; }
+}
+
 .aviso-concepto__formato {
     margin: 0;
     font-size: 13px;

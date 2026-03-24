@@ -338,6 +338,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
                     </button>
                     <span class="aviso-concepto__copiado" id="msg-copiado">¡Copiado!</span>
                 </div>
+                <div class="aviso-concepto__toque-hint">
+                    <span>👆</span>
+                    <span>Toca el concepto para copiarlo automáticamente</span>
+                </div>
                 <p class="aviso-concepto__formato">
                     Formato: <strong>NOMBRE COMPLETO EN MAYÚSCULAS · DÍA-MES-AÑO</strong><br>
                     Sin este concepto tu pago <strong>no podrá ser validado</strong>.
