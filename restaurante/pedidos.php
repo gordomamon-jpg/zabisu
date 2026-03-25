@@ -86,7 +86,7 @@ $sqlResumenPlatos = "SELECT
                      INNER JOIN pedidos p ON pm.id_pedido = p.id_pedido
                      INNER JOIN productos pr ON pr.id_producto = dp.id_producto
                      LEFT JOIN menu_dia md ON md.id_menu = pr.id_menu
-                     WHERE dp.categoria = 'Plato fuerte'
+                     WHERE dp.categoria = 'Plato fuerte' AND p.es_prueba = 0
                      GROUP BY COALESCE(md.fecha, DATE(p.fecha_pedido)), dp.nombre_producto
                      ORDER BY COALESCE(md.fecha, DATE(p.fecha_pedido)) DESC, dp.nombre_producto ASC";
 $stmtResumenPlatos = $conexion->prepare($sqlResumenPlatos);
@@ -115,7 +115,7 @@ $sqlResumenComplementos = "SELECT
                            INNER JOIN pedidos p ON pm.id_pedido = p.id_pedido
                            INNER JOIN productos pr ON pr.id_producto = dp.id_producto
                            LEFT JOIN menu_dia md ON md.id_menu = pr.id_menu
-                           WHERE dp.categoria = 'Complemento'
+                           WHERE dp.categoria = 'Complemento' AND p.es_prueba = 0
                            GROUP BY COALESCE(md.fecha, DATE(p.fecha_pedido)), dp.nombre_producto
                            ORDER BY COALESCE(md.fecha, DATE(p.fecha_pedido)) DESC, dp.nombre_producto ASC";
 $stmtResumenComplementos = $conexion->prepare($sqlResumenComplementos);
