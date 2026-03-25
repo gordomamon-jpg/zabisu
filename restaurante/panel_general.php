@@ -5,6 +5,11 @@ require_once "auth_check.php";
 $hoy = date("Y-m-d");
 
 /*
+    Auto-desactivar menús vencidos
+*/
+$conexion->exec("UPDATE menu_dia SET activo = 0 WHERE activo = 1 AND pedido_hasta < NOW()");
+
+/*
     Pedidos de hoy
 */
 $sqlHoy = "SELECT

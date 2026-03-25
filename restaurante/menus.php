@@ -3,6 +3,11 @@ require_once "../config/db.php";
 require_once "auth_check.php";
 
 /*
+    Auto-desactivar menús cuyo pedido_hasta ya pasó
+*/
+$conexion->exec("UPDATE menu_dia SET activo = 0 WHERE activo = 1 AND pedido_hasta < NOW()");
+
+/*
     Eliminar menú
 */
 $mensajeEliminar = "";
