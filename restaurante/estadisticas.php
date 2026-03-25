@@ -22,42 +22,58 @@ if ($fechaInicio > $fechaFin) {
 }
 
 /*
-    KPIs generales
+    Subquery reutilizable: fecha del menú por pedido
+*/
+$subFecha = "(SELECT pm2.id_pedido, MIN(md2.fecha) AS fecha_menu
+              FROM pedido_menus pm2
+              INNER JOIN detalle_pedido dp2 ON dp2.id_pedido_menu = pm2.id_pedido_menu
+              INNER JOIN productos pr2 ON pr2.id_producto = dp2.id_producto
+              INNER JOIN menu_dia md2 ON md2.id_menu = pr2.id_menu
+              GROUP BY pm2.id_pedido) AS mi";
+
+/*
+    KPIs generales (filtrados por fecha del menú, sin pedidos de prueba)
 */
 $sqlKpis = "SELECT
                 COUNT(*)                                                          AS total_pedidos,
-                COALESCE(SUM(total), 0)                                           AS total_ventas,
-                COALESCE(SUM(CASE WHEN metodo_pago = 'Transferencia' THEN total ELSE 0 END), 0) AS total_transferencia,
-                COALESCE(SUM(CASE WHEN metodo_pago = 'Efectivo'       THEN total ELSE 0 END), 0) AS total_efectivo,
-                COALESCE(SUM(CASE WHEN estado_pago = 'Pagado'                    THEN total ELSE 0 END), 0) AS total_confirmado,
-                COALESCE(SUM(CASE WHEN estado_pago = 'Pendiente de validación'   THEN total ELSE 0 END), 0) AS total_por_confirmar
-            FROM pedidos
-            WHERE DATE(fecha_pedido) BETWEEN :fi AND :ff";
+                COALESCE(SUM(p.total), 0)                                         AS total_ventas,
+                COALESCE(SUM(CASE WHEN p.metodo_pago = 'Transferencia' THEN p.total ELSE 0 END), 0) AS total_transferencia,
+                COALESCE(SUM(CASE WHEN p.metodo_pago = 'Efectivo'       THEN p.total ELSE 0 END), 0) AS total_efectivo,
+                COALESCE(SUM(CASE WHEN p.estado_pago = 'Pagado'                    THEN p.total ELSE 0 END), 0) AS total_confirmado,
+                COALESCE(SUM(CASE WHEN p.estado_pago = 'Pendiente de validación'   THEN p.total ELSE 0 END), 0) AS total_por_confirmar
+            FROM pedidos p
+            LEFT JOIN $subFecha ON mi.id_pedido = p.id_pedido
+            WHERE COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) BETWEEN :fi AND :ff
+              AND p.es_prueba = 0";
 $stmtKpis = $conexion->prepare($sqlKpis);
 $stmtKpis->execute([":fi" => $fechaInicio, ":ff" => $fechaFin]);
 $kpis = $stmtKpis->fetch(PDO::FETCH_ASSOC);
 
 /*
-    Total de comidas (filas en pedido_menus)
+    Total de comidas
 */
 $sqlComidas = "SELECT COUNT(*) AS total_comidas
                FROM pedido_menus pm
                INNER JOIN pedidos p ON pm.id_pedido = p.id_pedido
-               WHERE DATE(p.fecha_pedido) BETWEEN :fi AND :ff";
+               LEFT JOIN $subFecha ON mi.id_pedido = p.id_pedido
+               WHERE COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) BETWEEN :fi AND :ff
+                 AND p.es_prueba = 0";
 $stmtComidas = $conexion->prepare($sqlComidas);
 $stmtComidas->execute([":fi" => $fechaInicio, ":ff" => $fechaFin]);
 $totalComidas = (int)$stmtComidas->fetchColumn();
 
 /*
-    Ventas por día
+    Ventas por fecha de menú
 */
 $sqlPorDia = "SELECT
-                DATE(fecha_pedido)       AS fecha,
-                COUNT(*)                 AS pedidos,
-                COALESCE(SUM(total), 0)  AS total
-              FROM pedidos
-              WHERE DATE(fecha_pedido) BETWEEN :fi AND :ff
-              GROUP BY DATE(fecha_pedido)
+                COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) AS fecha,
+                COUNT(*)                                       AS pedidos,
+                COALESCE(SUM(p.total), 0)                      AS total
+              FROM pedidos p
+              LEFT JOIN $subFecha ON mi.id_pedido = p.id_pedido
+              WHERE COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) BETWEEN :fi AND :ff
+                AND p.es_prueba = 0
+              GROUP BY COALESCE(mi.fecha_menu, DATE(p.fecha_pedido))
               ORDER BY fecha ASC";
 $stmtPorDia = $conexion->prepare($sqlPorDia);
 $stmtPorDia->execute([":fi" => $fechaInicio, ":ff" => $fechaFin]);
@@ -69,12 +85,14 @@ $ventasPorDia = $stmtPorDia->fetchAll(PDO::FETCH_ASSOC);
 $sqlPorUbicacion = "SELECT
                         u.nombre_ubicacion,
                         u.tipo,
-                        COUNT(*)                AS pedidos,
+                        COUNT(*)                  AS pedidos,
                         COALESCE(SUM(p.total), 0) AS total
                     FROM pedidos p
                     INNER JOIN horarios_ubicacion h ON p.id_horario = h.id_horario
                     INNER JOIN ubicaciones u ON h.id_ubicacion = u.id_ubicacion
-                    WHERE DATE(p.fecha_pedido) BETWEEN :fi AND :ff
+                    LEFT JOIN $subFecha ON mi.id_pedido = p.id_pedido
+                    WHERE COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) BETWEEN :fi AND :ff
+                      AND p.es_prueba = 0
                     GROUP BY u.id_ubicacion, u.nombre_ubicacion, u.tipo
                     ORDER BY total DESC";
 $stmtPorUbicacion = $conexion->prepare($sqlPorUbicacion);
@@ -85,12 +103,14 @@ $ventasPorUbicacion = $stmtPorUbicacion->fetchAll(PDO::FETCH_ASSOC);
     Distribución por método de pago
 */
 $sqlPorMetodo = "SELECT
-                    metodo_pago,
-                    COUNT(*)                AS pedidos,
-                    COALESCE(SUM(total), 0) AS total
-                 FROM pedidos
-                 WHERE DATE(fecha_pedido) BETWEEN :fi AND :ff
-                 GROUP BY metodo_pago
+                    p.metodo_pago,
+                    COUNT(*)                  AS pedidos,
+                    COALESCE(SUM(p.total), 0) AS total
+                 FROM pedidos p
+                 LEFT JOIN $subFecha ON mi.id_pedido = p.id_pedido
+                 WHERE COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) BETWEEN :fi AND :ff
+                   AND p.es_prueba = 0
+                 GROUP BY p.metodo_pago
                  ORDER BY total DESC";
 $stmtPorMetodo = $conexion->prepare($sqlPorMetodo);
 $stmtPorMetodo->execute([":fi" => $fechaInicio, ":ff" => $fechaFin]);
@@ -105,8 +125,11 @@ $sqlTopPlatos = "SELECT
                  FROM detalle_pedido dp
                  INNER JOIN pedido_menus pm ON dp.id_pedido_menu = pm.id_pedido_menu
                  INNER JOIN pedidos p ON pm.id_pedido = p.id_pedido
+                 INNER JOIN productos pr ON pr.id_producto = dp.id_producto
+                 LEFT JOIN menu_dia md ON md.id_menu = pr.id_menu
                  WHERE dp.categoria = 'Plato fuerte'
-                   AND DATE(p.fecha_pedido) BETWEEN :fi AND :ff
+                   AND COALESCE(md.fecha, DATE(p.fecha_pedido)) BETWEEN :fi AND :ff
+                   AND p.es_prueba = 0
                  GROUP BY dp.nombre_producto
                  ORDER BY total DESC
                  LIMIT 10";
@@ -123,8 +146,11 @@ $sqlTopComplementos = "SELECT
                        FROM detalle_pedido dp
                        INNER JOIN pedido_menus pm ON dp.id_pedido_menu = pm.id_pedido_menu
                        INNER JOIN pedidos p ON pm.id_pedido = p.id_pedido
+                       INNER JOIN productos pr ON pr.id_producto = dp.id_producto
+                       LEFT JOIN menu_dia md ON md.id_menu = pr.id_menu
                        WHERE dp.categoria = 'Complemento'
-                         AND DATE(p.fecha_pedido) BETWEEN :fi AND :ff
+                         AND COALESCE(md.fecha, DATE(p.fecha_pedido)) BETWEEN :fi AND :ff
+                         AND p.es_prueba = 0
                        GROUP BY dp.nombre_producto
                        ORDER BY total DESC
                        LIMIT 10";
@@ -133,7 +159,7 @@ $stmtTopComplementos->execute([":fi" => $fechaInicio, ":ff" => $fechaFin]);
 $topComplementos = $stmtTopComplementos->fetchAll(PDO::FETCH_ASSOC);
 
 /*
-    Pedidos detallados del período (para la tabla al final)
+    Pedidos detallados del período
 */
 $sqlDetallePeriodo = "SELECT
                          p.id_pedido,
@@ -143,13 +169,16 @@ $sqlDetallePeriodo = "SELECT
                          p.metodo_pago,
                          p.estado_pago,
                          p.fecha_pedido,
+                         COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) AS fecha_menu,
                          h.hora_entrega,
                          u.nombre_ubicacion
                       FROM pedidos p
                       INNER JOIN horarios_ubicacion h ON p.id_horario = h.id_horario
                       INNER JOIN ubicaciones u ON h.id_ubicacion = u.id_ubicacion
-                      WHERE DATE(p.fecha_pedido) BETWEEN :fi AND :ff
-                      ORDER BY p.fecha_pedido DESC";
+                      LEFT JOIN $subFecha ON mi.id_pedido = p.id_pedido
+                      WHERE COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) BETWEEN :fi AND :ff
+                        AND p.es_prueba = 0
+                      ORDER BY fecha_menu DESC, p.fecha_pedido DESC";
 $stmtDetalle = $conexion->prepare($sqlDetallePeriodo);
 $stmtDetalle->execute([":fi" => $fechaInicio, ":ff" => $fechaFin]);
 $pedidosPeriodo = $stmtDetalle->fetchAll(PDO::FETCH_ASSOC);
@@ -388,7 +417,7 @@ function fmtFecha($fecha)
                                     <?php echo htmlspecialchars($p["folio"]); ?>
                                 </a>
                             </td>
-                            <td><?php echo date("d/m/Y", strtotime($p["fecha_pedido"])); ?></td>
+                            <td><?php echo date("d/m/Y", strtotime($p["fecha_menu"])); ?></td>
                             <td><?php echo htmlspecialchars($p["nombre_cliente"]); ?></td>
                             <td><?php echo htmlspecialchars($p["nombre_ubicacion"]); ?></td>
                             <td><?php echo date("g:i A", strtotime($p["hora_entrega"])); ?></td>
