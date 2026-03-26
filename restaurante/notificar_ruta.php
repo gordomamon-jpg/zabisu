@@ -24,6 +24,38 @@ if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha)) {
     $fecha = date("Y-m-d");
 }
 
+/* ── Obtener id_horario ── */
+$stmtH = $conexion->prepare("
+    SELECT h.id_horario
+    FROM horarios_ubicacion h
+    INNER JOIN ubicaciones u ON h.id_ubicacion = u.id_ubicacion
+    WHERE u.nombre_ubicacion = :nombre_ubicacion
+      AND h.hora_entrega     = :hora_entrega
+    LIMIT 1
+");
+$stmtH->execute([":nombre_ubicacion" => $nombre_ubicacion, ":hora_entrega" => $hora_entrega]);
+$id_horario = $stmtH->fetchColumn();
+
+if (!$id_horario) {
+    echo json_encode(["ok" => false, "mensaje" => "No se encontró el horario indicado."]);
+    exit;
+}
+
+/* ── Verificar si ya se envió la notificación ── */
+$stmtCheck = $conexion->prepare("
+    SELECT id FROM notificaciones_ruta
+    WHERE fecha_menu = :fecha AND id_horario = :id_horario
+    LIMIT 1
+");
+$stmtCheck->execute([":fecha" => $fecha, ":id_horario" => $id_horario]);
+if ($stmtCheck->fetchColumn()) {
+    echo json_encode([
+        "ok"      => false,
+        "mensaje" => "La notificación para esta ubicación y horario ya fue enviada anteriormente."
+    ]);
+    exit;
+}
+
 /* ── Obtener pedidos del grupo ── */
 $sql = "SELECT
             p.id_pedido,
@@ -133,6 +165,17 @@ foreach ($pedidos as $pedido) {
         $errores++;
     }
 }
+
+/* ── Registrar notificación enviada ── */
+$stmtLog = $conexion->prepare("
+    INSERT IGNORE INTO notificaciones_ruta (fecha_menu, id_horario, enviado_en, tipo, total_enviados)
+    VALUES (:fecha, :id_horario, NOW(), 'manual', :total_enviados)
+");
+$stmtLog->execute([
+    ":fecha"          => $fecha,
+    ":id_horario"     => $id_horario,
+    ":total_enviados" => $enviados,
+]);
 
 echo json_encode([
     "ok"        => true,
