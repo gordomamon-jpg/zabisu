@@ -190,6 +190,14 @@ $modoPrueba = (int)($stmtModoPrueba->fetchColumn() ?? 0);
             </div>
         </a>
 
+        <a href="nuevo_pedido.php" class="panel-acceso panel-acceso--pedidos">
+            <div class="panel-acceso__icono">➕</div>
+            <div class="panel-acceso__contenido">
+                <strong class="panel-acceso__titulo">Nuevo pedido manual</strong>
+                <span class="panel-acceso__desc">Registra pedidos recibidos por WhatsApp, teléfono u otro medio</span>
+            </div>
+        </a>
+
     </div>
 
     <!-- RESUMEN DEL DÍA -->
