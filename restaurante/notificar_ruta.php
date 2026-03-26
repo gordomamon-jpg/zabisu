@@ -36,9 +36,18 @@ $sql = "SELECT
         FROM pedidos p
         INNER JOIN horarios_ubicacion h ON p.id_horario = h.id_horario
         INNER JOIN ubicaciones u        ON h.id_ubicacion = u.id_ubicacion
-        WHERE DATE(p.fecha_pedido) = :fecha
-          AND u.nombre_ubicacion   = :nombre_ubicacion
-          AND h.hora_entrega       = :hora_entrega
+        INNER JOIN (
+            SELECT pm2.id_pedido, MIN(md2.fecha) AS fecha_menu
+            FROM pedido_menus pm2
+            INNER JOIN detalle_pedido dp2 ON dp2.id_pedido_menu = pm2.id_pedido_menu
+            INNER JOIN productos pr2      ON pr2.id_producto    = dp2.id_producto
+            INNER JOIN menu_dia md2       ON md2.id_menu        = pr2.id_menu
+            GROUP BY pm2.id_pedido
+        ) AS mi ON mi.id_pedido = p.id_pedido
+        WHERE mi.fecha_menu      = :fecha
+          AND u.nombre_ubicacion = :nombre_ubicacion
+          AND h.hora_entrega     = :hora_entrega
+          AND p.es_prueba        = 0
         ORDER BY p.nombre_cliente ASC";
 
 $stmt = $conexion->prepare($sql);
