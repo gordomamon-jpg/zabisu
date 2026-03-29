@@ -2,6 +2,11 @@
 require_once "../config/db.php";
 require_once "auth_check.php";
 
+/* ── Modo prueba ── */
+$stmtMP = $conexion->prepare("SELECT valor FROM configuracion WHERE clave = 'modo_prueba' LIMIT 1");
+$stmtMP->execute();
+$esPrueba = (int)($stmtMP->fetchColumn() ?? 0);
+
 /* ── Menú más reciente (sin restricción de ventana) ── */
 $stmtMenu = $conexion->prepare("SELECT * FROM menu_dia ORDER BY fecha DESC LIMIT 1");
 $stmtMenu->execute();
@@ -165,13 +170,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
                  (folio, nombre_cliente, telefono, correo_cliente, id_horario, metodo_pago,
                   observaciones, total, estado, estado_pago, es_prueba, referencia_pago)
                  VALUES (:folio,:nombre_cliente,:telefono,:correo_cliente,:id_horario,:metodo_pago,
-                         :observaciones,:total,'Pendiente',:estado_pago,0,:folio2)"
+                         :observaciones,:total,'Pendiente',:estado_pago,:es_prueba,:folio2)"
             );
             $stmtPed->execute([
                 ":folio"=>$folio,":nombre_cliente"=>$nombre_cliente,":telefono"=>$telefono,
                 ":correo_cliente"=>$correo_cliente,":id_horario"=>$id_horario,
                 ":metodo_pago"=>$metodo_pago,":observaciones"=>$observaciones,
-                ":total"=>$totalPedido,":estado_pago"=>$estado_pago,":folio2"=>$folio,
+                ":total"=>$totalPedido,":estado_pago"=>$estado_pago,":es_prueba"=>$esPrueba,":folio2"=>$folio,
             ]);
             $id_pedido = (int)$conexion->lastInsertId();
 
