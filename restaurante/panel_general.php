@@ -17,7 +17,7 @@ $sqlHoy = "SELECT
                COALESCE(SUM(total), 0)                   AS total_ventas,
                SUM(CASE WHEN visto = 0 THEN 1 ELSE 0 END) AS nuevos
            FROM pedidos
-           WHERE DATE(fecha_pedido) = :hoy";
+           WHERE DATE(fecha_pedido) = :hoy AND es_prueba = 0";
 $stmtHoy = $conexion->prepare($sqlHoy);
 $stmtHoy->execute([":hoy" => $hoy]);
 $resumenHoy = $stmtHoy->fetch(PDO::FETCH_ASSOC);
@@ -27,7 +27,7 @@ $resumenHoy = $stmtHoy->fetch(PDO::FETCH_ASSOC);
 */
 $sqlComidasHoy = "SELECT COUNT(*) FROM pedido_menus pm
                   INNER JOIN pedidos p ON pm.id_pedido = p.id_pedido
-                  WHERE DATE(p.fecha_pedido) = :hoy";
+                  WHERE DATE(p.fecha_pedido) = :hoy AND p.es_prueba = 0";
 $stmtComidasHoy = $conexion->prepare($sqlComidasHoy);
 $stmtComidasHoy->execute([":hoy" => $hoy]);
 $comidasHoy = (int)$stmtComidasHoy->fetchColumn();
@@ -70,6 +70,7 @@ $sqlUltimosPedidos = "SELECT
                        FROM pedidos p
                        INNER JOIN horarios_ubicacion h ON p.id_horario = h.id_horario
                        INNER JOIN ubicaciones u ON h.id_ubicacion = u.id_ubicacion
+                       WHERE p.es_prueba = 0
                        ORDER BY p.fecha_pedido DESC, p.id_pedido DESC
                        LIMIT 5";
 $stmtUltimos = $conexion->prepare($sqlUltimosPedidos);
@@ -83,7 +84,7 @@ $sqlMes = "SELECT
                COUNT(*)                AS total_pedidos,
                COALESCE(SUM(total), 0) AS total_ventas
            FROM pedidos
-           WHERE DATE(fecha_pedido) BETWEEN :inicio AND :hoy";
+           WHERE DATE(fecha_pedido) BETWEEN :inicio AND :hoy AND es_prueba = 0";
 $stmtMes = $conexion->prepare($sqlMes);
 $stmtMes->execute([":inicio" => date("Y-m-01"), ":hoy" => $hoy]);
 $resumenMes = $stmtMes->fetch(PDO::FETCH_ASSOC);
