@@ -596,7 +596,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const selCantidad = document.getElementById("cantidad_menus");
     if (selCantidad) selCantidad.addEventListener("change", function () {
-        actualizarBloquesMenues(parseInt(this.value) || 1);
+        const val = parseInt(this.value, 10);
+        actualizarBloquesMenues(isNaN(val) ? 1 : val);
     });
 
     // ── Opciones por tipo de menú ─────────────────────────────────
