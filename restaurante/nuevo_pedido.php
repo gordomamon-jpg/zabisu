@@ -83,9 +83,27 @@ $stmtHor = $conexion->prepare(
 $stmtHor->execute();
 $horarios = $stmtHor->fetchAll(PDO::FETCH_ASSOC);
 
+/* ── Extras disponibles (deduplicados por nombre) ── */
+$PRECIOS_EXTRA = ["Sopa" => 25, "Complemento" => 25, "Agua" => 20];
+$extrasForm = [];
+$nombresExtrasForm = [];
+foreach (["Sopa", "Complemento", "Agua"] as $catEx) {
+    foreach ($menusPorTipo as $tipoMenu => $cats) {
+        if (!empty($cats[$catEx])) {
+            foreach ($cats[$catEx] as $prod) {
+                if (!in_array($prod["nombre"], $nombresExtrasForm)) {
+                    $nombresExtrasForm[] = $prod["nombre"];
+                    $extrasForm[$catEx][] = $prod;
+                }
+            }
+        }
+    }
+}
+$iconosExtra = ["Sopa" => "🥣", "Complemento" => "🥗", "Agua" => "💧"];
+
 /* ── Cantidad de menús ── */
 $cantidadMenus = isset($_POST["cantidad_menus"]) ? (int)$_POST["cantidad_menus"] : 1;
-if ($cantidadMenus < 1) $cantidadMenus = 1;
+if ($cantidadMenus < 0) $cantidadMenus = 0;
 if ($cantidadMenus > 5) $cantidadMenus = 5;
 
 /* ── Procesar POST ── */
@@ -155,9 +173,25 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
         try {
             $conexion->beginTransaction();
 
+            $PRECIOS_EXTRA_SERVER = ["Sopa" => 25.00, "Complemento" => 25.00, "Agua" => 20.00];
+            $extrasGuardar = [];
+            foreach ($_POST["extras"] ?? [] as $idProducto => $cantidad) {
+                $cantidad = min((int)$cantidad, 5);
+                if ($cantidad <= 0 || !isset($productosIndexados[$idProducto])) continue;
+                $prod = $productosIndexados[$idProducto];
+                $precioExtra = $PRECIOS_EXTRA_SERVER[$prod["categoria"]] ?? 25.00;
+                $extrasGuardar[] = [
+                    "id_producto"     => (int)$idProducto,
+                    "nombre"          => $prod["nombre"],
+                    "categoria"       => $prod["categoria"],
+                    "cantidad"        => $cantidad,
+                    "precio_unitario" => $precioExtra,
+                ];
+            }
+
             $totalPedido = 0.0;
             if ($cantidadMenus === 0) {
-                $totalPedido = max(0.0, (float)str_replace(',', '', $_POST["total_manual"] ?? "0"));
+                foreach ($extrasGuardar as $ex) $totalPedido += $ex["cantidad"] * $ex["precio_unitario"];
             } else {
                 foreach ($menusRecibidos as $m) $totalPedido += $preciosMenus[$m["tipo_menu"] ?? ""] ?? 0;
             }
@@ -200,6 +234,23 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
                     $stmtDet->execute([":id_pedido_menu"=>$id_pedido_menu,":id_producto"=>$idP,":categoria"=>$productosIndexados[$idP]["categoria"],":nombre_producto"=>$productosIndexados[$idP]["nombre"]]);
                 }
                 $nMenu++;
+            }
+
+            if (!empty($extrasGuardar)) {
+                $stmtExtra = $conexion->prepare(
+                    "INSERT INTO pedido_extras (id_pedido,id_producto,nombre,categoria,cantidad,precio_unitario)
+                     VALUES (:id_pedido,:id_producto,:nombre,:categoria,:cantidad,:precio)"
+                );
+                foreach ($extrasGuardar as $ex) {
+                    $stmtExtra->execute([
+                        ":id_pedido"   => $id_pedido,
+                        ":id_producto" => $ex["id_producto"],
+                        ":nombre"      => $ex["nombre"],
+                        ":categoria"   => $ex["categoria"],
+                        ":cantidad"    => $ex["cantidad"],
+                        ":precio"      => $ex["precio_unitario"],
+                    ]);
+                }
             }
 
             $conexion->commit();
@@ -298,13 +349,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
                 <?php endfor; ?>
             </select>
 
-            <div id="bloque-total-manual" style="<?php echo $cantidadMenus === 0 ? '' : 'display:none;'; ?>margin-top:14px;">
-                <label for="total_manual">Total a cobrar <span class="nota-formulario" style="display:inline;font-size:12px;">(captura el importe)</span></label>
-                <input type="text" name="total_manual" id="total_manual"
-                       inputmode="decimal" autocomplete="off"
-                       value="<?php echo htmlspecialchars($_POST["total_manual"] ?? ""); ?>"
-                       placeholder="0.00">
-            </div>
         </section>
 
         <!-- BLOQUES DE MENÚ -->
@@ -420,6 +464,36 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
             </section>
         <?php endfor; ?>
 
+        <!-- EXTRAS -->
+        <section class="bloque-formulario" id="bloque-extras" style="<?php echo $cantidadMenus === 0 ? '' : 'display:none;'; ?>">
+            <h2>Extras</h2>
+            <?php if (!empty($extrasForm)): ?>
+                <?php foreach ($extrasForm as $cat => $items): ?>
+                <div class="grupo-categoria">
+                    <h3><?php echo $iconosExtra[$cat]; ?> <?php echo htmlspecialchars($cat === "Complemento" ? "Complemento extra" : $cat . " extra"); ?></h3>
+                    <?php foreach ($items as $item): ?>
+                    <?php $precioItem = $PRECIOS_EXTRA[$cat] ?? 25; ?>
+                    <div class="extra-item <?php echo (int)($_POST["extras"][$item["id_producto"]] ?? 0) > 0 ? 'extra-item--activo' : ''; ?>" data-precio="<?php echo $precioItem; ?>">
+                        <span class="extra-item__nombre"><?php echo htmlspecialchars($item["nombre"]); ?></span>
+                        <span class="extra-item__precio-hint">$<?php echo $precioItem; ?> c/u</span>
+                        <div class="extra-item__contador">
+                            <button type="button" class="extra-btn-menos">−</button>
+                            <input type="number"
+                                   name="extras[<?php echo (int)$item["id_producto"]; ?>]"
+                                   class="extra-cantidad"
+                                   value="<?php echo (int)($_POST["extras"][$item["id_producto"]] ?? 0); ?>"
+                                   min="0" max="5" readonly>
+                            <button type="button" class="extra-btn-mas">+</button>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <p class="nota-formulario">No hay productos disponibles para extras.</p>
+            <?php endif; ?>
+        </section>
+
         <!-- ENTREGA -->
         <section class="bloque-formulario" id="bloque-entrega">
             <h2>Punto de entrega</h2>
@@ -501,8 +575,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // ── Cantidad de menús ─────────────────────────────────────────
     function actualizarBloquesMenues(cantidad) {
-        const bloqueManual = document.getElementById("bloque-total-manual");
-        if (bloqueManual) bloqueManual.style.display = cantidad === 0 ? "" : "none";
+        const bloqueExtras = document.getElementById("bloque-extras");
+        if (bloqueExtras) bloqueExtras.style.display = cantidad === 0 ? "" : "none";
 
         for (let i = 1; i <= 5; i++) {
             const bloque = document.getElementById("menu-bloque-" + i);
@@ -586,8 +660,11 @@ document.addEventListener("DOMContentLoaded", function () {
         let total = 0;
 
         if (cantidad === 0) {
-            const manualInput = document.getElementById("total_manual");
-            total = parseFloat((manualInput ? manualInput.value : "0").replace(/,/g, "")) || 0;
+            document.querySelectorAll(".extra-item").forEach(function (item) {
+                const cant   = parseInt(item.querySelector(".extra-cantidad").value) || 0;
+                const precio = parseFloat(item.dataset.precio) || 0;
+                total += cant * precio;
+            });
         } else {
             document.querySelectorAll(".selector-tipo-menu").forEach(function (sel) {
                 const n = sel.getAttribute("data-menu");
@@ -630,8 +707,29 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    const totalManualInput = document.getElementById("total_manual");
-    if (totalManualInput) totalManualInput.addEventListener("input", actualizarTotal);
+    // ── Contadores de extras ─────────────────────────────────────
+    document.querySelectorAll(".extra-item").forEach(function (item) {
+        const menos = item.querySelector(".extra-btn-menos");
+        const mas   = item.querySelector(".extra-btn-mas");
+        const input = item.querySelector(".extra-cantidad");
+
+        menos.addEventListener("click", function () {
+            const v = parseInt(input.value) || 0;
+            if (v > 0) {
+                input.value = v - 1;
+                item.classList.toggle("extra-item--activo", (v - 1) > 0);
+                actualizarTotal();
+            }
+        });
+        mas.addEventListener("click", function () {
+            const v = parseInt(input.value) || 0;
+            if (v < 5) {
+                input.value = v + 1;
+                item.classList.add("extra-item--activo");
+                actualizarTotal();
+            }
+        });
+    });
 
     actualizarSeleccionVisual();
     actualizarBloquesMenues(<?php echo (int)$cantidadMenus; ?>);
