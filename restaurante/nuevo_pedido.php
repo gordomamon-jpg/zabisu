@@ -118,7 +118,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
     }
     if ($id_horario === "") $errores[] = "Debes seleccionar un horario de entrega.";
     if ($metodo_pago === "") $errores[] = "Selecciona el método de pago.";
-    if (empty($menusRecibidos)) $errores[] = "Agrega al menos un menú.";
+    if ($cantidadMenus > 0 && empty($menusRecibidos)) $errores[] = "Agrega al menos un menú.";
 
     foreach ($menusRecibidos as $nMenu => $menu) {
         $tipo_menu    = $menu["tipo_menu"]    ?? "";
@@ -156,7 +156,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
             $conexion->beginTransaction();
 
             $totalPedido = 0.0;
-            foreach ($menusRecibidos as $m) $totalPedido += $preciosMenus[$m["tipo_menu"] ?? ""] ?? 0;
+            if ($cantidadMenus === 0) {
+                $totalPedido = max(0.0, (float)str_replace(',', '', $_POST["total_manual"] ?? "0"));
+            } else {
+                foreach ($menusRecibidos as $m) $totalPedido += $preciosMenus[$m["tipo_menu"] ?? ""] ?? 0;
+            }
 
             $folio       = "ZAB-" . date("Ymd") . "-" . strtoupper(substr(md5(uniqid()), 0, 5));
             $estado_pago = match($metodo_pago) {
@@ -286,12 +290,21 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
 
             <label for="cantidad_menus">¿Cuántos menús?</label>
             <select name="cantidad_menus" id="cantidad_menus">
+                <option value="0" <?php echo ($cantidadMenus === 0) ? "selected" : ""; ?>>Sin menú / Solo extras</option>
                 <?php for ($n = 1; $n <= 5; $n++): ?>
                     <option value="<?php echo $n; ?>" <?php echo ($cantidadMenus === $n) ? "selected" : ""; ?>>
                         <?php echo $n; ?> menú<?php echo $n > 1 ? "s" : ""; ?>
                     </option>
                 <?php endfor; ?>
             </select>
+
+            <div id="bloque-total-manual" style="<?php echo $cantidadMenus === 0 ? '' : 'display:none;'; ?>margin-top:14px;">
+                <label for="total_manual">Total a cobrar <span class="nota-formulario" style="display:inline;font-size:12px;">(captura el importe)</span></label>
+                <input type="text" name="total_manual" id="total_manual"
+                       inputmode="decimal" autocomplete="off"
+                       value="<?php echo htmlspecialchars($_POST["total_manual"] ?? ""); ?>"
+                       placeholder="0.00">
+            </div>
         </section>
 
         <!-- BLOQUES DE MENÚ -->
@@ -488,10 +501,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // ── Cantidad de menús ─────────────────────────────────────────
     function actualizarBloquesMenues(cantidad) {
+        const bloqueManual = document.getElementById("bloque-total-manual");
+        if (bloqueManual) bloqueManual.style.display = cantidad === 0 ? "" : "none";
+
         for (let i = 1; i <= 5; i++) {
             const bloque = document.getElementById("menu-bloque-" + i);
             if (!bloque) continue;
-            const visible = i <= cantidad;
+            const visible = cantidad > 0 && i <= cantidad;
             bloque.style.display = visible ? "" : "none";
             bloque.querySelectorAll("input, select").forEach(function (el) {
                 if (!visible) {
@@ -566,16 +582,24 @@ document.addEventListener("DOMContentLoaded", function () {
     };
 
     function actualizarTotal() {
+        const cantidad = parseInt(document.getElementById("cantidad_menus").value) || 0;
         let total = 0;
-        document.querySelectorAll(".selector-tipo-menu").forEach(function (sel) {
-            const n = sel.getAttribute("data-menu");
-            const bloque = document.getElementById("menu-bloque-" + n);
-            if (bloque && bloque.style.display === "none") return;
-            const precio = preciosMenus[sel.value] || 0;
-            total += precio;
-            const precioEl = document.getElementById("precio-menu-" + n);
-            if (precioEl) precioEl.innerHTML = "Precio de este menú: <strong>$" + precio.toFixed(2) + "</strong>";
-        });
+
+        if (cantidad === 0) {
+            const manualInput = document.getElementById("total_manual");
+            total = parseFloat((manualInput ? manualInput.value : "0").replace(/,/g, "")) || 0;
+        } else {
+            document.querySelectorAll(".selector-tipo-menu").forEach(function (sel) {
+                const n = sel.getAttribute("data-menu");
+                const bloque = document.getElementById("menu-bloque-" + n);
+                if (bloque && bloque.style.display === "none") return;
+                const precio = preciosMenus[sel.value] || 0;
+                total += precio;
+                const precioEl = document.getElementById("precio-menu-" + n);
+                if (precioEl) precioEl.innerHTML = "Precio de este menú: <strong>$" + precio.toFixed(2) + "</strong>";
+            });
+        }
+
         const totalEl = document.getElementById("total-general");
         if (totalEl) totalEl.textContent = "$" + total.toFixed(2);
     }
@@ -605,6 +629,9 @@ document.addEventListener("DOMContentLoaded", function () {
             actualizarTotal();
         });
     });
+
+    const totalManualInput = document.getElementById("total_manual");
+    if (totalManualInput) totalManualInput.addEventListener("input", actualizarTotal);
 
     actualizarSeleccionVisual();
     actualizarBloquesMenues(<?php echo (int)$cantidadMenus; ?>);
