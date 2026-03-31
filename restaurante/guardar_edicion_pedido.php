@@ -42,7 +42,25 @@ if ($accion === "metodo_pago") {
     $stmtU->execute([":metodo" => $metodo, ":estado" => $nuevoEstado, ":id" => $id_pedido]);
 }
 
-/* ── Acción 2: Agregar extras ── */
+/* ── Acción 2: Cambiar horario ── */
+elseif ($accion === "horario") {
+    $id_horario_nuevo = (int)($_POST["id_horario"] ?? 0);
+    if ($id_horario_nuevo <= 0) die("Horario no válido.");
+
+    /* Verificar que el horario existe y está activo */
+    $stmtHV = $conexion->prepare(
+        "SELECT h.id_horario FROM horarios_ubicacion h
+         INNER JOIN ubicaciones u ON h.id_ubicacion = u.id_ubicacion
+         WHERE h.id_horario = :id AND h.activo = 1 AND u.activo = 1 LIMIT 1"
+    );
+    $stmtHV->execute([":id" => $id_horario_nuevo]);
+    if (!$stmtHV->fetchColumn()) die("Horario no encontrado.");
+
+    $stmtUH = $conexion->prepare("UPDATE pedidos SET id_horario = :id_horario WHERE id_pedido = :id");
+    $stmtUH->execute([":id_horario" => $id_horario_nuevo, ":id" => $id_pedido]);
+}
+
+/* ── Acción 3: Agregar extras ── */
 elseif ($accion === "extras") {
     $PRECIOS_EXTRA = ["Sopa" => 25.00, "Complemento" => 25.00, "Agua" => 20.00];
     $extrasPost    = $_POST["extras"] ?? [];

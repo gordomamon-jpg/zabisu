@@ -93,6 +93,19 @@ if ($menuRecienteId) {
     }
 }
 
+/*
+    6. Horarios disponibles para cambiar
+*/
+$stmtHorarios = $conexion->prepare(
+    "SELECT h.id_horario, h.hora_entrega, u.nombre_ubicacion, u.tipo
+     FROM horarios_ubicacion h
+     INNER JOIN ubicaciones u ON h.id_ubicacion = u.id_ubicacion
+     WHERE h.activo = 1 AND u.activo = 1
+     ORDER BY u.nombre_ubicacion, h.hora_entrega"
+);
+$stmtHorarios->execute();
+$horariosDisponibles = $stmtHorarios->fetchAll(PDO::FETCH_ASSOC);
+
 /* Flash message */
 $editadoOk = isset($_GET["editado"]);
 
@@ -285,6 +298,28 @@ function obtenerClaseEstadoPago($estadoPago)
     <?php endif; ?>
 
     <!-- ── Editar pedido ─────────────────────────────────── -->
+    <div class="bloque-formulario">
+        <h2>Cambiar horario de entrega</h2>
+
+        <form method="POST" action="guardar_edicion_pedido.php">
+            <input type="hidden" name="id_pedido" value="<?php echo $id_pedido; ?>">
+            <input type="hidden" name="accion"    value="horario">
+
+            <label for="id_horario_sel">Punto y horario</label>
+            <select name="id_horario" id="id_horario_sel">
+                <?php foreach ($horariosDisponibles as $h): ?>
+                <option value="<?php echo (int)$h["id_horario"]; ?>"
+                    <?php echo (int)$h["id_horario"] === (int)$pedido["id_horario"] ? "selected" : ""; ?>>
+                    <?php echo htmlspecialchars($h["nombre_ubicacion"]); ?>
+                    — <?php echo date("g:i A", strtotime($h["hora_entrega"])); ?>
+                </option>
+                <?php endforeach; ?>
+            </select>
+
+            <button type="submit" class="btn-submit" style="margin-top:16px;">Guardar cambio</button>
+        </form>
+    </div>
+
     <div class="bloque-formulario">
         <h2>Cambiar método de pago</h2>
 
