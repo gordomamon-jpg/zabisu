@@ -32,7 +32,8 @@ $sqlBase = "SELECT
                     h.hora_entrega,
                     u.nombre_ubicacion,
                     u.tipo AS tipo_ubicacion,
-                    COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) AS fecha_grupo_menu
+                    COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) AS fecha_grupo_menu,
+                    COALESCE(mc.num_menus, 0) AS num_menus
                FROM pedidos p
                INNER JOIN horarios_ubicacion h ON p.id_horario = h.id_horario
                INNER JOIN ubicaciones u ON h.id_ubicacion = u.id_ubicacion
@@ -43,7 +44,12 @@ $sqlBase = "SELECT
                    INNER JOIN productos pr2 ON pr2.id_producto = dp2.id_producto
                    INNER JOIN menu_dia md2 ON md2.id_menu = pr2.id_menu
                    GROUP BY pm2.id_pedido
-               ) AS mi ON mi.id_pedido = p.id_pedido";
+               ) AS mi ON mi.id_pedido = p.id_pedido
+               LEFT JOIN (
+                   SELECT id_pedido, COUNT(*) AS num_menus
+                   FROM pedido_menus
+                   GROUP BY id_pedido
+               ) AS mc ON mc.id_pedido = p.id_pedido";
 
 $sqlPedidos = $sqlBase . " WHERE p.es_prueba = 0
                ORDER BY COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) DESC, p.visto ASC, p.fecha_pedido DESC, p.id_pedido DESC";
@@ -523,9 +529,15 @@ function formatearFechaBonita($fecha)
                                                     </a>
                                                 <?php endif; ?>
                                                 <?php if ($pedido["metodo_pago"] === "Efectivo" || $pedido["estado_pago"] === "Pagado"): ?>
-                                                    <button class="btn-tabla btn-tabla--imprimir" data-id="<?php echo (int)$pedido["id_pedido"]; ?>">
-                                                        Imprimir ticket
-                                                    </button>
+                                                    <?php if ((int)$pedido["num_menus"] > 1): ?>
+                                                        <a class="btn-tabla" target="_blank" href="ticket.php?id=<?php echo (int)$pedido["id_pedido"]; ?>&separado=1">
+                                                            Imprimir separado
+                                                        </a>
+                                                    <?php else: ?>
+                                                        <button class="btn-tabla btn-tabla--imprimir" data-id="<?php echo (int)$pedido["id_pedido"]; ?>">
+                                                            Imprimir ticket
+                                                        </button>
+                                                    <?php endif; ?>
                                                 <?php endif; ?>
                                                 <?php if (!empty($pedido["comprobante_pago"])): ?>
                                                     <?php $rutaComp = __DIR__ . "/../uploads/comprobantes/" . $pedido["comprobante_pago"]; ?>

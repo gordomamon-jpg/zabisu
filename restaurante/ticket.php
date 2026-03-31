@@ -421,12 +421,10 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
 
         <div class="line"></div>
 
-        <?php if ($precioMenu > 0): ?>
         <div class="row total">
-            <div>Total</div>
-            <div>$<?php echo number_format($precioMenu, 2); ?></div>
+            <div>Total pedido</div>
+            <div>$<?php echo number_format((float)$pedido["total"], 2); ?></div>
         </div>
-        <?php endif; ?>
 
         <div class="footer">Preparar pedido</div>
     </div>
