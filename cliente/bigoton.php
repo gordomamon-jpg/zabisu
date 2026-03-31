@@ -109,7 +109,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["ordenar"])) {
     for ($i = 0; $i < $cantidadPersonas; $i++) {
         $persona     = $personas[$i] ?? [];
         $nPersona    = $i + 1;
-        $nombre      = trim($persona["nombre"]       ?? "");
+        $nombre      = strtoupper(trim(preg_replace('/[^A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]/u', '', $persona["nombre"] ?? "")));
         $tipoMenu    = trim($persona["tipo_menu"]    ?? "");
         $platoFuerte = (int)($persona["plato_fuerte"] ?? 0);
 
@@ -484,6 +484,36 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["ordenar"])) {
     cantidadSel.addEventListener("change", function () {
         actualizarPersonas(parseInt(this.value) || 1);
     });
+
+    /* ── Validación de nombres: solo letras y espacios, MAYÚSCULAS ── */
+    document.getElementById("form-bigoton").addEventListener("input", function (e) {
+        var input = e.target;
+        if (!input.name || !input.name.match(/personas\[\d+\]\[nombre\]/)) return;
+        var pos   = input.selectionStart;
+        var limpio = input.value.replace(/[^A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]/g, "").toUpperCase();
+        if (input.value !== limpio) {
+            input.value = limpio;
+            input.setSelectionRange(pos, pos);
+        }
+    });
+
+    /* ── Validación de correo en tiempo real ── */
+    var correoInput = document.getElementById("correo_cliente");
+    var correoError = document.createElement("p");
+    correoError.style.cssText = "color:#ff6b6b;font-size:13px;margin:4px 0 0;display:none;";
+    correoError.textContent   = "Ingresa un correo válido.";
+    if (correoInput) correoInput.parentNode.insertBefore(correoError, correoInput.nextSibling);
+
+    if (correoInput) {
+        correoInput.addEventListener("blur", function () {
+            var val = this.value.trim();
+            var valido = val === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+            correoError.style.display = valido ? "none" : "";
+        });
+        correoInput.addEventListener("input", function () {
+            correoError.style.display = "none";
+        });
+    }
 
     /* ── Inicializar ── */
     actualizarPersonas(parseInt(cantidadSel.value) || 1);
