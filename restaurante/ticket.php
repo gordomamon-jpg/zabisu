@@ -300,6 +300,27 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
             letter-spacing: 0.5px;
         }
 
+        .resaltado {
+            background: #000;
+            color: #fff;
+            padding: 2px 5px;
+            display: inline-block;
+            font-weight: 800;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .bloque-obs-resaltado {
+            background: #000;
+            color: #fff;
+            padding: 4px 5px;
+            font-weight: 700;
+            white-space: pre-line;
+            line-height: 1.4;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
         @media print {
             @page {
                 size: 80mm auto;
@@ -387,10 +408,15 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
         <div class="line"></div>
 
         <?php foreach ($agrupado as $categoria => $items): ?>
+            <?php $esResaltado = in_array($categoria, ["Plato fuerte", "Complemento"]); ?>
             <div class="item-group">
                 <div class="item-label"><?php echo htmlspecialchars($categoria); ?></div>
                 <div class="item-value">
-                    <?php echo htmlspecialchars(implode(" / ", $items)); ?>
+                    <?php if ($esResaltado): ?>
+                        <span class="resaltado"><?php echo htmlspecialchars(implode(" / ", $items)); ?></span>
+                    <?php else: ?>
+                        <?php echo htmlspecialchars(implode(" / ", $items)); ?>
+                    <?php endif; ?>
                 </div>
             </div>
         <?php endforeach; ?>
@@ -470,7 +496,7 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
         <div class="bloque-prioridad__fila">
             <span class="bloque-prioridad__label">ESTADO</span>
             <span class="bloque-prioridad__valor">
-                <?php echo htmlspecialchars(obtenerTextoEstadoPagoTicket($pedido["estado_pago"])); ?>
+                <span class="resaltado"><?php echo htmlspecialchars(obtenerTextoEstadoPagoTicket($pedido["estado_pago"])); ?></span>
             </span>
         </div>
     </div>
@@ -488,10 +514,15 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
             </div>
 
             <?php foreach ($agrupado as $categoria => $items): ?>
+                <?php $esResaltado = in_array($categoria, ["Plato fuerte", "Complemento"]); ?>
                 <div class="item-group">
                     <div class="item-label"><?php echo htmlspecialchars($categoria); ?></div>
                     <div class="item-value">
-                        <?php echo htmlspecialchars(implode(" / ", $items)); ?>
+                        <?php if ($esResaltado): ?>
+                            <span class="resaltado"><?php echo htmlspecialchars(implode(" / ", $items)); ?></span>
+                        <?php else: ?>
+                            <?php echo htmlspecialchars(implode(" / ", $items)); ?>
+                        <?php endif; ?>
                     </div>
                 </div>
             <?php endforeach; ?>
@@ -516,9 +547,11 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
     <?php endif; ?>
 
     <div class="section-title">Observaciones</div>
-    <div class="obs">
-        <?php echo $pedido["observaciones"] !== "" ? htmlspecialchars($pedido["observaciones"]) : "Sin observaciones"; ?>
-    </div>
+    <?php if ($pedido["observaciones"] !== ""): ?>
+        <div class="bloque-obs-resaltado"><?php echo htmlspecialchars($pedido["observaciones"]); ?></div>
+    <?php else: ?>
+        <div class="obs">Sin observaciones</div>
+    <?php endif; ?>
 
     <div class="line"></div>
 
