@@ -244,6 +244,7 @@ function fmtFecha($fecha)
                 <a href="estadisticas.php" class="btn-limpiar-filtros">Este mes</a>
                 <a href="estadisticas.php?fecha_inicio=<?php echo date("Y-m-d", strtotime("monday this week")); ?>&fecha_fin=<?php echo $hoy; ?>" class="btn-limpiar-filtros">Esta semana</a>
                 <a href="estadisticas.php?fecha_inicio=<?php echo $hoy; ?>&fecha_fin=<?php echo $hoy; ?>" class="btn-limpiar-filtros">Hoy</a>
+                <a href="reporte_ventas.php?fecha_inicio=<?php echo urlencode($fechaInicio); ?>&fecha_fin=<?php echo urlencode($fechaFin); ?>" class="btn-tabla" style="text-decoration:none;padding:10px 18px;font-size:14px;">📄 Generar reporte</a>
             </div>
         </form>
         <p class="estadisticas-filtro__rango">
