@@ -63,10 +63,38 @@ foreach ($menusPedido as $menu) {
     4. Obtener extras del pedido
 */
 $sqlExtras = "SELECT * FROM pedido_extras WHERE id_pedido = :id_pedido ORDER BY id_extra ASC";
+
 $stmtExtras = $conexion->prepare($sqlExtras);
 $stmtExtras->bindParam(":id_pedido", $id_pedido, PDO::PARAM_INT);
 $stmtExtras->execute();
 $extrasVer = $stmtExtras->fetchAll(PDO::FETCH_ASSOC);
+
+/*
+    5. Extras disponibles para agregar (del menú más reciente)
+*/
+$PRECIOS_EXTRA_ED  = ["Sopa" => 25, "Complemento" => 25, "Agua" => 20];
+$iconosExtra       = ["Sopa" => "🥣", "Complemento" => "🥗", "Agua" => "💧"];
+$extrasDisponibles = [];
+
+$menuRecienteId = $conexion->query("SELECT id_menu FROM menu_dia ORDER BY fecha DESC LIMIT 1")->fetchColumn();
+if ($menuRecienteId) {
+    $stmtExtrasDisp = $conexion->prepare(
+        "SELECT id_producto, nombre, categoria FROM productos
+         WHERE id_menu = :id_menu AND categoria IN ('Sopa','Complemento','Agua') AND disponible = 1
+         ORDER BY FIELD(categoria,'Sopa','Complemento','Agua'), nombre"
+    );
+    $stmtExtrasDisp->execute([":id_menu" => $menuRecienteId]);
+    $nombresUsados = [];
+    foreach ($stmtExtrasDisp->fetchAll(PDO::FETCH_ASSOC) as $p) {
+        if (!in_array($p["nombre"], $nombresUsados)) {
+            $nombresUsados[]                          = $p["nombre"];
+            $extrasDisponibles[$p["categoria"]][]     = $p;
+        }
+    }
+}
+
+/* Flash message */
+$editadoOk = isset($_GET["editado"]);
 
 function obtenerTextoEstadoPago($estadoPago)
 {
@@ -250,6 +278,69 @@ function obtenerClaseEstadoPago($estadoPago)
         </div>
     <?php endif; ?>
 
+    <?php if ($editadoOk): ?>
+    <div class="bloque-formulario" style="border-left:4px solid #2ecc71;">
+        <p style="margin:0;color:#2ecc71;font-weight:700;">✓ Pedido actualizado correctamente.</p>
+    </div>
+    <?php endif; ?>
+
+    <!-- ── Editar pedido ─────────────────────────────────── -->
+    <div class="bloque-formulario">
+        <h2>Cambiar método de pago</h2>
+
+        <form method="POST" action="guardar_edicion_pedido.php">
+            <input type="hidden" name="id_pedido" value="<?php echo $id_pedido; ?>">
+            <input type="hidden" name="accion"    value="metodo_pago">
+
+            <label for="metodo_pago_sel">Método de pago</label>
+            <select name="metodo_pago" id="metodo_pago_sel">
+                <option value="Efectivo"      <?php echo $pedido["metodo_pago"] === "Efectivo"      ? "selected" : ""; ?>>Efectivo</option>
+                <option value="Transferencia" <?php echo $pedido["metodo_pago"] === "Transferencia" ? "selected" : ""; ?>>Transferencia</option>
+            </select>
+
+            <?php if ($pedido["estado_pago"] === "Pagado"): ?>
+                <p class="nota-formulario">El estado del pago no cambiará porque ya fue confirmado.</p>
+            <?php endif; ?>
+
+            <button type="submit" class="btn-submit" style="margin-top:16px;">Guardar cambio</button>
+        </form>
+    </div>
+
+    <?php if (!empty($extrasDisponibles)): ?>
+    <div class="bloque-formulario">
+        <h2>Agregar extras</h2>
+
+        <form method="POST" action="guardar_edicion_pedido.php" id="form-agregar-extras">
+            <input type="hidden" name="id_pedido" value="<?php echo $id_pedido; ?>">
+            <input type="hidden" name="accion"    value="extras">
+
+            <?php foreach ($extrasDisponibles as $cat => $items): ?>
+            <div class="grupo-categoria">
+                <h3><?php echo $iconosExtra[$cat]; ?> <?php echo htmlspecialchars($cat === "Complemento" ? "Complemento extra" : $cat . " extra"); ?></h3>
+                <?php foreach ($items as $item): ?>
+                <?php $precioEd = $PRECIOS_EXTRA_ED[$cat] ?? 25; ?>
+                <div class="extra-item" data-precio="<?php echo $precioEd; ?>">
+                    <span class="extra-item__nombre"><?php echo htmlspecialchars($item["nombre"]); ?></span>
+                    <span class="extra-item__precio-hint">$<?php echo $precioEd; ?> c/u</span>
+                    <div class="extra-item__contador">
+                        <button type="button" class="extra-btn-menos">−</button>
+                        <input type="number" name="extras[<?php echo (int)$item["id_producto"]; ?>]"
+                               class="extra-cantidad" value="0" min="0" max="5" readonly>
+                        <button type="button" class="extra-btn-mas">+</button>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <?php endforeach; ?>
+
+            <p class="nota-formulario" id="nota-extras-vacio">Selecciona al menos un extra para continuar.</p>
+            <button type="submit" class="btn-submit" id="btn-agregar-extras" disabled style="margin-top:8px;">
+                Agregar extras al pedido
+            </button>
+        </form>
+    </div>
+    <?php endif; ?>
+
     <div class="bloque-formulario acciones-panel">
         <h2>Acciones</h2>
 
@@ -270,6 +361,45 @@ function obtenerClaseEstadoPago($estadoPago)
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const btnAgregar = document.getElementById("btn-agregar-extras");
+    const notaVacio  = document.getElementById("nota-extras-vacio");
+
+    function actualizarBotonExtras() {
+        const hayAlguno = Array.from(document.querySelectorAll(".extra-cantidad"))
+            .some(function (i) { return parseInt(i.value) > 0; });
+        if (btnAgregar) btnAgregar.disabled = !hayAlguno;
+        if (notaVacio)  notaVacio.style.display = hayAlguno ? "none" : "";
+    }
+
+    document.querySelectorAll(".extra-item").forEach(function (item) {
+        const menos = item.querySelector(".extra-btn-menos");
+        const mas   = item.querySelector(".extra-btn-mas");
+        const input = item.querySelector(".extra-cantidad");
+
+        menos.addEventListener("click", function () {
+            const v = parseInt(input.value) || 0;
+            if (v > 0) {
+                input.value = v - 1;
+                item.classList.toggle("extra-item--activo", (v - 1) > 0);
+                actualizarBotonExtras();
+            }
+        });
+        mas.addEventListener("click", function () {
+            const v = parseInt(input.value) || 0;
+            if (v < 5) {
+                input.value = v + 1;
+                item.classList.add("extra-item--activo");
+                actualizarBotonExtras();
+            }
+        });
+    });
+
+    actualizarBotonExtras();
+});
+</script>
 
 </body>
 </html>
