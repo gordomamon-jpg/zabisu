@@ -374,14 +374,12 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
                 — <?php echo htmlspecialchars($menu["tipo_menu"]); ?>
             </div>
 
-            <?php if ($nombrePersona !== ""): ?>
             <div class="bloque-prioridad__fila">
-                <span class="bloque-prioridad__label">PARA</span>
+                <span class="bloque-prioridad__label">CLIENTE</span>
                 <span class="bloque-prioridad__valor bloque-prioridad__valor--grande nombre-persona">
-                    <?php echo htmlspecialchars($nombrePersona); ?>
+                    <?php echo htmlspecialchars($nombrePersona !== "" ? $nombrePersona : $pedido["nombre_cliente"]); ?>
                 </span>
             </div>
-            <?php endif; ?>
 
             <div class="bloque-prioridad__fila">
                 <span class="bloque-prioridad__label">UBICACIÓN</span>

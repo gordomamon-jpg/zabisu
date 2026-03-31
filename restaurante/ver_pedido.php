@@ -391,11 +391,11 @@ function obtenerClaseEstadoPago($estadoPago)
                 <a class="btn-tabla" target="_blank" href="imprimir_y_notificar.php?id=<?php echo (int)$pedido["id_pedido"]; ?>">
                     Imprimir ticket
                 </a>
-                <?php if (count($menusPedido) > 1): ?>
+            <?php endif; ?>
+            <?php if (count($menusPedido) > 1): ?>
                 <a class="btn-tabla" target="_blank" href="ticket.php?id=<?php echo (int)$pedido["id_pedido"]; ?>&separado=1">
-                    Imprimir por persona
+                    Imprimir separado
                 </a>
-                <?php endif; ?>
             <?php endif; ?>
 
             <a class="btn-link" href="pedidos.php">Volver a pedidos</a>
