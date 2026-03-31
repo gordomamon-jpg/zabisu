@@ -260,7 +260,7 @@ foreach ($productos as $producto) {
 /*
     4. Obtener ubicaciones activas
 */
-$sqlUbicaciones = "SELECT * FROM ubicaciones WHERE activo = 1 ORDER BY tipo, nombre_ubicacion";
+$sqlUbicaciones = "SELECT * FROM ubicaciones WHERE activo = 1 AND nombre_ubicacion != 'El Bigoton' ORDER BY tipo, nombre_ubicacion";
 $stmtUbicaciones = $conexion->prepare($sqlUbicaciones);
 $stmtUbicaciones->execute();
 $ubicaciones = $stmtUbicaciones->fetchAll(PDO::FETCH_ASSOC);
@@ -276,7 +276,7 @@ $sqlHorarios = "SELECT
                     u.tipo
                 FROM horarios_ubicacion h
                 INNER JOIN ubicaciones u ON h.id_ubicacion = u.id_ubicacion
-                WHERE h.activo = 1 AND u.activo = 1
+                WHERE h.activo = 1 AND u.activo = 1 AND u.nombre_ubicacion != 'El Bigoton'
                 ORDER BY u.tipo, u.nombre_ubicacion, h.hora_entrega";
 $stmtHorarios = $conexion->prepare($sqlHorarios);
 $stmtHorarios->execute();
