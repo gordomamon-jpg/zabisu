@@ -96,7 +96,124 @@ $iconosCat = ["Plato fuerte"=>"🍽️","Sopa"=>"🥣","Complemento"=>"🥗","Ag
     <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
     <link rel="stylesheet" href="../assets/css/styles.css">
 </head>
+<style>
+    .hamburguer-btn {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        z-index: 200;
+        background: rgba(12,12,15,.75);
+        border: 1px solid rgba(255,255,255,.12);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border-radius: 10px;
+        width: 42px;
+        height: 42px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 5px;
+        cursor: pointer;
+        padding: 0;
+    }
+    .hamburguer-btn span {
+        display: block;
+        width: 20px;
+        height: 2px;
+        background: #fff;
+        border-radius: 2px;
+        transition: transform .25s, opacity .25s;
+    }
+    .hamburguer-btn.abierto span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburguer-btn.abierto span:nth-child(2) { opacity: 0; }
+    .hamburguer-btn.abierto span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    .nav-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.5);
+        z-index: 190;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .25s;
+    }
+    .nav-overlay.visible { opacity: 1; pointer-events: all; }
+
+    .nav-drawer {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 260px;
+        max-width: 85vw;
+        background: #0c0c0f;
+        z-index: 195;
+        transform: translateX(100%);
+        transition: transform .28s cubic-bezier(.4,0,.2,1);
+        display: flex;
+        flex-direction: column;
+        padding: 72px 0 32px;
+    }
+    .nav-drawer.abierto { transform: translateX(0); }
+
+    .nav-drawer__titulo {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 3px;
+        color: #ff7a00;
+        text-transform: uppercase;
+        padding: 0 24px 16px;
+        border-bottom: 1px solid rgba(255,255,255,.08);
+        margin-bottom: 8px;
+    }
+
+    .nav-drawer__item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 24px;
+        color: #fff;
+        text-decoration: none;
+        font-size: 15px;
+        font-weight: 600;
+        transition: background .15s;
+    }
+    .nav-drawer__item:hover { background: rgba(255,255,255,.06); }
+    .nav-drawer__item__icono {
+        font-size: 20px;
+        width: 28px;
+        text-align: center;
+        flex-shrink: 0;
+    }
+</style>
+
 <body>
+
+<!-- ── Hamburger ── -->
+<button class="hamburguer-btn" id="hamburguer-btn" aria-label="Menú">
+    <span></span><span></span><span></span>
+</button>
+
+<!-- ── Overlay ── -->
+<div class="nav-overlay" id="nav-overlay"></div>
+
+<!-- ── Drawer ── -->
+<nav class="nav-drawer" id="nav-drawer">
+    <div class="nav-drawer__titulo">Zabisu</div>
+    <a class="nav-drawer__item" href="estado_pedido.php">
+        <span class="nav-drawer__item__icono">🔍</span>
+        Consultar mi pedido
+    </a>
+    <a class="nav-drawer__item" href="menu.php">
+        <span class="nav-drawer__item__icono">🍽️</span>
+        Ver menú del día
+    </a>
+    <a class="nav-drawer__item" href="pedido.php">
+        <span class="nav-drawer__item__icono">🛒</span>
+        Hacer un pedido
+    </a>
+</nav>
 
 <div class="md-pagina">
 
@@ -298,6 +415,35 @@ function llamarCta() {
 document.querySelectorAll(".md-plato:not(.md-plato--agotado), .md-chip:not(.md-chip--agotado)").forEach(function (el) {
     el.addEventListener("click", llamarCta);
 });
+</script>
+
+<script>
+(function () {
+    var btn     = document.getElementById("hamburguer-btn");
+    var drawer  = document.getElementById("nav-drawer");
+    var overlay = document.getElementById("nav-overlay");
+
+    function abrir() {
+        drawer.classList.add("abierto");
+        overlay.classList.add("visible");
+        btn.classList.add("abierto");
+        document.body.style.overflow = "hidden";
+    }
+    function cerrar() {
+        drawer.classList.remove("abierto");
+        overlay.classList.remove("visible");
+        btn.classList.remove("abierto");
+        document.body.style.overflow = "";
+    }
+
+    btn.addEventListener("click", function () {
+        drawer.classList.contains("abierto") ? cerrar() : abrir();
+    });
+    overlay.addEventListener("click", cerrar);
+    document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") cerrar();
+    });
+})();
 </script>
 
 <footer class="cliente-footer">
