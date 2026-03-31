@@ -530,9 +530,9 @@ function formatearFechaBonita($fecha)
                                                 <?php endif; ?>
                                                 <?php if ($pedido["metodo_pago"] === "Efectivo" || $pedido["estado_pago"] === "Pagado"): ?>
                                                     <?php if ((int)$pedido["num_menus"] > 1): ?>
-                                                        <a class="btn-tabla" target="_blank" href="ticket.php?id=<?php echo (int)$pedido["id_pedido"]; ?>&separado=1">
+                                                        <button class="btn-tabla btn-tabla--imprimir btn-tabla--imprimir-sep" data-id="<?php echo (int)$pedido["id_pedido"]; ?>">
                                                             Imprimir separado
-                                                        </a>
+                                                        </button>
                                                     <?php else: ?>
                                                         <button class="btn-tabla btn-tabla--imprimir" data-id="<?php echo (int)$pedido["id_pedido"]; ?>">
                                                             Imprimir ticket
@@ -724,6 +724,25 @@ document.addEventListener("DOMContentLoaded", function () {
                 iframeTicket.contentWindow.print();
             };
             iframeTicket.src = "ticket.php?id=" + id;
+        });
+    });
+
+    document.querySelectorAll(".btn-tabla--imprimir-sep").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            var id = btn.dataset.id;
+            var fila = btn.closest("tr");
+            if (fila) {
+                fila.classList.remove("fila-pedido-nuevo");
+                fila.classList.add("fila-pedido-visto");
+                var badge = fila.querySelector(".badge-nuevo");
+                if (badge) badge.remove();
+            }
+            fetch("imprimir_y_notificar.php?id=" + id, { cache: "no-store" });
+            iframeTicket.onload = function () {
+                iframeTicket.contentWindow.focus();
+                iframeTicket.contentWindow.print();
+            };
+            iframeTicket.src = "ticket.php?id=" + id + "&separado=1";
         });
     });
 

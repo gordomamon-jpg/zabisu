@@ -393,7 +393,7 @@ function obtenerClaseEstadoPago($estadoPago)
                 </a>
             <?php endif; ?>
             <?php if (count($menusPedido) > 1): ?>
-                <a class="btn-tabla" target="_blank" href="ticket.php?id=<?php echo (int)$pedido["id_pedido"]; ?>&separado=1">
+                <a class="btn-tabla btn-tabla--imprimir" target="_blank" href="ticket.php?id=<?php echo (int)$pedido["id_pedido"]; ?>&separado=1">
                     Imprimir separado
                 </a>
             <?php endif; ?>

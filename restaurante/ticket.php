@@ -401,6 +401,13 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
                     <?php echo htmlspecialchars(obtenerTextoMetodoPagoTicket($pedido["metodo_pago"])); ?>
                 </span>
             </div>
+
+            <div class="bloque-prioridad__fila">
+                <span class="bloque-prioridad__label">ESTADO</span>
+                <span class="bloque-prioridad__valor">
+                    <span class="resaltado"><?php echo htmlspecialchars(obtenerTextoEstadoPagoTicket($pedido["estado_pago"])); ?></span>
+                </span>
+            </div>
         </div>
 
         <div class="line"></div>
