@@ -317,7 +317,7 @@ function obtenerClaseEstadoPago($estadoPago)
                 <?php endforeach; ?>
             </select>
 
-            <button type="submit" class="btn-submit" style="margin-top:16px;">Guardar cambio</button>
+            <button type="submit" class="btn-tabla" style="margin-top:16px;">Guardar cambio</button>
         </form>
     </div>
 
@@ -338,7 +338,7 @@ function obtenerClaseEstadoPago($estadoPago)
                 <p class="nota-formulario">El estado del pago no cambiará porque ya fue confirmado.</p>
             <?php endif; ?>
 
-            <button type="submit" class="btn-submit" style="margin-top:16px;">Guardar cambio</button>
+            <button type="submit" class="btn-tabla" style="margin-top:16px;">Guardar cambio</button>
         </form>
     </div>
 
@@ -370,7 +370,7 @@ function obtenerClaseEstadoPago($estadoPago)
             <?php endforeach; ?>
 
             <p class="nota-formulario" id="nota-extras-vacio">Selecciona al menos un extra para continuar.</p>
-            <button type="submit" class="btn-submit" id="btn-agregar-extras" disabled style="margin-top:8px;">
+            <button type="submit" class="btn-tabla" id="btn-agregar-extras" disabled style="margin-top:8px;">
                 Agregar extras al pedido
             </button>
         </form>
