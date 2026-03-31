@@ -60,7 +60,19 @@ foreach ($menusPedido as $menu) {
 }
 
 /*
-    4. Obtener extras del pedido
+    4. Modo separado: un ticket por menú
+*/
+$separado = isset($_GET["separado"]) && $_GET["separado"] === "1";
+
+/* Precios por tipo de menú (para calcular el total individual) */
+$preciosTicket = [];
+$stmtPrecTick  = $conexion->query("SELECT nombre_menu, precio FROM tipos_menu");
+foreach ($stmtPrecTick->fetchAll(PDO::FETCH_ASSOC) as $t) {
+    $preciosTicket[$t["nombre_menu"]] = (float)$t["precio"];
+}
+
+/*
+    5. Obtener extras del pedido
 */
 $sqlExtras = "SELECT * FROM pedido_extras WHERE id_pedido = :id_pedido ORDER BY id_extra ASC";
 $stmtExtras = $conexion->prepare($sqlExtras);
@@ -273,6 +285,21 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
             font-weight: 800;
         }
 
+        .ticket-separado {
+            page-break-after: always;
+        }
+
+        .ticket-separado:last-child {
+            page-break-after: avoid;
+        }
+
+        .nombre-persona {
+            font-size: 15px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
         @media print {
             @page {
                 size: 80mm auto;
@@ -297,6 +324,91 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
     </style>
 </head>
 <body>
+
+<?php if ($separado): ?>
+
+    <?php foreach ($menusPedido as $idx => $menu): ?>
+    <?php
+        $agrupado      = agruparDetallePorCategoria($detallePorMenu[$menu["id_pedido_menu"]] ?? []);
+        $precioMenu    = $preciosTicket[$menu["tipo_menu"]] ?? 0;
+        $nombrePersona = $menu["nombre_persona"] ?? "";
+        $totalMenus    = count($menusPedido);
+    ?>
+    <div class="ticket ticket-separado">
+
+        <div class="ticket-header">
+            <img class="ticket-logo" src="../assets/img/dd.png" alt="Zabisu">
+            <div class="ticket-header__info">
+                <div class="brand">ZABISU</div>
+                <div class="folio"><?php echo htmlspecialchars($pedido["folio"]); ?></div>
+                <div class="small"><?php echo date("d/m/Y g:i A", strtotime($pedido["fecha_pedido"])); ?></div>
+            </div>
+        </div>
+
+        <div class="line"></div>
+
+        <div class="bloque-prioridad">
+            <div class="bloque-prioridad__titulo">
+                MENÚ <?php echo (int)$menu["numero_menu"]; ?> DE <?php echo $totalMenus; ?>
+                — <?php echo htmlspecialchars($menu["tipo_menu"]); ?>
+            </div>
+
+            <?php if ($nombrePersona !== ""): ?>
+            <div class="bloque-prioridad__fila">
+                <span class="bloque-prioridad__label">PARA</span>
+                <span class="bloque-prioridad__valor bloque-prioridad__valor--grande nombre-persona">
+                    <?php echo htmlspecialchars($nombrePersona); ?>
+                </span>
+            </div>
+            <?php endif; ?>
+
+            <div class="bloque-prioridad__fila">
+                <span class="bloque-prioridad__label">UBICACIÓN</span>
+                <span class="bloque-prioridad__valor">
+                    <?php echo htmlspecialchars($pedido["nombre_ubicacion"]); ?>
+                </span>
+            </div>
+
+            <div class="bloque-prioridad__fila">
+                <span class="bloque-prioridad__label">HORA</span>
+                <span class="bloque-prioridad__valor bloque-prioridad__valor--grande">
+                    <?php echo date("g:i A", strtotime($pedido["hora_entrega"])); ?>
+                </span>
+            </div>
+
+            <div class="bloque-prioridad__fila">
+                <span class="bloque-prioridad__label">PAGO</span>
+                <span class="bloque-prioridad__valor">
+                    <?php echo htmlspecialchars(obtenerTextoMetodoPagoTicket($pedido["metodo_pago"])); ?>
+                </span>
+            </div>
+        </div>
+
+        <div class="line"></div>
+
+        <?php foreach ($agrupado as $categoria => $items): ?>
+            <div class="item-group">
+                <div class="item-label"><?php echo htmlspecialchars($categoria); ?></div>
+                <div class="item-value">
+                    <?php echo htmlspecialchars(implode(" / ", $items)); ?>
+                </div>
+            </div>
+        <?php endforeach; ?>
+
+        <div class="line"></div>
+
+        <?php if ($precioMenu > 0): ?>
+        <div class="row total">
+            <div>Total</div>
+            <div>$<?php echo number_format($precioMenu, 2); ?></div>
+        </div>
+        <?php endif; ?>
+
+        <div class="footer">Preparar pedido</div>
+    </div>
+    <?php endforeach; ?>
+
+<?php else: ?>
 
 <div class="ticket">
     <div class="ticket-header">
@@ -370,6 +482,9 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
         <div class="menu-block">
             <div class="menu-title">
                 Menú <?php echo (int)$menu["numero_menu"]; ?> — <?php echo htmlspecialchars($menu["tipo_menu"]); ?>
+                <?php if (!empty($menu["nombre_persona"])): ?>
+                    · <?php echo htmlspecialchars($menu["nombre_persona"]); ?>
+                <?php endif; ?>
             </div>
 
             <?php foreach ($agrupado as $categoria => $items): ?>
@@ -416,6 +531,8 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
         Preparar pedido
     </div>
 </div>
+
+<?php endif; ?>
 
 <script>
 window.onload = function () {

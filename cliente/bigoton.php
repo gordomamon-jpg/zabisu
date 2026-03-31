@@ -171,8 +171,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["ordenar"])) {
 
         /* Insertar menús y detalle */
         $stmtPM = $conexion->prepare(
-            "INSERT INTO pedido_menus (id_pedido, numero_menu, tipo_menu)
-             VALUES (:id_pedido, :num, :tipo)"
+            "INSERT INTO pedido_menus (id_pedido, numero_menu, tipo_menu, nombre_persona)
+             VALUES (:id_pedido, :num, :tipo, :nombre_persona)"
         );
         $stmtDP = $conexion->prepare(
             "INSERT INTO detalle_pedido (id_pedido_menu, id_producto, categoria, nombre_producto)
@@ -183,7 +183,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["ordenar"])) {
             $tipoMenu    = trim($personas[$i]["tipo_menu"]);
             $platoFuerte = (int)$personas[$i]["plato_fuerte"];
 
-            $stmtPM->execute([":id_pedido" => $id_pedido, ":num" => $i + 1, ":tipo" => $tipoMenu]);
+            $nombrePersona = trim($personas[$i]["nombre"]);
+            $stmtPM->execute([":id_pedido" => $id_pedido, ":num" => $i + 1, ":tipo" => $tipoMenu, ":nombre_persona" => $nombrePersona]);
             $id_pedido_menu = (int)$conexion->lastInsertId();
 
             $prod = $productosIndexados[$platoFuerte];
