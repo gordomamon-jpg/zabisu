@@ -218,6 +218,76 @@ try {
         $stmtCorreoEnviado->execute();
     }
 
+    /*
+        6. Descontar inventario de desechable (solo una vez por pedido)
+    */
+    if ((int)$pedido["inventario_descontado"] === 0) {
+
+        // Contar menús del pedido
+        $stmtNumMenus = $conexion->prepare(
+            "SELECT COUNT(*) FROM pedido_menus WHERE id_pedido = :id_pedido"
+        );
+        $stmtNumMenus->execute([":id_pedido" => $id_pedido]);
+        $numMenus = (int)$stmtNumMenus->fetchColumn();
+
+        // Extras: tazones (Sopa + Complemento) y botellas (Agua)
+        $stmtExtrasInv = $conexion->prepare(
+            "SELECT categoria, COALESCE(SUM(cantidad), 0) AS total
+               FROM pedido_extras
+              WHERE id_pedido = :id_pedido
+                AND categoria IN ('Sopa', 'Complemento', 'Agua')
+              GROUP BY categoria"
+        );
+        $stmtExtrasInv->execute([":id_pedido" => $id_pedido]);
+        $extrasInv = $stmtExtrasInv->fetchAll(PDO::FETCH_KEY_PAIR);
+
+        $extrasTazon   = (int)($extrasInv["Sopa"]        ?? 0)
+                       + (int)($extrasInv["Complemento"] ?? 0);
+        $extrasBotella = (int)($extrasInv["Agua"]        ?? 0);
+
+        // Mapa: id_item => cantidad a descontar
+        $descuentos = [
+            1  => $numMenus,                      // Contenedor con división 8x8
+            2  => $numMenus + $extrasTazon,        // Tazón con tapa
+            3  => $numMenus,                      // Tenedor
+            4  => $numMenus,                      // Cuchillo
+            5  => $numMenus,                      // Cuchara
+            6  => $numMenus,                      // Cuchara nevera
+            7  => $numMenus,                      // Servilleta
+            8  => $numMenus,                      // Bolsa con adherible
+            9  => $numMenus + $extrasBotella,      // Botella con tapa
+            10 => $numMenus,                      // Bolsa mediana
+        ];
+
+        $stmtDescItem = $conexion->prepare(
+            "UPDATE inventario_desechable
+                SET stock_actual = stock_actual - :cantidad
+              WHERE id_item = :id_item"
+        );
+        $stmtInsertMov = $conexion->prepare(
+            "INSERT INTO inventario_movimientos (id_item, tipo, cantidad, id_pedido)
+             VALUES (:id_item, 'descuento', :cantidad, :id_pedido)"
+        );
+
+        foreach ($descuentos as $id_item => $cantidad) {
+            if ($cantidad > 0) {
+                $stmtDescItem->execute([
+                    ":cantidad" => $cantidad,
+                    ":id_item"  => $id_item,
+                ]);
+                $stmtInsertMov->execute([
+                    ":id_item"   => $id_item,
+                    ":cantidad"  => -$cantidad,
+                    ":id_pedido" => $id_pedido,
+                ]);
+            }
+        }
+
+        $conexion->prepare(
+            "UPDATE pedidos SET inventario_descontado = 1 WHERE id_pedido = :id_pedido"
+        )->execute([":id_pedido" => $id_pedido]);
+    }
+
     header("Location: ticket.php?id=" . urlencode($id_pedido));
     exit;
 

@@ -199,6 +199,24 @@ $modoPrueba = (int)($stmtModoPrueba->fetchColumn() ?? 0);
             </div>
         </a>
 
+        <a href="inventario.php" class="panel-acceso panel-acceso--inventario">
+            <div class="panel-acceso__icono">📦</div>
+            <div class="panel-acceso__contenido">
+                <strong class="panel-acceso__titulo">Inventario desechable</strong>
+                <span class="panel-acceso__desc">Control de stock de contenedores, cubiertos y empaques</span>
+            </div>
+            <?php
+                $stmtAlertaInv = $conexion->prepare(
+                    "SELECT COUNT(*) FROM inventario_desechable WHERE stock_actual <= stock_minimo"
+                );
+                $stmtAlertaInv->execute();
+                $alertasInv = (int)$stmtAlertaInv->fetchColumn();
+                if ($alertasInv > 0):
+            ?>
+                <span class="panel-acceso__badge"><?php echo $alertasInv; ?> alerta<?php echo $alertasInv !== 1 ? "s" : ""; ?></span>
+            <?php endif; ?>
+        </a>
+
     </div>
 
     <!-- RESUMEN DEL DÍA -->

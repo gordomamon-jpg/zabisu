@@ -2054,7 +2054,8 @@ input[type="checkbox"] {
 .panel-acceso--pedidos   { border-left: 3px solid rgba(255, 122, 0, 0.7); }
 .panel-acceso--estadisticas { border-left: 3px solid rgba(255, 200, 60, 0.6); }
 .panel-acceso--menus     { border-left: 3px solid rgba(100, 180, 255, 0.5); }
-.panel-acceso--nuevo-menu { border-left: 3px solid rgba(134, 239, 172, 0.5); }
+.panel-acceso--nuevo-menu  { border-left: 3px solid rgba(134, 239, 172, 0.5); }
+.panel-acceso--inventario  { border-left: 3px solid rgba(192, 132, 252, 0.5); }
 
 .panel-acceso__icono {
     font-size: 28px;
