@@ -248,15 +248,17 @@ try {
         // Mapa: id_item => cantidad a descontar
         $descuentos = [
             1  => $numMenus,                      // Contenedor con división 8x8
-            2  => $numMenus + $extrasTazon,        // Tazón con tapa
-            3  => $numMenus,                      // Tenedor
-            4  => $numMenus,                      // Cuchillo
-            5  => $numMenus,                      // Cuchara
-            6  => $numMenus,                      // Cuchara nevera
-            7  => $numMenus,                      // Servilleta
-            8  => $numMenus,                      // Bolsa con adherible
-            9  => $numMenus + $extrasBotella,      // Botella con tapa
-            10 => $numMenus,                      // Bolsa mediana
+            2  => $numMenus + $extrasTazon,        // Tazón
+            3  => $numMenus + $extrasTazon,        // Tapa tazón
+            4  => $numMenus,                      // Tenedor
+            5  => $numMenus,                      // Cuchillo
+            6  => $numMenus,                      // Cuchara
+            7  => $numMenus,                      // Cuchara nevera
+            8  => $numMenus,                      // Servilleta
+            9  => $numMenus,                      // Bolsa con adherible
+            10 => $numMenus + $extrasBotella,      // Botella
+            11 => $numMenus + $extrasBotella,      // Tapa botella
+            12 => $numMenus,                      // Bolsa mediana
         ];
 
         $stmtDescItem = $conexion->prepare(
