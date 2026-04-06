@@ -553,7 +553,7 @@ h1 {
 
 
 
-.bloque-formulario label {
+.bloque-formulario label:not(.opcion-producto):not(.opcion-horario) {
     display: block;
     font-size: 13px;
     font-weight: 700;
