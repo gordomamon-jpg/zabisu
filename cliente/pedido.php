@@ -60,9 +60,6 @@ if (!$menuActivo) {
         <meta name="apple-mobile-web-app-title" content="Zabisu">
         <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
         <link rel="stylesheet" href="../assets/css/styles.css?v=2">
-        <style>
-            .opcion-producto { text-transform: none !important; font-weight: normal !important; letter-spacing: normal !important; }
-        </style>
     </head>
     <body>
         <div class="contenedor">
@@ -463,6 +460,9 @@ if ($scrollDestino === "bloque-entrega") {
     <meta name="apple-mobile-web-app-title" content="Zabisu">
     <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
     <link rel="stylesheet" href="../assets/css/styles.css">
+    <style>
+        .opcion-producto { text-transform: none !important; font-weight: normal !important; letter-spacing: normal !important; }
+    </style>
 </head>
 <body>
 
