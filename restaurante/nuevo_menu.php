@@ -163,7 +163,7 @@ $peDefault        = $_POST["precio_ejecutivo"] ?? "100";
                 <div class="nm-precio-card nm-precio-card--zabisu">
                     <div class="nm-precio-card__header">
                         <strong>Menú Zabisu</strong>
-                        <span class="nm-precio-card__desc">2 platos fuertes · Sopa · 4 complementos · Agua · Postre</span>
+                        <span class="nm-precio-card__desc">2 platos fuertes · Sopa · 5 complementos · Agua · Postre</span>
                     </div>
                     <div class="nm-precio-card__input">
                         <span class="nm-precio-card__simbolo">$</span>
@@ -175,7 +175,7 @@ $peDefault        = $_POST["precio_ejecutivo"] ?? "100";
                 <div class="nm-precio-card nm-precio-card--ejecutivo">
                     <div class="nm-precio-card__header">
                         <strong>Menú Ejecutivo</strong>
-                        <span class="nm-precio-card__desc">3 platos fuertes · Sopa · 4 complementos · Agua · Postre</span>
+                        <span class="nm-precio-card__desc">3 platos fuertes · Sopa · 5 complementos · Agua · Postre</span>
                     </div>
                     <div class="nm-precio-card__input">
                         <span class="nm-precio-card__simbolo">$</span>

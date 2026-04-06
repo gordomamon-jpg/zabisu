@@ -238,8 +238,8 @@ foreach ($stmtGuardados->fetchAll(PDO::FETCH_ASSOC) as $p) {
     Estructura fija del menú
 */
 $estructura = [
-    "Zabisu"   => ["Plato fuerte" => 2, "Sopa" => 1, "Complemento" => 4, "Agua" => 1, "Postre" => 1],
-    "Ejecutivo"=> ["Plato fuerte" => 3, "Sopa" => 1, "Complemento" => 4, "Agua" => 1, "Postre" => 1],
+    "Zabisu"   => ["Plato fuerte" => 2, "Sopa" => 1, "Complemento" => 5, "Agua" => 1, "Postre" => 1],
+    "Ejecutivo"=> ["Plato fuerte" => 3, "Sopa" => 1, "Complemento" => 5, "Agua" => 1, "Postre" => 1],
 ];
 
 $iconosCategoria = [
