@@ -715,10 +715,16 @@ textarea::placeholder {
     border: 1px solid rgba(255,255,255,0.07);
     cursor: pointer;
     transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+}
+
+label.opcion-producto,
+.bloque-formulario label.opcion-producto {
     text-transform: none;
     font-weight: normal;
     letter-spacing: normal;
     color: var(--zabisu-white-soft);
+    margin-bottom: 10px;
+    margin-top: 0;
 }
 
 .opcion-horario:hover,
