@@ -392,46 +392,73 @@ function formatearFechaBonita($fecha)
     </div>
 
     <!-- ══ PANEL RESUMEN DE RUTA ════════════════════════════════ -->
+    <?php $puntosHoy = $resumenRutaPorFecha[date("Y-m-d")] ?? []; ?>
     <div class="bloque-formulario bloque-resumen-ruta" id="bloque-resumen-ruta" style="display:none;">
-        <h2>🚚 Resumen de ruta</h2>
-        <p class="nota-formulario">
-            Total de menús y extras a entregar, agrupados por ubicación y horario.
-        </p>
-
-        <?php if (empty($resumenRutaPorFecha)): ?>
-            <p class="nota-formulario" style="margin-top:12px;">No hay pedidos activos para mostrar.</p>
-        <?php else: ?>
-            <?php foreach ($resumenRutaPorFecha as $fecha => $puntos): ?>
-            <div class="ruta-seccion-fecha">
-                <p class="ruta-seccion-fecha__label"><?php echo htmlspecialchars(formatearFechaBonita($fecha)); ?></p>
-                <div class="ruta-cards">
-                    <?php foreach ($puntos as $punto): ?>
-                    <div class="ruta-card">
-                        <div class="ruta-card__header">
-                            <span class="ruta-card__icono">📍</span>
-                            <span class="ruta-card__ubicacion"><?php echo htmlspecialchars($punto["nombre_ubicacion"]); ?></span>
-                        </div>
-                        <div class="ruta-card__hora">
-                            🕐 <?php echo date("g:i A", strtotime($punto["hora_entrega"])); ?>
-                        </div>
-                        <div class="ruta-card__menus">
-                            <span class="ruta-card__menus-num"><?php echo $punto["total_menus"]; ?></span>
-                            <span class="ruta-card__menus-label"><?php echo $punto["total_menus"] === 1 ? "menú" : "menús"; ?></span>
-                        </div>
-                        <?php if (!empty($punto["extras"])): ?>
-                        <div class="ruta-card__extras">
-                            <?php foreach ($punto["extras"] as $extra): ?>
-                            <span class="ruta-card__extra-chip">
-                                +<?php echo $extra["cantidad"]; ?> <?php echo htmlspecialchars($extra["nombre"]); ?>
-                            </span>
-                            <?php endforeach; ?>
-                        </div>
-                        <?php endif; ?>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
+        <div class="ruta-panel-header">
+            <div>
+                <h2>🚚 Resumen de ruta</h2>
+                <p class="nota-formulario" style="margin:4px 0 0;">
+                    Pedidos de hoy — <?php echo htmlspecialchars(formatearFechaBonita(date("Y-m-d"))); ?>
+                </p>
             </div>
-            <?php endforeach; ?>
+            <?php if (!empty($puntosHoy)): ?>
+            <div class="ruta-panel-total">
+                <span class="ruta-panel-total__num"><?php echo array_sum(array_column($puntosHoy, "total_menus")); ?></span>
+                <span class="ruta-panel-total__label">menús en total</span>
+            </div>
+            <?php endif; ?>
+        </div>
+
+        <?php if (empty($puntosHoy)): ?>
+            <p class="nota-formulario" style="margin-top:16px;">No hay pedidos registrados para hoy.</p>
+        <?php else: ?>
+        <div class="tabla-pedidos-wrapper" style="margin-top:18px;">
+            <table class="tabla-pedidos ruta-tabla">
+                <thead>
+                    <tr>
+                        <th>Ubicación</th>
+                        <th>Hora</th>
+                        <th style="text-align:center;">Menús</th>
+                        <th>Extras</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($puntosHoy as $punto): ?>
+                    <tr>
+                        <td>
+                            <strong class="ruta-tabla__ubicacion">
+                                📍 <?php echo htmlspecialchars($punto["nombre_ubicacion"]); ?>
+                            </strong>
+                        </td>
+                        <td>
+                            <span class="ruta-tabla__hora">
+                                <?php echo date("g:i A", strtotime($punto["hora_entrega"])); ?>
+                            </span>
+                        </td>
+                        <td style="text-align:center;">
+                            <span class="ruta-tabla__menus-badge">
+                                <?php echo $punto["total_menus"]; ?>
+                                <span class="ruta-tabla__menus-label"><?php echo $punto["total_menus"] === 1 ? "menú" : "menús"; ?></span>
+                            </span>
+                        </td>
+                        <td>
+                            <?php if (!empty($punto["extras"])): ?>
+                                <div class="ruta-tabla__extras">
+                                    <?php foreach ($punto["extras"] as $extra): ?>
+                                    <span class="ruta-card__extra-chip">
+                                        +<?php echo $extra["cantidad"]; ?> <?php echo htmlspecialchars($extra["nombre"]); ?>
+                                    </span>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php else: ?>
+                                <span class="texto-secundario">—</span>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
         <?php endif; ?>
     </div>
 

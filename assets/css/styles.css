@@ -1871,107 +1871,85 @@ input[type="checkbox"] {
     background: linear-gradient(180deg, rgba(74,222,128,0.05) 0%, rgba(12,12,15,0.96) 100%);
 }
 
-.ruta-seccion-fecha {
-    margin-top: 20px;
-}
-.ruta-seccion-fecha:first-child {
-    margin-top: 4px;
-}
-.ruta-seccion-fecha__label {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--zabisu-white-soft);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    margin: 0 0 12px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid rgba(255,255,255,0.07);
-}
-
-.ruta-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 14px;
-}
-
-.ruta-card {
-    padding: 18px 16px;
-    border-radius: 18px;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.07);
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    transition: border-color 0.18s, background 0.18s;
-}
-.ruta-card:hover {
-    border-color: rgba(74, 222, 128, 0.25);
-    background: rgba(74, 222, 128, 0.04);
-}
-
-.ruta-card__header {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-}
-.ruta-card__icono {
-    font-size: 16px;
-    flex-shrink: 0;
-    margin-top: 1px;
-}
-.ruta-card__ubicacion {
-    font-size: 15px;
-    font-weight: 800;
-    color: var(--zabisu-white);
-    line-height: 1.3;
-}
-
-.ruta-card__hora {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--zabisu-white-soft);
+.ruta-panel-header {
     display: flex;
     align-items: center;
-    gap: 5px;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+.ruta-panel-header h2 {
+    margin: 0;
 }
 
-.ruta-card__menus {
+.ruta-panel-total {
     display: flex;
     align-items: baseline;
-    gap: 6px;
-    padding: 8px 12px;
-    border-radius: 12px;
+    gap: 7px;
+    padding: 10px 20px;
+    border-radius: 14px;
     background: rgba(74, 222, 128, 0.08);
-    border: 1px solid rgba(74, 222, 128, 0.18);
+    border: 1px solid rgba(74, 222, 128, 0.22);
 }
-.ruta-card__menus-num {
-    font-size: 26px;
+.ruta-panel-total__num {
+    font-size: 32px;
     font-weight: 900;
     color: #4ade80;
     line-height: 1;
 }
-.ruta-card__menus-label {
+.ruta-panel-total__label {
     font-size: 13px;
     font-weight: 700;
-    color: rgba(74, 222, 128, 0.75);
+    color: rgba(74, 222, 128, 0.7);
 }
 
-.ruta-card__extras {
+.ruta-tabla__ubicacion {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--zabisu-white);
+}
+
+.ruta-tabla__hora {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--zabisu-white-soft);
+}
+
+.ruta-tabla__menus-badge {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 5px;
+    padding: 5px 14px;
+    border-radius: 999px;
+    background: rgba(74, 222, 128, 0.1);
+    border: 1px solid rgba(74, 222, 128, 0.25);
+    font-size: 18px;
+    font-weight: 900;
+    color: #4ade80;
+}
+.ruta-tabla__menus-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(74, 222, 128, 0.65);
+}
+
+.ruta-tabla__extras {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 6px;
 }
+
 .ruta-card__extra-chip {
     display: inline-flex;
     align-items: center;
-    padding: 5px 10px;
+    padding: 4px 10px;
     border-radius: 999px;
     background: rgba(255, 122, 0, 0.1);
     border: 1px solid rgba(255, 122, 0, 0.25);
     color: var(--zabisu-orange);
     font-size: 12px;
     font-weight: 700;
-    width: fit-content;
+    white-space: nowrap;
 }
 
 .cabecera-modulo {
