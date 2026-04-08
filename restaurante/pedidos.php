@@ -341,6 +341,9 @@ function formatearFechaBonita($fecha)
             <button type="button" id="btn-toggle-notificacion" class="btn-notificar-ruta">
                 📍 Notificar llegada al punto
             </button>
+            <button type="button" id="btn-toggle-resumen-ruta" class="btn-notificar-ruta btn-resumen-ruta">
+                🚚 Ver resumen de ruta
+            </button>
         </div>
     </div>
 
@@ -386,6 +389,50 @@ function formatearFechaBonita($fecha)
         </button>
 
         <div id="notificacion-resultado" class="notificacion-resultado" style="display:none;"></div>
+    </div>
+
+    <!-- ══ PANEL RESUMEN DE RUTA ════════════════════════════════ -->
+    <div class="bloque-formulario bloque-resumen-ruta" id="bloque-resumen-ruta" style="display:none;">
+        <h2>🚚 Resumen de ruta</h2>
+        <p class="nota-formulario">
+            Total de menús y extras a entregar, agrupados por ubicación y horario.
+        </p>
+
+        <?php if (empty($resumenRutaPorFecha)): ?>
+            <p class="nota-formulario" style="margin-top:12px;">No hay pedidos activos para mostrar.</p>
+        <?php else: ?>
+            <?php foreach ($resumenRutaPorFecha as $fecha => $puntos): ?>
+            <div class="ruta-seccion-fecha">
+                <p class="ruta-seccion-fecha__label"><?php echo htmlspecialchars(formatearFechaBonita($fecha)); ?></p>
+                <div class="ruta-cards">
+                    <?php foreach ($puntos as $punto): ?>
+                    <div class="ruta-card">
+                        <div class="ruta-card__header">
+                            <span class="ruta-card__icono">📍</span>
+                            <span class="ruta-card__ubicacion"><?php echo htmlspecialchars($punto["nombre_ubicacion"]); ?></span>
+                        </div>
+                        <div class="ruta-card__hora">
+                            🕐 <?php echo date("g:i A", strtotime($punto["hora_entrega"])); ?>
+                        </div>
+                        <div class="ruta-card__menus">
+                            <span class="ruta-card__menus-num"><?php echo $punto["total_menus"]; ?></span>
+                            <span class="ruta-card__menus-label"><?php echo $punto["total_menus"] === 1 ? "menú" : "menús"; ?></span>
+                        </div>
+                        <?php if (!empty($punto["extras"])): ?>
+                        <div class="ruta-card__extras">
+                            <?php foreach ($punto["extras"] as $extra): ?>
+                            <span class="ruta-card__extra-chip">
+                                +<?php echo $extra["cantidad"]; ?> <?php echo htmlspecialchars($extra["nombre"]); ?>
+                            </span>
+                            <?php endforeach; ?>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
     </div>
 
     <?php if (!empty($pedidos)): ?>
@@ -541,27 +588,6 @@ function formatearFechaBonita($fecha)
                                             <?php echo (int)$complemento["total"]; ?>
                                         </strong>
                                     </div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                    <?php endif; ?>
-
-                    <?php if (!empty($resumenRutaPorFecha[$fecha])): ?>
-                        <div class="resumen-ruta-dia">
-                            <h4 class="resumen-ruta-dia__titulo">🚚 Resumen de ruta</h4>
-                            <div class="resumen-ruta-dia__lista">
-                                <?php foreach ($resumenRutaPorFecha[$fecha] as $punto): ?>
-                                <div class="ruta-punto">
-                                    <span class="ruta-punto__ubicacion"><?php echo htmlspecialchars($punto["nombre_ubicacion"]); ?></span>
-                                    <span class="ruta-punto__sep">·</span>
-                                    <span class="ruta-punto__hora"><?php echo date("g:i A", strtotime($punto["hora_entrega"])); ?></span>
-                                    <span class="ruta-punto__sep">·</span>
-                                    <span class="ruta-punto__menus"><?php echo $punto["total_menus"]; ?> <?php echo $punto["total_menus"] === 1 ? "menú" : "menús"; ?></span>
-                                    <?php foreach ($punto["extras"] as $extra): ?>
-                                        <span class="ruta-punto__sep">·</span>
-                                        <span class="ruta-punto__extra"><?php echo $extra["cantidad"]; ?> <?php echo htmlspecialchars($extra["nombre"]); ?><?php echo $extra["cantidad"] > 1 ? " extras" : " extra"; ?></span>
-                                    <?php endforeach; ?>
-                                </div>
                                 <?php endforeach; ?>
                             </div>
                         </div>
@@ -867,6 +893,21 @@ document.addEventListener("DOMContentLoaded", function () {
             btnToggleNotif.classList.toggle("btn-notificar-ruta--activo", !visible);
             if (!visible) {
                 bloqueNotif.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+        });
+    }
+
+    // ── RESUMEN DE RUTA ──────────────────────────────────────────
+    const btnToggleResumenRuta = document.getElementById("btn-toggle-resumen-ruta");
+    const bloqueResumenRuta    = document.getElementById("bloque-resumen-ruta");
+
+    if (btnToggleResumenRuta && bloqueResumenRuta) {
+        btnToggleResumenRuta.addEventListener("click", function () {
+            const visible = bloqueResumenRuta.style.display !== "none";
+            bloqueResumenRuta.style.display = visible ? "none" : "block";
+            btnToggleResumenRuta.classList.toggle("btn-resumen-ruta--activo", !visible);
+            if (!visible) {
+                bloqueResumenRuta.scrollIntoView({ behavior: "smooth", block: "start" });
             }
         });
     }
