@@ -147,6 +147,88 @@ foreach ($resumenPlatosPorFecha as $fecha => $platos) {
 }
 
 /*
+    Resumen de ruta: menús por ubicación + horario + fecha
+*/
+$sqlResumenRuta = "SELECT
+    COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) AS fecha_grupo,
+    u.nombre_ubicacion,
+    h.hora_entrega,
+    SUM(mc.num_menus) AS total_menus
+FROM pedidos p
+INNER JOIN horarios_ubicacion h ON p.id_horario = h.id_horario
+INNER JOIN ubicaciones u ON h.id_ubicacion = u.id_ubicacion
+LEFT JOIN (
+    SELECT id_pedido, COUNT(*) AS num_menus FROM pedido_menus GROUP BY id_pedido
+) AS mc ON mc.id_pedido = p.id_pedido
+LEFT JOIN (
+    SELECT pm2.id_pedido, MIN(md2.fecha) AS fecha_menu
+    FROM pedido_menus pm2
+    INNER JOIN detalle_pedido dp2 ON dp2.id_pedido_menu = pm2.id_pedido_menu
+    INNER JOIN productos pr2 ON pr2.id_producto = dp2.id_producto
+    INNER JOIN menu_dia md2 ON md2.id_menu = pr2.id_menu
+    GROUP BY pm2.id_pedido
+) AS mi ON mi.id_pedido = p.id_pedido
+WHERE p.es_prueba = 0 AND p.estado != 'Cancelado'
+GROUP BY fecha_grupo, u.nombre_ubicacion, h.hora_entrega
+ORDER BY fecha_grupo DESC, h.hora_entrega ASC, u.nombre_ubicacion ASC";
+
+$stmtResumenRuta = $conexion->prepare($sqlResumenRuta);
+$stmtResumenRuta->execute();
+$resumenRutaDB = $stmtResumenRuta->fetchAll(PDO::FETCH_ASSOC);
+
+/*
+    Extras por ubicación + horario + fecha
+*/
+$sqlExtrasRuta = "SELECT
+    COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) AS fecha_grupo,
+    u.nombre_ubicacion,
+    h.hora_entrega,
+    pe.nombre AS nombre_extra,
+    SUM(pe.cantidad) AS total_cantidad
+FROM pedido_extras pe
+INNER JOIN pedidos p ON pe.id_pedido = p.id_pedido
+INNER JOIN horarios_ubicacion h ON p.id_horario = h.id_horario
+INNER JOIN ubicaciones u ON h.id_ubicacion = u.id_ubicacion
+LEFT JOIN (
+    SELECT pm2.id_pedido, MIN(md2.fecha) AS fecha_menu
+    FROM pedido_menus pm2
+    INNER JOIN detalle_pedido dp2 ON dp2.id_pedido_menu = pm2.id_pedido_menu
+    INNER JOIN productos pr2 ON pr2.id_producto = dp2.id_producto
+    INNER JOIN menu_dia md2 ON md2.id_menu = pr2.id_menu
+    GROUP BY pm2.id_pedido
+) AS mi ON mi.id_pedido = p.id_pedido
+WHERE p.es_prueba = 0 AND p.estado != 'Cancelado'
+GROUP BY fecha_grupo, u.nombre_ubicacion, h.hora_entrega, pe.nombre
+ORDER BY fecha_grupo DESC, h.hora_entrega ASC, u.nombre_ubicacion ASC, pe.nombre ASC";
+
+$stmtExtrasRuta = $conexion->prepare($sqlExtrasRuta);
+$stmtExtrasRuta->execute();
+$extrasRutaDB = $stmtExtrasRuta->fetchAll(PDO::FETCH_ASSOC);
+
+// Indexar: [fecha][ubicacion||hora] = ['nombre_ubicacion', 'hora_entrega', 'total_menus', 'extras']
+$resumenRutaPorFecha = [];
+foreach ($resumenRutaDB as $fila) {
+    $fecha = $fila["fecha_grupo"];
+    $key   = $fila["nombre_ubicacion"] . "||" . $fila["hora_entrega"];
+    $resumenRutaPorFecha[$fecha][$key] = [
+        "nombre_ubicacion" => $fila["nombre_ubicacion"],
+        "hora_entrega"     => $fila["hora_entrega"],
+        "total_menus"      => (int)$fila["total_menus"],
+        "extras"           => [],
+    ];
+}
+foreach ($extrasRutaDB as $fila) {
+    $fecha = $fila["fecha_grupo"];
+    $key   = $fila["nombre_ubicacion"] . "||" . $fila["hora_entrega"];
+    if (isset($resumenRutaPorFecha[$fecha][$key])) {
+        $resumenRutaPorFecha[$fecha][$key]["extras"][] = [
+            "nombre"   => $fila["nombre_extra"],
+            "cantidad" => (int)$fila["total_cantidad"],
+        ];
+    }
+}
+
+/*
     Opciones para filtros
 */
 $ubicacionesFiltro = array_values(array_unique(array_column($pedidos, "nombre_ubicacion")));
@@ -459,6 +541,27 @@ function formatearFechaBonita($fecha)
                                             <?php echo (int)$complemento["total"]; ?>
                                         </strong>
                                     </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if (!empty($resumenRutaPorFecha[$fecha])): ?>
+                        <div class="resumen-ruta-dia">
+                            <h4 class="resumen-ruta-dia__titulo">🚚 Resumen de ruta</h4>
+                            <div class="resumen-ruta-dia__lista">
+                                <?php foreach ($resumenRutaPorFecha[$fecha] as $punto): ?>
+                                <div class="ruta-punto">
+                                    <span class="ruta-punto__ubicacion"><?php echo htmlspecialchars($punto["nombre_ubicacion"]); ?></span>
+                                    <span class="ruta-punto__sep">·</span>
+                                    <span class="ruta-punto__hora"><?php echo date("g:i A", strtotime($punto["hora_entrega"])); ?></span>
+                                    <span class="ruta-punto__sep">·</span>
+                                    <span class="ruta-punto__menus"><?php echo $punto["total_menus"]; ?> <?php echo $punto["total_menus"] === 1 ? "menú" : "menús"; ?></span>
+                                    <?php foreach ($punto["extras"] as $extra): ?>
+                                        <span class="ruta-punto__sep">·</span>
+                                        <span class="ruta-punto__extra"><?php echo $extra["cantidad"]; ?> <?php echo htmlspecialchars($extra["nombre"]); ?><?php echo $extra["cantidad"] > 1 ? " extras" : " extra"; ?></span>
+                                    <?php endforeach; ?>
+                                </div>
                                 <?php endforeach; ?>
                             </div>
                         </div>

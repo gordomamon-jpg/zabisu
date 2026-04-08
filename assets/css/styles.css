@@ -1854,6 +1854,64 @@ input[type="checkbox"] {
     border: 1px solid rgba(255,255,255,0.08);
 }
 
+.resumen-ruta-dia {
+    margin-bottom: 18px;
+    padding: 16px;
+    border-radius: 18px;
+    background: linear-gradient(180deg, rgba(0,200,120,0.07) 0%, rgba(255,255,255,0.02) 100%);
+    border: 1px solid rgba(0,200,120,0.18);
+}
+
+.resumen-ruta-dia__titulo {
+    margin: 0 0 12px;
+    color: var(--zabisu-white);
+    font-size: 16px;
+    font-weight: 800;
+}
+
+.resumen-ruta-dia__lista {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ruta-punto {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    font-size: 14px;
+}
+
+.ruta-punto__sep {
+    color: rgba(255,255,255,0.25);
+    font-weight: 400;
+}
+
+.ruta-punto__ubicacion {
+    color: var(--zabisu-white);
+    font-weight: 800;
+}
+
+.ruta-punto__hora {
+    color: var(--zabisu-white-soft);
+    font-weight: 600;
+}
+
+.ruta-punto__menus {
+    color: #4ade80;
+    font-weight: 700;
+}
+
+.ruta-punto__extra {
+    color: var(--zabisu-orange);
+    font-weight: 600;
+}
+
 .cabecera-modulo {
     display: flex;
     align-items: center;
