@@ -419,6 +419,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
             $totalPedido += $cantidad * $precioExtra;
         }
 
+        // Extra fijo: Huevo sobre arroz
+        $cantidadHuevo = min((int)($_POST["huevo_extra"] ?? 0), 5);
+        if ($cantidadHuevo > 0) {
+            $extrasSeleccionados[] = [
+                "id_producto"     => null,
+                "nombre"          => "Huevo sobre arroz",
+                "categoria"       => "Extra fijo",
+                "cantidad"        => $cantidadHuevo,
+                "precio_unitario" => 10.00,
+            ];
+            $totalPedido += $cantidadHuevo * 10.00;
+        }
+
         $_SESSION["pedido_temporal"] = [
             "nombre_cliente"  => $nombre_cliente,
             "telefono"        => $telefono,
@@ -753,6 +766,24 @@ if ($scrollDestino === "bloque-entrega") {
                         <?php endforeach; ?>
                     </div>
                     <?php endforeach; ?>
+
+                    <!-- Extra fijo: Huevo sobre arroz -->
+                    <div class="grupo-categoria">
+                        <h3>🍳 Extra especial</h3>
+                        <div class="extra-item <?php echo (int)($_POST["huevo_extra"] ?? 0) > 0 ? 'extra-item--activo' : ''; ?>" data-precio="10">
+                            <span class="extra-item__nombre">Huevo sobre arroz</span>
+                            <span class="extra-item__precio-hint">$10 c/u</span>
+                            <div class="extra-item__contador">
+                                <button type="button" class="extra-btn-menos">−</button>
+                                <input type="number"
+                                       name="huevo_extra"
+                                       class="extra-cantidad"
+                                       value="<?php echo (int)($_POST["huevo_extra"] ?? 0); ?>"
+                                       min="0" max="5" readonly>
+                                <button type="button" class="extra-btn-mas">+</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
