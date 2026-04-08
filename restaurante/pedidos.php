@@ -121,7 +121,7 @@ $sqlResumenComplementos = "SELECT
                            INNER JOIN pedidos p ON pm.id_pedido = p.id_pedido
                            INNER JOIN productos pr ON pr.id_producto = dp.id_producto
                            LEFT JOIN menu_dia md ON md.id_menu = pr.id_menu
-                           WHERE dp.categoria = 'Complemento' AND p.es_prueba = 0
+                           WHERE dp.categoria IN ('Complemento', 'Agua') AND p.es_prueba = 0
                            GROUP BY COALESCE(md.fecha, DATE(p.fecha_pedido)), dp.nombre_producto
                            ORDER BY COALESCE(md.fecha, DATE(p.fecha_pedido)) DESC, dp.nombre_producto ASC";
 $stmtResumenComplementos = $conexion->prepare($sqlResumenComplementos);
@@ -132,10 +132,49 @@ $resumenComplementosPorFecha = [];
 
 foreach ($resumenComplementosDB as $fila) {
     $fechaGrupo = $fila["fecha_grupo"];
-    $resumenComplementosPorFecha[$fechaGrupo][] = [
+    $resumenComplementosPorFecha[$fechaGrupo][$fila["nombre_producto"]] = [
         "nombre_producto" => $fila["nombre_producto"],
-        "total" => (int)$fila["total"]
+        "total"           => (int)$fila["total"]
     ];
+}
+
+// Sumar aguas de pedido_extras
+$sqlAguasExtra = "SELECT
+                      COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) AS fecha_grupo,
+                      pe.nombre AS nombre_producto,
+                      SUM(pe.cantidad) AS total
+                  FROM pedido_extras pe
+                  INNER JOIN pedidos p ON pe.id_pedido = p.id_pedido
+                  LEFT JOIN (
+                      SELECT pm2.id_pedido, MIN(md2.fecha) AS fecha_menu
+                      FROM pedido_menus pm2
+                      INNER JOIN detalle_pedido dp2 ON dp2.id_pedido_menu = pm2.id_pedido_menu
+                      INNER JOIN productos pr2 ON pr2.id_producto = dp2.id_producto
+                      INNER JOIN menu_dia md2 ON md2.id_menu = pr2.id_menu
+                      GROUP BY pm2.id_pedido
+                  ) AS mi ON mi.id_pedido = p.id_pedido
+                  WHERE pe.categoria = 'Agua' AND p.es_prueba = 0
+                  GROUP BY fecha_grupo, pe.nombre
+                  ORDER BY fecha_grupo DESC, pe.nombre ASC";
+$stmtAguasExtra = $conexion->prepare($sqlAguasExtra);
+$stmtAguasExtra->execute();
+foreach ($stmtAguasExtra->fetchAll(PDO::FETCH_ASSOC) as $fila) {
+    $fechaGrupo = $fila["fecha_grupo"];
+    $nombre     = $fila["nombre_producto"];
+    if (isset($resumenComplementosPorFecha[$fechaGrupo][$nombre])) {
+        $resumenComplementosPorFecha[$fechaGrupo][$nombre]["total"] += (int)$fila["total"];
+    } else {
+        $resumenComplementosPorFecha[$fechaGrupo][$nombre] = [
+            "nombre_producto" => $nombre,
+            "total"           => (int)$fila["total"],
+        ];
+    }
+}
+
+// Re-indexar a array simple ordenado por nombre
+foreach ($resumenComplementosPorFecha as $fecha => $items) {
+    ksort($resumenComplementosPorFecha[$fecha]);
+    $resumenComplementosPorFecha[$fecha] = array_values($resumenComplementosPorFecha[$fecha]);
 }
 
 /*
@@ -603,7 +642,7 @@ function formatearFechaBonita($fecha)
 
                     <?php if (!empty($resumenComplementosPorFecha[$fecha])): ?>
                         <div class="resumen-produccion-dia resumen-produccion-dia--secundario">
-                            <h4 class="resumen-produccion-dia__titulo">Producción de complementos</h4>
+                            <h4 class="resumen-produccion-dia__titulo">Producción de complementos y aguas</h4>
 
                             <div class="resumen-produccion-dia__grid">
                                 <?php foreach ($resumenComplementosPorFecha[$fecha] as $complemento): ?>
