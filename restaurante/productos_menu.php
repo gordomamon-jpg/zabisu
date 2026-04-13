@@ -239,7 +239,7 @@ foreach ($stmtGuardados->fetchAll(PDO::FETCH_ASSOC) as $p) {
 */
 $estructura = [
     "Zabisu"   => ["Plato fuerte" => 2, "Sopa" => 1, "Complemento" => 5, "Agua" => 1, "Postre" => 1],
-    "Ejecutivo"=> ["Plato fuerte" => 3, "Sopa" => 1, "Complemento" => 5, "Agua" => 1, "Postre" => 1],
+    "Ejecutivo"=> ["Plato fuerte" => 4, "Sopa" => 1, "Complemento" => 5, "Agua" => 1, "Postre" => 1],
 ];
 
 $iconosCategoria = [
@@ -397,7 +397,7 @@ $esCreacion = !isset($_GET["editar"]) && empty($productosGuardados);
             </button>
             <button type="button" class="pm-tab" data-tab="Ejecutivo">
                 Menú Ejecutivo
-                <span class="pm-tab__sub">3 platos fuertes</span>
+                <span class="pm-tab__sub">4 platos fuertes</span>
             </button>
         </div>
 
