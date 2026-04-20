@@ -199,6 +199,14 @@ $modoPrueba = (int)($stmtModoPrueba->fetchColumn() ?? 0);
             </div>
         </a>
 
+        <a href="../cliente/bigoton.php" class="panel-acceso panel-acceso--bigoton">
+            <div class="panel-acceso__icono">🥸</div>
+            <div class="panel-acceso__contenido">
+                <strong class="panel-acceso__titulo">El Bigoton</strong>
+                <span class="panel-acceso__desc">Registra pedidos del comedor interno</span>
+            </div>
+        </a>
+
         <a href="inventario.php" class="panel-acceso panel-acceso--inventario">
             <div class="panel-acceso__icono">📦</div>
             <div class="panel-acceso__contenido">

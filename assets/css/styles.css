@@ -2154,6 +2154,7 @@ input[type="checkbox"] {
 .panel-acceso--menus     { border-left: 3px solid rgba(100, 180, 255, 0.5); }
 .panel-acceso--nuevo-menu  { border-left: 3px solid rgba(134, 239, 172, 0.5); }
 .panel-acceso--inventario  { border-left: 3px solid rgba(192, 132, 252, 0.5); }
+.panel-acceso--bigoton     { border-left: 3px solid rgba(251, 191, 36, 0.6); }
 
 .panel-acceso__icono {
     font-size: 28px;
