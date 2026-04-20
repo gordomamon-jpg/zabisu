@@ -104,12 +104,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             $stmtUpdate = $conexion->prepare(
                 "UPDATE productos SET nombre=:nombre, descripcion=:descripcion,
-                 disponible=:disponible, limite_pedidos=:limite_pedidos
+                 disponible=:disponible, limite_pedidos=:limite_pedidos,
+                 complementos_max=:complementos_max
                  WHERE id_producto=:id"
             );
             $stmtInsert = $conexion->prepare(
-                "INSERT INTO productos (id_menu, tipo_menu, categoria, nombre, descripcion, disponible, limite_pedidos)
-                 VALUES (:id_menu, :tipo_menu, :categoria, :nombre, :descripcion, 1, :limite_pedidos)"
+                "INSERT INTO productos (id_menu, tipo_menu, categoria, nombre, descripcion, disponible, limite_pedidos, complementos_max)
+                 VALUES (:id_menu, :tipo_menu, :categoria, :nombre, :descripcion, 1, :limite_pedidos, :complementos_max)"
             );
 
             foreach ($productos as $tipo_menu => $categorias) {
@@ -118,10 +119,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         $nombre      = trim($item["nombre"]         ?? "");
                         $descripcion = trim($item["descripcion"]    ?? "");
                         $limite      = trim($item["limite_pedidos"] ?? "");
+                        $compMax     = trim($item["complementos_max"] ?? "");
 
-                        $limiteFinal = null;
-                        if ($categoria === "Plato fuerte" && $limite !== "" && is_numeric($limite)) {
-                            $limiteFinal = (int)$limite;
+                        $limiteFinal  = null;
+                        $compMaxFinal = null;
+                        if ($categoria === "Plato fuerte") {
+                            if ($limite !== "" && is_numeric($limite)) {
+                                $limiteFinal = (int)$limite;
+                            }
+                            if ($compMax !== "" && is_numeric($compMax) && (int)$compMax >= 1) {
+                                $compMaxFinal = (int)$compMax;
+                            }
                         }
 
                         $exDato = $exMap[$tipo_menu][$categoria][$i] ?? null;
@@ -132,33 +140,36 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                 // Actualizar con los nuevos valores
                                 $idsUsados[] = $idEx;
                                 $stmtUpdate->execute([
-                                    ":nombre"         => $nombre,
-                                    ":descripcion"    => $descripcion,
-                                    ":disponible"     => 1,
-                                    ":limite_pedidos" => $limiteFinal,
-                                    ":id"             => $idEx,
+                                    ":nombre"          => $nombre,
+                                    ":descripcion"     => $descripcion,
+                                    ":disponible"      => 1,
+                                    ":limite_pedidos"  => $limiteFinal,
+                                    ":complementos_max"=> $compMaxFinal,
+                                    ":id"              => $idEx,
                                 ]);
                             } elseif (isset($idsRef[$idEx])) {
                                 // Slot vacío pero referenciado: marcar no disponible con nombre original
                                 $idsUsados[] = $idEx;
                                 $stmtUpdate->execute([
-                                    ":nombre"         => $exDato["nombre"],
-                                    ":descripcion"    => $exDato["descripcion"],
-                                    ":disponible"     => 0,
-                                    ":limite_pedidos" => $exDato["limite_pedidos"],
-                                    ":id"             => $idEx,
+                                    ":nombre"          => $exDato["nombre"],
+                                    ":descripcion"     => $exDato["descripcion"],
+                                    ":disponible"      => 0,
+                                    ":limite_pedidos"  => $exDato["limite_pedidos"],
+                                    ":complementos_max"=> $exDato["complementos_max"] ?? null,
+                                    ":id"              => $idEx,
                                 ]);
                             }
                             // Si slot vacío y no referenciado: no se agrega a $idsUsados → se elimina abajo
                         } elseif ($nombre !== "") {
                             // Insertar nuevo producto
                             $stmtInsert->execute([
-                                ":id_menu"        => $id_menu,
-                                ":tipo_menu"      => $tipo_menu,
-                                ":categoria"      => $categoria,
-                                ":nombre"         => $nombre,
-                                ":descripcion"    => $descripcion,
-                                ":limite_pedidos" => $limiteFinal,
+                                ":id_menu"         => $id_menu,
+                                ":tipo_menu"       => $tipo_menu,
+                                ":categoria"       => $categoria,
+                                ":nombre"          => $nombre,
+                                ":descripcion"     => $descripcion,
+                                ":limite_pedidos"  => $limiteFinal,
+                                ":complementos_max"=> $compMaxFinal,
                             ]);
                         }
                     }
@@ -432,10 +443,11 @@ $esCreacion = !isset($_GET["editar"]) && empty($productosGuardados);
 
                 <div class="pm-productos-lista">
                     <?php for ($i = 0; $i < $cantidad; $i++):
-                        $guardado = $guardadosCategoria[$i] ?? null;
-                        $nombreVal = $guardado["nombre"] ?? "";
-                        $descVal   = $guardado["descripcion"] ?? "";
-                        $limiteVal = $guardado["limite_pedidos"] ?? "";
+                        $guardado    = $guardadosCategoria[$i] ?? null;
+                        $nombreVal   = $guardado["nombre"] ?? "";
+                        $descVal     = $guardado["descripcion"] ?? "";
+                        $limiteVal   = $guardado["limite_pedidos"] ?? "";
+                        $compMaxVal  = $guardado["complementos_max"] ?? "";
                         $inputBase = "productos[" . htmlspecialchars($tipoMenu) . "][" . htmlspecialchars($categoria) . "][" . $i . "]";
                     ?>
                     <div class="pm-producto-card">
@@ -460,6 +472,14 @@ $esCreacion = !isset($_GET["editar"]) && empty($productosGuardados);
                                        placeholder="Sin límite"
                                        value="<?php echo htmlspecialchars($limiteVal); ?>">
                                 <span class="nm-campo__ayuda">Deja vacío si no hay límite para este plato</span>
+                            </div>
+                            <div class="pm-limite">
+                                <label>Máx. complementos</label>
+                                <input type="number" min="1" max="5"
+                                       name="<?php echo $inputBase; ?>[complementos_max]"
+                                       placeholder="Sin límite (usa el máx. del menú)"
+                                       value="<?php echo htmlspecialchars($compMaxVal); ?>">
+                                <span class="nm-campo__ayuda">Deja vacío para permitir hasta 2. Pon 1 si este plato solo incluye un complemento.</span>
                             </div>
                             <?php endif; ?>
                         </div>

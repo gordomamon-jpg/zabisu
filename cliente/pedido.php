@@ -367,7 +367,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
         if ($agua === "")         $erroresMenus[$numeroMenu][] = "Falta seleccionar el agua.";
         if ($postre === "")       $erroresMenus[$numeroMenu][] = "Falta seleccionar el postre.";
         if (empty($complementos)) $erroresMenus[$numeroMenu][] = "Falta seleccionar al menos un complemento.";
-        if (count($complementos) > 2) $erroresMenus[$numeroMenu][] = "Solo puedes elegir hasta 2 complementos.";
+        $maxComp = ($plato_fuerte !== "" && isset($productosIndexados[$plato_fuerte]) && !empty($productosIndexados[$plato_fuerte]["complementos_max"]))
+            ? (int)$productosIndexados[$plato_fuerte]["complementos_max"]
+            : 2;
+        if (count($complementos) > $maxComp) {
+            $erroresMenus[$numeroMenu][] = $maxComp === 1
+                ? "Este plato solo incluye 1 complemento."
+                : "Solo puedes elegir hasta {$maxComp} complementos.";
+        }
 
         $productosAValidar = array_filter(
             array_merge([$plato_fuerte, $sopa, $agua, $postre], $complementos),
@@ -636,6 +643,7 @@ if ($scrollDestino === "bloque-entrega") {
                                             <input type="radio"
                                                    name="menus[<?php echo $i; ?>][plato_fuerte]"
                                                    value="<?php echo $item["id_producto"]; ?>"
+                                                   data-complementos-max="<?php echo !empty($item['complementos_max']) ? (int)$item['complementos_max'] : 2; ?>"
                                                    <?php echo (($_POST["menus"][$i]["plato_fuerte"] ?? "") == $item["id_producto"]) ? "checked" : ""; ?>
                                                    <?php echo !empty($item["agotado"]) ? 'disabled' : ''; ?>>
                                             <strong><?php echo htmlspecialchars($item["nombre"]); ?></strong>
@@ -665,8 +673,8 @@ if ($scrollDestino === "bloque-entrega") {
                             <?php endif; ?>
 
                             <?php if (!empty($menusPorTipo[$tipoMenu]["Complemento"])): ?>
-                                <div class="grupo-categoria">
-                                    <h3>🥗 Complementos <span class="cat-hint">· elige hasta 2</span></h3>
+                                <div class="grupo-categoria grupo-complementos" data-max="2">
+                                    <h3>🥗 Complementos <span class="cat-hint complementos-hint">· elige hasta 2</span></h3>
                                     <?php foreach ($menusPorTipo[$tipoMenu]["Complemento"] as $item): ?>
                                         <label class="opcion-producto">
                                             <input type="checkbox"
@@ -1031,12 +1039,15 @@ document.addEventListener("DOMContentLoaded", function () {
                 const postre = bloque.querySelector("input[name='menus[" + i + "][postre]']:checked:not([disabled])");
                 const complementos = bloque.querySelectorAll("input[name='menus[" + i + "][complementos][]']:checked:not([disabled])");
 
+                var grupoComp = bloque ? bloque.querySelector(".grupo-complementos") : null;
+                var maxComp   = grupoComp ? (parseInt(grupoComp.dataset.max) || 2) : 2;
+
                 if (!plato) errores.push("Menú " + i + ": falta el plato fuerte.");
                 if (!sopa) errores.push("Menú " + i + ": falta la sopa.");
                 if (!agua) errores.push("Menú " + i + ": falta el agua.");
                 if (!postre) errores.push("Menú " + i + ": falta el postre.");
                 if (complementos.length === 0) errores.push("Menú " + i + ": falta al menos un complemento.");
-                if (complementos.length > 2) errores.push("Menú " + i + ": máximo 2 complementos.");
+                if (complementos.length > maxComp) errores.push("Menú " + i + ": máximo " + maxComp + " complemento" + (maxComp === 1 ? "" : "s") + ".");
             }
         }
 
@@ -1360,6 +1371,67 @@ document.addEventListener("DOMContentLoaded", function () {
 
     actualizarSeleccionVisual();
 
+    // ── COMPLEMENTOS MAX SEGÚN PLATO FUERTE ──────────────────────────
+    function aplicarMaxComplementos(bloqueOpciones) {
+        var platoRadio = bloqueOpciones.querySelector("input[name*='[plato_fuerte]']:checked");
+        var maxComp    = platoRadio ? (parseInt(platoRadio.dataset.complementosMax) || 2) : 2;
+        var grupo      = bloqueOpciones.querySelector(".grupo-complementos");
+        var hint       = bloqueOpciones.querySelector(".complementos-hint");
+
+        if (grupo) grupo.dataset.max = maxComp;
+        if (hint)  hint.textContent  = maxComp === 1 ? "· elige 1" : "· elige hasta " + maxComp;
+
+        // Si ya hay más marcados de los permitidos, desmarcar el exceso
+        var checks = Array.from(bloqueOpciones.querySelectorAll("input[name*='[complementos][]']:checked"));
+        if (checks.length > maxComp) {
+            checks.slice(maxComp).forEach(function(c) { c.checked = false; });
+            actualizarSeleccionVisual();
+            actualizarResumenTotal();
+        }
+    }
+
+    // Inicializar en carga de página (por si hay POST con errores)
+    document.querySelectorAll(".opciones-menu-tipo").forEach(function(bloque) {
+        aplicarMaxComplementos(bloque);
+    });
+
+    // Al cambiar plato fuerte
+    document.querySelectorAll("input[type='radio'][name*='[plato_fuerte]']").forEach(function(radio) {
+        radio.addEventListener("change", function() {
+            var bloque = this.closest(".opciones-menu-tipo");
+            if (bloque) aplicarMaxComplementos(bloque);
+        });
+    });
+
+    // Al marcar un complemento: respetar el límite activo
+    document.querySelectorAll("input[type='checkbox'][name*='[complementos][]']").forEach(function(cb) {
+        cb.addEventListener("change", function() {
+            if (!this.checked) return;
+            var bloque = this.closest(".opciones-menu-tipo");
+            if (!bloque) return;
+            var grupo  = bloque.querySelector(".grupo-complementos");
+            var maxComp = grupo ? (parseInt(grupo.dataset.max) || 2) : 2;
+            var checks  = Array.from(bloque.querySelectorAll("input[name*='[complementos][]']:checked"));
+            if (checks.length > maxComp) {
+                // Desmarcar los más viejos, conservar el recién marcado
+                checks.filter(function(c) { return c !== cb; })
+                      .slice(0, checks.length - maxComp)
+                      .forEach(function(c) { c.checked = false; });
+                actualizarSeleccionVisual();
+                actualizarResumenTotal();
+            }
+        });
+    });
+
+    // Al cambiar tipo de menú (Zabisu ↔ Ejecutivo): re-evaluar max
+    document.querySelectorAll("select[name*='[tipo_menu]']").forEach(function(sel) {
+        sel.addEventListener("change", function() {
+            var menuIdx = this.name.match(/\[(\d+)\]/)?.[1];
+            if (!menuIdx) return;
+            var bloque = document.querySelector(".opciones-menu-tipo[data-menu='" + menuIdx + "'][data-tipo='" + this.value + "']");
+            if (bloque) aplicarMaxComplementos(bloque);
+        });
+    });
 
     actualizarResumenTotal();
 
