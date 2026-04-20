@@ -33,15 +33,17 @@ if ($menuActivo) {
     $fechaMenuFormateada = $dias[date('l', $ts)] . " " . date('j', $ts) . " de " . ($meses[date('m', $ts)] ?? "");
 }
 
-/* ── Platos fuertes organizados por tipo_menu ── */
-$platosPorTipo      = [];
-$productosIndexados = [];
+/* ── Platos fuertes y complementos organizados por tipo_menu ── */
+$platosPorTipo        = [];
+$complementosPorTipo  = [];
+$productosIndexados   = [];
 
 if ($menuActivo) {
     $stmtProd = $conexion->prepare(
         "SELECT * FROM productos
-         WHERE id_menu = :id_menu AND disponible = 1 AND categoria = 'Plato fuerte'
-         ORDER BY tipo_menu, nombre"
+         WHERE id_menu = :id_menu AND disponible = 1
+           AND categoria IN ('Plato fuerte', 'Complemento')
+         ORDER BY tipo_menu, categoria, nombre"
     );
     $stmtProd->execute([":id_menu" => $menuActivo["id_menu"]]);
 
@@ -61,10 +63,14 @@ if ($menuActivo) {
     }
 
     foreach ($stmtProd->fetchAll(PDO::FETCH_ASSOC) as $p) {
-        $idP       = (int)$p["id_producto"];
+        $idP = (int)$p["id_producto"];
         $p["agotado"] = !empty($p["limite_pedidos"]) && ($conteos[$idP] ?? 0) >= (int)$p["limite_pedidos"];
-        $platosPorTipo[$p["tipo_menu"]][] = $p;
-        $productosIndexados[$idP]         = $p;
+        $productosIndexados[$idP] = $p;
+        if ($p["categoria"] === "Plato fuerte") {
+            $platosPorTipo[$p["tipo_menu"]][] = $p;
+        } elseif ($p["categoria"] === "Complemento") {
+            $complementosPorTipo[$p["tipo_menu"]][] = $p;
+        }
     }
 }
 
@@ -107,11 +113,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["ordenar"])) {
     $erroresPersonas = [];
 
     for ($i = 0; $i < $cantidadPersonas; $i++) {
-        $persona     = $personas[$i] ?? [];
-        $nPersona    = $i + 1;
-        $nombre      = strtoupper(trim(preg_replace('/[^A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]/u', '', $persona["nombre"] ?? "")));
-        $tipoMenu    = trim($persona["tipo_menu"]    ?? "");
-        $platoFuerte = (int)($persona["plato_fuerte"] ?? 0);
+        $persona      = $personas[$i] ?? [];
+        $nPersona     = $i + 1;
+        $nombre       = strtoupper(trim(preg_replace('/[^A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]/u', '', $persona["nombre"] ?? "")));
+        $tipoMenu     = trim($persona["tipo_menu"]    ?? "");
+        $platoFuerte  = (int)($persona["plato_fuerte"] ?? 0);
+        $compIds      = array_map('intval', array_filter($persona["complementos"] ?? [], fn($v) => (int)$v > 0));
 
         if ($nombre === "")                                $erroresPersonas[$nPersona][] = "Falta el nombre.";
         if (!in_array($tipoMenu, ["Zabisu", "Ejecutivo"])) $erroresPersonas[$nPersona][] = "Selecciona el tipo de menú.";
@@ -124,6 +131,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["ordenar"])) {
                 $prod = $productosIndexados[$platoFuerte];
                 if ($prod["tipo_menu"] !== $tipoMenu) $erroresPersonas[$nPersona][] = "El guisado no corresponde al tipo de menú elegido.";
                 if ($prod["agotado"])                 $erroresPersonas[$nPersona][] = "El guisado seleccionado está agotado.";
+            }
+        }
+
+        // Complementos opcionales: validar que pertenezcan al menú y tipo correcto
+        $maxComp = ($platoFuerte > 0 && !empty($productosIndexados[$platoFuerte]["complementos_max"]))
+            ? (int)$productosIndexados[$platoFuerte]["complementos_max"] : 2;
+        if (count($compIds) > $maxComp) {
+            $erroresPersonas[$nPersona][] = "Máximo {$maxComp} complemento(s) para este plato.";
+        }
+        foreach ($compIds as $cid) {
+            if (!isset($productosIndexados[$cid]) || $productosIndexados[$cid]["categoria"] !== "Complemento") {
+                $erroresPersonas[$nPersona][] = "Complemento no válido.";
+                break;
             }
         }
     }
@@ -176,25 +196,45 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["ordenar"])) {
         );
         $stmtDP = $conexion->prepare(
             "INSERT INTO detalle_pedido (id_pedido_menu, id_producto, categoria, nombre_producto)
-             VALUES (:id_pm, :id_prod, 'Plato fuerte', :nombre)"
+             VALUES (:id_pm, :id_prod, :categoria, :nombre)"
         );
 
         for ($i = 0; $i < $cantidadPersonas; $i++) {
             $tipoMenu    = trim($personas[$i]["tipo_menu"]);
             $platoFuerte = (int)$personas[$i]["plato_fuerte"];
+            $compIds     = array_map('intval', array_filter($personas[$i]["complementos"] ?? [], fn($v) => (int)$v > 0));
 
             $nombrePersona = trim($personas[$i]["nombre"]);
             $stmtPM->execute([":id_pedido" => $id_pedido, ":num" => $i + 1, ":tipo" => $tipoMenu, ":nombre_persona" => $nombrePersona]);
             $id_pedido_menu = (int)$conexion->lastInsertId();
 
+            // Plato fuerte
             $prod = $productosIndexados[$platoFuerte];
             $stmtDP->execute([
-                ":id_pm"   => $id_pedido_menu,
-                ":id_prod" => $platoFuerte,
-                ":nombre"  => $prod["nombre"],
+                ":id_pm"     => $id_pedido_menu,
+                ":id_prod"   => $platoFuerte,
+                ":categoria" => "Plato fuerte",
+                ":nombre"    => $prod["nombre"],
             ]);
 
-            $nombresConfirmacion[] = trim($personas[$i]["nombre"]) . " — " . $prod["nombre"];
+            // Complementos opcionales
+            $nombresComp = [];
+            foreach ($compIds as $cid) {
+                if (!isset($productosIndexados[$cid])) continue;
+                $stmtDP->execute([
+                    ":id_pm"     => $id_pedido_menu,
+                    ":id_prod"   => $cid,
+                    ":categoria" => "Complemento",
+                    ":nombre"    => $productosIndexados[$cid]["nombre"],
+                ]);
+                $nombresComp[] = $productosIndexados[$cid]["nombre"];
+            }
+
+            $lineaConf = trim($personas[$i]["nombre"]) . " — " . $prod["nombre"];
+            if (!empty($nombresComp)) {
+                $lineaConf .= " (+ " . implode(", ", $nombresComp) . ")";
+            }
+            $nombresConfirmacion[] = $lineaConf;
         }
 
         $exito         = true;
@@ -359,11 +399,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["ordenar"])) {
                     <?php endforeach; ?>
                 </div>
 
-                <!-- Platos fuertes (filtrados por tipo) -->
+                <!-- Platos fuertes y complementos (filtrados por tipo) -->
+                <?php
+                $compSel = array_map('intval', array_filter($_POST["personas"][$i]["complementos"] ?? [], fn($v) => (int)$v > 0));
+                ?>
                 <?php foreach (["Zabisu", "Ejecutivo"] as $tipo): ?>
                 <div class="grupo-categoria platos-grupo"
                      id="platos-<?php echo $i; ?>-<?php echo $tipo; ?>"
                      style="<?php echo $tipoSel !== $tipo ? 'display:none;' : ''; ?>margin-top:14px;">
+
                     <h3>🍽 Guisado</h3>
                     <?php if (!empty($platosPorTipo[$tipo])): ?>
                         <?php foreach ($platosPorTipo[$tipo] as $prod): ?>
@@ -385,6 +429,24 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["ordenar"])) {
                     <?php else: ?>
                         <p class="nota-formulario">Sin opciones para este tipo de menú.</p>
                     <?php endif; ?>
+
+                    <?php if (!empty($complementosPorTipo[$tipo])): ?>
+                    <h3 style="margin-top:16px;">🥗 Complementos <span class="cat-hint">· opcional, hasta 2</span></h3>
+                    <?php foreach ($complementosPorTipo[$tipo] as $comp): ?>
+                    <label class="opcion-producto <?php echo in_array((int)$comp["id_producto"], $compSel) ? "opcion-seleccionada" : ""; ?>">
+                        <input type="checkbox"
+                               name="personas[<?php echo $i; ?>][complementos][]"
+                               value="<?php echo (int)$comp["id_producto"]; ?>"
+                               class="check-complemento"
+                               data-persona="<?php echo $i; ?>"
+                               data-tipo="<?php echo htmlspecialchars($tipo); ?>"
+                               <?php echo in_array((int)$comp["id_producto"], $compSel) ? 'checked' : ''; ?>
+                               <?php echo $i >= $cantidadPersonas ? 'disabled' : ''; ?>>
+                        <span><?php echo htmlspecialchars($comp["nombre"]); ?></span>
+                    </label>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+
                 </div>
                 <?php endforeach; ?>
 
@@ -434,13 +496,30 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["ordenar"])) {
             if (!grupo) return;
             var visible = tipo === tipoSeleccionado;
             grupo.style.display = visible ? "" : "none";
-            grupo.querySelectorAll("input[type=radio]").forEach(function (r) {
+            grupo.querySelectorAll("input").forEach(function (r) {
                 r.disabled = !visible;
                 if (!visible) r.checked = false;
             });
         });
         actualizarTotal();
     }
+
+    /* ── Limitar a 2 complementos por persona ── */
+    document.querySelectorAll(".check-complemento").forEach(function (cb) {
+        cb.addEventListener("change", function () {
+            if (!this.checked) return;
+            var persona = this.dataset.persona;
+            var tipo    = this.dataset.tipo;
+            var checks  = Array.from(document.querySelectorAll(
+                ".check-complemento[data-persona='" + persona + "'][data-tipo='" + tipo + "']:checked"
+            ));
+            if (checks.length > 2) {
+                checks[0].checked = false;
+                var lbl = checks[0].closest(".opcion-producto");
+                if (lbl) lbl.classList.remove("opcion-seleccionada");
+            }
+        });
+    });
 
     /* ── Calcular total ── */
     function actualizarTotal() {
