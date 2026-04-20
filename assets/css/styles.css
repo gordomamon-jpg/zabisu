@@ -701,35 +701,42 @@ textarea::placeholder {
 .menu-incluye {
     margin-top: 4px;
     margin-bottom: 20px;
-    padding: 14px 16px;
-    border-radius: 14px;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.07);
 }
 .menu-incluye__titulo {
     font-size: 12px;
     font-weight: 700;
     color: var(--zabisu-white-soft);
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
     margin: 0 0 10px;
+    padding-left: 2px;
 }
 .menu-incluye__items {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
 }
 .menu-incluye__item {
-    display: inline-flex;
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 5px;
-    padding: 5px 12px;
-    border-radius: 999px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
-    font-size: 13px;
-    font-weight: 600;
+    justify-content: center;
+    gap: 6px;
+    padding: 14px 10px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    text-align: center;
+}
+.menu-incluye__item-emoji {
+    font-size: 22px;
+    line-height: 1;
+}
+.menu-incluye__item-nombre {
+    font-size: 12px;
+    font-weight: 700;
     color: var(--zabisu-white-soft);
+    line-height: 1.35;
 }
 
 .ticket-linea--incluido {

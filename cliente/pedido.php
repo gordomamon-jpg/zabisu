@@ -690,13 +690,22 @@ if ($scrollDestino === "bloque-entrega") {
                                 <p class="menu-incluye__titulo">Tu menú también incluye:</p>
                                 <div class="menu-incluye__items">
                                     <?php if ($sopaIncluida): ?>
-                                        <span class="menu-incluye__item">🥣 <?php echo htmlspecialchars($sopaIncluida); ?></span>
+                                        <div class="menu-incluye__item">
+                                            <span class="menu-incluye__item-emoji">🥣</span>
+                                            <span class="menu-incluye__item-nombre"><?php echo htmlspecialchars($sopaIncluida); ?></span>
+                                        </div>
                                     <?php endif; ?>
                                     <?php if ($aguaIncluida): ?>
-                                        <span class="menu-incluye__item">💧 <?php echo htmlspecialchars($aguaIncluida); ?></span>
+                                        <div class="menu-incluye__item">
+                                            <span class="menu-incluye__item-emoji">💧</span>
+                                            <span class="menu-incluye__item-nombre"><?php echo htmlspecialchars($aguaIncluida); ?></span>
+                                        </div>
                                     <?php endif; ?>
                                     <?php if ($postreIncluido): ?>
-                                        <span class="menu-incluye__item">🍮 <?php echo htmlspecialchars($postreIncluido); ?></span>
+                                        <div class="menu-incluye__item">
+                                            <span class="menu-incluye__item-emoji">🍮</span>
+                                            <span class="menu-incluye__item-nombre"><?php echo htmlspecialchars($postreIncluido); ?></span>
+                                        </div>
                                     <?php endif; ?>
                                 </div>
                             </div>
