@@ -491,6 +491,21 @@ if ($scrollDestino === "bloque-entrega") {
 </head>
 <body>
 
+<!-- Modal: Sugerencia de plato fuerte -->
+<div id="modal-sugerencia" class="zb-modal-overlay" style="display:none;">
+    <div class="zb-modal">
+        <p class="zb-modal__eyebrow">¡Hola! 👋</p>
+        <h2 class="zb-modal__titulo">¿Qué te gustaría de plato fuerte mañana?</h2>
+        <p class="zb-modal__desc">Tu opinión nos ayuda a planear el menú.</p>
+        <textarea id="sugerencia-texto" class="zb-modal__textarea" placeholder="Escribe tu sugerencia..." maxlength="200" rows="3"></textarea>
+        <div class="zb-modal__acciones">
+            <button type="button" id="btn-enviar-sugerencia" class="btn-principal">Enviar sugerencia</button>
+            <button type="button" id="btn-omitir-sugerencia" class="btn-volver-panel">Omitir</button>
+        </div>
+        <p class="zb-modal__gracias" id="sugerencia-gracias" style="display:none;">¡Gracias por tu sugerencia! 🙌</p>
+    </div>
+</div>
+
 <div class="contenedor">
 
     <div class="md-hero">
@@ -1486,6 +1501,45 @@ function actualizarOpcionesMenu(numeroMenu) {
 </script>
 
 <div id="pedido-toast-stack"></div>
+
+<script>
+(function () {
+    const KEY = "zb_sugerencia_mostrada";
+    if (sessionStorage.getItem(KEY)) return;
+    sessionStorage.setItem(KEY, "1");
+
+    const overlay = document.getElementById("modal-sugerencia");
+    const btnEnviar = document.getElementById("btn-enviar-sugerencia");
+    const btnOmitir = document.getElementById("btn-omitir-sugerencia");
+    const texto = document.getElementById("sugerencia-texto");
+    const gracias = document.getElementById("sugerencia-gracias");
+
+    setTimeout(function () { overlay.style.display = "flex"; }, 800);
+
+    function cerrar() { overlay.style.display = "none"; }
+
+    btnOmitir.addEventListener("click", cerrar);
+    overlay.addEventListener("click", function (e) { if (e.target === overlay) cerrar(); });
+
+    btnEnviar.addEventListener("click", function () {
+        const val = texto.value.trim();
+        if (!val) { texto.focus(); return; }
+        btnEnviar.disabled = true;
+        const fd = new FormData();
+        fd.append("sugerencia", val);
+        fetch("guardar_sugerencia.php", { method: "POST", body: fd })
+            .then(function (r) { return r.json(); })
+            .then(function () {
+                gracias.style.display = "block";
+                texto.style.display   = "none";
+                btnEnviar.style.display = "none";
+                btnOmitir.textContent = "Cerrar";
+                setTimeout(cerrar, 2000);
+            })
+            .catch(cerrar);
+    });
+})();
+</script>
 
 <footer class="cliente-footer">
     <span class="cliente-footer__slogan">© 2026 Zabisu - Sabor y Servicio. Todos los derechos reservados.</span>

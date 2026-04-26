@@ -248,7 +248,69 @@ function agruparDetallePorCategoria($detalles)
             <a href="pedido.php" class="btn-link">Hacer otro pedido</a>
         </div>
     </div>
+
+    <!-- Feedback -->
+    <div class="bloque-formulario" id="bloque-feedback">
+        <h2>¿Cómo fue tu experiencia?</h2>
+        <p class="nota-formulario" style="margin-bottom:16px;">Tu opinión nos ayuda a mejorar.</p>
+        <div class="zb-estrellas" id="estrellas">
+            <?php for ($s = 1; $s <= 5; $s++): ?>
+                <button type="button" class="zb-estrella" data-valor="<?php echo $s; ?>">★</button>
+            <?php endfor; ?>
+        </div>
+        <textarea id="feedback-comentario" class="zb-modal__textarea" placeholder="Comentario opcional..." maxlength="500" rows="3" style="margin-top:14px;"></textarea>
+        <button type="button" id="btn-enviar-feedback" class="btn-principal" style="margin-top:12px;width:100%;" disabled>Enviar opinión</button>
+        <p class="zb-modal__gracias" id="feedback-gracias" style="display:none;">¡Gracias! Tu opinión fue registrada 💛</p>
+    </div>
 </div>
+
+<script>
+(function () {
+    const folio = <?php echo json_encode($pedido["folio"] ?? ""); ?>;
+    let calSeleccionada = 0;
+    const estrellas = document.querySelectorAll(".zb-estrella");
+    const btnEnviar = document.getElementById("btn-enviar-feedback");
+    const gracias   = document.getElementById("feedback-gracias");
+    const bloque    = document.getElementById("bloque-feedback");
+
+    estrellas.forEach(function (btn) {
+        btn.addEventListener("mouseenter", function () {
+            const v = parseInt(this.dataset.valor);
+            estrellas.forEach(function (b) {
+                b.classList.toggle("zb-estrella--hover", parseInt(b.dataset.valor) <= v);
+            });
+        });
+        btn.addEventListener("mouseleave", function () {
+            estrellas.forEach(function (b) { b.classList.remove("zb-estrella--hover"); });
+        });
+        btn.addEventListener("click", function () {
+            calSeleccionada = parseInt(this.dataset.valor);
+            estrellas.forEach(function (b) {
+                b.classList.toggle("zb-estrella--activa", parseInt(b.dataset.valor) <= calSeleccionada);
+            });
+            btnEnviar.disabled = false;
+        });
+    });
+
+    btnEnviar.addEventListener("click", function () {
+        if (!calSeleccionada) return;
+        btnEnviar.disabled = true;
+        const fd = new FormData();
+        fd.append("calificacion", calSeleccionada);
+        fd.append("comentario", document.getElementById("feedback-comentario").value.trim());
+        fd.append("folio", folio);
+        fetch("guardar_feedback.php", { method: "POST", body: fd })
+            .then(function (r) { return r.json(); })
+            .then(function () {
+                bloque.querySelector(".zb-estrellas").style.display = "none";
+                bloque.querySelector("#feedback-comentario").style.display = "none";
+                btnEnviar.style.display = "none";
+                bloque.querySelector(".nota-formulario").style.display = "none";
+                gracias.style.display = "block";
+            });
+    });
+})();
+</script>
 
 <footer class="cliente-footer">
     <span class="cliente-footer__slogan">© 2026 Zabisu - Sabor y Servicio. Todos los derechos reservados.</span>
