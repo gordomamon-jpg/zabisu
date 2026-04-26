@@ -411,7 +411,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
                                         <input type="radio" name="menus[<?php echo $i; ?>][plato_fuerte]" value="<?php echo $item["id_producto"]; ?>"
                                                <?php echo (($_POST["menus"][$i]["plato_fuerte"] ?? "") == $item["id_producto"]) ? "checked" : ""; ?>
                                                <?php echo !empty($item["agotado"]) ? 'disabled' : ''; ?>>
-                                        <strong><?php echo htmlspecialchars($item["nombre"]); ?></strong> — <?php echo htmlspecialchars($item["descripcion"]); ?>
+                                        <strong><?php echo htmlspecialchars($item["nombre"]); ?></strong>
                                         <?php if (!empty($item["agotado"])): ?><span class="badge-agotado">Agotado</span><?php endif; ?>
                                     </label>
                                 <?php endforeach; ?>
@@ -425,7 +425,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
                                     <label class="opcion-producto">
                                         <input type="checkbox" name="menus[<?php echo $i; ?>][complementos][]" value="<?php echo $item["id_producto"]; ?>"
                                                <?php echo in_array($item["id_producto"], $_POST["menus"][$i]["complementos"] ?? []) ? "checked" : ""; ?>>
-                                        <strong><?php echo htmlspecialchars($item["nombre"]); ?></strong> — <?php echo htmlspecialchars($item["descripcion"]); ?>
+                                        <strong><?php echo htmlspecialchars($item["nombre"]); ?></strong>
                                     </label>
                                 <?php endforeach; ?>
                             </div>
