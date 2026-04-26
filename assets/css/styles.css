@@ -745,13 +745,39 @@ textarea::placeholder {
 }
 
 /* ── Tarjeta flotante (sugerencia plato) ───────────────── */
-.zb-flotante {
+/* ── Burbuja flotante ──────────────────────────────────── */
+.zb-burbuja {
     position: fixed;
     bottom: 24px;
-    left: 20px;
     right: 20px;
-    margin: 0 auto;
-    max-width: 380px;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: var(--zabisu-orange);
+    border: none;
+    cursor: pointer;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    box-shadow: 0 4px 18px rgba(255, 122, 0, 0.4);
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity .3s ease, visibility .3s ease;
+}
+.zb-burbuja--visible {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* ── Tarjeta flotante ──────────────────────────────────── */
+.zb-flotante {
+    position: fixed;
+    bottom: 88px;
+    right: 20px;
+    width: calc(100% - 40px);
+    max-width: 320px;
     background: #1e1e24;
     border: 1px solid rgba(255,255,255,0.1);
     border-radius: 18px;

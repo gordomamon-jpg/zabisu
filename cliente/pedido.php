@@ -492,9 +492,15 @@ if ($scrollDestino === "bloque-entrega") {
 <body>
 
 <!-- Modal: Sugerencia de plato fuerte -->
+<!-- Burbuja flotante -->
+<button type="button" id="burbuja-sugerencia" class="zb-burbuja" aria-label="Sugerir plato fuerte">
+    🍽️
+</button>
+
+<!-- Tarjeta flotante -->
 <div id="modal-sugerencia" class="zb-flotante">
     <div class="zb-flotante__header">
-        <span class="zb-flotante__titulo">¿Qué te gustaría mañana? 🍽️</span>
+        <span class="zb-flotante__titulo">¿Qué te gustaría mañana?</span>
         <button type="button" id="btn-omitir-sugerencia" class="zb-flotante__cerrar" aria-label="Cerrar">✕</button>
     </div>
     <p class="zb-flotante__desc">Dinos qué plato fuerte se te antoja.</p>
@@ -1503,23 +1509,36 @@ function actualizarOpcionesMenu(numeroMenu) {
 
 <script>
 (function () {
-    const KEY = "zb_sugerencia_mostrada";
-    if (sessionStorage.getItem(KEY)) return;
-    sessionStorage.setItem(KEY, "1");
-
+    const KEY     = "zb_sugerencia_enviada";
+    const burbuja = document.getElementById("burbuja-sugerencia");
     const card    = document.getElementById("modal-sugerencia");
     const btnEnviar = document.getElementById("btn-enviar-sugerencia");
     const btnOmitir = document.getElementById("btn-omitir-sugerencia");
     const texto   = document.getElementById("sugerencia-texto");
     const gracias = document.getElementById("sugerencia-gracias");
 
-    setTimeout(function () { card.classList.add("zb-flotante--visible"); }, 1200);
-
-    function cerrar() {
-        card.classList.remove("zb-flotante--visible");
+    // Si ya envió, ocultar todo
+    if (sessionStorage.getItem(KEY)) {
+        burbuja.style.visibility = "hidden";
+        burbuja.style.opacity    = "0";
+        return;
     }
 
-    btnOmitir.addEventListener("click", cerrar);
+    function abrirTarjeta() {
+        card.classList.add("zb-flotante--visible");
+    }
+    function cerrarTarjeta() {
+        card.classList.remove("zb-flotante--visible");
+    }
+    function ocultarBurbuja() {
+        burbuja.classList.remove("zb-burbuja--visible");
+    }
+
+    burbuja.addEventListener("click", function () {
+        card.classList.contains("zb-flotante--visible") ? cerrarTarjeta() : abrirTarjeta();
+    });
+
+    btnOmitir.addEventListener("click", cerrarTarjeta);
 
     btnEnviar.addEventListener("click", function () {
         const val = texto.value.trim();
@@ -1530,14 +1549,21 @@ function actualizarOpcionesMenu(numeroMenu) {
         fetch("guardar_sugerencia.php", { method: "POST", body: fd })
             .then(function (r) { return r.json(); })
             .then(function () {
-                texto.style.display              = "none";
+                sessionStorage.setItem(KEY, "1");
+                texto.style.display = "none";
                 card.querySelector(".zb-flotante__acciones").style.display = "none";
                 card.querySelector(".zb-flotante__desc").style.display     = "none";
                 gracias.style.display = "block";
-                setTimeout(cerrar, 2200);
+                setTimeout(function () {
+                    cerrarTarjeta();
+                    setTimeout(ocultarBurbuja, 400);
+                }, 2000);
             })
-            .catch(cerrar);
+            .catch(cerrarTarjeta);
     });
+
+    // Mostrar burbuja con pequeño delay
+    setTimeout(function () { burbuja.classList.add("zb-burbuja--visible"); }, 800);
 })();
 </script>
 
