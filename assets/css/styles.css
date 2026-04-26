@@ -747,12 +747,13 @@ textarea::placeholder {
 /* ── Tarjeta flotante (sugerencia plato) ───────────────── */
 .zb-flotante {
     position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    opacity: 0;
-    width: calc(100% - 40px);
+    bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    left: 20px;
+    right: 20px;
+    margin: 0 auto;
     max-width: 380px;
+    transform: translateY(20px);
+    opacity: 0;
     background: #1e1e24;
     border: 1px solid rgba(255,255,255,0.1);
     border-radius: 18px;
@@ -762,11 +763,13 @@ textarea::placeholder {
     flex-direction: column;
     gap: 10px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    -webkit-transition: opacity .35s ease, -webkit-transform .35s ease;
     transition: opacity .35s ease, transform .35s ease;
 }
 .zb-flotante--visible {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    -webkit-transform: translateY(0);
+    transform: translateY(0);
 }
 .zb-flotante__header {
     display: flex;
