@@ -492,7 +492,7 @@ if ($scrollDestino === "bloque-entrega") {
 <body>
 
 <!-- Modal: Sugerencia de plato fuerte -->
-<div id="modal-sugerencia" class="zb-flotante" style="display:none;">
+<div id="modal-sugerencia" class="zb-flotante">
     <div class="zb-flotante__header">
         <span class="zb-flotante__titulo">¿Qué te gustaría mañana? 🍽️</span>
         <button type="button" id="btn-omitir-sugerencia" class="zb-flotante__cerrar" aria-label="Cerrar">✕</button>
@@ -1514,13 +1514,11 @@ function actualizarOpcionesMenu(numeroMenu) {
     const gracias = document.getElementById("sugerencia-gracias");
 
     setTimeout(function () {
-        card.style.display = "flex";
-        requestAnimationFrame(function () { card.classList.add("zb-flotante--visible"); });
+        card.classList.add("zb-flotante--visible");
     }, 1200);
 
     function cerrar() {
         card.classList.remove("zb-flotante--visible");
-        setTimeout(function () { card.style.display = "none"; }, 350);
     }
 
     btnOmitir.addEventListener("click", cerrar);
