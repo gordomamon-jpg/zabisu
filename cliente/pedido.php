@@ -1513,9 +1513,7 @@ function actualizarOpcionesMenu(numeroMenu) {
     const texto   = document.getElementById("sugerencia-texto");
     const gracias = document.getElementById("sugerencia-gracias");
 
-    setTimeout(function () {
-        card.classList.add("zb-flotante--visible");
-    }, 1200);
+    setTimeout(function () { card.classList.add("zb-flotante--visible"); }, 1200);
 
     function cerrar() {
         card.classList.remove("zb-flotante--visible");
