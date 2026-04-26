@@ -141,9 +141,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
     foreach ($menusRecibidos as $nMenu => $menu) {
         $tipo_menu    = $menu["tipo_menu"]    ?? "";
         $plato_fuerte = $menu["plato_fuerte"] ?? "";
-        $sopa         = $menu["sopa"]         ?? "";
-        $agua         = $menu["agua"]         ?? "";
-        $postre       = $menu["postre"]       ?? "";
         $complementos = $menu["complementos"] ?? [];
 
         if ($tipo_menu === "" || !in_array($tipo_menu, ["Zabisu", "Ejecutivo"], true))
@@ -153,13 +150,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
         } elseif (isset($productosIndexados[$plato_fuerte]) && !empty($productosIndexados[$plato_fuerte]["agotado"])) {
             $erroresMenus[$nMenu][] = "El plato fuerte seleccionado está agotado.";
         }
-        if ($sopa === "")         $erroresMenus[$nMenu][] = "Falta la sopa.";
-        if ($agua === "")         $erroresMenus[$nMenu][] = "Falta el agua.";
-        if ($postre === "")       $erroresMenus[$nMenu][] = "Falta el postre.";
         if (empty($complementos)) $erroresMenus[$nMenu][] = "Falta al menos un complemento.";
         if (count($complementos) > 2) $erroresMenus[$nMenu][] = "Máximo 2 complementos.";
 
-        foreach (array_filter(array_merge([$plato_fuerte, $sopa, $agua, $postre], $complementos)) as $idP) {
+        foreach (array_filter(array_merge([$plato_fuerte], $complementos)) as $idP) {
             if (!isset($productosIndexados[$idP])) { $erroresMenus[$nMenu][] = "Producto no válido."; break; }
             if ($productosIndexados[$idP]["tipo_menu"] !== $tipo_menu) { $erroresMenus[$nMenu][] = "Hay un producto que no corresponde al tipo de menú."; break; }
         }
@@ -170,6 +164,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
     }
 
     if (empty($errores)) {
+        // Auto-asignar sopa, agua y postre según tipo de menú
+        foreach ($menusRecibidos as $num => &$menuData) {
+            $tipo = $menuData["tipo_menu"] ?? "";
+            foreach (["Sopa" => "sopa", "Agua" => "agua", "Postre" => "postre"] as $cat => $key) {
+                if (!empty($menusPorTipo[$tipo][$cat])) {
+                    $menuData[$key] = (string)$menusPorTipo[$tipo][$cat][0]["id_producto"];
+                }
+            }
+        }
+        unset($menuData);
         try {
             $conexion->beginTransaction();
 
@@ -386,10 +390,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
                     Precio de este menú: <strong>$<?php echo number_format($preciosMenus[$tipoSel] ?? 0, 2); ?></strong>
                 </p>
 
-                <?php foreach (["Zabisu", "Ejecutivo"] as $tipoMenu): ?>
+                <?php foreach (["Zabisu", "Ejecutivo"] as $tipoMenu):
+                    $sopaIncluida   = $menusPorTipo[$tipoMenu]["Sopa"][0]["nombre"]   ?? "";
+                    $aguaIncluida   = $menusPorTipo[$tipoMenu]["Agua"][0]["nombre"]   ?? "";
+                    $postreIncluido = $menusPorTipo[$tipoMenu]["Postre"][0]["nombre"] ?? "";
+                ?>
                     <div class="opciones-menu-tipo menu-<?php echo $i; ?>-tipo"
                          data-menu="<?php echo $i; ?>"
                          data-tipo="<?php echo $tipoMenu; ?>"
+                         data-sopa="<?php echo htmlspecialchars($sopaIncluida); ?>"
+                         data-agua="<?php echo htmlspecialchars($aguaIncluida); ?>"
+                         data-postre="<?php echo htmlspecialchars($postreIncluido); ?>"
                          style="<?php echo ($tipoSel === $tipoMenu) ? 'display:block;' : 'display:none;'; ?>">
 
                         <?php if (!empty($menusPorTipo[$tipoMenu]["Plato fuerte"])): ?>
@@ -402,19 +413,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
                                                <?php echo !empty($item["agotado"]) ? 'disabled' : ''; ?>>
                                         <strong><?php echo htmlspecialchars($item["nombre"]); ?></strong> — <?php echo htmlspecialchars($item["descripcion"]); ?>
                                         <?php if (!empty($item["agotado"])): ?><span class="badge-agotado">Agotado</span><?php endif; ?>
-                                    </label>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php endif; ?>
-
-                        <?php if (!empty($menusPorTipo[$tipoMenu]["Sopa"])): ?>
-                            <div class="grupo-categoria">
-                                <h3>🥣 Sopa <span class="cat-hint">· elige 1</span></h3>
-                                <?php foreach ($menusPorTipo[$tipoMenu]["Sopa"] as $item): ?>
-                                    <label class="opcion-producto">
-                                        <input type="radio" name="menus[<?php echo $i; ?>][sopa]" value="<?php echo $item["id_producto"]; ?>"
-                                               <?php echo (($_POST["menus"][$i]["sopa"] ?? "") == $item["id_producto"]) ? "checked" : ""; ?>>
-                                        <strong><?php echo htmlspecialchars($item["nombre"]); ?></strong> — <?php echo htmlspecialchars($item["descripcion"]); ?>
                                     </label>
                                 <?php endforeach; ?>
                             </div>
@@ -433,34 +431,40 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
                             </div>
                         <?php endif; ?>
 
-                        <?php if (!empty($menusPorTipo[$tipoMenu]["Agua"])): ?>
-                            <div class="grupo-categoria">
-                                <h3>💧 Agua <span class="cat-hint">· elige 1</span></h3>
-                                <?php foreach ($menusPorTipo[$tipoMenu]["Agua"] as $item): ?>
-                                    <label class="opcion-producto">
-                                        <input type="radio" name="menus[<?php echo $i; ?>][agua]" value="<?php echo $item["id_producto"]; ?>"
-                                               <?php echo (($_POST["menus"][$i]["agua"] ?? "") == $item["id_producto"]) ? "checked" : ""; ?>>
-                                        <strong><?php echo htmlspecialchars($item["nombre"]); ?></strong> — <?php echo htmlspecialchars($item["descripcion"]); ?>
-                                    </label>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php endif; ?>
-
-                        <?php if (!empty($menusPorTipo[$tipoMenu]["Postre"])): ?>
-                            <div class="grupo-categoria">
-                                <h3>🍮 Postre <span class="cat-hint">· elige 1</span></h3>
-                                <?php foreach ($menusPorTipo[$tipoMenu]["Postre"] as $item): ?>
-                                    <label class="opcion-producto">
-                                        <input type="radio" name="menus[<?php echo $i; ?>][postre]" value="<?php echo $item["id_producto"]; ?>"
-                                               <?php echo (($_POST["menus"][$i]["postre"] ?? "") == $item["id_producto"]) ? "checked" : ""; ?>>
-                                        <strong><?php echo htmlspecialchars($item["nombre"]); ?></strong> — <?php echo htmlspecialchars($item["descripcion"]); ?>
-                                    </label>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php endif; ?>
-
                     </div>
                 <?php endforeach; ?>
+
+                <?php
+                    $sopaMI   = $menusPorTipo[$tipoSel]["Sopa"][0]["nombre"]   ?? "";
+                    $aguaMI   = $menusPorTipo[$tipoSel]["Agua"][0]["nombre"]   ?? "";
+                    $postreMI = $menusPorTipo[$tipoSel]["Postre"][0]["nombre"] ?? "";
+                ?>
+                <?php if ($sopaMI || $aguaMI || $postreMI): ?>
+                <div class="menu-incluye" id="menu-incluye-<?php echo $i; ?>">
+                    <p class="menu-incluye__titulo">Tu menú también incluye:</p>
+                    <div class="menu-incluye__items">
+                        <?php if ($sopaMI): ?>
+                        <div class="menu-incluye__item">
+                            <span class="menu-incluye__item-emoji">🥣</span>
+                            <span class="menu-incluye__item-nombre"><?php echo htmlspecialchars($sopaMI); ?></span>
+                        </div>
+                        <?php endif; ?>
+                        <?php if ($aguaMI): ?>
+                        <div class="menu-incluye__item">
+                            <span class="menu-incluye__item-emoji">💧</span>
+                            <span class="menu-incluye__item-nombre"><?php echo htmlspecialchars($aguaMI); ?></span>
+                        </div>
+                        <?php endif; ?>
+                        <?php if ($postreMI): ?>
+                        <div class="menu-incluye__item">
+                            <span class="menu-incluye__item-emoji">🍮</span>
+                            <span class="menu-incluye__item-nombre"><?php echo htmlspecialchars($postreMI); ?></span>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+
             </section>
         <?php endfor; ?>
 
@@ -605,11 +609,24 @@ document.addEventListener("DOMContentLoaded", function () {
         const sel = document.getElementById("tipo_menu_" + menuNum);
         if (!sel) return;
         const tipo = sel.value;
+        let activoDiv = null;
         document.querySelectorAll(".menu-" + menuNum + "-tipo").forEach(function (div) {
             const visible = div.dataset.tipo === tipo;
             div.style.display = visible ? "block" : "none";
             div.querySelectorAll("input").forEach(function (inp) { inp.disabled = !visible; });
+            if (visible) activoDiv = div;
         });
+        // Actualizar bloque "Tu menú también incluye"
+        const incluyeBloque = document.getElementById("menu-incluye-" + menuNum);
+        if (incluyeBloque && activoDiv) {
+            const emojis  = ["🥣", "💧", "🍮"];
+            const valores = [activoDiv.dataset.sopa, activoDiv.dataset.agua, activoDiv.dataset.postre];
+            const items   = incluyeBloque.querySelectorAll(".menu-incluye__item");
+            items.forEach(function (item, idx) {
+                const nombreEl = item.querySelector(".menu-incluye__item-nombre");
+                if (nombreEl && valores[idx] !== undefined) nombreEl.textContent = valores[idx];
+            });
+        }
         actualizarTotal();
     };
 
