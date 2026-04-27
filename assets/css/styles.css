@@ -769,6 +769,14 @@ textarea::placeholder {
 .zb-burbuja--visible {
     visibility: visible;
     opacity: 1;
+    animation: zb-burbuja-destello 2s ease-in-out infinite;
+}
+.zb-burbuja--abierta {
+    animation: none;
+}
+@keyframes zb-burbuja-destello {
+    0%, 100% { box-shadow: 0 4px 18px rgba(255, 122, 0, 0.4); }
+    50%       { box-shadow: 0 4px 28px rgba(255, 122, 0, 0.85), 0 0 0 8px rgba(255, 122, 0, 0.12); }
 }
 
 /* ── Tarjeta flotante ──────────────────────────────────── */

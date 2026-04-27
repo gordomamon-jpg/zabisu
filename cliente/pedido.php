@@ -1535,6 +1535,7 @@ function actualizarOpcionesMenu(numeroMenu) {
     }
 
     burbuja.addEventListener("click", function () {
+        burbuja.classList.add("zb-burbuja--abierta");
         card.classList.contains("zb-flotante--visible") ? cerrarTarjeta() : abrirTarjeta();
     });
 
