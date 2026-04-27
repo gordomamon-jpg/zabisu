@@ -204,6 +204,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
             $estado_pago = match($metodo_pago) {
                 "Efectivo"      => "Pago en efectivo",
                 "Transferencia" => "Pagado",
+                "Tarjeta"       => "Pagado",
                 default         => "Pendiente de pago",
             };
 
@@ -534,7 +535,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
 
             <label>Método de pago</label>
             <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
-                <?php foreach (["Efectivo", "Transferencia"] as $metodo): ?>
+                <?php foreach (["Efectivo", "Transferencia", "Tarjeta"] as $metodo): ?>
                     <label class="opcion-producto" style="flex:1;min-width:140px;justify-content:center;">
                         <input type="radio" name="metodo_pago" value="<?php echo $metodo; ?>"
                                <?php echo (($_POST["metodo_pago"] ?? "") === $metodo) ? "checked" : ""; ?>>
