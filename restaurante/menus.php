@@ -143,7 +143,7 @@ function formatearFechaBonita($fecha)
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Menús | Restaurante Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
-    <link rel="stylesheet" href="../assets/css/styles.css">
+    <link rel="stylesheet" href="../assets/css/styles.css?v=<?php echo CSS_VERSION; ?>">
 </head>
 <body>
 

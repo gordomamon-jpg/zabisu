@@ -59,7 +59,7 @@ if (!$menuActivo) {
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-title" content="Zabisu">
         <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
-        <link rel="stylesheet" href="../assets/css/styles.css?v=3">
+        <link rel="stylesheet" href="../assets/css/styles.css?v=<?php echo CSS_VERSION; ?>">
     </head>
     <body>
         <div class="contenedor">
@@ -141,7 +141,7 @@ if (!$recibiendoPedidos) {
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Zabisu">
     <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
-    <link rel="stylesheet" href="../assets/css/styles.css?v=3">
+    <link rel="stylesheet" href="../assets/css/styles.css?v=<?php echo CSS_VERSION; ?>">
     </head>
     <body>
     <div class="contenedor">
@@ -484,7 +484,7 @@ if ($scrollDestino === "bloque-entrega") {
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Zabisu">
     <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
-    <link rel="stylesheet" href="../assets/css/styles.css?v=3">
+    <link rel="stylesheet" href="../assets/css/styles.css?v=<?php echo CSS_VERSION; ?>">
     <style>
         .opcion-producto { text-transform: none !important; font-weight: normal !important; letter-spacing: normal !important; }
     </style>

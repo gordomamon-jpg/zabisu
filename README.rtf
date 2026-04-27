@@ -1,0 +1,532 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2867
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fnil\fcharset0 LucidaGrande;\f2\fnil\fcharset128 HiraginoSans-W3;
+\f3\fnil\fcharset0 AppleColorEmoji;\f4\fnil\fcharset0 STIXTwoMath-Regular;\f5\fnil\fcharset0 Menlo-Regular;
+\f6\fnil\fcharset0 HelveticaNeue;\f7\fnil\fcharset0 .SFNS-Regular;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;\red0\green0\blue0;\red14\green14\blue14;
+}
+{\*\expandedcolortbl;;\csgray\c0;\cspthree\c0\c0\c0;\cssrgb\c6700\c6700\c6700;
+}
+\margl1440\margr1440\vieww17180\viewh13480\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 Restaurar la hora al funcionamiento correcto:\
+\
+UPDATE menu_dia\
+SET\
+    publicado_desde = TIMESTAMP(DATE_SUB(fecha, INTERVAL 1 DAY), '19:00:00'),\
+    pedido_hasta = TIMESTAMP(fecha, '11:30:00')\
+WHERE activo = 1;\
+\
+Para habilitarlo:\
+\
+UPDATE menu_dia\
+SET\
+    publicado_desde = DATE_SUB(NOW(), INTERVAL 1 HOUR),\
+    pedido_hasta = DATE_ADD(NOW(), INTERVAL 2 HOUR)\
+WHERE activo = 1;\
+\
+\
+Checklist de despliegue \'97 Zabisu\
+\
+  ---\
+  1. Base de datos\
+\
+  - Exportar la BD local con mysqldump\
+  mysqldump -u root -p zabisu > zabisu_backup.sql\
+  - Verificar que el .sql incluye estructura + datos (ubicaciones, tipos_menu, horarios, etc.)\
+  - Anotar el nombre exacto de la BD, usuario y contrase\'f1a que usar\'e1s en producci\'f3n\
+\
+  ---\
+  2. config/db.php\
+\
+  - Cambiar host de localhost al host de MySQL del VPS (normalmente sigue siendo localhost)\
+  - Cambiar dbname si el nombre de la BD en producci\'f3n es diferente\
+  - Cambiar usuario y contrase\'f1a por los del servidor nuevo\
+  - Verificar que no est\'e9 hardcodeado con credenciales locales de XAMPP (root sin contrase\'f1a)\
+\
+  ---\
+  3. config/mail.php\
+\
+  - Verificar que el App Password de Gmail sigue vigente\
+  - Confirmar que la cuenta gomez.roman.ambar@gmail.com tiene habilitado el acceso SMTP\
+  - Considerar crear una cuenta de correo dedicada tipo notificaciones@zabisu.com para verse m\'e1s profesional\
+\
+  ---\
+  4. Rutas y paths\
+\
+  - Revisar que no haya rutas absolutas hardcodeadas apuntando a /Applications/XAMPP/...\
+  - Verificar que todos los require_once usen rutas relativas (../config/db.php)\
+  - Verificar la ruta de uploads: uploads/comprobantes/ debe existir en el servidor y tener permisos de escritura\
+  chmod 755 uploads/comprobantes/\
+  - Verificar la ruta del autoload de Composer: vendor/autoload.php\
+\
+  ---\
+  5. Carpeta vendor/ (Composer / PHPMailer)\
+\
+  - Subir la carpeta vendor/ completa al servidor o ejecutar en el servidor:\
+  composer install --no-dev\
+  - Confirmar que composer.json y composer.lock est\'e1n en la ra\'edz del proyecto\
+\
+  ---\
+  6. Permisos de archivos en el servidor\
+\
+  - Carpeta uploads/comprobantes/ 
+\f1 \uc0\u8594 
+\f0  755\
+  - Archivos PHP 
+\f1 \uc0\u8594 
+\f0  644\
+  - Carpetas del proyecto 
+\f1 \uc0\u8594 
+\f0  755\
+  - config/db.php y config/mail.php 
+\f1 \uc0\u8594 
+\f0  600 (solo lectura para el propietario \'97 son archivos con credenciales)\
+\
+  ---\
+  7. PHP y Apache\
+\
+  - Confirmar versi\'f3n de PHP en el servidor \uc0\u8805  7.4 (el proyecto usa PDO, match, etc.)\
+  - Extensiones de PHP necesarias habilitadas:\
+    - pdo_mysql\
+    - mbstring\
+    - openssl (para PHPMailer/SMTP)\
+    - fileinfo (para uploads)\
+  - Crear .htaccess en la ra\'edz para redirigir tr\'e1fico correctamente\
+\
+  ---\
+  8. .htaccess (nuevo \'97 hay que crearlo)\
+\
+  - Crear archivo .htaccess en la ra\'edz del proyecto:\
+  RewriteEngine On\
+\
+  # Redirigir al cliente por defecto\
+  RewriteRule ^$ /cliente/menu.php [L,R=302]\
+\
+  # Proteger archivos de configuraci\'f3n\
+  <Files "db.php">\
+      Order allow,deny\
+      Deny from all\
+  </Files>\
+  <Files "mail.php">\
+      Order allow,deny\
+      Deny from all\
+  </Files>\
+\
+  # Proteger carpeta config/\
+  <FilesMatch "^.*$">\
+      Order allow,deny\
+      Deny from all\
+  </FilesMatch>\
+\
+  ---\
+  9. SSL y dominio\
+\
+  - Apuntar zabisu.com al IP del VPS desde el panel de Hostinger (DNS A record)\
+  - Instalar certificado SSL con Let's Encrypt:\
+  certbot --apache -d zabisu.com -d www.zabisu.com\
+  - Forzar HTTPS en .htaccess:\
+  RewriteCond %\{HTTPS\} off\
+  RewriteRule ^(.*)$ https://%\{HTTP_HOST\}%\{REQUEST_URI\} [L,R=301]\
+\
+  ---\
+  10. Seguridad antes de salir en vivo\
+\
+  - Eliminar restaurante/test_correo.php del servidor (expone configuraci\'f3n)\
+  - Verificar que restaurante/ no sea accesible sin autenticaci\'f3n \'97 actualmente no tiene login\
+  - Verificar que uploads/comprobantes/ no sea listable (agregar .htaccess con Options -Indexes)\
+  - Deshabilitar display_errors en producci\'f3n \'97 agregar en .htaccess o php.ini:\
+  php_flag display_errors off\
+  php_value error_reporting 0\
+\
+  ---\
+  11. Pendiente importante \'97 Panel del restaurante sin login\
+\
+  
+\f2 \uc0\u9614 
+\f0  
+\f3 \uc0\u9888 \u65039 
+\f0   Actualmente restaurante/ no tiene ning\'fan sistema de autenticaci\'f3n. Cualquiera que conozca la URL puede acceder al panel de pedidos, estad\'edsticas y men\'fas.\
+\
+  - Definir si se implementa login antes del despliegue o despu\'e9s\
+  - Recomendado: al menos una autenticaci\'f3n b\'e1sica por .htaccess como medida temporal mientras se hace el login formal\
+\
+  ---\
+  12. GitHub (opcional pero recomendado)\
+\
+  - Crear repositorio privado en GitHub\
+  - Agregar .gitignore para excluir:\
+  /vendor/\
+  config/db.php\
+  config/mail.php\
+  uploads/comprobantes/*\
+  .DS_Store\
+  - Primer commit con el proyecto limpio\
+  - En el servidor: git clone del repo + composer install\
+\
+  ---\
+  Resumen de prioridades\
+\
+  \uc0\u9484 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 
+\f2 \'84\'a6
+\f0 \uc0\u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9488 \
+  \uc0\u9474    Prioridad    \u9474                    Tarea                   \u9474 \
+  
+\f2 \'84\'a5
+\f0 \uc0\u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 
+\f2 \'84\'a9
+\f0 \uc0\u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 
+\f2 \'84\'a7
+\f0 \
+  \uc0\u9474  
+\f3 \uc0\u55357 \u56628 
+\f0  Cr\'edtico     \uc0\u9474  Credenciales de BD en producci\'f3n          \u9474 \
+  
+\f2 \'84\'a5
+\f0 \uc0\u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 
+\f2 \'84\'a9
+\f0 \uc0\u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 
+\f2 \'84\'a7
+\f0 \
+  \uc0\u9474  
+\f3 \uc0\u55357 \u56628 
+\f0  Cr\'edtico     \uc0\u9474  Permisos de config/ (600)                 \u9474 \
+  
+\f2 \'84\'a5
+\f0 \uc0\u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 
+\f2 \'84\'a9
+\f0 \uc0\u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 
+\f2 \'84\'a7
+\f0 \
+  \uc0\u9474  
+\f3 \uc0\u55357 \u56628 
+\f0  Cr\'edtico     \uc0\u9474  Eliminar test_correo.php                  \u9474 \
+  
+\f2 \'84\'a5
+\f0 \uc0\u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 
+\f2 \'84\'a9
+\f0 \uc0\u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 
+\f2 \'84\'a7
+\f0 \
+  \uc0\u9474  
+\f3 \uc0\u55357 \u56628 
+\f0  Cr\'edtico     \uc0\u9474  Autenticaci\'f3n en restaurante/             \u9474 \
+  
+\f2 \'84\'a5
+\f0 \uc0\u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 
+\f2 \'84\'a9
+\f0 \uc0\u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 
+\f2 \'84\'a7
+\f0 \
+  \uc0\u9474  
+\f3 \uc0\u55357 \u57313 
+\f0  Importante  \uc0\u9474  SSL + forzar HTTPS                        \u9474 \
+  
+\f2 \'84\'a5
+\f0 \uc0\u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 
+\f2 \'84\'a9
+\f0 \uc0\u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 
+\f2 \'84\'a7
+\f0 \
+  \uc0\u9474  
+\f3 \uc0\u55357 \u57313 
+\f0  Importante  \uc0\u9474  Composer en servidor                      \u9474 \
+  
+\f2 \'84\'a5
+\f0 \uc0\u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 
+\f2 \'84\'a9
+\f0 \uc0\u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 
+\f2 \'84\'a7
+\f0 \
+  \uc0\u9474  
+\f3 \uc0\u55357 \u57313 
+\f0  Importante  \uc0\u9474  Permisos de uploads/                      \u9474 \
+  
+\f2 \'84\'a5
+\f0 \uc0\u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 
+\f2 \'84\'a9
+\f0 \uc0\u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 
+\f2 \'84\'a7
+\f0 \
+  \uc0\u9474  
+\f3 \uc0\u55357 \u57314 
+\f0  Recomendado \uc0\u9474  GitHub para despliegues                   \u9474 \
+  
+\f2 \'84\'a5
+\f0 \uc0\u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 
+\f2 \'84\'a9
+\f0 \uc0\u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 
+\f2 \'84\'a7
+\f0 \
+  \uc0\u9474  
+\f3 \uc0\u55357 \u57314 
+\f0  Recomendado \uc0\u9474  Correo dedicado notificaciones@zabisu.com \u9474 \
+  \uc0\u9492 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 
+\f2 \'84\'a8
+\f0 \uc0\u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9496 \
+\
+\
+\
+\
+FINAL\
+\
+
+\f4 \uc0\u9210 
+\f0  Despliegue de Zabisu en VPS Hostinger KVM 2                                                                                                                                 \
+                                                                                                                                                                              \
+  1. Conectarse al VPS\
+                                                                                                                                                                              \
+  ssh root@187.124.226.123\
+                                                                                                                                                                              \
+  ---             \
+  2. Actualizar el sistema\
+\
+  apt update && apt upgrade -y\
+\
+  ---\
+  3. Instalar dependencias\
+\
+  apt install -y apache2 php php-mysql php-mbstring php-xml php-curl unzip mysql-server\
+\
+  curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer\
+\
+  ---\
+  4. Clonar el repositorio\
+\
+  cd /var/www/html\
+  git clone https://github.com/gordomamon-jpg/zabisu.git\
+  cd zabisu\
+  composer install --no-dev\
+\
+  ---\
+  5. Configurar MySQL\
+\
+  mysql_secure_installation\
+\
+  mysql -u root\
+\
+  CREATE DATABASE zabisu CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\
+  CREATE USER 'zabisu_user'@'localhost' IDENTIFIED BY 'TU_PASSWORD';\
+  GRANT ALL PRIVILEGES ON zabisu.* TO 'zabisu_user'@'localhost';\
+  FLUSH PRIVILEGES;\
+  EXIT;\
+\
+  ---\
+  6. Importar la base de datos\
+\
+  Desde la Mac (terminal local):\
+  /usr/local/mysql/bin/mysqldump -u root -p zabisu > ~/Desktop/zabisu.sql\
+  scp ~/Desktop/zabisu.sql root@187.124.226.123:/var/www/html/zabisu/\
+\
+  En el VPS:\
+  mysql -u zabisu_user -p zabisu < zabisu.sql\
+\
+  ---\
+  7. Crear archivos de configuraci\'f3n\
+\
+  cp config/db.example.php config/db.php\
+  cp config/mail.example.php config/mail.php\
+  nano config/db.php   # Llenar con usuario/password de MySQL\
+  nano config/mail.php # Llenar con correo y App Password de Gmail\
+\
+  ---\
+  8. Configurar Apache\
+\
+  nano /etc/apache2/sites-available/zabisu.conf\
+\
+  <VirtualHost *:80>\
+      ServerName zabisu.com\
+      ServerAlias www.zabisu.com\
+      DocumentRoot /var/www/html/zabisu\
+\
+      <Directory /var/www/html/zabisu>\
+          AllowOverride All\
+          Require all granted\
+      </Directory>\
+\
+      ErrorLog $\{APACHE_LOG_DIR\}/zabisu_error.log\
+      CustomLog $\{APACHE_LOG_DIR\}/zabisu_access.log combined\
+  </VirtualHost>\
+\
+  a2ensite zabisu.conf && a2enmod rewrite && a2dissite 000-default.conf && systemctl restart apache2\
+\
+  ---\
+  9. Permisos de archivos\
+\
+  chown -R www-data:www-data /var/www/html/zabisu\
+  chmod -R 755 /var/www/html/zabisu\
+  chmod -R 775 /var/www/html/zabisu/uploads\
+\
+  ---\
+  10. SSL con Let's Encrypt\
+\
+  apt install -y certbot python3-certbot-apache\
+  certbot --apache -d zabisu.com -d www.zabisu.com\
+\
+  ---\
+  11. DNS en Hostinger\
+\
+  - Registro A 
+\f1 \uc0\u8594 
+\f0  @ 
+\f1 \uc0\u8594 
+\f0  187.124.226.123\
+  - Registro CNAME 
+\f1 \uc0\u8594 
+\f0  www 
+\f1 \uc0\u8594 
+\f0  zabisu.com\
+  - Eliminar registros A viejos\
+\
+  ---\
+  12. Activar HTTPS en .htaccess\
+\
+  Descomentar en /var/www/html/zabisu/.htaccess:\
+  RewriteCond %\{HTTPS\} off\
+  RewriteRule ^(.*)$ https://%\{HTTP_HOST\}%\{REQUEST_URI\} [L,R=301]\
+\
+  systemctl reload apache2\
+\
+  ---\
+  13. Reiniciar el VPS\
+\
+  reboot\
+\
+  ---\
+  URLs finales\
+\
+  \uc0\u9484 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 
+\f2 \'84\'a6
+\f0 \uc0\u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9488 \
+  \uc0\u9474                    URL                    \u9474       Descripci\'f3n      \u9474 \
+  
+\f2 \'84\'a5
+\f0 \uc0\u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 
+\f2 \'84\'a9
+\f0 \uc0\u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 
+\f2 \'84\'a7
+\f0 \
+  \uc0\u9474  https://zabisu.com                       \u9474  Men\'fa del cliente      \u9474 \
+  
+\f2 \'84\'a5
+\f0 \uc0\u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 
+\f2 \'84\'a9
+\f0 \uc0\u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 
+\f2 \'84\'a7
+\f0 \
+  \uc0\u9474  https://zabisu.com/restaurante/login.php \u9474  Panel del restaurante \u9474 \
+  \uc0\u9492 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 
+\f2 \'84\'a8
+\f0 \uc0\u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9472 \u9496 \
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+\
+ahora quiero que cuando ya no este en horario de tomar pedidos, la pagina que se muestra que se mas explicita y que diga de forma detallada y humanizada que ya se         \
+  cerraron los pedidos en punto de las 11:30 AM \
+\
+\
+\
+\
+	SSH\
+\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f5\fs22 \cf2 \CocoaLigature0 ssh root@187.124.226.123  \
+\
+cd /var/www/html/zabisu && git pull origin main\
+\
+\
+	GIT\
+	\
+cd /Applications/XAMPP/xamppfiles/htdocs/zabisu
+\f0\fs24 \cf0 \CocoaLigature1 \
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf0 \
+\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f6\fs28 \cf3 tengo dos temas ahoraaaaa, quiero ya hacer bien todos los procesos , m\'e1s que nada ser como un tipo Check-list diario para entregarle a mis trabajadores para que no est\'e9n y sepan que les toca hacer quiero que tipo me ayudes a desglosar todo el procedimiento que se le va a tener que hacer con base a los men\'fas que te voy a p tanto preparaci\'f3n como cocci\'f3n de todo ello para imprimir lo diario y se vaya tachando conforme, empecemos con este menu:\
+
+\f3 \uc0\u55358 \u56675 
+\f6  SOPA\
+\
+Sopa de pasta\
+Pasta cocida en caldo casero, ligera y reconfortante.\
+\
+
+\f7 \uc0\u11835 
+\f6 \
+\
+
+\f3 \uc0\u55356 \u57213 
+\f6  PLATO FUERTE\
+\
+Tacos dorados de pollo\
+Tacos crujientes rellenos de pollo, dorados al punto y llenos de sabor.\
+\
+Bisteces en adobo con papas\
+Bisteces tiernos guisados en adobo con papas, de sabor intenso y tradicional.\
+\
+
+\f7 \uc0\u11835 
+\f6 \
+\
+
+\f3 \uc0\u55356 \u57178 
+\f6  COMPLEMENTOS\
+\
+Arroz rojo\
+Arroz esponjoso en salsa de jitomate, sazonado al estilo tradicional.\
+\
+Frijoles refritos\
+Frijoles refritos con saz\'f3n casera y textura cremosa.\
+\
+Ensalada de la casa\
+Mezcla fresca de vegetales seleccionados, ligera y refrescante.\
+\
+Codito con crema\
+Pasta suave en crema, ligera y de sabor casero.\
+\
+
+\f7 \uc0\u11835 
+\f6 \
+\
+
+\f3 \uc0\u55358 \u56676 
+\f6  AGUA\
+\
+Agua de papaya\
+Refrescante agua de papaya natural, dulce y suave.\
+\
+\
+Asada a las finas hierbas 3
+\f7 \cf4 \uc0\u55356 \u57213  Te compartimos nuestro men\'fa del d\'eda.\
+\pard\tx860\tx1420\tx1980\tx2540\tx3100\tx3660\tx4220\tx4780\tx5340\tx5900\tx6460\tx7020\li300\sl324\slmult1\partightenfactor0
+\cf4 \
+Puedes consultarlo y realizar tu pedido aqu\'ed:\
+\uc0\u55357 \u56393  zabisu.com\
+\
+Recuerda ordenar antes de las 10:00 am para entrega de 1:00 a 3:00 pm.\
+\
+Si has disfrutado Zabisu, nos ayudar\'eda mucho que nos recomiendes con alguien m\'e1s \uc0\u55357 \u56908 \
+\
+Zabisu \'97 Sabor y servicio.
+\f6 \cf3 \
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+\cf3 Empalizada 5\
+Pescado empanizado }
