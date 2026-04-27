@@ -500,10 +500,10 @@ if ($scrollDestino === "bloque-entrega") {
 <!-- Tarjeta flotante -->
 <div id="modal-sugerencia" class="zb-flotante">
     <div class="zb-flotante__header">
-        <span class="zb-flotante__titulo">¿Qué te gustaría mañana?</span>
+        <span class="zb-flotante__titulo">¿Qué se te antoja? 🍽️</span>
         <button type="button" id="btn-omitir-sugerencia" class="zb-flotante__cerrar" aria-label="Cerrar">✕</button>
     </div>
-    <p class="zb-flotante__desc">Dinos qué plato fuerte se te antoja.</p>
+    <p class="zb-flotante__desc">¡Tu opinión cuenta! Cuéntanos qué platillos te gustaría ver en futuros menús y haz que tu idea llegue al plato.</p>
     <textarea id="sugerencia-texto" class="zb-modal__textarea" placeholder="Tu sugerencia..." maxlength="200" rows="2"></textarea>
     <div class="zb-flotante__acciones">
         <button type="button" id="btn-enviar-sugerencia" class="btn-principal" style="flex:1;">Enviar</button>
