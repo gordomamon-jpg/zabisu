@@ -885,35 +885,58 @@ textarea::placeholder {
 .panel-acceso--encuestas {
     border-left: 3px solid rgba(251, 191, 36, 0.5);
 }
-.encuesta-stats {
+
+/* Resumen global */
+.encuesta-resumen-global {
     display: flex;
-    gap: 20px;
+    gap: 24px;
     align-items: flex-start;
     flex-wrap: wrap;
-    margin-bottom: 4px;
+    padding: 20px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 16px;
+    margin-bottom: 24px;
 }
-.encuesta-promedio {
+.encuesta-resumen-global__izq {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 14px;
+    gap: 4px;
+    min-width: 80px;
 }
-.encuesta-promedio__numero {
-    font-size: 48px;
+.encuesta-resumen-global__num {
+    font-size: 56px;
     font-weight: 900;
-    color: var(--zabisu-white);
     line-height: 1;
 }
-.encuesta-promedio__estrellas {
-    display: flex;
-    gap: 3px;
-    margin-bottom: 4px;
+.encuesta-resumen-global__etiqueta {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
 }
+.encuesta-resumen-global__estrellas {
+    display: flex;
+    gap: 2px;
+    margin: 2px 0;
+}
+.encuesta-estrella-display {
+    font-size: 18px;
+    color: rgba(255,255,255,0.15);
+}
+.encuesta-estrella-display--activa {
+    color: var(--zabisu-orange);
+}
+
+/* Distribución */
 .encuesta-distribucion {
     flex: 1;
     min-width: 180px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
+    justify-content: center;
 }
 .encuesta-dist__fila {
     display: flex;
@@ -922,49 +945,100 @@ textarea::placeholder {
 }
 .encuesta-dist__label {
     font-size: 12px;
+    font-weight: 600;
     color: var(--zabisu-white-muted);
-    width: 22px;
+    width: 28px;
     flex-shrink: 0;
 }
 .encuesta-dist__barra-track {
     flex: 1;
-    height: 6px;
-    background: rgba(255,255,255,0.08);
+    height: 8px;
+    background: rgba(255,255,255,0.07);
     border-radius: 99px;
     overflow: hidden;
 }
 .encuesta-dist__barra-fill {
     height: 100%;
-    background: var(--zabisu-orange);
     border-radius: 99px;
-    transition: width .4s;
+    transition: width .5s ease;
 }
-.encuesta-dist__cnt {
+.encuesta-dist__pct {
     font-size: 12px;
-    color: var(--zabisu-white-muted);
-    width: 18px;
+    font-weight: 700;
+    color: var(--zabisu-white-soft);
+    width: 32px;
     text-align: right;
     flex-shrink: 0;
 }
-.encuesta-feedback-item {
+.encuesta-dist__cnt {
+    font-size: 11px;
+    color: var(--zabisu-white-muted);
+    width: 28px;
+    flex-shrink: 0;
+}
+
+/* Tarjetas de feedback */
+.encuesta-feedback-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.encuesta-feedback-card {
     background: rgba(255,255,255,0.03);
     border: 1px solid rgba(255,255,255,0.07);
+    border-left: 3px solid;
     border-radius: 12px;
-    padding: 12px 14px;
-    margin-bottom: 8px;
+    padding: 14px 16px;
 }
-.encuesta-feedback-item__header {
+.encuesta-feedback-card__top {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 6px;
+    gap: 10px;
+    margin-bottom: 8px;
 }
-.encuesta-feedback-item__comentario {
+.encuesta-feedback-card__izq {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.encuesta-feedback-card__emoji {
+    font-size: 28px;
+    line-height: 1;
+}
+.encuesta-feedback-card__estrellas {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 2px;
+}
+.encuesta-feedback-card__cal {
+    font-size: 12px;
+    font-weight: 700;
+}
+.encuesta-feedback-card__meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+}
+.encuesta-feedback-card__folio {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--zabisu-orange);
+}
+.encuesta-feedback-card__fecha {
+    font-size: 11px;
+    color: var(--zabisu-white-muted);
+}
+.encuesta-feedback-card__comentario {
     font-size: 13px;
     color: var(--zabisu-white-soft);
     margin: 0;
-    line-height: 1.5;
+    line-height: 1.6;
+    font-style: italic;
 }
+
+/* Sugerencias */
 .encuesta-sugerencia-item {
     display: flex;
     gap: 10px;

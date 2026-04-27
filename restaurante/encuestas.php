@@ -76,60 +76,98 @@ $totalFeedbacks = (int)($statsGlobal["total"] ?? 0);
         <?php if ($totalFeedbacks === 0): ?>
             <p class="nota-formulario">Aún no hay calificaciones registradas.</p>
         <?php else: ?>
-            <div class="encuesta-stats">
-                <div class="encuesta-promedio">
-                    <span class="encuesta-promedio__numero"><?php echo $statsGlobal["promedio"]; ?></span>
-                    <div>
-                        <div class="encuesta-promedio__estrellas">
-                            <?php
-                            $prom = (float)$statsGlobal["promedio"];
-                            for ($s = 1; $s <= 5; $s++) {
-                                echo $s <= round($prom) ? '<span class="zb-estrella zb-estrella--activa">★</span>' : '<span class="zb-estrella">★</span>';
-                            }
-                            ?>
-                        </div>
-                        <span class="nota-formulario"><?php echo $totalFeedbacks; ?> opinión<?php echo $totalFeedbacks !== 1 ? "es" : ""; ?></span>
+
+            <?php
+                $prom = (float)($statsGlobal["promedio"] ?? 0);
+                $etiqueta = match(true) {
+                    $prom >= 4.5 => ["label" => "Excelente", "color" => "#4ac86e"],
+                    $prom >= 3.5 => ["label" => "Bueno",     "color" => "#a3e635"],
+                    $prom >= 2.5 => ["label" => "Regular",   "color" => "#facc15"],
+                    default      => ["label" => "Mejorable", "color" => "#f87171"],
+                };
+            ?>
+
+            <!-- Resumen global -->
+            <div class="encuesta-resumen-global">
+                <div class="encuesta-resumen-global__izq">
+                    <span class="encuesta-resumen-global__num" style="color:<?php echo $etiqueta['color']; ?>">
+                        <?php echo number_format($prom, 1); ?>
+                    </span>
+                    <span class="encuesta-resumen-global__etiqueta" style="color:<?php echo $etiqueta['color']; ?>">
+                        <?php echo $etiqueta['label']; ?>
+                    </span>
+                    <div class="encuesta-resumen-global__estrellas">
+                        <?php for ($s = 1; $s <= 5; $s++): ?>
+                            <span class="encuesta-estrella-display <?php echo $s <= round($prom) ? 'encuesta-estrella-display--activa' : ''; ?>">★</span>
+                        <?php endfor; ?>
                     </div>
+                    <span class="nota-formulario" style="font-size:12px;"><?php echo $totalFeedbacks; ?> opinión<?php echo $totalFeedbacks !== 1 ? "es" : ""; ?></span>
                 </div>
 
                 <div class="encuesta-distribucion">
-                    <?php for ($s = 5; $s >= 1; $s--): ?>
-                        <?php $cnt = $distribucion[$s] ?? 0; $pct = $totalFeedbacks > 0 ? round($cnt / $totalFeedbacks * 100) : 0; ?>
+                    <?php for ($s = 5; $s >= 1; $s--):
+                        $cnt = $distribucion[$s] ?? 0;
+                        $pct = $totalFeedbacks > 0 ? round($cnt / $totalFeedbacks * 100) : 0;
+                        $barColor = match(true) {
+                            $s >= 4 => "#4ac86e",
+                            $s === 3 => "#facc15",
+                            default  => "#f87171",
+                        };
+                    ?>
                         <div class="encuesta-dist__fila">
-                            <span class="encuesta-dist__label"><?php echo $s; ?>★</span>
+                            <span class="encuesta-dist__label"><?php echo $s; ?> ★</span>
                             <div class="encuesta-dist__barra-track">
-                                <div class="encuesta-dist__barra-fill" style="width:<?php echo $pct; ?>%"></div>
+                                <div class="encuesta-dist__barra-fill" style="width:<?php echo $pct; ?>%; background:<?php echo $barColor; ?>;"></div>
                             </div>
-                            <span class="encuesta-dist__cnt"><?php echo $cnt; ?></span>
+                            <span class="encuesta-dist__pct"><?php echo $pct; ?>%</span>
+                            <span class="encuesta-dist__cnt">(<?php echo $cnt; ?>)</span>
                         </div>
                     <?php endfor; ?>
                 </div>
             </div>
 
+            <!-- Tarjetas de feedback -->
             <?php if (!empty($feedbacks)): ?>
-            <div style="margin-top:20px;">
-                <?php foreach ($feedbacks as $fb): ?>
-                <div class="encuesta-feedback-item">
-                    <div class="encuesta-feedback-item__header">
-                        <div>
-                            <?php for ($s = 1; $s <= 5; $s++): ?>
-                                <span class="zb-estrella <?php echo $s <= (int)$fb["calificacion"] ? 'zb-estrella--activa' : ''; ?>" style="font-size:16px;">★</span>
-                            <?php endfor; ?>
+            <div class="encuesta-feedback-lista">
+                <?php foreach ($feedbacks as $fb):
+                    $cal = (int)$fb["calificacion"];
+                    $accentColor = match(true) {
+                        $cal >= 4 => "#4ac86e",
+                        $cal === 3 => "#facc15",
+                        default   => "#f87171",
+                    };
+                    $emojis = [1 => "😞", 2 => "😕", 3 => "😐", 4 => "😊", 5 => "🤩"];
+                ?>
+                <div class="encuesta-feedback-card" style="border-left-color: <?php echo $accentColor; ?>">
+                    <div class="encuesta-feedback-card__top">
+                        <div class="encuesta-feedback-card__izq">
+                            <span class="encuesta-feedback-card__emoji"><?php echo $emojis[$cal]; ?></span>
+                            <div>
+                                <div class="encuesta-feedback-card__estrellas">
+                                    <?php for ($s = 1; $s <= 5; $s++): ?>
+                                        <span style="color: <?php echo $s <= $cal ? $accentColor : 'rgba(255,255,255,0.15)'; ?>; font-size:15px;">★</span>
+                                    <?php endfor; ?>
+                                </div>
+                                <span class="encuesta-feedback-card__cal" style="color:<?php echo $accentColor; ?>">
+                                    <?php echo $cal; ?>/5
+                                </span>
+                            </div>
                         </div>
-                        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
+                        <div class="encuesta-feedback-card__meta">
                             <?php if (!empty($fb["folio"])): ?>
-                                <span style="font-size:11px;color:var(--zabisu-orange);font-weight:700;"><?php echo htmlspecialchars($fb["folio"]); ?></span>
+                                <span class="encuesta-feedback-card__folio"><?php echo htmlspecialchars($fb["folio"]); ?></span>
                             <?php endif; ?>
-                            <span class="nota-formulario" style="font-size:11px;"><?php echo date("d/m/Y g:i A", strtotime($fb["created_at"])); ?></span>
+                            <span class="encuesta-feedback-card__fecha"><?php echo date("d/m/Y · g:i A", strtotime($fb["created_at"])); ?></span>
                         </div>
                     </div>
                     <?php if (!empty($fb["comentario"])): ?>
-                        <p class="encuesta-feedback-item__comentario"><?php echo htmlspecialchars($fb["comentario"]); ?></p>
+                        <p class="encuesta-feedback-card__comentario">"<?php echo htmlspecialchars($fb["comentario"]); ?>"</p>
                     <?php endif; ?>
                 </div>
                 <?php endforeach; ?>
             </div>
             <?php endif; ?>
+
         <?php endif; ?>
     </div>
 
