@@ -122,6 +122,20 @@ function agruparDetallePorCategoria($detalles)
         </p>
     </div>
 
+    <!-- Feedback -->
+    <div class="bloque-formulario" id="bloque-feedback">
+        <h2>¿Cómo fue tu experiencia?</h2>
+        <p class="nota-formulario" style="margin-bottom:16px;">Tu opinión nos ayuda a mejorar.</p>
+        <div class="zb-estrellas" id="estrellas">
+            <?php for ($s = 1; $s <= 5; $s++): ?>
+                <button type="button" class="zb-estrella" data-valor="<?php echo $s; ?>">★</button>
+            <?php endfor; ?>
+        </div>
+        <textarea id="feedback-comentario" class="zb-modal__textarea" placeholder="Comentario opcional..." maxlength="500" rows="3" style="margin-top:14px;"></textarea>
+        <button type="button" id="btn-enviar-feedback" class="btn-principal" style="margin-top:12px;width:100%;" disabled>Enviar opinión</button>
+        <p class="zb-modal__gracias" id="feedback-gracias" style="display:none;">¡Gracias! Tu opinión fue registrada 💛</p>
+    </div>
+
     <div class="bloque-formulario resumen-total">
         <h2>Resumen final</h2>
 
@@ -249,19 +263,6 @@ function agruparDetallePorCategoria($detalles)
         </div>
     </div>
 
-    <!-- Feedback -->
-    <div class="bloque-formulario" id="bloque-feedback">
-        <h2>¿Cómo fue tu experiencia?</h2>
-        <p class="nota-formulario" style="margin-bottom:16px;">Tu opinión nos ayuda a mejorar.</p>
-        <div class="zb-estrellas" id="estrellas">
-            <?php for ($s = 1; $s <= 5; $s++): ?>
-                <button type="button" class="zb-estrella" data-valor="<?php echo $s; ?>">★</button>
-            <?php endfor; ?>
-        </div>
-        <textarea id="feedback-comentario" class="zb-modal__textarea" placeholder="Comentario opcional..." maxlength="500" rows="3" style="margin-top:14px;"></textarea>
-        <button type="button" id="btn-enviar-feedback" class="btn-principal" style="margin-top:12px;width:100%;" disabled>Enviar opinión</button>
-        <p class="zb-modal__gracias" id="feedback-gracias" style="display:none;">¡Gracias! Tu opinión fue registrada 💛</p>
-    </div>
 </div>
 
 <script>
