@@ -8,6 +8,31 @@ if ($id_pedido <= 0) {
     die("No se recibió un pedido válido.");
 }
 
+/* ── Eliminar pedido ── */
+if ($_SERVER["REQUEST_METHOD"] === "POST" && ($_POST["accion"] ?? "") === "eliminar_pedido") {
+    $idEliminar = (int)($_POST["id_pedido"] ?? 0);
+    if ($idEliminar > 0) {
+        try {
+            $conexion->beginTransaction();
+            // Borrar detalle_pedido de cada pedido_menu
+            $stmtPM = $conexion->prepare("SELECT id_pedido_menu FROM pedido_menus WHERE id_pedido = :id");
+            $stmtPM->execute([":id" => $idEliminar]);
+            foreach ($stmtPM->fetchAll(PDO::FETCH_COLUMN) as $pmId) {
+                $conexion->prepare("DELETE FROM detalle_pedido WHERE id_pedido_menu = :id")->execute([":id" => $pmId]);
+            }
+            $conexion->prepare("DELETE FROM pedido_menus   WHERE id_pedido = :id")->execute([":id" => $idEliminar]);
+            $conexion->prepare("DELETE FROM pedido_extras  WHERE id_pedido = :id")->execute([":id" => $idEliminar]);
+            $conexion->prepare("DELETE FROM feedback_pedidos WHERE id_pedido = :id")->execute([":id" => $idEliminar]);
+            $conexion->prepare("DELETE FROM pedidos        WHERE id_pedido = :id")->execute([":id" => $idEliminar]);
+            $conexion->commit();
+            header("Location: pedidos.php?eliminado=1");
+            exit;
+        } catch (Exception $e) {
+            $conexion->rollBack();
+        }
+    }
+}
+
 /*
     1. Obtener pedido principal
 */
@@ -400,12 +425,48 @@ function obtenerClaseEstadoPago($estadoPago)
             <?php endif; ?>
 
             <a class="btn-link" href="pedidos.php">Volver a pedidos</a>
+            <button type="button" class="btn-eliminar-pedido" id="btn-eliminar-pedido">🗑 Eliminar pedido</button>
         </div>
+    </div>
+</div>
+
+<!-- Modal confirmación eliminar -->
+<div id="modal-eliminar" class="zb-modal-overlay" style="display:none;">
+    <div class="zb-modal" style="max-width:360px;">
+        <p class="zb-modal__eyebrow" style="color:#f87171;">⚠️ Eliminar pedido</p>
+        <h2 class="zb-modal__titulo" style="font-size:17px;">¿Seguro que quieres eliminar este pedido?</h2>
+        <p class="zb-modal__desc">
+            Se borrará el pedido <strong style="color:var(--zabisu-orange);"><?php echo htmlspecialchars($pedido["folio"]); ?></strong> de forma permanente. Esta acción no se puede deshacer.
+        </p>
+        <form method="POST" action="">
+            <input type="hidden" name="accion"    value="eliminar_pedido">
+            <input type="hidden" name="id_pedido" value="<?php echo (int)$pedido["id_pedido"]; ?>">
+            <div class="zb-modal__acciones" style="margin-top:8px;">
+                <button type="submit" class="btn-principal" style="background:#ef4444;flex:1;">Sí, eliminar</button>
+                <button type="button" id="btn-cancelar-eliminar" class="btn-volver-panel" style="flex:1;">Cancelar</button>
+            </div>
+        </form>
     </div>
 </div>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+
+    // ── Modal eliminar ────────────────────────────────────
+    const btnEliminar  = document.getElementById("btn-eliminar-pedido");
+    const modalElim    = document.getElementById("modal-eliminar");
+    const btnCancelar  = document.getElementById("btn-cancelar-eliminar");
+
+    if (btnEliminar) btnEliminar.addEventListener("click", function () {
+        modalElim.style.display = "flex";
+    });
+    if (btnCancelar) btnCancelar.addEventListener("click", function () {
+        modalElim.style.display = "none";
+    });
+    if (modalElim) modalElim.addEventListener("click", function (e) {
+        if (e.target === modalElim) modalElim.style.display = "none";
+    });
+
     const btnAgregar = document.getElementById("btn-agregar-extras");
     const notaVacio  = document.getElementById("nota-extras-vacio");
 
