@@ -332,6 +332,7 @@ function obtenerClaseEstadoPago($estadoPago)
             <select name="metodo_pago" id="metodo_pago_sel">
                 <option value="Efectivo"      <?php echo $pedido["metodo_pago"] === "Efectivo"      ? "selected" : ""; ?>>Efectivo</option>
                 <option value="Transferencia" <?php echo $pedido["metodo_pago"] === "Transferencia" ? "selected" : ""; ?>>Transferencia</option>
+                <option value="Tarjeta"       <?php echo $pedido["metodo_pago"] === "Tarjeta"       ? "selected" : ""; ?>>Tarjeta</option>
             </select>
 
             <?php if ($pedido["estado_pago"] === "Pagado"): ?>
@@ -387,7 +388,7 @@ function obtenerClaseEstadoPago($estadoPago)
                 </a>
             <?php endif; ?>
 
-            <?php if ($pedido["metodo_pago"] === "Efectivo" || $pedido["estado_pago"] === "Pagado"): ?>
+            <?php if (in_array($pedido["metodo_pago"], ["Efectivo", "Tarjeta"]) || $pedido["estado_pago"] === "Pagado"): ?>
                 <a class="btn-tabla" target="_blank" href="imprimir_y_notificar.php?id=<?php echo (int)$pedido["id_pedido"]; ?>">
                     Imprimir ticket
                 </a>

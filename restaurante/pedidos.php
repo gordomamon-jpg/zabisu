@@ -723,7 +723,7 @@ function formatearFechaBonita($fecha)
                                                         Confirmar pago
                                                     </a>
                                                 <?php endif; ?>
-                                                <?php if ($pedido["metodo_pago"] === "Efectivo" || $pedido["estado_pago"] === "Pagado"): ?>
+                                                <?php if (in_array($pedido["metodo_pago"], ["Efectivo", "Tarjeta"]) || $pedido["estado_pago"] === "Pagado"): ?>
                                                     <?php if ((int)$pedido["num_menus"] > 1): ?>
                                                         <button class="btn-tabla btn-tabla--imprimir btn-tabla--imprimir-sep" data-id="<?php echo (int)$pedido["id_pedido"]; ?>">
                                                             Imprimir separado
