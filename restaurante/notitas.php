@@ -187,6 +187,7 @@
                 background: #fff !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
+                page-break-after: always;
             }
             .notita__logo {
                 filter: grayscale(100%) contrast(200%);
@@ -257,10 +258,10 @@ function generarPreview() {
         </div>`;
 
     for (var i = 0; i < cantidad; i++) {
-        if (i > 0) {
+        lista.innerHTML += ticketHtml;
+        if (i < cantidad - 1) {
             lista.innerHTML += `<div class="corte">✂</div>`;
         }
-        lista.innerHTML += ticketHtml;
     }
 
     document.getElementById("seccion-form").style.display = "none";
