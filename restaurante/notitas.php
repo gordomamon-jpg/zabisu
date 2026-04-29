@@ -105,43 +105,42 @@
         .notita {
             width: 72mm;
             background: #fff;
-            font-family: 'Courier New', Courier, monospace;
+            font-family: Arial, Helvetica, sans-serif;
             color: #000;
             text-align: center;
-            padding: 6mm 4mm 4mm;
+            padding: 6mm 5mm 5mm;
             box-sizing: border-box;
         }
-        .notita__logo {
-            width: 28px;
-            height: 28px;
-            object-fit: contain;
-            display: block;
-            margin: 0 auto 4px;
-            /* forzar grises para pantalla también */
-            filter: grayscale(100%);
-        }
         .notita__marca {
-            font-size: 15px;
+            font-size: 22px;
             font-weight: 900;
-            letter-spacing: 2px;
+            letter-spacing: 4px;
             text-transform: uppercase;
             display: block;
+            margin-bottom: 2px;
         }
         .notita__linea {
+            border: none;
+            border-top: 2px solid #000;
+            margin: 5px 0;
+        }
+        .notita__linea--dashed {
             border: none;
             border-top: 1px dashed #000;
             margin: 5px 0;
         }
         .notita__mensaje {
-            font-size: 12px;
-            line-height: 1.6;
+            font-size: 15px;
+            font-weight: 500;
+            line-height: 1.65;
             white-space: pre-wrap;
             word-break: break-word;
-            margin: 6px 0;
+            margin: 8px 0;
         }
         .notita__slogan {
-            font-size: 9px;
-            letter-spacing: 1.5px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 2px;
             text-transform: uppercase;
             opacity: .6;
             display: block;
@@ -188,9 +187,6 @@
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
                 page-break-after: always;
-            }
-            .notita__logo {
-                filter: grayscale(100%) contrast(200%);
             }
             .corte {
                 color: #000;
@@ -249,11 +245,10 @@ function generarPreview() {
 
     var ticketHtml = `
         <div class="notita">
-            <img class="notita__logo" src="../assets/img/LOGO_N.png" alt="Zabisu">
             <span class="notita__marca">Zabisu</span>
             <hr class="notita__linea">
             <p class="notita__mensaje">${escapeHtml(mensaje)}</p>
-            <hr class="notita__linea">
+            <hr class="notita__linea--dashed">
             <span class="notita__slogan">Sabor y Servicio</span>
         </div>`;
 
