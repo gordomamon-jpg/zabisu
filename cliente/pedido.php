@@ -219,6 +219,7 @@ $sqlConteoProductos = "SELECT
                        WHERE p.estado != 'Cancelado'
                          AND p.es_prueba = 0
                          AND pr.id_menu = :id_menu_activo
+                         AND dp.nombre_producto = pr.nombre
                        GROUP BY dp.id_producto";
 $stmtConteoProductos = $conexion->prepare($sqlConteoProductos);
 $stmtConteoProductos->bindParam(":id_menu_activo", $menuActivo["id_menu"], PDO::PARAM_INT);

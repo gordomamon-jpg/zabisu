@@ -56,6 +56,7 @@ if ($menuActivo) {
          WHERE p.estado != 'Cancelado'
            AND p.es_prueba = 0
            AND pr.id_menu = :id_menu
+           AND dp.nombre_producto = pr.nombre
          GROUP BY dp.id_producto"
     );
     $stmtCont->execute([":id_menu" => $menuActivo["id_menu"]]);

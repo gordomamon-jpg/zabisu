@@ -50,6 +50,7 @@ $sqlConteos = "SELECT dp.id_producto, COUNT(*) AS total_pedidos
                WHERE p.estado != 'Cancelado'
                  AND p.es_prueba = 0
                  AND pr.id_menu = :id_menu
+                 AND dp.nombre_producto = pr.nombre
                GROUP BY dp.id_producto";
 $stmtConteos = $conexion->prepare($sqlConteos);
 $stmtConteos->bindParam(":id_menu", $menuActivo["id_menu"], PDO::PARAM_INT);
