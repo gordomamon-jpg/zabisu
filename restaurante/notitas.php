@@ -44,10 +44,7 @@
             box-sizing: border-box;
             color: #1a1a1a;
         }
-        .notitas-form textarea:focus {
-            outline: none;
-            border-color: #FF7A00;
-        }
+        .notitas-form textarea:focus { outline: none; border-color: #FF7A00; }
         .notitas-form input[type=number] {
             width: 120px;
             padding: 10px 14px;
@@ -57,18 +54,9 @@
             font-family: inherit;
             color: #1a1a1a;
         }
-        .notitas-form input[type=number]:focus {
-            outline: none;
-            border-color: #FF7A00;
-        }
-        .notitas-form .campo {
-            margin-bottom: 22px;
-        }
-        .notitas-form .acciones {
-            display: flex;
-            gap: 12px;
-            margin-top: 28px;
-        }
+        .notitas-form input[type=number]:focus { outline: none; border-color: #FF7A00; }
+        .notitas-form .campo { margin-bottom: 22px; }
+        .notitas-form .acciones { display: flex; gap: 12px; margin-top: 28px; }
         .btn-imprimir {
             background: #FF7A00;
             color: #fff;
@@ -95,104 +83,121 @@
             align-items: center;
         }
 
-        /* ── Preview en pantalla ── */
-        .preview-grid {
-            display: none;
-            flex-wrap: wrap;
-            gap: 10px;
-            padding: 24px 20px;
-            max-width: 820px;
-            margin: 0 auto;
-        }
-        .preview-grid.visible { display: flex; }
-
-        /* ── Ticket ── */
-        .notita {
-            width: 210px;
-            border: 1.5px solid #eee;
-            border-radius: 10px;
-            overflow: hidden;
-            background: #fff;
-            box-shadow: 0 2px 8px rgba(0,0,0,.08);
-            display: flex;
-            flex-direction: column;
-            page-break-inside: avoid;
-        }
-        .notita__header {
-            background: #FF7A00;
-            padding: 10px 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .notita__logo {
-            width: 28px;
-            height: 28px;
-            object-fit: contain;
-        }
-        .notita__marca {
-            color: #fff;
-            font-size: 16px;
-            font-weight: 800;
-            letter-spacing: .3px;
-        }
-        .notita__cuerpo {
-            padding: 14px 14px 10px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-        }
-        .notita__mensaje {
-            font-size: 13px;
-            color: #1a1a1a;
-            line-height: 1.55;
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
-        .notita__footer {
-            padding: 8px 14px 10px;
-            text-align: center;
-            border-top: 1px solid #f0f0f0;
-        }
-        .notita__slogan {
-            font-size: 10px;
-            color: #aaa;
-            letter-spacing: .5px;
-            text-transform: uppercase;
-        }
-
         /* ── Barra de acciones del preview ── */
         .preview-acciones {
             display: none;
             justify-content: center;
             gap: 12px;
-            padding: 0 20px 32px;
+            padding: 20px 20px 16px;
         }
         .preview-acciones.visible { display: flex; }
 
+        /* ── Preview en pantalla: columna centrada simulando rollo ── */
+        .preview-lista {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            padding: 0 20px 60px;
+        }
+        .preview-lista.visible { display: flex; }
+
+        /* ── Ticket individual ── */
+        .notita {
+            width: 72mm;
+            background: #fff;
+            font-family: 'Courier New', Courier, monospace;
+            color: #000;
+            text-align: center;
+            padding: 6mm 4mm 4mm;
+            box-sizing: border-box;
+        }
+        .notita__logo {
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto 4px;
+            /* forzar grises para pantalla también */
+            filter: grayscale(100%);
+        }
+        .notita__marca {
+            font-size: 15px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            display: block;
+        }
+        .notita__linea {
+            border: none;
+            border-top: 1px dashed #000;
+            margin: 5px 0;
+        }
+        .notita__mensaje {
+            font-size: 12px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-word;
+            margin: 6px 0;
+        }
+        .notita__slogan {
+            font-size: 9px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            opacity: .6;
+            display: block;
+            margin-top: 4px;
+        }
+
+        /* ── Línea de corte entre tickets ── */
+        .corte {
+            width: 72mm;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #bbb;
+            font-size: 11px;
+            margin: 0;
+            user-select: none;
+        }
+        .corte::before, .corte::after {
+            content: '';
+            flex: 1;
+            border-top: 1px dashed #bbb;
+        }
+
         /* ── Print ── */
         @media print {
+            @page { margin: 0; size: 72mm auto; }
+
             body * { visibility: hidden; }
-            .preview-grid, .preview-grid * { visibility: visible; }
-            .preview-grid {
+            .preview-lista, .preview-lista * { visibility: visible; }
+
+            .preview-lista {
                 display: flex !important;
                 position: fixed;
                 top: 0; left: 0;
-                width: 100%;
-                padding: 8mm;
-                gap: 6mm;
-                box-sizing: border-box;
+                width: 72mm;
+                padding: 0;
+                align-items: stretch;
             }
+
             .notita {
-                width: 62mm;
-                border: 1px solid #ddd;
-                box-shadow: none;
-                border-radius: 6px;
+                width: 72mm;
+                color: #000 !important;
+                background: #fff !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
             }
-            .notita__mensaje { font-size: 11px; }
-            .notita__slogan { font-size: 8px; }
+            .notita__logo {
+                filter: grayscale(100%) contrast(200%);
+            }
+            .corte {
+                color: #000;
+                width: 72mm;
+            }
+            .corte::before, .corte::after {
+                border-top: 1px dashed #000;
+            }
             .preview-acciones { display: none !important; }
         }
     </style>
@@ -202,16 +207,16 @@
 <!-- ── Formulario ── -->
 <div class="notitas-form" id="seccion-form">
     <h1>🎈 Imprimir Notitas</h1>
-    <p class="subtitulo">Crea pequeños tickets personalizados para imprimir en cantidad.</p>
+    <p class="subtitulo">Para impresora térmica de tickets. Blanco y negro, con línea de corte entre cada notita.</p>
 
     <div class="campo">
         <label for="mensaje">Mensaje de la notita</label>
-        <textarea id="mensaje" placeholder="Ej: ¡Feliz Día del Niño! 🎉&#10;Con cariño, el equipo Zabisu 🧡" maxlength="300"></textarea>
+        <textarea id="mensaje" placeholder="Ej: ¡Feliz Día del Niño!&#10;Con cariño, el equipo Zabisu" maxlength="300"></textarea>
     </div>
 
     <div class="campo">
         <label for="cantidad">Cantidad de notitas</label>
-        <input type="number" id="cantidad" value="50" min="1" max="200">
+        <input type="number" id="cantidad" value="50" min="1" max="300">
     </div>
 
     <div class="acciones">
@@ -226,45 +231,46 @@
     <button type="button" class="btn-volver" onclick="volverForm()">← Editar</button>
 </div>
 
-<div class="preview-grid" id="preview-grid"></div>
+<div class="preview-lista" id="preview-lista"></div>
 
 <script>
 function generarPreview() {
     var mensaje  = document.getElementById("mensaje").value.trim();
-    var cantidad = Math.max(1, Math.min(200, parseInt(document.getElementById("cantidad").value) || 1));
+    var cantidad = Math.max(1, Math.min(300, parseInt(document.getElementById("cantidad").value) || 1));
 
     if (!mensaje) {
         document.getElementById("mensaje").focus();
         return;
     }
 
-    var grid = document.getElementById("preview-grid");
-    grid.innerHTML = "";
+    var lista = document.getElementById("preview-lista");
+    lista.innerHTML = "";
+
+    var ticketHtml = `
+        <div class="notita">
+            <img class="notita__logo" src="../assets/img/LOGO_N.png" alt="Zabisu">
+            <span class="notita__marca">Zabisu</span>
+            <hr class="notita__linea">
+            <p class="notita__mensaje">${escapeHtml(mensaje)}</p>
+            <hr class="notita__linea">
+            <span class="notita__slogan">Sabor y Servicio</span>
+        </div>`;
 
     for (var i = 0; i < cantidad; i++) {
-        grid.innerHTML += `
-        <div class="notita">
-            <div class="notita__header">
-                <img class="notita__logo" src="../assets/img/LOGO_BLANCO.png" alt="Zabisu">
-                <span class="notita__marca">Zabisu</span>
-            </div>
-            <div class="notita__cuerpo">
-                <p class="notita__mensaje">${escapeHtml(mensaje)}</p>
-            </div>
-            <div class="notita__footer">
-                <span class="notita__slogan">Sabor y Servicio</span>
-            </div>
-        </div>`;
+        if (i > 0) {
+            lista.innerHTML += `<div class="corte">✂</div>`;
+        }
+        lista.innerHTML += ticketHtml;
     }
 
     document.getElementById("seccion-form").style.display = "none";
-    grid.classList.add("visible");
+    lista.classList.add("visible");
     document.getElementById("preview-acciones").classList.add("visible");
 }
 
 function volverForm() {
     document.getElementById("seccion-form").style.display = "";
-    document.getElementById("preview-grid").classList.remove("visible");
+    document.getElementById("preview-lista").classList.remove("visible");
     document.getElementById("preview-acciones").classList.remove("visible");
 }
 
