@@ -428,6 +428,22 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
 
         <div class="line"></div>
 
+        <?php if ($idx === array_key_last($menusPedido) && !empty($extrasTicket)): ?>
+        <div class="menu-block">
+            <div class="menu-title">EXTRAS</div>
+            <?php foreach ($extrasTicket as $extra): ?>
+            <div class="item-group">
+                <div class="item-label"><?php echo htmlspecialchars($extra["categoria"]); ?></div>
+                <div class="item-value">
+                    <?php echo htmlspecialchars($extra["nombre"]); ?> ×<?php echo (int)$extra["cantidad"]; ?>
+                    — $<?php echo number_format($extra["cantidad"] * $extra["precio_unitario"], 2); ?>
+                </div>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        <div class="line"></div>
+        <?php endif; ?>
+
         <div class="row total">
             <div>Total pedido</div>
             <div>$<?php echo number_format((float)$pedido["total"], 2); ?></div>
