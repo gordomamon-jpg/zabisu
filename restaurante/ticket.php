@@ -211,6 +211,15 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
             text-transform: uppercase;
             margin-bottom: 6px;
         }
+        .menu-title--extras {
+            background: #000;
+            color: #fff;
+            padding: 3px 6px;
+            display: inline-block;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 8px;
+        }
 
         .item-group {
             margin-bottom: 5px;
@@ -430,7 +439,7 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
 
         <?php if ($idx === array_key_last($menusPedido) && !empty($extrasTicket)): ?>
         <div class="menu-block">
-            <div class="menu-title">EXTRAS</div>
+            <div class="menu-title menu-title--extras">EXTRAS</div>
             <?php foreach ($extrasTicket as $extra): ?>
             <div class="item-group">
                 <div class="item-label"><?php echo htmlspecialchars($extra["categoria"]); ?></div>
