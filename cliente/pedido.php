@@ -217,10 +217,13 @@ $sqlConteoProductos = "SELECT
                        INNER JOIN pedidos p ON pm.id_pedido = p.id_pedido
                        INNER JOIN productos pr ON dp.id_producto = pr.id_producto
                        WHERE p.estado != 'Cancelado'
+                         AND p.es_prueba = 0
                          AND pr.id_menu = :id_menu_activo
+                         AND DATE(p.fecha_pedido) = :fecha_menu
                        GROUP BY dp.id_producto";
 $stmtConteoProductos = $conexion->prepare($sqlConteoProductos);
 $stmtConteoProductos->bindParam(":id_menu_activo", $menuActivo["id_menu"], PDO::PARAM_INT);
+$stmtConteoProductos->bindParam(":fecha_menu", $menuActivo["fecha"]);
 $stmtConteoProductos->execute();
 $conteosProductosDB = $stmtConteoProductos->fetchAll(PDO::FETCH_ASSOC);
 
