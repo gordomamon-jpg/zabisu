@@ -53,7 +53,9 @@ if ($menuActivo) {
          INNER JOIN pedido_menus pm ON dp.id_pedido_menu = pm.id_pedido_menu
          INNER JOIN pedidos p       ON pm.id_pedido = p.id_pedido
          INNER JOIN productos pr    ON dp.id_producto = pr.id_producto
-         WHERE p.estado != 'Cancelado' AND pr.id_menu = :id_menu
+         WHERE p.estado != 'Cancelado'
+           AND p.es_prueba = 0
+           AND pr.id_menu = :id_menu
          GROUP BY dp.id_producto"
     );
     $stmtCont->execute([":id_menu" => $menuActivo["id_menu"]]);
