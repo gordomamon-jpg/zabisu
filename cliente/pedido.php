@@ -219,11 +219,10 @@ $sqlConteoProductos = "SELECT
                        WHERE p.estado != 'Cancelado'
                          AND p.es_prueba = 0
                          AND pr.id_menu = :id_menu_activo
-                         AND DATE(p.fecha_pedido) = :fecha_menu
+                         AND DATE(p.fecha_pedido) = CURDATE()
                        GROUP BY dp.id_producto";
 $stmtConteoProductos = $conexion->prepare($sqlConteoProductos);
 $stmtConteoProductos->bindParam(":id_menu_activo", $menuActivo["id_menu"], PDO::PARAM_INT);
-$stmtConteoProductos->bindParam(":fecha_menu", $menuActivo["fecha"]);
 $stmtConteoProductos->execute();
 $conteosProductosDB = $stmtConteoProductos->fetchAll(PDO::FETCH_ASSOC);
 

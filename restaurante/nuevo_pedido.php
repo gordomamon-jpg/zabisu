@@ -42,10 +42,10 @@ if ($menuActivo) {
          WHERE p.estado != 'Cancelado'
            AND p.es_prueba = 0
            AND pr.id_menu = :id_menu
-           AND DATE(p.fecha_pedido) = :fecha_menu
+           AND DATE(p.fecha_pedido) = CURDATE()
          GROUP BY dp.id_producto"
     );
-    $stmtCont->execute([":id_menu" => $menuActivo["id_menu"], ":fecha_menu" => $menuActivo["fecha"]]);
+    $stmtCont->execute([":id_menu" => $menuActivo["id_menu"]]);
     $conteos = [];
     foreach ($stmtCont->fetchAll(PDO::FETCH_ASSOC) as $row) {
         $conteos[$row["id_producto"]] = (int)$row["total_pedidos"];
