@@ -215,6 +215,14 @@ $modoPrueba = (int)($stmtModoPrueba->fetchColumn() ?? 0);
             </div>
         </a>
 
+        <a href="notitas.php" class="panel-acceso">
+            <div class="panel-acceso__icono">🎈</div>
+            <div class="panel-acceso__contenido">
+                <strong class="panel-acceso__titulo">Notitas</strong>
+                <span class="panel-acceso__desc">Imprime tickets personalizados en cantidad</span>
+            </div>
+        </a>
+
         <a href="inventario.php" class="panel-acceso panel-acceso--inventario">
             <div class="panel-acceso__icono">📦</div>
             <div class="panel-acceso__contenido">
