@@ -108,7 +108,7 @@ function imprimirNotitas() {
     .notita {
         width: 100%;
         text-align: center;
-        padding: 6mm 3mm 5mm;
+        padding: 2mm 3mm 5mm;
         box-sizing: border-box;
         page-break-after: always;
     }
@@ -148,7 +148,10 @@ function imprimirNotitas() {
         font-weight: 700;
         letter-spacing: 2px;
         text-transform: uppercase;
-        opacity: .65;
+        background: #000;
+        color: #fff;
+        padding: 3px 8px;
+        display: inline-block;
         margin-top: 4px;
     }
 </style>
