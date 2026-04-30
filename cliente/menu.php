@@ -188,6 +188,49 @@ $iconosCat = ["Plato fuerte"=>"🍽️","Sopa"=>"🥣","Complemento"=>"🥗","Ag
         text-align: center;
         flex-shrink: 0;
     }
+
+    /* ── Día del Niño (30 abr) ────────────────────────────── */
+    .dnino-confetti {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        overflow: hidden;
+    }
+    .dnino-confetti span {
+        position: absolute;
+        bottom: -8px;
+        border-radius: 50%;
+        opacity: 0;
+        animation: dnino-float linear infinite;
+    }
+    .dnino-confetti span:nth-child(1)  { width:5px;  height:5px;  background:#ff6b9d; left:8%;  animation-duration:7s;   animation-delay:0s;    }
+    .dnino-confetti span:nth-child(2)  { width:6px;  height:6px;  background:#4ecdc4; left:18%; animation-duration:9s;   animation-delay:1.3s;  }
+    .dnino-confetti span:nth-child(3)  { width:5px;  height:5px;  background:#ffe66d; left:30%; animation-duration:8s;   animation-delay:0.5s;  }
+    .dnino-confetti span:nth-child(4)  { width:7px;  height:7px;  background:#a29bfe; left:44%; animation-duration:10s;  animation-delay:2.1s;  }
+    .dnino-confetti span:nth-child(5)  { width:5px;  height:5px;  background:#ff6b9d; left:57%; animation-duration:7.5s; animation-delay:0.9s;  }
+    .dnino-confetti span:nth-child(6)  { width:6px;  height:6px;  background:#ffe66d; left:70%; animation-duration:9.5s; animation-delay:1.8s;  }
+    .dnino-confetti span:nth-child(7)  { width:5px;  height:5px;  background:#4ecdc4; left:82%; animation-duration:8.5s; animation-delay:3.2s;  }
+    .dnino-confetti span:nth-child(8)  { width:6px;  height:6px;  background:#c7f2a4; left:93%; animation-duration:7s;   animation-delay:2.6s;  }
+    @keyframes dnino-float {
+        0%   { transform: translateY(0)      scale(0.8); opacity: 0;   }
+        12%  {                                            opacity: 0.55; }
+        88%  {                                            opacity: 0.4;  }
+        100% { transform: translateY(-280px) scale(1.1); opacity: 0;   }
+    }
+    .dnino-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 14px;
+        padding: 6px 15px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.07);
+        border: 1px solid rgba(255,255,255,0.13);
+        font-size: 13px;
+        font-weight: 600;
+        color: rgba(255,255,255,0.8);
+        letter-spacing: 0.2px;
+    }
 </style>
 
 <body>
@@ -224,6 +267,13 @@ $iconosCat = ["Plato fuerte"=>"🍽️","Sopa"=>"🥣","Complemento"=>"🥗","Ag
         <div class="md-hero__glow-top"></div>
         <div class="md-hero__glow-bottom"></div>
 
+        <?php if (in_array(date('m-d'), ['04-29','04-30'])): ?>
+        <div class="dnino-confetti" aria-hidden="true">
+            <span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span>
+        </div>
+        <?php endif; ?>
+
         <p class="md-hero__eyebrow">Menú del día</p>
         <div class="md-hero__marca-grupo">
             <img class="md-hero__logo" src="../assets/img/LOGO_BLANCO.png" alt="Zabisu">
@@ -246,6 +296,10 @@ $iconosCat = ["Plato fuerte"=>"🍽️","Sopa"=>"🥣","Complemento"=>"🥗","Ag
         <div class="md-hero__cierre">
             Pedidos hasta las <strong><?php echo date("g:i A", strtotime($menuActivo["pedido_hasta"])); ?></strong>
         </div>
+
+        <?php if (in_array(date('m-d'), ['04-29','04-30'])): ?>
+        <div class="dnino-badge">🎈 ¡Feliz Día del Niño!</div>
+        <?php endif; ?>
     </div>
 
     <!-- ══ TABS ═══════════════════════════════════════════════ -->
