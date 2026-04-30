@@ -153,6 +153,8 @@ function imprimirNotitas() {
         padding: 3px 8px;
         display: inline-block;
         margin-top: 4px;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
     }
 </style>
 </head>
