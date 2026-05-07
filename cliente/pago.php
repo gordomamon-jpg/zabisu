@@ -82,6 +82,36 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
     }
 
     if (empty($errores)) {
+        // Verificar que ningún plato fuerte seleccionado haya alcanzado su límite
+        $stmtContPago = $conexion->prepare(
+            "SELECT dp2.id_producto, COUNT(*) AS total
+             FROM detalle_pedido dp2
+             INNER JOIN pedido_menus pm2 ON dp2.id_pedido_menu = pm2.id_pedido_menu
+             INNER JOIN pedidos p2       ON pm2.id_pedido = p2.id_pedido
+             INNER JOIN productos pr2    ON dp2.id_producto = pr2.id_producto
+             WHERE p2.estado != 'Cancelado'
+               AND p2.es_prueba = 0
+               AND pr2.categoria = 'Plato fuerte'
+             GROUP BY dp2.id_producto"
+        );
+        $stmtContPago->execute();
+        $conteosActuales = [];
+        foreach ($stmtContPago->fetchAll(PDO::FETCH_ASSOC) as $fila) {
+            $conteosActuales[(int)$fila["id_producto"]] = (int)$fila["total"];
+        }
+
+        foreach ($menusRecibidos as $numMenu => $menu) {
+            $idPlato = (int)($menu["plato_fuerte"] ?? 0);
+            if (!$idPlato || !isset($productosIndexados[$idPlato])) continue;
+            $prod = $productosIndexados[$idPlato];
+            $limite = isset($prod["limite_pedidos"]) ? (int)$prod["limite_pedidos"] : 0;
+            if ($limite > 0 && ($conteosActuales[$idPlato] ?? 0) >= $limite) {
+                $errores[] = "El plato \"" . htmlspecialchars($prod["nombre"]) . "\" (menú {$numMenu}) ya está agotado. Regresa y elige otro.";
+            }
+        }
+    }
+
+    if (empty($errores)) {
         try {
             $conexion->beginTransaction();
 
