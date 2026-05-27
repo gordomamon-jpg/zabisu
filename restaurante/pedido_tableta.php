@@ -421,7 +421,8 @@ body {
 </ul></div>
 <?php endif; ?>
 
-<form method="POST" action="" id="form-tableta">
+<form method="POST" action="pedido_tableta.php" id="form-tableta">
+<input type="hidden" name="guardar_pedido" value="1">
 
 <!-- NOMBRE -->
 <div class="t-bloque">
@@ -709,11 +710,16 @@ body {
 
     /* ── Submit: deshabilitar para evitar doble envío ── */
     var form   = document.getElementById("form-tableta");
-    var submit = document.getElementById("t-submit");
+    var submit   = document.getElementById("t-submit");
+    var enviando = false;
     if (form && submit) {
-        form.addEventListener("submit", function () {
-            submit.disabled    = true;
-            submit.textContent = "Guardando...";
+        form.addEventListener("submit", function (e) {
+            if (enviando) { e.preventDefault(); return; }
+            enviando = true;
+            setTimeout(function () {
+                submit.disabled    = true;
+                submit.textContent = "Guardando...";
+            }, 50);
         });
     }
 
