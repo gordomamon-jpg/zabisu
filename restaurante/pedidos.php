@@ -71,6 +71,20 @@ $totalNuevosActual = count(array_filter($pedidos, function ($pedido) {
 }));
 
 /*
+    Pedidos TAB- sin ver para auto-impresión en esta página
+*/
+$tabAutoprint = array_values(array_filter($pedidos, function ($p) {
+    return strpos($p["folio"], "TAB-") === 0 && (int)$p["visto"] === 0;
+}));
+$tabAutoprintJS = json_encode(array_map(function ($p) {
+    return [
+        "id"        => (int)$p["id_pedido"],
+        "folio"     => $p["folio"],
+        "num_menus" => (int)$p["num_menus"],
+    ];
+}, $tabAutoprint));
+
+/*
     Agrupar pedidos por fecha
 */
 $pedidosPorFecha = [];
@@ -1028,6 +1042,26 @@ document.addEventListener("DOMContentLoaded", function () {
         resultadoNotif.className = "notificacion-resultado notificacion-resultado--" + tipo;
         resultadoNotif.innerHTML = html;
         resultadoNotif.style.display = "block";
+    }
+
+    // ============================================================
+    // AUTO-IMPRESIÓN DE TICKETS TAB- (desde tableta)
+    // ============================================================
+    var tabAutoprint = <?= $tabAutoprintJS ?>;
+    if (tabAutoprint.length > 0 && iframeTicket) {
+        tabAutoprint.forEach(function (orden, idx) {
+            var key = "tab_impreso_" + orden.id;
+            if (localStorage.getItem(key)) return;
+            localStorage.setItem(key, "1");
+            setTimeout(function () {
+                fetch("imprimir_y_notificar.php?id=" + orden.id, { cache: "no-store" });
+                iframeTicket.onload = function () {
+                    iframeTicket.contentWindow.focus();
+                    iframeTicket.contentWindow.print();
+                };
+                iframeTicket.src = "ticket.php?id=" + orden.id + (orden.num_menus > 1 ? "&separado=1" : "");
+            }, idx * 3000);
+        });
     }
 });
 </script>
