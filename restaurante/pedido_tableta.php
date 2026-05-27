@@ -3,10 +3,6 @@ require_once "../config/db.php";
 require_once "auth_check.php";
 date_default_timezone_set("America/Mexico_City");
 
-$stmtMP = $conexion->prepare("SELECT valor FROM configuracion WHERE clave = 'modo_prueba' LIMIT 1");
-$stmtMP->execute();
-$esPrueba = (int)($stmtMP->fetchColumn() ?? 0);
-
 $stmtMenu = $conexion->prepare("SELECT * FROM menu_dia ORDER BY fecha DESC LIMIT 1");
 $stmtMenu->execute();
 $menuActivo = $stmtMenu->fetch(PDO::FETCH_ASSOC);
@@ -147,7 +143,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
                 ":nombre_cliente" => $nombre_cliente,
                 ":id_horario"     => $id_horario,
                 ":total"          => $totalPedido,
-                ":es_prueba"      => $esPrueba,
+                ":es_prueba"      => 0,
                 ":folio2"         => $folio,
             ]);
             $id_pedido = (int)$conexion->lastInsertId();
