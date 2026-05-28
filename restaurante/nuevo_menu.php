@@ -62,10 +62,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 }
 
 $fechaDefault     = $_POST["fecha"]            ?? date("Y-m-d");
-$pubDefault       = $_POST["publicado_desde"]  ?? date("Y-m-d") . "T07:00";
-$hastaDefault     = $_POST["pedido_hasta"]     ?? date("Y-m-d") . "T11:30";
-$pzDefault        = $_POST["precio_zabisu"]    ?? "90";
-$peDefault        = $_POST["precio_ejecutivo"] ?? "100";
+$pubDefault       = $_POST["publicado_desde"]  ?? date("Y-m-d") . "T17:00";
+$hastaDefault     = $_POST["pedido_hasta"]     ?? date("Y-m-d") . "T11:50";
+$pzDefault        = $_POST["precio_zabisu"]    ?? "100";
+$peDefault        = $_POST["precio_ejecutivo"] ?? "110";
 ?>
 <!DOCTYPE html>
 <html lang="es">
