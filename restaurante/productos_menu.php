@@ -400,6 +400,39 @@ $esCreacion = !isset($_GET["editar"]) && empty($productosGuardados);
             </div>
         </div>
 
+        <!-- CARGA RÁPIDA -->
+        <div class="bloque-formulario nm-seccion" id="seccion-carga-rapida">
+            <div class="nm-seccion__header">
+                <span class="nm-seccion__icono">⚡</span>
+                <div>
+                    <h2>Carga rápida</h2>
+                    <p class="nota-formulario" style="margin:0;">Pega el menú completo en el formato de abajo y se llenarán todos los campos automáticamente.</p>
+                </div>
+            </div>
+
+            <div style="background:var(--fondo-card,#1a1a1a);border:1px solid var(--borde,#333);border-radius:8px;padding:14px 16px;margin:16px 0 0;">
+                <p style="font-size:12px;color:var(--texto-secundario);margin:0 0 8px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;">Formato</p>
+                <pre style="font-family:monospace;font-size:13px;color:var(--texto-principal,#eee);margin:0;white-space:pre-wrap;line-height:1.7;">PLATO ZABISU: Nombre 1 | Nombre 2
+PLATO EJECUTIVO: Nombre 1 | Nombre 2 | Nombre 3 | Nombre 4
+SOPA: Nombre de la sopa
+COMPLEMENTO: Opción 1 | Opción 2 | Opción 3 | Opción 4 | Opción 5
+AGUA: Nombre del agua
+POSTRE: Nombre del postre</pre>
+                <p style="font-size:12px;color:var(--texto-secundario);margin:10px 0 0;">Descripción opcional entre paréntesis: <code style="background:#2a2a2a;padding:1px 5px;border-radius:3px;">Milanesa de res (Con papas y ensalada)</code></p>
+                <p style="font-size:12px;color:var(--texto-secundario);margin:6px 0 0;">Sopa, Complemento, Agua y Postre se aplican igual a Zabisu y Ejecutivo.</p>
+            </div>
+
+            <textarea id="carga-rapida-texto" rows="8"
+                placeholder="Pega aquí el menú..."
+                style="width:100%;box-sizing:border-box;margin-top:16px;padding:12px 14px;background:var(--fondo-input,#111);border:1px solid var(--borde,#333);border-radius:8px;color:var(--texto-principal,#eee);font-size:14px;font-family:monospace;line-height:1.6;resize:vertical;"></textarea>
+
+            <div style="margin-top:12px;display:flex;gap:14px;align-items:center;">
+                <button type="button" id="btn-carga-rapida" class="btn-principal">Aplicar al formulario</button>
+                <span id="carga-rapida-ok" style="font-size:13px;color:#4caf50;display:none;">✓ Campos llenados — revisa y guarda</span>
+                <span id="carga-rapida-err" style="font-size:13px;color:#e57373;display:none;"></span>
+            </div>
+        </div>
+
         <!-- TABS -->
         <div class="pm-tabs">
             <button type="button" class="pm-tab pm-tab--activo" data-tab="Zabisu">
@@ -535,6 +568,77 @@ document.addEventListener("DOMContentLoaded", function () {
             if (contenido) contenido.classList.add("pm-tab-contenido--activo");
         });
     });
+
+    // ── CARGA RÁPIDA ──────────────────────────────────────────
+    var btnCarga = document.getElementById("btn-carga-rapida");
+    if (btnCarga) {
+        btnCarga.addEventListener("click", function () {
+            var texto = document.getElementById("carga-rapida-texto").value.trim();
+            var okEl  = document.getElementById("carga-rapida-ok");
+            var errEl = document.getElementById("carga-rapida-err");
+            okEl.style.display = "none";
+            errEl.style.display = "none";
+
+            if (!texto) {
+                errEl.textContent = "El campo está vacío.";
+                errEl.style.display = "inline";
+                return;
+            }
+
+            var parsed = {};
+            texto.split("\n").forEach(function (linea) {
+                linea = linea.trim();
+                if (!linea) return;
+                var colonIdx = linea.indexOf(":");
+                if (colonIdx === -1) return;
+                var clave = linea.substring(0, colonIdx).trim().toLowerCase();
+                var valor = linea.substring(colonIdx + 1).trim();
+                parsed[clave] = valor.split("|").map(function (s) {
+                    s = s.trim();
+                    var m = s.match(/^(.+?)\s*\((.+)\)\s*$/);
+                    return m ? { nombre: m[1].trim(), descripcion: m[2].trim() } : { nombre: s, descripcion: "" };
+                }).filter(function (item) { return item.nombre !== ""; });
+            });
+
+            function fillCat(tipoMenu, categoria, items) {
+                var key     = "[" + tipoMenu + "][" + categoria + "]";
+                var nombres = Array.from(document.querySelectorAll("input[name*='" + key + "'][name$='[nombre]']"));
+                var descs   = Array.from(document.querySelectorAll("textarea[name*='" + key + "']"));
+                nombres.forEach(function (inp, idx) {
+                    inp.value = items[idx] ? items[idx].nombre : "";
+                });
+                descs.forEach(function (ta, idx) {
+                    ta.value = items[idx] ? items[idx].descripcion : "";
+                });
+            }
+
+            var mapa = {
+                "plato zabisu":    function (v) { fillCat("Zabisu",    "Plato fuerte", v); },
+                "plato ejecutivo": function (v) { fillCat("Ejecutivo", "Plato fuerte", v); },
+                "sopa":            function (v) { fillCat("Zabisu", "Sopa", v);        fillCat("Ejecutivo", "Sopa", v); },
+                "complemento":     function (v) { fillCat("Zabisu", "Complemento", v); fillCat("Ejecutivo", "Complemento", v); },
+                "complementos":    function (v) { fillCat("Zabisu", "Complemento", v); fillCat("Ejecutivo", "Complemento", v); },
+                "agua":            function (v) { fillCat("Zabisu", "Agua", v);        fillCat("Ejecutivo", "Agua", v); },
+                "postre":          function (v) { fillCat("Zabisu", "Postre", v);      fillCat("Ejecutivo", "Postre", v); }
+            };
+
+            var aplicados = 0;
+            Object.keys(parsed).forEach(function (k) {
+                if (mapa[k]) { mapa[k](parsed[k]); aplicados++; }
+            });
+
+            if (aplicados === 0) {
+                errEl.textContent = "No se reconoció ninguna línea. Revisa el formato.";
+                errEl.style.display = "inline";
+                return;
+            }
+
+            okEl.style.display = "inline";
+            // Cambiar al tab Zabisu para que el usuario vea el resultado
+            var tabZab = document.querySelector(".pm-tab[data-tab='Zabisu']");
+            if (tabZab) tabZab.click();
+        });
+    }
 
     // ── COPIAR ZABISU → EJECUTIVO ─────────────────────────────
     var btnCopiar = document.getElementById("btn-copiar-zabisu");
