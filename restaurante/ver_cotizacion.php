@@ -107,10 +107,11 @@ $vigenciaFecha = date("d/m/Y", strtotime($cot["fecha_cotizacion"] . " +" . (int)
         .prt-total-box { padding:9px 18px; text-align:right; min-width:180px; border-top:1px solid #ccc; border-bottom:1px solid #ccc; }
         .prt-total-box__label { font-size:9px; font-weight:600; text-transform:uppercase; letter-spacing:.14em; color:#555; display:block; margin-bottom:4px; }
         .prt-total-box__valor { font-size:26px; font-weight:900; color:#FF7A00; display:block; }
+        .prt-bottom { page-break-inside:avoid; break-inside:avoid; }
         .prt-notas { border:1px solid #ccc; border-top:3px solid #111; padding:9px 12px; margin-bottom:14px; }
         .prt-notas h4 { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.12em; color:#555; margin:0 0 6px; }
         .prt-notas p { font-size:12px; margin:0; line-height:1.55; color:#222; }
-        .prt-footer { display:flex; justify-content:space-between; align-items:flex-end; padding:12px 0 12px; border-top:1px solid #ccc; page-break-inside:avoid; break-inside:avoid; page-break-before:avoid; break-before:avoid; }
+        .prt-footer { display:flex; justify-content:space-between; align-items:flex-end; padding:12px 0 12px; border-top:1px solid #ccc; }
         .prt-footer__info p { font-size:11px; color:#555; margin:0 0 2px; }
         .prt-footer__info p strong { color:#111; }
         .prt-firma { text-align:center; }
@@ -289,22 +290,23 @@ $vigenciaFecha = date("d/m/Y", strtotime($cot["fecha_cotizacion"] . " +" . (int)
                     </div>
                 </div>
 
-                <?php if ($cot["notas"]): ?>
-                <div class="prt-notas">
-                    <h4>Notas y condiciones</h4>
-                    <p><?php echo nl2br(htmlspecialchars($cot["notas"])); ?></p>
-                </div>
-                <?php endif; ?>
-
                 <div class="prt-spacer"></div>
-                <div class="prt-footer">
-                    <div class="prt-footer__info">
-                        <p>Esta cotización es válida hasta el <strong><?php echo $vigenciaFecha; ?></strong>.</p>
-                        <p>Foodtruck Zabisu &mdash; Sabor y Servicio</p>
+                <div class="prt-bottom">
+                    <?php if ($cot["notas"]): ?>
+                    <div class="prt-notas">
+                        <h4>Notas y condiciones</h4>
+                        <p><?php echo nl2br(htmlspecialchars($cot["notas"])); ?></p>
                     </div>
-                    <div class="prt-firma">
-                        <div class="prt-firma__linea"></div>
-                        <p class="prt-firma__label">Autorizado por</p>
+                    <?php endif; ?>
+                    <div class="prt-footer">
+                        <div class="prt-footer__info">
+                            <p>Esta cotización es válida hasta el <strong><?php echo $vigenciaFecha; ?></strong>.</p>
+                            <p>Foodtruck Zabisu &mdash; Sabor y Servicio</p>
+                        </div>
+                        <div class="prt-firma">
+                            <div class="prt-firma__linea"></div>
+                            <p class="prt-firma__label">Autorizado por</p>
+                        </div>
                     </div>
                 </div>
 
