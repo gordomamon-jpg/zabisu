@@ -239,6 +239,14 @@ $modoPrueba = (int)($stmtModoPrueba->fetchColumn() ?? 0);
             </div>
         </a>
 
+        <a href="cotizaciones.php" class="panel-acceso">
+            <div class="panel-acceso__icono">📄</div>
+            <div class="panel-acceso__contenido">
+                <strong class="panel-acceso__titulo">Cotizaciones BBQ</strong>
+                <span class="panel-acceso__desc">Genera cotizaciones profesionales para eventos y clientes</span>
+            </div>
+        </a>
+
         <a href="inventario.php" class="panel-acceso panel-acceso--inventario">
             <div class="panel-acceso__icono">📦</div>
             <div class="panel-acceso__contenido">
