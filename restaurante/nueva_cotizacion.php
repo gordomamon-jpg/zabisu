@@ -43,11 +43,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         try {
             $conexion->beginTransaction();
 
-            $año = date("Y");
-            $stmtCount = $conexion->prepare("SELECT COUNT(*) FROM cotizaciones WHERE YEAR(created_at) = :año");
-            $stmtCount->execute([":año" => $año]);
+            $anio = date("Y");
+            $stmtCount = $conexion->prepare("SELECT COUNT(*) FROM cotizaciones WHERE YEAR(created_at) = :anio");
+            $stmtCount->execute([":anio" => $anio]);
             $num   = (int)$stmtCount->fetchColumn() + 1;
-            $folio = "COT-" . $año . "-" . str_pad($num, 3, "0", STR_PAD_LEFT);
+            $folio = "COT-" . $anio . "-" . str_pad($num, 3, "0", STR_PAD_LEFT);
 
             $total = array_sum(array_column($itemsValidos, "subtotal"));
 
