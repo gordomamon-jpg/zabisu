@@ -80,7 +80,7 @@ $vigenciaFecha = date("d/m/Y", strtotime($cot["fecha_cotizacion"] . " +" . (int)
         .prt-body { padding:32px 40px 40px; }
         .prt-header { display:flex; justify-content:space-between; align-items:flex-start; padding-bottom:24px; border-bottom:1px solid #222; margin-bottom:26px; }
         .prt-brand { display:flex; align-items:center; gap:16px; }
-        .prt-brand__logo { height:56px; object-fit:contain; }
+        .prt-brand__logo { height:70px; width:auto; object-fit:contain; display:block; }
         .prt-brand__texto h1 { font-size:19px; font-weight:900; color:#111; margin:0 0 4px; letter-spacing:-.2px; }
         .prt-brand__texto p { font-size:11px; color:#555; margin:0; letter-spacing:.06em; text-transform:uppercase; }
         .prt-doc { text-align:right; }
