@@ -33,7 +33,7 @@ $estadoLabel = [
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cotizaciones BBQ | Zabisu</title>
+    <title>Cotizaciones | Foodtruck Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
     <link rel="stylesheet" href="../assets/css/styles.css?v=5">
 </head>
@@ -43,9 +43,9 @@ $estadoLabel = [
     <div class="hero-zabisu">
         <div class="hero-zabisu__glow"></div>
         <div class="hero-zabisu__contenido">
-            <p class="hero-zabisu__eyebrow">RESTAURANTE — BBQ</p>
+            <p class="hero-zabisu__eyebrow">FOODTRUCK ZABISU</p>
             <h1 class="hero-zabisu__titulo">Cotizaciones</h1>
-            <p class="hero-zabisu__texto">Gestiona las cotizaciones para eventos y clientes BBQ</p>
+            <p class="hero-zabisu__texto">Genera cotizaciones profesionales para eventos y clientes</p>
             <a href="panel_general.php" class="btn-volver-panel">← Panel general</a>
         </div>
     </div>

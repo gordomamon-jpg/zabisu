@@ -74,38 +74,43 @@ $vigenciaFecha = date("d/m/Y", strtotime($cot["fecha_cotizacion"] . " +" . (int)
         #print-area { display:none; }
 
         /* ── LAYOUT IMPRESIÓN ── */
-        .prt { font-family: 'Helvetica Neue', Arial, sans-serif; color:#111; max-width:800px; margin:0 auto; padding:32px 40px; }
-        .prt-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:28px; }
-        .prt-header__logo { height:56px; }
-        .prt-header__marca { }
-        .prt-header__marca h1 { font-size:28px; font-weight:900; color:#111; margin:0; letter-spacing:-.5px; }
-        .prt-header__marca p { font-size:13px; color:#666; margin:2px 0 0; }
-        .prt-header__doc { text-align:right; }
-        .prt-header__doc h2 { font-size:22px; font-weight:800; color:#111; margin:0 0 4px; letter-spacing:.05em; }
-        .prt-header__doc p { font-size:13px; color:#444; margin:2px 0; }
-        .prt-divider { border:none; border-top:2px solid #111; margin:0 0 20px; }
-        .prt-info { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:24px; }
-        .prt-info-bloque { border:1px solid #ddd; border-radius:6px; padding:14px 16px; }
-        .prt-info-bloque h4 { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:#888; margin:0 0 8px; }
-        .prt-info-bloque p { font-size:13px; margin:0 0 4px; }
-        .prt-info-bloque p strong { display:inline-block; min-width:60px; color:#888; font-weight:400; }
-        .prt-tabla { width:100%; border-collapse:collapse; margin-bottom:16px; }
-        .prt-tabla th { background:#111; color:#fff; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; padding:8px 12px; text-align:left; }
-        .prt-tabla th:last-child, .prt-tabla td:last-child { text-align:right; }
-        .prt-tabla td { padding:10px 12px; border-bottom:1px solid #eee; font-size:13px; }
-        .prt-tabla tr:last-child td { border-bottom:2px solid #111; }
-        .prt-total { display:flex; justify-content:flex-end; margin-bottom:24px; }
-        .prt-total-box { border:2px solid #111; border-radius:6px; padding:12px 20px; text-align:right; }
-        .prt-total-box span { font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:#666; display:block; }
-        .prt-total-box strong { font-size:26px; font-weight:900; }
-        .prt-notas { border:1px solid #ddd; border-radius:6px; padding:14px 16px; margin-bottom:24px; }
-        .prt-notas h4 { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:#888; margin:0 0 8px; }
-        .prt-notas p { font-size:13px; margin:0; white-space:pre-wrap; }
-        .prt-footer { display:flex; justify-content:space-between; align-items:flex-end; padding-top:20px; border-top:1px solid #ddd; }
-        .prt-footer p { font-size:12px; color:#666; margin:0 0 4px; }
+        .prt { font-family:'Helvetica Neue',Arial,sans-serif; color:#111; max-width:780px; margin:0 auto; }
+        .prt-topbar { background:#111; height:7px; }
+        .prt-body { padding:32px 40px 36px; }
+        .prt-header { display:flex; justify-content:space-between; align-items:flex-start; padding-bottom:22px; border-bottom:1px solid #ddd; margin-bottom:22px; }
+        .prt-brand { display:flex; align-items:center; gap:14px; }
+        .prt-brand__logo { height:58px; object-fit:contain; }
+        .prt-brand__texto h1 { font-size:20px; font-weight:900; color:#111; margin:0 0 3px; letter-spacing:-.3px; }
+        .prt-brand__texto p { font-size:11px; color:#888; margin:0; letter-spacing:.07em; text-transform:uppercase; }
+        .prt-doc { text-align:right; }
+        .prt-doc__etiqueta { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.14em; color:#aaa; display:block; margin-bottom:4px; }
+        .prt-doc__folio { font-size:22px; font-weight:900; color:#111; display:block; margin-bottom:6px; }
+        .prt-doc p { font-size:12px; color:#555; margin:2px 0; }
+        .prt-info { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:22px; }
+        .prt-info-bloque { border-left:3px solid #111; background:#f8f8f8; padding:12px 16px; }
+        .prt-info-bloque h4 { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:#888; margin:0 0 8px; }
+        .prt-info-bloque p { font-size:13px; margin:0 0 3px; }
+        .prt-info-bloque p strong { font-weight:400; color:#999; min-width:58px; display:inline-block; }
+        .prt-tabla { width:100%; border-collapse:collapse; font-size:13px; }
+        .prt-tabla thead tr { background:#111; }
+        .prt-tabla th { color:#fff; padding:9px 12px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; text-align:left; }
+        .prt-tabla th:not(:first-child) { text-align:right; }
+        .prt-tabla td { padding:10px 12px; border-bottom:1px solid #ebebeb; }
+        .prt-tabla td:not(:first-child) { text-align:right; }
+        .prt-tabla tbody tr:nth-child(even) td { background:#f8f8f8; }
+        .prt-tabla tfoot tr td { border-top:2px solid #111; border-bottom:none; font-weight:600; background:#fff; }
+        .prt-total-wrap { display:flex; justify-content:flex-end; padding:20px 0 22px; }
+        .prt-total-box { border:2px solid #111; padding:14px 24px; text-align:right; min-width:200px; }
+        .prt-total-box__label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.14em; color:#888; display:block; margin-bottom:5px; }
+        .prt-total-box__valor { font-size:30px; font-weight:900; color:#111; display:block; }
+        .prt-notas { border:1px solid #ddd; padding:14px 16px; margin-bottom:22px; background:#fafafa; }
+        .prt-notas h4 { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:#888; margin:0 0 8px; }
+        .prt-notas p { font-size:13px; margin:0; line-height:1.65; }
+        .prt-footer { display:flex; justify-content:space-between; align-items:flex-end; padding-top:18px; border-top:1px solid #ddd; }
+        .prt-footer__info p { font-size:12px; color:#777; margin:0 0 3px; }
         .prt-firma { text-align:center; }
-        .prt-firma__linea { border-top:1px solid #999; width:180px; margin:40px auto 6px; }
-        .prt-firma__label { font-size:11px; color:#666; }
+        .prt-firma__linea { border-top:1px solid #aaa; width:190px; margin:44px auto 7px; }
+        .prt-firma__label { font-size:11px; color:#888; }
     </style>
 </head>
 <body>
@@ -116,7 +121,7 @@ $vigenciaFecha = date("d/m/Y", strtotime($cot["fecha_cotizacion"] . " +" . (int)
         <div class="hero-zabisu">
             <div class="hero-zabisu__glow"></div>
             <div class="hero-zabisu__contenido">
-                <p class="hero-zabisu__eyebrow">BBQ — COTIZACIÓN</p>
+                <p class="hero-zabisu__eyebrow">FOODTRUCK ZABISU — COTIZACIÓN</p>
                 <h1 class="hero-zabisu__titulo"><?php echo htmlspecialchars($cot["folio"]); ?></h1>
                 <p class="hero-zabisu__texto"><?php echo htmlspecialchars($cot["nombre_cliente"]); ?><?php if ($cot["empresa"]): ?> &mdash; <?php echo htmlspecialchars($cot["empresa"]); ?><?php endif; ?></p>
                 <a href="cotizaciones.php" class="btn-volver-panel">← Cotizaciones</a>
@@ -215,83 +220,87 @@ $vigenciaFecha = date("d/m/Y", strtotime($cot["fecha_cotizacion"] . " +" . (int)
     <!-- ÁREA DE IMPRESIÓN -->
     <div id="print-area">
         <div class="prt">
-            <div class="prt-header">
-                <div style="display:flex;align-items:center;gap:14px;">
-                    <img class="prt-header__logo" src="../assets/img/LOGO_NARA.png" alt="Zabisu">
-                    <div class="prt-header__marca">
-                        <h1>ZABISU</h1>
-                        <p>BBQ &amp; Ahumados</p>
+            <div class="prt-topbar"></div>
+            <div class="prt-body">
+
+                <div class="prt-header">
+                    <div class="prt-brand">
+                        <img class="prt-brand__logo" src="../assets/img/dd.png" alt="Foodtruck Zabisu">
+                        <div class="prt-brand__texto">
+                            <h1>Foodtruck Zabisu</h1>
+                            <p>Sabor y Servicio</p>
+                        </div>
+                    </div>
+                    <div class="prt-doc">
+                        <span class="prt-doc__etiqueta">Cotización</span>
+                        <span class="prt-doc__folio"><?php echo htmlspecialchars($cot["folio"]); ?></span>
+                        <p>Fecha:&nbsp; <?php echo date("d/m/Y", strtotime($cot["fecha_cotizacion"])); ?></p>
+                        <p>Válida hasta:&nbsp; <strong><?php echo $vigenciaFecha; ?></strong></p>
                     </div>
                 </div>
-                <div class="prt-header__doc">
-                    <h2>COTIZACIÓN</h2>
-                    <p><strong><?php echo htmlspecialchars($cot["folio"]); ?></strong></p>
-                    <p>Fecha: <?php echo date("d/m/Y", strtotime($cot["fecha_cotizacion"])); ?></p>
-                    <p>Válida hasta: <?php echo $vigenciaFecha; ?></p>
-                </div>
-            </div>
-            <hr class="prt-divider">
 
-            <div class="prt-info">
-                <div class="prt-info-bloque">
-                    <h4>Datos del cliente</h4>
-                    <p><strong>Nombre: </strong><?php echo htmlspecialchars($cot["nombre_cliente"]); ?></p>
-                    <?php if ($cot["empresa"]): ?><p><strong>Empresa: </strong><?php echo htmlspecialchars($cot["empresa"]); ?></p><?php endif; ?>
-                    <?php if ($cot["telefono"]): ?><p><strong>Tel: </strong><?php echo htmlspecialchars($cot["telefono"]); ?></p><?php endif; ?>
-                    <?php if ($cot["correo"]): ?><p><strong>Correo: </strong><?php echo htmlspecialchars($cot["correo"]); ?></p><?php endif; ?>
+                <div class="prt-info">
+                    <div class="prt-info-bloque">
+                        <h4>Para</h4>
+                        <p><strong>Nombre </strong><?php echo htmlspecialchars($cot["nombre_cliente"]); ?></p>
+                        <?php if ($cot["empresa"]): ?><p><strong>Empresa </strong><?php echo htmlspecialchars($cot["empresa"]); ?></p><?php endif; ?>
+                        <?php if ($cot["telefono"]): ?><p><strong>Tel. </strong><?php echo htmlspecialchars($cot["telefono"]); ?></p><?php endif; ?>
+                        <?php if ($cot["correo"]): ?><p><strong>Correo </strong><?php echo htmlspecialchars($cot["correo"]); ?></p><?php endif; ?>
+                    </div>
+                    <div class="prt-info-bloque">
+                        <h4>Evento</h4>
+                        <?php if ($cot["fecha_evento"]): ?><p><strong>Fecha </strong><?php echo date("d/m/Y", strtotime($cot["fecha_evento"])); ?></p><?php endif; ?>
+                        <?php if ($cot["lugar_evento"]): ?><p><strong>Lugar </strong><?php echo htmlspecialchars($cot["lugar_evento"]); ?></p><?php endif; ?>
+                        <?php if (!$cot["fecha_evento"] && !$cot["lugar_evento"]): ?><p style="color:#aaa;font-style:italic;">Sin detalles de evento</p><?php endif; ?>
+                    </div>
                 </div>
-                <div class="prt-info-bloque">
-                    <h4>Detalles del evento</h4>
-                    <?php if ($cot["fecha_evento"]): ?><p><strong>Fecha: </strong><?php echo date("d/m/Y", strtotime($cot["fecha_evento"])); ?></p><?php endif; ?>
-                    <?php if ($cot["lugar_evento"]): ?><p><strong>Lugar: </strong><?php echo htmlspecialchars($cot["lugar_evento"]); ?></p><?php endif; ?>
-                    <?php if (!$cot["fecha_evento"] && !$cot["lugar_evento"]): ?><p style="color:#aaa;">Sin detalles de evento</p><?php endif; ?>
-                </div>
-            </div>
 
-            <table class="prt-tabla">
-                <thead>
-                    <tr>
-                        <th style="width:50%;">Descripción</th>
-                        <th style="width:12%;text-align:right;">Cant.</th>
-                        <th style="width:18%;text-align:right;">P. Unitario</th>
-                        <th style="width:20%;text-align:right;">Subtotal</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($items as $item): ?>
-                    <tr>
-                        <td><?php echo htmlspecialchars($item["descripcion"]); ?></td>
-                        <td style="text-align:right;"><?php echo number_format((float)$item["cantidad"], 2, ".", ","); ?></td>
-                        <td style="text-align:right;"><?php echo fmtPeso($item["precio_unitario"]); ?></td>
-                        <td style="text-align:right;font-weight:700;"><?php echo fmtPeso($item["subtotal"]); ?></td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
+                <table class="prt-tabla">
+                    <thead>
+                        <tr>
+                            <th style="width:50%;">Descripción</th>
+                            <th style="width:12%;text-align:right;">Cant.</th>
+                            <th style="width:18%;text-align:right;">P. Unitario</th>
+                            <th style="width:20%;text-align:right;">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($items as $item): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($item["descripcion"]); ?></td>
+                            <td><?php echo number_format((float)$item["cantidad"], 2, ".", ","); ?></td>
+                            <td><?php echo fmtPeso($item["precio_unitario"]); ?></td>
+                            <td style="font-weight:700;"><?php echo fmtPeso($item["subtotal"]); ?></td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
 
-            <div class="prt-total">
-                <div class="prt-total-box">
-                    <span>Total</span>
-                    <strong><?php echo fmtPeso($cot["total"]); ?></strong>
+                <div class="prt-total-wrap">
+                    <div class="prt-total-box">
+                        <span class="prt-total-box__label">Total</span>
+                        <span class="prt-total-box__valor"><?php echo fmtPeso($cot["total"]); ?></span>
+                    </div>
                 </div>
-            </div>
 
-            <?php if ($cot["notas"]): ?>
-            <div class="prt-notas">
-                <h4>Notas y condiciones</h4>
-                <p><?php echo nl2br(htmlspecialchars($cot["notas"])); ?></p>
-            </div>
-            <?php endif; ?>
+                <?php if ($cot["notas"]): ?>
+                <div class="prt-notas">
+                    <h4>Notas y condiciones</h4>
+                    <p><?php echo nl2br(htmlspecialchars($cot["notas"])); ?></p>
+                </div>
+                <?php endif; ?>
 
-            <div class="prt-footer">
-                <div>
-                    <p>Esta cotización es válida hasta el <strong><?php echo $vigenciaFecha; ?></strong>.</p>
-                    <p>Para más información: Zabisu BBQ &amp; Ahumados</p>
+                <div class="prt-footer">
+                    <div class="prt-footer__info">
+                        <p>Esta cotización es válida hasta el <strong><?php echo $vigenciaFecha; ?></strong>.</p>
+                        <p>Foodtruck Zabisu &mdash; Sabor y Servicio</p>
+                    </div>
+                    <div class="prt-firma">
+                        <div class="prt-firma__linea"></div>
+                        <p class="prt-firma__label">Autorizado por</p>
+                    </div>
                 </div>
-                <div class="prt-firma">
-                    <div class="prt-firma__linea"></div>
-                    <p class="prt-firma__label">Autorizado por</p>
-                </div>
+
             </div>
         </div>
     </div>
