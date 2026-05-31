@@ -64,15 +64,15 @@ $vigenciaFecha = date("d/m/Y", strtotime($cot["fecha_cotizacion"] . " +" . (int)
         .cot-info-bloque p span { color:var(--texto-secundario); }
 
         /* ── IMPRESIÓN ── */
-        @page { margin: 12mm 14mm; }
+        @page { margin: 0; size: A4; }
         @media print {
             .no-print { display:none !important; }
             body { background:#fff !important; color:#111 !important; margin:0; padding:0; }
             .contenedor { max-width:100% !important; padding:0 !important; margin:0 !important; }
             .hero-zabisu, .bloque-formulario { display:none !important; }
             #print-area { display:block !important; }
-            .prt { max-width:100% !important; }
-            .prt-body { padding:20px 0 0 !important; }
+            .prt { max-width:100% !important; width:100%; }
+            .prt-body { padding:14mm 18mm 16mm !important; }
         }
         #print-area { display:none; }
 
