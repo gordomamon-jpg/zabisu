@@ -79,10 +79,10 @@ $vigenciaFecha = date("d/m/Y", strtotime($cot["fecha_cotizacion"] . " +" . (int)
         .prt-accent { background:#FF7A00; height:3px; }
         .prt-body { padding:32px 40px 40px; }
         .prt-header { display:flex; justify-content:space-between; align-items:flex-start; padding-bottom:24px; border-bottom:1px solid #222; margin-bottom:26px; }
-        .prt-brand { display:flex; align-items:center; gap:16px; }
+        .prt-brand { display:flex; align-items:center; gap:16px; flex-shrink:0; }
         .prt-brand__logo { height:70px; width:auto; object-fit:contain; display:block; }
-        .prt-brand__texto h1 { font-size:19px; font-weight:900; color:#111; margin:0 0 4px; letter-spacing:-.2px; }
-        .prt-brand__texto p { font-size:11px; color:#555; margin:0; letter-spacing:.06em; text-transform:uppercase; }
+        .prt-brand__texto h1 { font-size:19px; font-weight:900; color:#111; margin:0 0 4px; letter-spacing:-.2px; white-space:nowrap; }
+        .prt-brand__texto p { font-size:11px; color:#555; margin:0; letter-spacing:.06em; text-transform:uppercase; white-space:nowrap; }
         .prt-doc { text-align:right; }
         .prt-doc__etiqueta { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.16em; color:#777; display:block; margin-bottom:5px; }
         .prt-doc__folio { font-size:21px; font-weight:900; color:#111; display:block; margin-bottom:7px; }
