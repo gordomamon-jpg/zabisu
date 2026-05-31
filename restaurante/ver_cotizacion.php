@@ -71,16 +71,17 @@ $vigenciaFecha = date("d/m/Y", strtotime($cot["fecha_cotizacion"] . " +" . (int)
             .contenedor { max-width:100% !important; padding:0 !important; margin:0 !important; }
             .hero-zabisu, .bloque-formulario { display:none !important; }
             #print-area { display:block !important; }
-            .prt { max-width:100% !important; width:100%; }
-            .prt-body { padding:14mm 18mm 16mm !important; }
+            .prt { max-width:100% !important; width:100%; min-height:297mm; }
+            .prt-body { padding:14mm 18mm 0 !important; }
         }
         #print-area { display:none; }
 
         /* ── LAYOUT IMPRESIÓN ── */
-        .prt { font-family:'Helvetica Neue',Arial,sans-serif; color:#111; max-width:780px; margin:0 auto; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-        .prt-topbar { background:#111; height:5px; }
-        .prt-accent { background:#FF7A00; height:3px; }
-        .prt-body { padding:32px 40px 40px; }
+        .prt { font-family:'Helvetica Neue',Arial,sans-serif; color:#111; max-width:780px; margin:0 auto; -webkit-print-color-adjust:exact; print-color-adjust:exact; min-height:297mm; display:flex; flex-direction:column; }
+        .prt-topbar { background:#111; height:5px; flex-shrink:0; }
+        .prt-accent { background:#FF7A00; height:3px; flex-shrink:0; }
+        .prt-body { padding:32px 40px 0; flex:1; display:flex; flex-direction:column; box-sizing:border-box; }
+        .prt-spacer { flex:1; min-height:20px; }
         .prt-header { display:flex; justify-content:space-between; align-items:flex-start; padding-bottom:24px; border-bottom:1px solid #222; margin-bottom:26px; }
         .prt-brand { display:flex; align-items:center; gap:16px; }
         .prt-brand__logo { height:56px; object-fit:contain; }
@@ -109,7 +110,7 @@ $vigenciaFecha = date("d/m/Y", strtotime($cot["fecha_cotizacion"] . " +" . (int)
         .prt-notas { border:1px solid #ccc; border-top:3px solid #111; padding:14px 16px; margin-bottom:26px; }
         .prt-notas h4 { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.12em; color:#555; margin:0 0 8px; }
         .prt-notas p { font-size:13px; margin:0; line-height:1.7; color:#222; }
-        .prt-footer { display:flex; justify-content:space-between; align-items:flex-end; padding-top:20px; border-top:1px solid #ccc; }
+        .prt-footer { display:flex; justify-content:space-between; align-items:flex-end; padding:20px 0 14px; border-top:1px solid #ccc; }
         .prt-footer__info p { font-size:12px; color:#555; margin:0 0 3px; }
         .prt-footer__info p strong { color:#111; }
         .prt-firma { text-align:center; }
@@ -295,6 +296,7 @@ $vigenciaFecha = date("d/m/Y", strtotime($cot["fecha_cotizacion"] . " +" . (int)
                 </div>
                 <?php endif; ?>
 
+                <div class="prt-spacer"></div>
                 <div class="prt-footer">
                     <div class="prt-footer__info">
                         <p>Esta cotización es válida hasta el <strong><?php echo $vigenciaFecha; ?></strong>.</p>
