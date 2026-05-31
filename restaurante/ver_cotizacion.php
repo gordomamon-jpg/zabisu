@@ -81,7 +81,7 @@ $vigenciaFecha = date("d/m/Y", strtotime($cot["fecha_cotizacion"] . " +" . (int)
         .prt-topbar { background:#111; height:5px; flex-shrink:0; }
         .prt-accent { background:#FF7A00; height:3px; flex-shrink:0; }
         .prt-body { padding:18px 36px 0; flex:1; display:flex; flex-direction:column; box-sizing:border-box; }
-        .prt-spacer { flex:1; min-height:8px; }
+        .prt-spacer { flex:1; min-height:8px; page-break-after:avoid; break-after:avoid; }
         .prt-header { display:flex; justify-content:space-between; align-items:flex-start; padding-bottom:14px; border-bottom:1px solid #222; margin-bottom:14px; }
         .prt-brand { display:flex; align-items:center; gap:12px; }
         .prt-brand__logo { height:44px; object-fit:contain; }
@@ -110,7 +110,7 @@ $vigenciaFecha = date("d/m/Y", strtotime($cot["fecha_cotizacion"] . " +" . (int)
         .prt-notas { border:1px solid #ccc; border-top:3px solid #111; padding:9px 12px; margin-bottom:14px; }
         .prt-notas h4 { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.12em; color:#555; margin:0 0 6px; }
         .prt-notas p { font-size:12px; margin:0; line-height:1.55; color:#222; }
-        .prt-footer { display:flex; justify-content:space-between; align-items:flex-end; padding:12px 0 12px; border-top:1px solid #ccc; }
+        .prt-footer { display:flex; justify-content:space-between; align-items:flex-end; padding:12px 0 12px; border-top:1px solid #ccc; page-break-inside:avoid; break-inside:avoid; page-break-before:avoid; break-before:avoid; }
         .prt-footer__info p { font-size:11px; color:#555; margin:0 0 2px; }
         .prt-footer__info p strong { color:#111; }
         .prt-firma { text-align:center; }
