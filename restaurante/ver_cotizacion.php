@@ -75,41 +75,43 @@ $vigenciaFecha = date("d/m/Y", strtotime($cot["fecha_cotizacion"] . " +" . (int)
 
         /* ── LAYOUT IMPRESIÓN ── */
         .prt { font-family:'Helvetica Neue',Arial,sans-serif; color:#111; max-width:780px; margin:0 auto; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-        .prt-topbar { background:#FF7A00; height:8px; }
-        .prt-body { padding:32px 40px 36px; }
-        .prt-header { display:flex; justify-content:space-between; align-items:flex-start; padding-bottom:22px; border-bottom:2px solid #FF7A00; margin-bottom:22px; }
-        .prt-brand { display:flex; align-items:center; gap:14px; }
-        .prt-brand__logo { height:58px; object-fit:contain; }
-        .prt-brand__texto h1 { font-size:20px; font-weight:900; color:#111; margin:0 0 3px; letter-spacing:-.3px; }
-        .prt-brand__texto p { font-size:11px; color:#FF7A00; margin:0; letter-spacing:.07em; text-transform:uppercase; font-weight:700; }
+        .prt-topbar { background:#111; height:5px; }
+        .prt-accent { background:#FF7A00; height:3px; }
+        .prt-body { padding:32px 40px 40px; }
+        .prt-header { display:flex; justify-content:space-between; align-items:flex-start; padding-bottom:24px; border-bottom:1px solid #222; margin-bottom:26px; }
+        .prt-brand { display:flex; align-items:center; gap:16px; }
+        .prt-brand__logo { height:56px; object-fit:contain; }
+        .prt-brand__texto h1 { font-size:19px; font-weight:900; color:#111; margin:0 0 4px; letter-spacing:-.2px; }
+        .prt-brand__texto p { font-size:11px; color:#555; margin:0; letter-spacing:.06em; text-transform:uppercase; }
         .prt-doc { text-align:right; }
-        .prt-doc__etiqueta { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.14em; color:#FF7A00; display:block; margin-bottom:4px; }
-        .prt-doc__folio { font-size:22px; font-weight:900; color:#111; display:block; margin-bottom:6px; }
-        .prt-doc p { font-size:12px; color:#444; margin:2px 0; }
-        .prt-info { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:22px; }
-        .prt-info-bloque { border-left:4px solid #FF7A00; padding:12px 16px; }
-        .prt-info-bloque h4 { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:#FF7A00; margin:0 0 8px; }
-        .prt-info-bloque p { font-size:13px; margin:0 0 3px; color:#111; }
-        .prt-info-bloque p strong { font-weight:400; color:#666; min-width:58px; display:inline-block; }
-        .prt-tabla { width:100%; border-collapse:collapse; font-size:13px; }
+        .prt-doc__etiqueta { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.16em; color:#777; display:block; margin-bottom:5px; }
+        .prt-doc__folio { font-size:21px; font-weight:900; color:#111; display:block; margin-bottom:7px; }
+        .prt-doc p { font-size:12px; color:#444; margin:3px 0; }
+        .prt-info { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:26px; }
+        .prt-info-bloque { border:1px solid #ccc; border-top:3px solid #111; padding:14px 16px; }
+        .prt-info-bloque h4 { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.12em; color:#555; margin:0 0 10px; }
+        .prt-info-bloque p { font-size:13px; margin:0 0 4px; color:#111; }
+        .prt-info-bloque p strong { font-weight:400; color:#777; min-width:55px; display:inline-block; }
+        .prt-tabla { width:100%; border-collapse:collapse; font-size:13px; margin-bottom:0; }
         .prt-tabla thead tr { background:#111; }
-        .prt-tabla th { color:#fff; padding:9px 12px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; text-align:left; }
+        .prt-tabla th { color:#fff; padding:10px 12px; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.09em; text-align:left; }
         .prt-tabla th:not(:first-child) { text-align:right; }
-        .prt-tabla td { padding:10px 12px; border-bottom:1px solid #ccc; color:#111; }
+        .prt-tabla td { padding:11px 12px; border-bottom:1px solid #ddd; color:#111; }
         .prt-tabla td:not(:first-child) { text-align:right; }
-        .prt-tabla tfoot tr td { border-top:2px solid #111; border-bottom:none; font-weight:600; }
-        .prt-total-wrap { display:flex; justify-content:flex-end; padding:20px 0 22px; }
-        .prt-total-box { border:3px solid #FF7A00; padding:14px 24px; text-align:right; min-width:200px; }
-        .prt-total-box__label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.14em; color:#FF7A00; display:block; margin-bottom:5px; }
-        .prt-total-box__valor { font-size:30px; font-weight:900; color:#111; display:block; }
-        .prt-notas { border-left:4px solid #FF7A00; padding:12px 16px; margin-bottom:22px; }
-        .prt-notas h4 { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:#FF7A00; margin:0 0 8px; }
-        .prt-notas p { font-size:13px; margin:0; line-height:1.65; color:#111; }
-        .prt-footer { display:flex; justify-content:space-between; align-items:flex-end; padding-top:18px; border-top:2px solid #FF7A00; }
-        .prt-footer__info p { font-size:12px; color:#444; margin:0 0 3px; }
+        .prt-tabla tbody tr:last-child td { border-bottom:2px solid #111; }
+        .prt-total-wrap { display:flex; justify-content:flex-end; padding:18px 0 26px; }
+        .prt-total-box { padding:14px 24px; text-align:right; min-width:200px; border-top:1px solid #ccc; border-bottom:1px solid #ccc; }
+        .prt-total-box__label { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.14em; color:#555; display:block; margin-bottom:6px; }
+        .prt-total-box__valor { font-size:32px; font-weight:900; color:#FF7A00; display:block; }
+        .prt-notas { border:1px solid #ccc; border-top:3px solid #111; padding:14px 16px; margin-bottom:26px; }
+        .prt-notas h4 { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.12em; color:#555; margin:0 0 8px; }
+        .prt-notas p { font-size:13px; margin:0; line-height:1.7; color:#222; }
+        .prt-footer { display:flex; justify-content:space-between; align-items:flex-end; padding-top:20px; border-top:1px solid #ccc; }
+        .prt-footer__info p { font-size:12px; color:#555; margin:0 0 3px; }
+        .prt-footer__info p strong { color:#111; }
         .prt-firma { text-align:center; }
-        .prt-firma__linea { border-top:1px solid #111; width:190px; margin:44px auto 7px; }
-        .prt-firma__label { font-size:11px; color:#444; }
+        .prt-firma__linea { border-top:1px solid #888; width:190px; margin:46px auto 7px; }
+        .prt-firma__label { font-size:11px; color:#555; }
     </style>
 </head>
 <body>
@@ -220,6 +222,7 @@ $vigenciaFecha = date("d/m/Y", strtotime($cot["fecha_cotizacion"] . " +" . (int)
     <div id="print-area">
         <div class="prt">
             <div class="prt-topbar"></div>
+            <div class="prt-accent"></div>
             <div class="prt-body">
 
                 <div class="prt-header">
