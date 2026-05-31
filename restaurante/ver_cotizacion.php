@@ -227,9 +227,9 @@ $vigenciaFecha = date("d/m/Y", strtotime($cot["fecha_cotizacion"] . " +" . (int)
 
                 <div class="prt-header">
                     <div class="prt-brand">
-                        <img class="prt-brand__logo" src="../assets/img/dd.png" alt="Foodtruck Zabisu">
+                        <img class="prt-brand__logo" src="../assets/img/dd.png" alt="Zabisu">
                         <div class="prt-brand__texto">
-                            <h1>Foodtruck Zabisu</h1>
+                            <h1>Zabisu</h1>
                             <p>Sabor y Servicio</p>
                         </div>
                     </div>
@@ -295,7 +295,7 @@ $vigenciaFecha = date("d/m/Y", strtotime($cot["fecha_cotizacion"] . " +" . (int)
                 <div class="prt-footer">
                     <div class="prt-footer__info">
                         <p>Esta cotización es válida hasta el <strong><?php echo $vigenciaFecha; ?></strong>.</p>
-                        <p>Foodtruck Zabisu &mdash; Sabor y Servicio</p>
+                        <p>Zabisu &mdash; Sabor y Servicio</p>
                     </div>
                     <div class="prt-firma">
                         <div class="prt-firma__linea"></div>
