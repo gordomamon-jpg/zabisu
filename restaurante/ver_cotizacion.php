@@ -74,43 +74,42 @@ $vigenciaFecha = date("d/m/Y", strtotime($cot["fecha_cotizacion"] . " +" . (int)
         #print-area { display:none; }
 
         /* ── LAYOUT IMPRESIÓN ── */
-        .prt { font-family:'Helvetica Neue',Arial,sans-serif; color:#111; max-width:780px; margin:0 auto; }
-        .prt-topbar { background:#111; height:7px; }
+        .prt { font-family:'Helvetica Neue',Arial,sans-serif; color:#111; max-width:780px; margin:0 auto; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+        .prt-topbar { background:#FF7A00; height:8px; }
         .prt-body { padding:32px 40px 36px; }
-        .prt-header { display:flex; justify-content:space-between; align-items:flex-start; padding-bottom:22px; border-bottom:1px solid #ddd; margin-bottom:22px; }
+        .prt-header { display:flex; justify-content:space-between; align-items:flex-start; padding-bottom:22px; border-bottom:2px solid #FF7A00; margin-bottom:22px; }
         .prt-brand { display:flex; align-items:center; gap:14px; }
         .prt-brand__logo { height:58px; object-fit:contain; }
         .prt-brand__texto h1 { font-size:20px; font-weight:900; color:#111; margin:0 0 3px; letter-spacing:-.3px; }
-        .prt-brand__texto p { font-size:11px; color:#888; margin:0; letter-spacing:.07em; text-transform:uppercase; }
+        .prt-brand__texto p { font-size:11px; color:#FF7A00; margin:0; letter-spacing:.07em; text-transform:uppercase; font-weight:700; }
         .prt-doc { text-align:right; }
-        .prt-doc__etiqueta { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.14em; color:#aaa; display:block; margin-bottom:4px; }
+        .prt-doc__etiqueta { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.14em; color:#FF7A00; display:block; margin-bottom:4px; }
         .prt-doc__folio { font-size:22px; font-weight:900; color:#111; display:block; margin-bottom:6px; }
-        .prt-doc p { font-size:12px; color:#555; margin:2px 0; }
+        .prt-doc p { font-size:12px; color:#444; margin:2px 0; }
         .prt-info { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:22px; }
-        .prt-info-bloque { border-left:3px solid #111; background:#f8f8f8; padding:12px 16px; }
-        .prt-info-bloque h4 { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:#888; margin:0 0 8px; }
-        .prt-info-bloque p { font-size:13px; margin:0 0 3px; }
-        .prt-info-bloque p strong { font-weight:400; color:#999; min-width:58px; display:inline-block; }
+        .prt-info-bloque { border-left:4px solid #FF7A00; padding:12px 16px; }
+        .prt-info-bloque h4 { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:#FF7A00; margin:0 0 8px; }
+        .prt-info-bloque p { font-size:13px; margin:0 0 3px; color:#111; }
+        .prt-info-bloque p strong { font-weight:400; color:#666; min-width:58px; display:inline-block; }
         .prt-tabla { width:100%; border-collapse:collapse; font-size:13px; }
         .prt-tabla thead tr { background:#111; }
         .prt-tabla th { color:#fff; padding:9px 12px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; text-align:left; }
         .prt-tabla th:not(:first-child) { text-align:right; }
-        .prt-tabla td { padding:10px 12px; border-bottom:1px solid #ebebeb; }
+        .prt-tabla td { padding:10px 12px; border-bottom:1px solid #ccc; color:#111; }
         .prt-tabla td:not(:first-child) { text-align:right; }
-        .prt-tabla tbody tr:nth-child(even) td { background:#f8f8f8; }
-        .prt-tabla tfoot tr td { border-top:2px solid #111; border-bottom:none; font-weight:600; background:#fff; }
+        .prt-tabla tfoot tr td { border-top:2px solid #111; border-bottom:none; font-weight:600; }
         .prt-total-wrap { display:flex; justify-content:flex-end; padding:20px 0 22px; }
-        .prt-total-box { border:2px solid #111; padding:14px 24px; text-align:right; min-width:200px; }
-        .prt-total-box__label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.14em; color:#888; display:block; margin-bottom:5px; }
+        .prt-total-box { border:3px solid #FF7A00; padding:14px 24px; text-align:right; min-width:200px; }
+        .prt-total-box__label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.14em; color:#FF7A00; display:block; margin-bottom:5px; }
         .prt-total-box__valor { font-size:30px; font-weight:900; color:#111; display:block; }
-        .prt-notas { border:1px solid #ddd; padding:14px 16px; margin-bottom:22px; background:#fafafa; }
-        .prt-notas h4 { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:#888; margin:0 0 8px; }
-        .prt-notas p { font-size:13px; margin:0; line-height:1.65; }
-        .prt-footer { display:flex; justify-content:space-between; align-items:flex-end; padding-top:18px; border-top:1px solid #ddd; }
-        .prt-footer__info p { font-size:12px; color:#777; margin:0 0 3px; }
+        .prt-notas { border-left:4px solid #FF7A00; padding:12px 16px; margin-bottom:22px; }
+        .prt-notas h4 { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:#FF7A00; margin:0 0 8px; }
+        .prt-notas p { font-size:13px; margin:0; line-height:1.65; color:#111; }
+        .prt-footer { display:flex; justify-content:space-between; align-items:flex-end; padding-top:18px; border-top:2px solid #FF7A00; }
+        .prt-footer__info p { font-size:12px; color:#444; margin:0 0 3px; }
         .prt-firma { text-align:center; }
-        .prt-firma__linea { border-top:1px solid #aaa; width:190px; margin:44px auto 7px; }
-        .prt-firma__label { font-size:11px; color:#888; }
+        .prt-firma__linea { border-top:1px solid #111; width:190px; margin:44px auto 7px; }
+        .prt-firma__label { font-size:11px; color:#444; }
     </style>
 </head>
 <body>
