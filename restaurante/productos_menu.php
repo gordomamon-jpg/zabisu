@@ -249,7 +249,7 @@ foreach ($stmtGuardados->fetchAll(PDO::FETCH_ASSOC) as $p) {
     Estructura fija del menú
 */
 $estructura = [
-    "Zabisu"   => ["Plato fuerte" => 2, "Sopa" => 1, "Complemento" => 5, "Agua" => 1, "Postre" => 1],
+    "Zabisu"   => ["Plato fuerte" => 3, "Sopa" => 1, "Complemento" => 5, "Agua" => 1, "Postre" => 1],
     "Ejecutivo"=> ["Plato fuerte" => 4, "Sopa" => 1, "Complemento" => 5, "Agua" => 1, "Postre" => 1],
 ];
 
@@ -437,7 +437,7 @@ POSTRE: Nombre del postre</pre>
         <div class="pm-tabs">
             <button type="button" class="pm-tab pm-tab--activo" data-tab="Zabisu">
                 Menú Zabisu
-                <span class="pm-tab__sub">2 platos fuertes</span>
+                <span class="pm-tab__sub">3 platos fuertes</span>
             </button>
             <button type="button" class="pm-tab" data-tab="Ejecutivo">
                 Menú Ejecutivo
