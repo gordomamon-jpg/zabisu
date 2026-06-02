@@ -118,6 +118,8 @@ $estadoLabel = [
                         <td style="display:flex;gap:8px;flex-wrap:wrap;">
                             <a href="ver_cotizacion.php?id=<?php echo (int)$c["id_cotizacion"]; ?>"
                                class="btn-limpiar-filtros" style="font-size:12px;padding:5px 10px;">Ver</a>
+                            <a href="editar_cotizacion.php?id=<?php echo (int)$c["id_cotizacion"]; ?>"
+                               class="btn-limpiar-filtros" style="font-size:12px;padding:5px 10px;">Editar</a>
                             <form method="POST" onsubmit="return confirm('¿Eliminar la cotización <?php echo htmlspecialchars($c["folio"]); ?>? Esta acción no se puede deshacer.');" style="margin:0;">
                                 <input type="hidden" name="eliminar_id" value="<?php echo (int)$c["id_cotizacion"]; ?>">
                                 <button type="submit" class="btn-tabla" style="font-size:12px;padding:5px 10px;background:#3a1a1a;color:#e57373;border:none;cursor:pointer;">Eliminar</button>

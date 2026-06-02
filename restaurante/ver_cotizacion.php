@@ -147,11 +147,18 @@ $granTotal      = $subtotalCot + $ivaMonto;
             </div>
         </div>
         <?php endif; ?>
+        <?php if (isset($_GET["editada"])): ?>
+        <div class="nm-exito" style="margin-bottom:0;">
+            <span class="nm-exito__icono">✓</span>
+            <div><strong>Cotización actualizada correctamente.</strong></div>
+        </div>
+        <?php endif; ?>
 
         <!-- ACCIONES -->
         <div class="bloque-formulario">
             <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
                 <button onclick="window.print();" class="btn-principal">🖨️ Imprimir / PDF</button>
+                <a href="editar_cotizacion.php?id=<?php echo $id; ?>" class="btn-limpiar-filtros">✏️ Editar</a>
                 <a href="cotizaciones.php" class="btn-limpiar-filtros">← Volver a lista</a>
                 <div style="margin-left:auto;display:flex;gap:10px;align-items:center;">
                     <span style="font-size:13px;color:var(--texto-secundario);">Estado:</span>
