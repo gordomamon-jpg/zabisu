@@ -184,6 +184,7 @@ $granTotal      = $subtotalCot + $ivaMonto;
                     <?php if ($cot["lugar_evento"]): ?><p><span>Lugar:</span> <?php echo htmlspecialchars($cot["lugar_evento"]); ?></p><?php endif; ?>
                     <p><span>Cotización:</span> <?php echo date("d/m/Y", strtotime($cot["fecha_cotizacion"])); ?></p>
                     <p><span>Válida hasta:</span> <?php echo $vigenciaFecha; ?></p>
+                    <?php if ($cot["hecho_por"]): ?><p><span>Elaborado por:</span> <strong><?php echo htmlspecialchars($cot["hecho_por"]); ?></strong></p><?php endif; ?>
                 </div>
             </div>
         </div>
@@ -326,6 +327,7 @@ $granTotal      = $subtotalCot + $ivaMonto;
                         <div class="prt-footer__info">
                             <p>Esta cotización es válida hasta el <strong><?php echo $vigenciaFecha; ?></strong>.</p>
                             <p>Zabisu &mdash; Sabor y Servicio</p>
+                            <?php if ($cot["hecho_por"]): ?><p>Elaborado por: <strong><?php echo htmlspecialchars($cot["hecho_por"]); ?></strong></p><?php endif; ?>
                         </div>
                         <div class="prt-firma">
                             <div class="prt-firma__linea"></div>
