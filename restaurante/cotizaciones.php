@@ -101,7 +101,14 @@ $estadoLabel = [
                                 <span class="texto-secundario">—</span>
                             <?php endif; ?>
                         </td>
-                        <td><strong><?php echo fmtPeso($c["total"]); ?></strong></td>
+                        <?php
+                            $iva = (float)($c["iva_porcentaje"] ?? 0);
+                            $gran = (float)$c["total"] * (1 + $iva / 100);
+                        ?>
+                        <td>
+                            <strong><?php echo fmtPeso($gran); ?></strong>
+                            <?php if ($iva > 0): ?><br><span style="font-size:11px;color:var(--texto-secundario);">+ IVA <?php echo (int)$iva; ?>%</span><?php endif; ?>
+                        </td>
                         <td>
                             <span class="<?php echo $estadoClase[$c["estado"]] ?? "estado"; ?>"
                                   <?php if ($c["estado"] === "rechazada"): ?>style="background:#3a1a1a;color:#e57373;"<?php endif; ?>>

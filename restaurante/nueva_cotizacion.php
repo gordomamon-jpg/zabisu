@@ -14,6 +14,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $fechaCotizacion = trim($_POST["fecha_cotizacion"] ?? date("Y-m-d"));
     $vigenciaDias    = max(1, (int)($_POST["vigencia_dias"] ?? 15));
     $notas           = trim($_POST["notas"]            ?? "");
+    $ivaPorcentaje   = (float)($_POST["iva_porcentaje"] ?? 0);
+    if (!in_array($ivaPorcentaje, [0, 8, 16])) $ivaPorcentaje = 0;
     $itemsRaw        = $_POST["items"] ?? [];
 
     if ($nombreCliente === "") {
@@ -54,10 +56,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $stmtIns = $conexion->prepare(
                 "INSERT INTO cotizaciones
                  (folio, nombre_cliente, empresa, telefono, correo,
-                  fecha_evento, lugar_evento, fecha_cotizacion, vigencia_dias, notas, total)
+                  fecha_evento, lugar_evento, fecha_cotizacion, vigencia_dias, notas, total, iva_porcentaje)
                  VALUES
                  (:folio, :nombre_cliente, :empresa, :telefono, :correo,
-                  :fecha_evento, :lugar_evento, :fecha_cotizacion, :vigencia_dias, :notas, :total)"
+                  :fecha_evento, :lugar_evento, :fecha_cotizacion, :vigencia_dias, :notas, :total, :iva_porcentaje)"
             );
             $stmtIns->execute([
                 ":folio"            => $folio,
@@ -71,6 +73,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 ":vigencia_dias"    => $vigenciaDias,
                 ":notas"            => $notas         ?: null,
                 ":total"            => $total,
+                ":iva_porcentaje"   => $ivaPorcentaje,
             ]);
             $idNueva = (int)$conexion->lastInsertId();
 
@@ -254,6 +257,14 @@ $fechaHoy = date("Y-m-d");
                     <label>Vigencia (días)</label>
                     <input type="number" name="vigencia_dias" min="1" value="<?php echo htmlspecialchars($_POST["vigencia_dias"] ?? "15"); ?>">
                     <span class="nm-campo__ayuda">La cotización expira N días después de la fecha de cotización.</span>
+                </div>
+                <div class="nm-campo">
+                    <label>IVA</label>
+                    <select name="iva_porcentaje" style="background:var(--fondo-input,#111);border:1px solid var(--borde,#333);border-radius:8px;color:var(--texto-principal,#eee);padding:10px 12px;font-size:14px;width:100%;">
+                        <option value="0"  <?php echo ($_POST["iva_porcentaje"] ?? "0") === "0"  ? "selected" : ""; ?>>Sin IVA</option>
+                        <option value="8"  <?php echo ($_POST["iva_porcentaje"] ?? "") === "8"   ? "selected" : ""; ?>>8%</option>
+                        <option value="16" <?php echo ($_POST["iva_porcentaje"] ?? "") === "16"  ? "selected" : ""; ?>>16%</option>
+                    </select>
                 </div>
             </div>
             <div class="nm-campo" style="margin-top:16px;">

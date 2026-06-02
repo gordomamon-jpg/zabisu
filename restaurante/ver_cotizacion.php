@@ -38,7 +38,11 @@ $estadoLabel = [
     "aceptada" => "Aceptada", "rechazada" => "Rechazada",
 ];
 
-$vigenciaFecha = date("d/m/Y", strtotime($cot["fecha_cotizacion"] . " +" . (int)$cot["vigencia_dias"] . " days"));
+$vigenciaFecha  = date("d/m/Y", strtotime($cot["fecha_cotizacion"] . " +" . (int)$cot["vigencia_dias"] . " days"));
+$ivaPct         = (float)($cot["iva_porcentaje"] ?? 0);
+$subtotalCot    = (float)$cot["total"];
+$ivaMonto       = round($subtotalCot * $ivaPct / 100, 2);
+$granTotal      = $subtotalCot + $ivaMonto;
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -204,9 +208,21 @@ $vigenciaFecha = date("d/m/Y", strtotime($cot["fecha_cotizacion"] . " +" . (int)
                     </tbody>
                 </table>
             </div>
-            <div class="cot-total-fila">
-                <span style="font-size:14px;color:var(--texto-secundario);">TOTAL</span>
-                <span style="font-size:26px;font-weight:800;color:var(--zabisu-orange);"><?php echo fmtPeso($cot["total"]); ?></span>
+            <div class="cot-total-fila" style="flex-direction:column;align-items:flex-end;gap:6px;">
+                <?php if ($ivaPct > 0): ?>
+                <div style="display:flex;gap:24px;align-items:baseline;">
+                    <span style="font-size:13px;color:var(--texto-secundario);">SUBTOTAL</span>
+                    <span style="font-size:18px;font-weight:600;"><?php echo fmtPeso($subtotalCot); ?></span>
+                </div>
+                <div style="display:flex;gap:24px;align-items:baseline;">
+                    <span style="font-size:13px;color:var(--texto-secundario);">IVA (<?php echo (int)$ivaPct; ?>%)</span>
+                    <span style="font-size:18px;font-weight:600;"><?php echo fmtPeso($ivaMonto); ?></span>
+                </div>
+                <?php endif; ?>
+                <div style="display:flex;gap:24px;align-items:baseline;border-top:1px solid var(--borde);padding-top:8px;margin-top:2px;">
+                    <span style="font-size:14px;color:var(--texto-secundario);">TOTAL</span>
+                    <span style="font-size:26px;font-weight:800;color:var(--zabisu-orange);"><?php echo fmtPeso($granTotal); ?></span>
+                </div>
             </div>
         </div>
 
@@ -280,8 +296,14 @@ $vigenciaFecha = date("d/m/Y", strtotime($cot["fecha_cotizacion"] . " +" . (int)
 
                 <div class="prt-total-wrap">
                     <div class="prt-total-box">
+                        <?php if ($ivaPct > 0): ?>
+                        <span class="prt-total-box__label">Subtotal</span>
+                        <span style="font-size:16px;font-weight:700;color:#111;display:block;margin-bottom:6px;"><?php echo fmtPeso($subtotalCot); ?></span>
+                        <span class="prt-total-box__label">IVA (<?php echo (int)$ivaPct; ?>%)</span>
+                        <span style="font-size:16px;font-weight:700;color:#111;display:block;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #ccc;"><?php echo fmtPeso($ivaMonto); ?></span>
+                        <?php endif; ?>
                         <span class="prt-total-box__label">Total</span>
-                        <span class="prt-total-box__valor"><?php echo fmtPeso($cot["total"]); ?></span>
+                        <span class="prt-total-box__valor"><?php echo fmtPeso($granTotal); ?></span>
                     </div>
                 </div>
 
