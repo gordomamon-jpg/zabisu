@@ -75,7 +75,8 @@ $granTotal      = $subtotalCot + $ivaMonto;
             .contenedor { max-width:100% !important; padding:0 !important; margin:0 !important; }
             .hero-zabisu, .bloque-formulario { display:none !important; }
             #print-area { display:block !important; }
-            .prt { max-width:100% !important; width:100%; }
+            .prt { max-width:100% !important; width:100%; min-height:100vh; display:flex; flex-direction:column; }
+            .prt-body { flex:1; }
         }
         #print-area { display:none; }
 
@@ -83,7 +84,9 @@ $granTotal      = $subtotalCot + $ivaMonto;
         .prt { font-family:'Helvetica Neue',Arial,sans-serif; color:#111; max-width:780px; margin:0 auto; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
         .prt-topbar { background:#111; height:5px; }
         .prt-accent { background:#FF7A00; height:3px; }
-        .prt-body { padding:20px 36px 24px; }
+        .prt-body { padding:20px 36px 0; display:flex; flex-direction:column; box-sizing:border-box; }
+        .prt-spacer { flex:1; min-height:16px; }
+        .prt-bottom { padding-bottom:22px; }
         .prt-header { display:flex; align-items:flex-start; gap:16px; padding-bottom:16px; border-bottom:1px solid #222; margin-bottom:16px; }
         .prt-brand { display:flex; align-items:center; gap:14px; flex:none; }
         .prt-brand__logo { height:58px; width:auto; object-fit:contain; display:block; }
@@ -309,21 +312,25 @@ $granTotal      = $subtotalCot + $ivaMonto;
                     </div>
                 </div>
 
-                <?php if ($cot["notas"]): ?>
-                <div class="prt-notas">
-                    <h4>Notas y condiciones</h4>
-                    <p><?php echo nl2br(htmlspecialchars($cot["notas"])); ?></p>
-                </div>
-                <?php endif; ?>
+                <div class="prt-spacer"></div>
 
-                <div class="prt-footer">
-                    <div class="prt-footer__info">
-                        <p>Esta cotización es válida hasta el <strong><?php echo $vigenciaFecha; ?></strong>.</p>
-                        <p>Zabisu &mdash; Sabor y Servicio</p>
+                <div class="prt-bottom">
+                    <?php if ($cot["notas"]): ?>
+                    <div class="prt-notas">
+                        <h4>Notas y condiciones</h4>
+                        <p><?php echo nl2br(htmlspecialchars($cot["notas"])); ?></p>
                     </div>
-                    <div class="prt-firma">
-                        <div class="prt-firma__linea"></div>
-                        <p class="prt-firma__label">Autorizado por</p>
+                    <?php endif; ?>
+
+                    <div class="prt-footer">
+                        <div class="prt-footer__info">
+                            <p>Esta cotización es válida hasta el <strong><?php echo $vigenciaFecha; ?></strong>.</p>
+                            <p>Zabisu &mdash; Sabor y Servicio</p>
+                        </div>
+                        <div class="prt-firma">
+                            <div class="prt-firma__linea"></div>
+                            <p class="prt-firma__label">Autorizado por</p>
+                        </div>
                     </div>
                 </div>
 
