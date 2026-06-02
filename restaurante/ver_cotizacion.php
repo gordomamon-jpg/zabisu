@@ -334,11 +334,15 @@ $granTotal      = $subtotalCot + $ivaMonto;
                         <div class="prt-footer__info">
                             <p>Esta cotización es válida hasta el <strong><?php echo $vigenciaFecha; ?></strong>.</p>
                             <p>Zabisu &mdash; Sabor y Servicio</p>
-                            <?php if ($cot["hecho_por"]): ?><p>Autorizado por: <strong><?php echo htmlspecialchars($cot["hecho_por"]); ?></strong></p><?php endif; ?>
                         </div>
                         <div class="prt-firma">
                             <div class="prt-firma__linea"></div>
+                            <?php if ($cot["hecho_por"]): ?>
+                            <p class="prt-firma__label" style="font-weight:700;color:#111;"><?php echo htmlspecialchars($cot["hecho_por"]); ?></p>
                             <p class="prt-firma__label">Autorizado por</p>
+                            <?php else: ?>
+                            <p class="prt-firma__label">Autorizado por</p>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
