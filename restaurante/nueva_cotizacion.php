@@ -270,7 +270,7 @@ $fechaHoy = date("Y-m-d");
                 </div>
             </div>
             <div class="nm-campo" style="margin-top:16px;max-width:360px;">
-                <label>Elaborado por</label>
+                <label>Autorizado por</label>
                 <input type="text" name="hecho_por" value="<?php echo htmlspecialchars($_POST["hecho_por"] ?? ""); ?>" placeholder="Nombre de quien hace la cotización">
             </div>
             <div class="nm-campo" style="margin-top:16px;">

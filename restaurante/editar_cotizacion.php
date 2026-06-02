@@ -309,7 +309,7 @@ $itemsJson = json_encode(array_values($itemsExistentes));
                 </div>
             </div>
             <div class="nm-campo" style="margin-top:16px;max-width:360px;">
-                <label>Elaborado por</label>
+                <label>Autorizado por</label>
                 <input type="text" name="hecho_por" value="<?php echo htmlspecialchars($cot["hecho_por"] ?? ""); ?>" placeholder="Nombre de quien hace la cotización">
             </div>
             <div class="nm-campo" style="margin-top:16px;">
