@@ -80,8 +80,8 @@ $meses  = ['01'=>'enero','02'=>'febrero','03'=>'marzo','04'=>'abril','05'=>'mayo
 $ts         = strtotime($menuActivo["fecha"]);
 $fechaBonita = ($dias[date("l",$ts)] ?? "") . " " . date("j",$ts) . " de " . ($meses[date("m",$ts)] ?? "");
 
-$ordenCat = ["Plato fuerte","Sopa","Complemento","Agua","Postre"];
-$iconosCat = ["Plato fuerte"=>"🍽️","Sopa"=>"🥣","Complemento"=>"🥗","Agua"=>"💧","Postre"=>"🍮"];
+$ordenCat = ["Plato fuerte","Sopa","Complemento","Agua","Cortesia"];
+$iconosCat = ["Plato fuerte"=>"🍽️","Sopa"=>"🥣","Complemento"=>"🥗","Agua"=>"💧","Cortesia"=>"🍬"];
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -325,9 +325,9 @@ $iconosCat = ["Plato fuerte"=>"🍽️","Sopa"=>"🥣","Complemento"=>"🥗","Ag
              id="panel-<?php echo $tipoMenu; ?>">
 
             <?php
-            // Renderizar Agua y Postre juntos en una fila
-            $tieneAgua   = !empty($menusPorTipo[$tipoMenu]["Agua"]);
-            $tienePostre = !empty($menusPorTipo[$tipoMenu]["Postre"]);
+            // Renderizar Agua y Cortesia juntos en una fila
+            $tieneAgua     = !empty($menusPorTipo[$tipoMenu]["Agua"]);
+            $tieneCortesia = !empty($menusPorTipo[$tipoMenu]["Cortesia"]);
             $simplesMostradas = false;
             ?>
 
@@ -337,9 +337,9 @@ $iconosCat = ["Plato fuerte"=>"🍽️","Sopa"=>"🥣","Complemento"=>"🥗","Ag
                 $icono   = $iconosCat[$cat] ?? "•";
                 $esPlato = ($cat === "Plato fuerte");
                 $esChip  = ($cat === "Complemento");
-                $esSimple = in_array($cat, ["Agua","Postre"]);
+                $esSimple = in_array($cat, ["Agua","Cortesia"]);
 
-                // Agua y Postre se renderizan juntas, solo una vez
+                // Agua y Cortesia se renderizan juntas, solo una vez
                 if ($esSimple && $simplesMostradas) continue;
                 if ($esSimple) $simplesMostradas = true;
             ?>
@@ -347,7 +347,7 @@ $iconosCat = ["Plato fuerte"=>"🍽️","Sopa"=>"🥣","Complemento"=>"🥗","Ag
             <?php if ($esSimple): ?>
             <div class="md-seccion">
                 <div class="md-fila-simple">
-                    <?php foreach (["Agua","Postre"] as $catSimple):
+                    <?php foreach (["Agua","Cortesia"] as $catSimple):
                         if (empty($menusPorTipo[$tipoMenu][$catSimple])) continue;
                     ?>
                     <div class="md-fila-simple__col">

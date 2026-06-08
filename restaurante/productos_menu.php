@@ -249,8 +249,8 @@ foreach ($stmtGuardados->fetchAll(PDO::FETCH_ASSOC) as $p) {
     Estructura fija del menú
 */
 $estructura = [
-    "Zabisu"   => ["Plato fuerte" => 3, "Sopa" => 1, "Complemento" => 5, "Agua" => 1, "Postre" => 1],
-    "Ejecutivo"=> ["Plato fuerte" => 4, "Sopa" => 1, "Complemento" => 5, "Agua" => 1, "Postre" => 1],
+    "Zabisu"   => ["Plato fuerte" => 3, "Sopa" => 1, "Complemento" => 5, "Agua" => 1, "Cortesia" => 1],
+    "Ejecutivo"=> ["Plato fuerte" => 4, "Sopa" => 1, "Complemento" => 5, "Agua" => 1, "Cortesia" => 1],
 ];
 
 $iconosCategoria = [
@@ -258,7 +258,7 @@ $iconosCategoria = [
     "Sopa"         => "🥣",
     "Complemento"  => "🥗",
     "Agua"         => "💧",
-    "Postre"       => "🍮",
+    "Cortesia"     => "🍬",
 ];
 
 $meses = [
@@ -417,9 +417,9 @@ PLATO EJECUTIVO: Nombre 1 | Nombre 2 | Nombre 3 | Nombre 4
 SOPA: Nombre de la sopa
 COMPLEMENTO: Opción 1 | Opción 2 | Opción 3 | Opción 4 | Opción 5
 AGUA: Nombre del agua
-POSTRE: Nombre del postre</pre>
+CORTESIA: Nombre de la cortesia</pre>
                 <p style="font-size:12px;color:var(--texto-secundario);margin:10px 0 0;">Descripción opcional entre paréntesis: <code style="background:#2a2a2a;padding:1px 5px;border-radius:3px;">Milanesa de res (Con papas y ensalada)</code></p>
-                <p style="font-size:12px;color:var(--texto-secundario);margin:6px 0 0;">Sopa, Complemento, Agua y Postre se aplican igual a Zabisu y Ejecutivo.</p>
+                <p style="font-size:12px;color:var(--texto-secundario);margin:6px 0 0;">Sopa, Complemento, Agua y Cortesia se aplican igual a Zabisu y Ejecutivo.</p>
             </div>
 
             <textarea id="carga-rapida-texto" rows="8"
@@ -452,7 +452,7 @@ POSTRE: Nombre del postre</pre>
 
             <?php if ($tipoMenu === "Ejecutivo"): ?>
             <div class="pm-copiar-aviso">
-                <p>¿Los productos de Sopa, Complementos, Agua y Postre son los mismos que en Zabisu?</p>
+                <p>¿Los productos de Sopa, Complementos, Agua y Cortesia son los mismos que en Zabisu?</p>
                 <button type="button" class="btn-limpiar-filtros" id="btn-copiar-zabisu">
                     Copiar desde Menú Zabisu
                 </button>
@@ -489,7 +489,7 @@ POSTRE: Nombre del postre</pre>
                             <input type="text"
                                    name="<?php echo $inputBase; ?>[nombre]"
                                    class="pm-input-nombre <?php echo $tipoMenu === 'Zabisu' ? 'zabisu-nombre-' . $i . '-' . urlencode($categoria) : ''; ?>"
-                                   placeholder="Nombre<?php echo $categoria === 'Plato fuerte' ? ' del plato' : ($categoria === 'Sopa' ? ' de la sopa' : ($categoria === 'Agua' ? ' del agua' : ($categoria === 'Postre' ? ' del postre' : ' del complemento'))); ?>…"
+                                   placeholder="Nombre<?php echo $categoria === 'Plato fuerte' ? ' del plato' : ($categoria === 'Sopa' ? ' de la sopa' : ($categoria === 'Agua' ? ' del agua' : ($categoria === 'Cortesia' ? ' de la cortesia' : ' del complemento'))); ?>…"
                                    value="<?php echo htmlspecialchars($nombreVal); ?>">
 
                             <textarea name="<?php echo $inputBase; ?>[descripcion]"
@@ -619,7 +619,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 "complemento":     function (v) { fillCat("Zabisu", "Complemento", v); fillCat("Ejecutivo", "Complemento", v); },
                 "complementos":    function (v) { fillCat("Zabisu", "Complemento", v); fillCat("Ejecutivo", "Complemento", v); },
                 "agua":            function (v) { fillCat("Zabisu", "Agua", v);        fillCat("Ejecutivo", "Agua", v); },
-                "postre":          function (v) { fillCat("Zabisu", "Postre", v);      fillCat("Ejecutivo", "Postre", v); }
+                "cortesia":        function (v) { fillCat("Zabisu", "Cortesia", v);    fillCat("Ejecutivo", "Cortesia", v); }
             };
 
             var aplicados = 0;
@@ -645,7 +645,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (btnCopiar) {
         btnCopiar.addEventListener("click", function () {
 
-            var categoriasCopiar = ["Sopa", "Complemento", "Agua", "Postre"];
+            var categoriasCopiar = ["Sopa", "Complemento", "Agua", "Cortesia"];
 
             var tabZabisu   = document.getElementById("tab-Zabisu");
             var tabEjecutivo = document.getElementById("tab-Ejecutivo");

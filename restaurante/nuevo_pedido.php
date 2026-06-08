@@ -166,10 +166,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
     }
 
     if (empty($errores)) {
-        // Auto-asignar sopa, agua y postre según tipo de menú
+        // Auto-asignar sopa, agua y cortesia según tipo de menú
         foreach ($menusRecibidos as $num => &$menuData) {
             $tipo = $menuData["tipo_menu"] ?? "";
-            foreach (["Sopa" => "sopa", "Agua" => "agua", "Postre" => "postre"] as $cat => $key) {
+            foreach (["Sopa" => "sopa", "Agua" => "agua", "Cortesia" => "cortesia"] as $cat => $key) {
                 if (!empty($menusPorTipo[$tipo][$cat])) {
                     $menuData[$key] = (string)$menusPorTipo[$tipo][$cat][0]["id_producto"];
                 }
@@ -233,7 +233,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
                 $stmtPM->execute([":id_pedido"=>$id_pedido,":tipo_menu"=>$m["tipo_menu"],":numero_menu"=>$nMenu]);
                 $id_pedido_menu = (int)$conexion->lastInsertId();
                 $ids = array_filter(array_merge(
-                    [(int)($m["plato_fuerte"]??0),(int)($m["sopa"]??0),(int)($m["agua"]??0),(int)($m["postre"]??0)],
+                    [(int)($m["plato_fuerte"]??0),(int)($m["sopa"]??0),(int)($m["agua"]??0),(int)($m["cortesia"]??0)],
                     array_map('intval', $m["complementos"]??[])
                 ));
                 foreach ($ids as $idP) {
@@ -396,14 +396,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
                 <?php foreach (["Zabisu", "Ejecutivo"] as $tipoMenu):
                     $sopaIncluida   = $menusPorTipo[$tipoMenu]["Sopa"][0]["nombre"]   ?? "";
                     $aguaIncluida   = $menusPorTipo[$tipoMenu]["Agua"][0]["nombre"]   ?? "";
-                    $postreIncluido = $menusPorTipo[$tipoMenu]["Postre"][0]["nombre"] ?? "";
+                    $cortesiaIncluida = $menusPorTipo[$tipoMenu]["Cortesia"][0]["nombre"] ?? "";
                 ?>
                     <div class="opciones-menu-tipo menu-<?php echo $i; ?>-tipo"
                          data-menu="<?php echo $i; ?>"
                          data-tipo="<?php echo $tipoMenu; ?>"
                          data-sopa="<?php echo htmlspecialchars($sopaIncluida); ?>"
                          data-agua="<?php echo htmlspecialchars($aguaIncluida); ?>"
-                         data-postre="<?php echo htmlspecialchars($postreIncluido); ?>"
+                         data-cortesia="<?php echo htmlspecialchars($cortesiaIncluida); ?>"
                          style="<?php echo ($tipoSel === $tipoMenu) ? 'display:block;' : 'display:none;'; ?>">
 
                         <?php if (!empty($menusPorTipo[$tipoMenu]["Plato fuerte"])): ?>
@@ -440,9 +440,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
                 <?php
                     $sopaMI   = $menusPorTipo[$tipoSel]["Sopa"][0]["nombre"]   ?? "";
                     $aguaMI   = $menusPorTipo[$tipoSel]["Agua"][0]["nombre"]   ?? "";
-                    $postreMI = $menusPorTipo[$tipoSel]["Postre"][0]["nombre"] ?? "";
+                    $cortesiaMI = $menusPorTipo[$tipoSel]["Cortesia"][0]["nombre"] ?? "";
                 ?>
-                <?php if ($sopaMI || $aguaMI || $postreMI): ?>
+                <?php if ($sopaMI || $aguaMI || $cortesiaMI): ?>
                 <div class="menu-incluye" id="menu-incluye-<?php echo $i; ?>">
                     <p class="menu-incluye__titulo">Tu menú también incluye:</p>
                     <div class="menu-incluye__items">
@@ -458,10 +458,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
                             <span class="menu-incluye__item-nombre"><?php echo htmlspecialchars($aguaMI); ?></span>
                         </div>
                         <?php endif; ?>
-                        <?php if ($postreMI): ?>
+                        <?php if ($cortesiaMI): ?>
                         <div class="menu-incluye__item">
-                            <span class="menu-incluye__item-emoji">🍮</span>
-                            <span class="menu-incluye__item-nombre"><?php echo htmlspecialchars($postreMI); ?></span>
+                            <span class="menu-incluye__item-emoji">🍬</span>
+                            <span class="menu-incluye__item-nombre"><?php echo htmlspecialchars($cortesiaMI); ?></span>
                         </div>
                         <?php endif; ?>
                     </div>
@@ -622,8 +622,8 @@ document.addEventListener("DOMContentLoaded", function () {
         // Actualizar bloque "Tu menú también incluye"
         const incluyeBloque = document.getElementById("menu-incluye-" + menuNum);
         if (incluyeBloque && activoDiv) {
-            const emojis  = ["🥣", "💧", "🍮"];
-            const valores = [activoDiv.dataset.sopa, activoDiv.dataset.agua, activoDiv.dataset.postre];
+            const emojis  = ["🥣", "💧", "🍬"];
+            const valores = [activoDiv.dataset.sopa, activoDiv.dataset.agua, activoDiv.dataset.cortesia];
             const items   = incluyeBloque.querySelectorAll(".menu-incluye__item");
             items.forEach(function (item, idx) {
                 const nombreEl = item.querySelector(".menu-incluye__item-nombre");

@@ -195,7 +195,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
                 $plato_fuerte = $menu["plato_fuerte"] ?? "";
                 $sopa = $menu["sopa"] ?? "";
                 $agua = $menu["agua"] ?? "";
-                $postre = $menu["postre"] ?? "";
+                $cortesia = $menu["cortesia"] ?? "";
                 $complementos = $menu["complementos"] ?? [];
 
                 $stmtPedidoMenu->bindParam(":id_pedido", $id_pedido, PDO::PARAM_INT);
@@ -210,7 +210,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
                     [$sopa],
                     $complementos,
                     [$agua],
-                    [$postre]
+                    [$cortesia]
                 );
 
                 foreach ($productosSeleccionados as $idProducto) {

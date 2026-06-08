@@ -113,7 +113,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
     if (empty($errores)) {
         foreach ($menusRecibidos as $num => &$menuData) {
             $tipo = $menuData["tipo_menu"] ?? "";
-            foreach (["Sopa"=>"sopa","Agua"=>"agua","Postre"=>"postre"] as $cat => $key) {
+            foreach (["Sopa"=>"sopa","Agua"=>"agua","Cortesia"=>"cortesia"] as $cat => $key) {
                 if (!empty($menusPorTipo[$tipo][$cat])) {
                     $menuData[$key] = (string)$menusPorTipo[$tipo][$cat][0]["id_producto"];
                 }
@@ -156,7 +156,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
                 $stmtPM->execute([":id_pedido"=>$id_pedido,":tipo_menu"=>$m["tipo_menu"],":numero_menu"=>$nMenu]);
                 $id_pedido_menu = (int)$conexion->lastInsertId();
                 $ids = array_filter(array_merge(
-                    [(int)($m["plato_fuerte"]??0),(int)($m["sopa"]??0),(int)($m["agua"]??0),(int)($m["postre"]??0)],
+                    [(int)($m["plato_fuerte"]??0),(int)($m["sopa"]??0),(int)($m["agua"]??0),(int)($m["cortesia"]??0)],
                     array_map('intval', $m["complementos"]??[])
                 ));
                 foreach ($ids as $idP) {
@@ -517,14 +517,14 @@ body {
         <?php
         $sopaN   = $menusPorTipo[$tipoMenu]["Sopa"][0]["nombre"]   ?? "";
         $aguaN   = $menusPorTipo[$tipoMenu]["Agua"][0]["nombre"]   ?? "";
-        $postreN = $menusPorTipo[$tipoMenu]["Postre"][0]["nombre"] ?? "";
+        $cortesiaN = $menusPorTipo[$tipoMenu]["Cortesia"][0]["nombre"] ?? "";
         ?>
-        <?php if ($sopaN || $aguaN || $postreN): ?>
+        <?php if ($sopaN || $aguaN || $cortesiaN): ?>
         <div class="t-incluye">
             <span class="t-incluye__title">También incluye</span>
-            <?php if ($sopaN):   ?><span class="t-incluye__item">🥣 <?= htmlspecialchars($sopaN) ?></span><?php endif; ?>
-            <?php if ($aguaN):   ?><span class="t-incluye__item">💧 <?= htmlspecialchars($aguaN) ?></span><?php endif; ?>
-            <?php if ($postreN): ?><span class="t-incluye__item">🍮 <?= htmlspecialchars($postreN) ?></span><?php endif; ?>
+            <?php if ($sopaN):     ?><span class="t-incluye__item">🥣 <?= htmlspecialchars($sopaN) ?></span><?php endif; ?>
+            <?php if ($aguaN):     ?><span class="t-incluye__item">💧 <?= htmlspecialchars($aguaN) ?></span><?php endif; ?>
+            <?php if ($cortesiaN): ?><span class="t-incluye__item">🍬 <?= htmlspecialchars($cortesiaN) ?></span><?php endif; ?>
         </div>
         <?php endif; ?>
 

@@ -399,10 +399,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
     }
 
     if (empty($errores)) {
-        // Auto-asignar sopa, agua y postre (el cliente no los elige, están fijos)
+        // Auto-asignar sopa, agua y cortesia (el cliente no los elige, están fijos)
         foreach ($menusRecibidos as $num => &$menuData) {
             $tipo = $menuData["tipo_menu"] ?? "";
-            foreach (["Sopa" => "sopa", "Agua" => "agua", "Postre" => "postre"] as $cat => $key) {
+            foreach (["Sopa" => "sopa", "Agua" => "agua", "Cortesia" => "cortesia"] as $cat => $key) {
                 if (!empty($menusPorTipo[$tipo][$cat])) {
                     $menuData[$key] = (string)$menusPorTipo[$tipo][$cat][0]["id_producto"];
                 }
@@ -659,14 +659,14 @@ if ($scrollDestino === "bloque-entrega") {
                         <?php
                         $sopaIncluida   = $menusPorTipo[$tipoMenu]["Sopa"][0]["nombre"]   ?? "";
                         $aguaIncluida   = $menusPorTipo[$tipoMenu]["Agua"][0]["nombre"]   ?? "";
-                        $postreIncluido = $menusPorTipo[$tipoMenu]["Postre"][0]["nombre"] ?? "";
+                        $cortesiaIncluida = $menusPorTipo[$tipoMenu]["Cortesia"][0]["nombre"] ?? "";
                         ?>
                         <div class="opciones-menu-tipo menu-<?php echo $i; ?>-tipo"
                              data-menu="<?php echo $i; ?>"
                              data-tipo="<?php echo $tipoMenu; ?>"
                              data-sopa="<?php echo htmlspecialchars($sopaIncluida); ?>"
                              data-agua="<?php echo htmlspecialchars($aguaIncluida); ?>"
-                             data-postre="<?php echo htmlspecialchars($postreIncluido); ?>"
+                             data-cortesia="<?php echo htmlspecialchars($cortesiaIncluida); ?>"
                              style="<?php echo ($tipoSeleccionado === $tipoMenu) ? 'display:block;' : 'display:none;'; ?>">
 
                             <?php if (!empty($menusPorTipo[$tipoMenu]["Plato fuerte"])): ?>
@@ -706,7 +706,7 @@ if ($scrollDestino === "bloque-entrega") {
                                 </div>
                             <?php endif; ?>
 
-                            <?php if ($sopaIncluida || $aguaIncluida || $postreIncluido): ?>
+                            <?php if ($sopaIncluida || $aguaIncluida || $cortesiaIncluida): ?>
                             <div class="menu-incluye">
                                 <p class="menu-incluye__titulo">Tu menú también incluye:</p>
                                 <div class="menu-incluye__items">
@@ -722,10 +722,10 @@ if ($scrollDestino === "bloque-entrega") {
                                             <span class="menu-incluye__item-nombre"><?php echo htmlspecialchars($aguaIncluida); ?></span>
                                         </div>
                                     <?php endif; ?>
-                                    <?php if ($postreIncluido): ?>
+                                    <?php if ($cortesiaIncluida): ?>
                                         <div class="menu-incluye__item">
-                                            <span class="menu-incluye__item-emoji">🍮</span>
-                                            <span class="menu-incluye__item-nombre"><?php echo htmlspecialchars($postreIncluido); ?></span>
+                                            <span class="menu-incluye__item-emoji">🍬</span>
+                                            <span class="menu-incluye__item-nombre"><?php echo htmlspecialchars($cortesiaIncluida); ?></span>
                                         </div>
                                     <?php endif; ?>
                                 </div>
@@ -1268,7 +1268,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const sopaNombre   = bloqueActivo ? (bloqueActivo.dataset.sopa   || "—") : "—";
             const aguaNombre   = bloqueActivo ? (bloqueActivo.dataset.agua   || "—") : "—";
-            const postreNombre = bloqueActivo ? (bloqueActivo.dataset.postre || "—") : "—";
+            const cortesiaNombre = bloqueActivo ? (bloqueActivo.dataset.cortesia || "—") : "—";
 
             let complementosTexto = "Sin seleccionar";
             if (compSel.length > 0) {
@@ -1307,8 +1307,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     </div>
 
                     <div class="ticket-linea ticket-linea--incluido">
-                        <span>🍮 Postre</span>
-                        <span>${postreNombre}</span>
+                        <span>🍬 Cortesia</span>
+                        <span>${cortesiaNombre}</span>
                     </div>
 
                     <div class="ticket-subtotal">
