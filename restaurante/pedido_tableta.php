@@ -59,6 +59,24 @@ foreach ($stmtTipos->fetchAll(PDO::FETCH_ASSOC) as $t) {
     $preciosMenus[$t["nombre_menu"]] = (float)$t["precio"];
 }
 
+/* ── Extras disponibles ── */
+$PRECIOS_EXTRA = ["Sopa" => 25, "Complemento" => 25, "Agua" => 20];
+$extrasForm = [];
+$nombresExtrasForm = [];
+foreach (["Sopa", "Complemento", "Agua"] as $catEx) {
+    foreach ($menusPorTipo as $tipoM => $cats) {
+        if (!empty($cats[$catEx])) {
+            foreach ($cats[$catEx] as $prod) {
+                if (!in_array($prod["nombre"], $nombresExtrasForm)) {
+                    $nombresExtrasForm[] = $prod["nombre"];
+                    $extrasForm[$catEx][] = $prod;
+                }
+            }
+        }
+    }
+}
+$iconosExtra = ["Sopa" => "🥣", "Complemento" => "🥗", "Agua" => "💧"];
+
 $stmtUbic = $conexion->prepare("SELECT * FROM ubicaciones WHERE activo = 1 ORDER BY tipo, nombre_ubicacion");
 $stmtUbic->execute();
 $ubicaciones = $stmtUbic->fetchAll(PDO::FETCH_ASSOC);
@@ -84,6 +102,7 @@ $totalCreado  = 0.0;
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
     $nombre_cliente = strtoupper(trim(preg_replace('/[^\p{L}\s]/u', '', $_POST["nombre_cliente"] ?? "")));
     $id_horario     = $_POST["id_horario"] ?? "";
+    $observaciones  = trim($_POST["observaciones"] ?? "");
     $menusRecibidos = $_POST["menus"] ?? [];
 
     if ($nombre_cliente === "") $errores[] = "El nombre del cliente es obligatorio.";
@@ -111,6 +130,22 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
     }
 
     if (empty($errores)) {
+        /* Procesar extras */
+        $extrasGuardar = [];
+        foreach ($_POST["extras"] ?? [] as $idProducto => $cantidad) {
+            $cantidad = min((int)$cantidad, 5);
+            if ($cantidad <= 0 || !isset($productosIndexados[$idProducto])) continue;
+            $prod = $productosIndexados[$idProducto];
+            $precioExtra = $PRECIOS_EXTRA[$prod["categoria"]] ?? 25.00;
+            $extrasGuardar[] = [
+                "id_producto"     => (int)$idProducto,
+                "nombre"          => $prod["nombre"],
+                "categoria"       => $prod["categoria"],
+                "cantidad"        => $cantidad,
+                "precio_unitario" => $precioExtra,
+            ];
+        }
+
         foreach ($menusRecibidos as $num => &$menuData) {
             $tipo = $menuData["tipo_menu"] ?? "";
             foreach (["Sopa"=>"sopa","Agua"=>"agua","Cortesia"=>"cortesia"] as $cat => $key) {
@@ -128,6 +163,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
             foreach ($menusRecibidos as $m) {
                 $totalPedido += $preciosMenus[$m["tipo_menu"] ?? ""] ?? 0;
             }
+            foreach ($extrasGuardar as $ex) {
+                $totalPedido += $ex["cantidad"] * $ex["precio_unitario"];
+            }
 
             $folio = "TAB-" . date("Ymd") . "-" . strtoupper(substr(md5(uniqid()), 0, 5));
 
@@ -136,12 +174,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
                  (folio, nombre_cliente, telefono, correo_cliente, id_horario, metodo_pago,
                   observaciones, total, estado, estado_pago, es_prueba, referencia_pago)
                  VALUES (:folio,:nombre_cliente,'0000000000','',:id_horario,'Efectivo',
-                         '',:total,'Pendiente','Pago en efectivo',:es_prueba,:folio2)"
+                         :observaciones,:total,'Pendiente','Pago en efectivo',:es_prueba,:folio2)"
             );
             $stmtPed->execute([
                 ":folio"          => $folio,
                 ":nombre_cliente" => $nombre_cliente,
                 ":id_horario"     => $id_horario,
+                ":observaciones"  => $observaciones,
                 ":total"          => $totalPedido,
                 ":es_prueba"      => 0,
                 ":folio2"         => $folio,
@@ -169,6 +208,23 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
                     ]);
                 }
                 $nMenu++;
+            }
+
+            if (!empty($extrasGuardar)) {
+                $stmtExtra = $conexion->prepare(
+                    "INSERT INTO pedido_extras (id_pedido,id_producto,nombre,categoria,cantidad,precio_unitario)
+                     VALUES (:id_pedido,:id_producto,:nombre,:categoria,:cantidad,:precio)"
+                );
+                foreach ($extrasGuardar as $ex) {
+                    $stmtExtra->execute([
+                        ":id_pedido"   => $id_pedido,
+                        ":id_producto" => $ex["id_producto"],
+                        ":nombre"      => $ex["nombre"],
+                        ":categoria"   => $ex["categoria"],
+                        ":cantidad"    => $ex["cantidad"],
+                        ":precio"      => $ex["precio_unitario"],
+                    ]);
+                }
             }
 
             $conexion->commit();
@@ -376,6 +432,60 @@ body {
 }
 .t-btn-nuevo:active { transform: scale(.97); }
 
+/* OBSERVACIONES */
+.t-obs {
+    width: 100%;
+    background: #1e1e2e;
+    border: 2px solid #333345;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 20px;
+    padding: 14px 16px;
+    outline: none;
+    resize: vertical;
+    font-family: inherit;
+    line-height: 1.5;
+    transition: border-color .2s;
+    caret-color: #ff7a00;
+    min-height: 80px;
+}
+.t-obs::placeholder { color: #444; font-size: 18px; }
+.t-obs:focus { border-color: #ff7a00; }
+
+/* EXTRAS */
+.t-extra-grid { display: flex; flex-direction: column; gap: 10px; }
+.t-extra-cat-label {
+    font-size: 13px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1.5px; color: #555; margin: 14px 0 8px; display: block;
+}
+.t-extra-cat-label:first-child { margin-top: 0; }
+.t-extra-card {
+    display: flex; align-items: center; justify-content: space-between;
+    background: #111120; border: 2px solid #252535; border-radius: 14px;
+    padding: 14px 16px; gap: 12px;
+    transition: border-color .15s;
+}
+.t-extra-card--activo { border-color: #ff7a00; background: rgba(255,122,0,.1); }
+.t-extra-card__info { flex: 1; }
+.t-extra-card__nombre { font-size: 17px; font-weight: 700; color: #ccc; display: block; }
+.t-extra-card--activo .t-extra-card__nombre { color: #ff7a00; }
+.t-extra-card__precio { font-size: 13px; color: #555; margin-top: 2px; display: block; }
+.t-extra-contador { display: flex; align-items: center; gap: 0; flex-shrink: 0; }
+.t-extra-btn {
+    width: 48px; height: 48px; border-radius: 50%; border: none; cursor: pointer;
+    font-size: 26px; font-weight: 300; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform .08s; user-select: none;
+}
+.t-extra-btn:active { transform: scale(.88); }
+.t-extra-btn--menos { background: #2a1a1a; color: #ff6b6b; }
+.t-extra-btn--mas   { background: #1a2a1a; color: #4ac86e; }
+.t-extra-num {
+    font-size: 24px; font-weight: 900; color: #fff;
+    min-width: 42px; text-align: center;
+}
+.t-extra-num--cero { color: #333; }
+
 /* RESPONSIVE */
 @media (max-width: 540px) {
     .t-counter__num  { font-size: 60px; min-width: 80px; }
@@ -431,6 +541,14 @@ body {
            maxlength="80" autocomplete="off" autocorrect="off" spellcheck="false"
            placeholder="Escribe el nombre..."
            value="<?= htmlspecialchars($_POST["nombre_cliente"] ?? "") ?>">
+</div>
+
+<!-- OBSERVACIONES -->
+<div class="t-bloque">
+    <h2>Observaciones</h2>
+    <textarea class="t-obs" name="observaciones" rows="3"
+              placeholder="Sin cebolla, alergia a..., para llevar..."
+    ><?= htmlspecialchars($_POST["observaciones"] ?? "") ?></textarea>
 </div>
 
 <!-- CANTIDAD -->
@@ -533,6 +651,42 @@ body {
 
 </div>
 <?php endfor; ?>
+
+<!-- EXTRAS -->
+<?php if (!empty($extrasForm)): ?>
+<div class="t-bloque">
+    <h2>Extras</h2>
+    <div class="t-extra-grid">
+        <?php foreach ($extrasForm as $cat => $items): ?>
+        <span class="t-extra-cat-label"><?= $iconosExtra[$cat] ?> <?= htmlspecialchars($cat) ?> extra · $<?= $PRECIOS_EXTRA[$cat] ?> c/u</span>
+        <?php foreach ($items as $prod):
+            $cantPrev = (int)($_POST["extras"][$prod["id_producto"]] ?? 0);
+        ?>
+        <div class="t-extra-card <?= $cantPrev > 0 ? 't-extra-card--activo' : '' ?>"
+             id="t-ex-card-<?= (int)$prod["id_producto"] ?>"
+             data-precio="<?= $PRECIOS_EXTRA[$cat] ?>">
+            <div class="t-extra-card__info">
+                <span class="t-extra-card__nombre"><?= htmlspecialchars($prod["nombre"]) ?></span>
+                <span class="t-extra-card__precio">$<?= $PRECIOS_EXTRA[$cat] ?> por pieza</span>
+            </div>
+            <div class="t-extra-contador">
+                <button type="button" class="t-extra-btn t-extra-btn--menos"
+                        data-id="<?= (int)$prod["id_producto"] ?>">−</button>
+                <span class="t-extra-num <?= $cantPrev === 0 ? 't-extra-num--cero' : '' ?>"
+                      id="t-ex-num-<?= (int)$prod["id_producto"] ?>"><?= $cantPrev ?></span>
+                <button type="button" class="t-extra-btn t-extra-btn--mas"
+                        data-id="<?= (int)$prod["id_producto"] ?>">+</button>
+            </div>
+            <input type="hidden"
+                   name="extras[<?= (int)$prod["id_producto"] ?>]"
+                   id="t-ex-val-<?= (int)$prod["id_producto"] ?>"
+                   value="<?= $cantPrev ?>">
+        </div>
+        <?php endforeach; ?>
+        <?php endforeach; ?>
+    </div>
+</div>
+<?php endif; ?>
 
 <!-- ENTREGA -->
 <div class="t-bloque">
@@ -695,6 +849,26 @@ body {
         if (ubRadio) ubRadio.checked = true;
     })();
 
+    /* ── Extras ── */
+
+    document.querySelectorAll(".t-extra-btn").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            var id      = this.dataset.id;
+            var valEl   = document.getElementById("t-ex-val-"  + id);
+            var numEl   = document.getElementById("t-ex-num-"  + id);
+            var cardEl  = document.getElementById("t-ex-card-" + id);
+            if (!valEl || !numEl || !cardEl) return;
+            var n = parseInt(valEl.value) || 0;
+            if (this.classList.contains("t-extra-btn--mas"))   n = Math.min(n + 1, 5);
+            if (this.classList.contains("t-extra-btn--menos")) n = Math.max(n - 1, 0);
+            valEl.value     = n;
+            numEl.textContent = n;
+            numEl.classList.toggle("t-extra-num--cero", n === 0);
+            cardEl.classList.toggle("t-extra-card--activo", n > 0);
+            actualizarTotal();
+        });
+    });
+
     /* ── Total ── */
     function actualizarTotal() {
         var total = 0;
@@ -704,6 +878,12 @@ body {
             var hidden = document.getElementById("t-tipo-val-" + i);
             total += preciosMenus[hidden ? hidden.value : "Zabisu"] || 0;
         }
+        document.querySelectorAll(".t-extra-card").forEach(function (card) {
+            var id    = card.id.replace("t-ex-card-", "");
+            var val   = parseInt(document.getElementById("t-ex-val-" + id)?.value) || 0;
+            var precio = parseFloat(card.dataset.precio) || 25;
+            total += val * precio;
+        });
         var el = document.getElementById("t-total");
         if (el) el.textContent = "$" + total.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     }
