@@ -82,6 +82,27 @@ $fechaBonita = ($dias[date("l",$ts)] ?? "") . " " . date("j",$ts) . " de " . ($m
 
 $ordenCat = ["Plato fuerte","Sopa","Complemento","Agua","Cortesia"];
 $iconosCat = ["Plato fuerte"=>"🍽️","Sopa"=>"🥣","Complemento"=>"🥗","Agua"=>"💧","Cortesia"=>"🍬"];
+
+/* ── Calificaciones públicas ── */
+$stmtRatings = $conexion->prepare(
+    "SELECT COUNT(*) AS total, ROUND(AVG(calificacion), 1) AS promedio FROM feedback_pedidos"
+);
+$stmtRatings->execute();
+$ratingsGlobal = $stmtRatings->fetch(PDO::FETCH_ASSOC);
+$ratingsTotal  = (int)($ratingsGlobal["total"]    ?? 0);
+$ratingsProm   = (float)($ratingsGlobal["promedio"] ?? 0);
+
+$stmtRatingsDist = $conexion->prepare(
+    "SELECT calificacion, COUNT(*) AS total
+     FROM feedback_pedidos
+     GROUP BY calificacion
+     ORDER BY calificacion DESC"
+);
+$stmtRatingsDist->execute();
+$ratingsDist = [];
+foreach ($stmtRatingsDist->fetchAll(PDO::FETCH_ASSOC) as $row) {
+    $ratingsDist[(int)$row["calificacion"]] = (int)$row["total"];
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -216,6 +237,128 @@ $iconosCat = ["Plato fuerte"=>"🍽️","Sopa"=>"🥣","Complemento"=>"🥗","Ag
         88%  {                                            opacity: 0.4;  }
         100% { transform: translateY(-280px) scale(1.1); opacity: 0;   }
     }
+    /* ── Sección de reseñas ── */
+    .md-resenas {
+        padding: 0 20px 48px;
+        max-width: 560px;
+        margin: 0 auto;
+    }
+    .md-resenas__eyebrow {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 3px;
+        color: #ff7a00;
+        text-transform: uppercase;
+        text-align: center;
+        margin-bottom: 18px;
+        opacity: .8;
+    }
+    .md-resenas__card {
+        background: rgba(255,255,255,.03);
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: 20px;
+        padding: 28px 24px;
+        display: flex;
+        gap: 28px;
+        align-items: center;
+    }
+    .md-resenas__izq {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex-shrink: 0;
+        min-width: 100px;
+    }
+    .md-resenas__num {
+        font-size: 56px;
+        font-weight: 800;
+        line-height: 1;
+        color: #fff;
+        letter-spacing: -2px;
+    }
+    .md-resenas__estrellas {
+        display: flex;
+        gap: 3px;
+        margin: 8px 0 6px;
+    }
+    .md-resenas__estrella {
+        font-size: 18px;
+        color: rgba(255,255,255,.15);
+        transition: color .2s;
+    }
+    .md-resenas__estrella--llena  { color: #ff7a00; }
+    .md-resenas__estrella--media  {
+        background: linear-gradient(90deg, #ff7a00 50%, rgba(255,255,255,.15) 50%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .md-resenas__etiqueta {
+        font-size: 12px;
+        font-weight: 700;
+        color: #ff7a00;
+        letter-spacing: .5px;
+    }
+    .md-resenas__total {
+        font-size: 11px;
+        color: rgba(255,255,255,.35);
+        margin-top: 4px;
+        text-align: center;
+    }
+    .md-resenas__sep {
+        width: 1px;
+        align-self: stretch;
+        background: rgba(255,255,255,.07);
+        flex-shrink: 0;
+    }
+    .md-resenas__dist {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .md-resenas__fila {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .md-resenas__fila-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: rgba(255,255,255,.45);
+        width: 20px;
+        text-align: right;
+        flex-shrink: 0;
+    }
+    .md-resenas__fila-icon {
+        font-size: 10px;
+        color: rgba(255,255,255,.3);
+        flex-shrink: 0;
+    }
+    .md-resenas__barra-track {
+        flex: 1;
+        height: 6px;
+        background: rgba(255,255,255,.07);
+        border-radius: 99px;
+        overflow: hidden;
+    }
+    .md-resenas__barra-fill {
+        height: 100%;
+        border-radius: 99px;
+        transition: width .6s cubic-bezier(.4,0,.2,1);
+    }
+    .md-resenas__fila-pct {
+        font-size: 10px;
+        color: rgba(255,255,255,.3);
+        width: 28px;
+        text-align: right;
+        flex-shrink: 0;
+    }
+    @media (max-width: 400px) {
+        .md-resenas__card { flex-direction: column; gap: 20px; }
+        .md-resenas__sep  { width: 100%; height: 1px; align-self: auto; }
+    }
+
     .dnino-badge {
         display: inline-flex;
         align-items: center;
@@ -436,6 +579,70 @@ $iconosCat = ["Plato fuerte"=>"🍽️","Sopa"=>"🥣","Complemento"=>"🥗","Ag
         </div>
         <?php endforeach; ?>
 
+    </div><!-- /.md-contenido -->
+
+    <!-- ══ RESEÑAS ══════════════════════════════════════════ -->
+    <?php if ($ratingsTotal >= 3): ?>
+    <section class="md-resenas">
+        <p class="md-resenas__eyebrow">Lo que dicen nuestros clientes</p>
+        <div class="md-resenas__card">
+
+            <!-- Puntuación global -->
+            <div class="md-resenas__izq">
+                <span class="md-resenas__num"><?php echo number_format($ratingsProm, 1); ?></span>
+                <div class="md-resenas__estrellas">
+                    <?php
+                    $promRedondeado = floor($ratingsProm);
+                    $tieneMedia     = ($ratingsProm - $promRedondeado) >= 0.25;
+                    for ($s = 1; $s <= 5; $s++):
+                        if ($s <= $promRedondeado) $cls = "md-resenas__estrella--llena";
+                        elseif ($s === $promRedondeado + 1 && $tieneMedia) $cls = "md-resenas__estrella--media";
+                        else $cls = "";
+                    ?>
+                        <span class="md-resenas__estrella <?php echo $cls; ?>">★</span>
+                    <?php endfor; ?>
+                </div>
+                <?php
+                $etqLabel = match(true) {
+                    $ratingsProm >= 4.5 => "Excelente",
+                    $ratingsProm >= 3.5 => "Bueno",
+                    $ratingsProm >= 2.5 => "Regular",
+                    default             => "Mejorable",
+                };
+                ?>
+                <span class="md-resenas__etiqueta"><?php echo $etqLabel; ?></span>
+                <span class="md-resenas__total"><?php echo $ratingsTotal; ?> opinión<?php echo $ratingsTotal !== 1 ? "es" : ""; ?></span>
+            </div>
+
+            <div class="md-resenas__sep"></div>
+
+            <!-- Distribución -->
+            <div class="md-resenas__dist">
+                <?php for ($s = 5; $s >= 1; $s--):
+                    $cnt = $ratingsDist[$s] ?? 0;
+                    $pct = $ratingsTotal > 0 ? round($cnt / $ratingsTotal * 100) : 0;
+                    $barColor = match(true) {
+                        $s >= 4  => "#ff7a00",
+                        $s === 3 => "#facc15",
+                        default  => "#f87171",
+                    };
+                ?>
+                <div class="md-resenas__fila">
+                    <span class="md-resenas__fila-label"><?php echo $s; ?></span>
+                    <span class="md-resenas__fila-icon">★</span>
+                    <div class="md-resenas__barra-track">
+                        <div class="md-resenas__barra-fill" style="width:<?php echo $pct; ?>%;background:<?php echo $barColor; ?>;"></div>
+                    </div>
+                    <span class="md-resenas__fila-pct"><?php echo $pct; ?>%</span>
+                </div>
+                <?php endfor; ?>
+            </div>
+
+        </div>
+    </section>
+    <?php endif; ?>
+
+    <div class="md-contenido">
         <!-- ══ CTA ════════════════════════════════════════════ -->
         <a href="pedido.php" class="md-cta">
             Ordenar ahora
