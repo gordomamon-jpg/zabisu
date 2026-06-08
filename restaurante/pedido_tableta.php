@@ -432,6 +432,34 @@ body {
 }
 .t-btn-nuevo:active { transform: scale(.97); }
 
+/* TOGGLE BLOQUE (observaciones y extras) */
+.t-toggle-header {
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer; user-select: none; padding: 2px 0;
+}
+.t-toggle-header h2 { margin-bottom: 0; }
+.t-toggle-arrow {
+    font-size: 22px; color: #555; transition: transform .25s;
+    line-height: 1; flex-shrink: 0;
+}
+.t-toggle-header--abierto .t-toggle-arrow { transform: rotate(180deg); color: #ff7a00; }
+.t-toggle-body {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height .3s cubic-bezier(.4,0,.2,1), opacity .25s;
+    opacity: 0;
+}
+.t-toggle-body--abierto { max-height: 800px; opacity: 1; }
+.t-toggle-body > * { margin-top: 16px; }
+
+/* BADGE de cantidad activa en header */
+.t-toggle-badge {
+    font-size: 12px; font-weight: 700; background: #ff7a00;
+    color: #000; border-radius: 99px; padding: 2px 9px;
+    display: none; margin-left: 8px;
+}
+.t-toggle-badge--on { display: inline-block; }
+
 /* OBSERVACIONES */
 .t-obs {
     width: 100%;
@@ -439,17 +467,16 @@ body {
     border: 2px solid #333345;
     border-radius: 12px;
     color: #fff;
-    font-size: 20px;
-    padding: 14px 16px;
+    font-size: 18px;
+    padding: 12px 14px;
     outline: none;
-    resize: vertical;
+    resize: none;
     font-family: inherit;
     line-height: 1.5;
     transition: border-color .2s;
     caret-color: #ff7a00;
-    min-height: 80px;
 }
-.t-obs::placeholder { color: #444; font-size: 18px; }
+.t-obs::placeholder { color: #444; font-size: 16px; }
 .t-obs:focus { border-color: #ff7a00; }
 
 /* EXTRAS */
@@ -544,11 +571,17 @@ body {
 </div>
 
 <!-- OBSERVACIONES -->
+<?php $obsVal = htmlspecialchars($_POST["observaciones"] ?? ""); ?>
 <div class="t-bloque">
-    <h2>Observaciones</h2>
-    <textarea class="t-obs" name="observaciones" rows="3"
-              placeholder="Sin cebolla, alergia a..., para llevar..."
-    ><?= htmlspecialchars($_POST["observaciones"] ?? "") ?></textarea>
+    <div class="t-toggle-header <?= $obsVal ? 't-toggle-header--abierto' : '' ?>" id="t-obs-header">
+        <h2>Observaciones<span class="t-toggle-badge <?= $obsVal ? 't-toggle-badge--on' : '' ?>" id="t-obs-badge">✓</span></h2>
+        <span class="t-toggle-arrow">▾</span>
+    </div>
+    <div class="t-toggle-body <?= $obsVal ? 't-toggle-body--abierto' : '' ?>" id="t-obs-body">
+        <textarea class="t-obs" name="observaciones" id="t-obs-textarea" rows="3"
+                  placeholder="Sin cebolla, alergia a..., para llevar..."
+        ><?= $obsVal ?></textarea>
+    </div>
 </div>
 
 <!-- CANTIDAD -->
@@ -653,9 +686,16 @@ body {
 <?php endfor; ?>
 
 <!-- EXTRAS -->
-<?php if (!empty($extrasForm)): ?>
+<?php if (!empty($extrasForm)):
+    $hayExtrasPrev = false;
+    foreach ($_POST["extras"] ?? [] as $cant) { if ((int)$cant > 0) { $hayExtrasPrev = true; break; } }
+?>
 <div class="t-bloque">
-    <h2>Extras</h2>
+    <div class="t-toggle-header <?= $hayExtrasPrev ? 't-toggle-header--abierto' : '' ?>" id="t-ex-header">
+        <h2>Extras<span class="t-toggle-badge <?= $hayExtrasPrev ? 't-toggle-badge--on' : '' ?>" id="t-ex-badge"></span></h2>
+        <span class="t-toggle-arrow">▾</span>
+    </div>
+    <div class="t-toggle-body <?= $hayExtrasPrev ? 't-toggle-body--abierto' : '' ?>" id="t-ex-body">
     <div class="t-extra-grid">
         <?php foreach ($extrasForm as $cat => $items): ?>
         <span class="t-extra-cat-label"><?= $iconosExtra[$cat] ?> <?= htmlspecialchars($cat) ?> extra · $<?= $PRECIOS_EXTRA[$cat] ?> c/u</span>
@@ -685,6 +725,7 @@ body {
         <?php endforeach; ?>
         <?php endforeach; ?>
     </div>
+    </div><!-- /.t-toggle-body -->
 </div>
 <?php endif; ?>
 
@@ -736,6 +777,28 @@ body {
     var preciosMenus   = <?= json_encode($preciosMenus) ?>;
     var cantidadActual = <?= (int)$cantidadMenus ?>;
     var MAX = 10;
+
+    /* ── Toggles (observaciones y extras) ── */
+    function initToggle(headerId, bodyId) {
+        var header = document.getElementById(headerId);
+        var body   = document.getElementById(bodyId);
+        if (!header || !body) return;
+        header.addEventListener("click", function () {
+            var abierto = body.classList.toggle("t-toggle-body--abierto");
+            header.classList.toggle("t-toggle-header--abierto", abierto);
+        });
+    }
+    initToggle("t-obs-header", "t-obs-body");
+    initToggle("t-ex-header",  "t-ex-body");
+
+    /* Badge observaciones: aparece cuando hay texto */
+    var obsTextarea = document.getElementById("t-obs-textarea");
+    var obsBadge    = document.getElementById("t-obs-badge");
+    if (obsTextarea && obsBadge) {
+        obsTextarea.addEventListener("input", function () {
+            obsBadge.classList.toggle("t-toggle-badge--on", this.value.trim() !== "");
+        });
+    }
 
     /* ── Nombre → MAYÚSCULAS ── */
     var nombreInput = document.getElementById("t-nombre");
@@ -850,6 +913,18 @@ body {
     })();
 
     /* ── Extras ── */
+    var exBadge = document.getElementById("t-ex-badge");
+
+    function actualizarBadgeExtras() {
+        if (!exBadge) return;
+        var total = 0;
+        document.querySelectorAll(".t-extra-card").forEach(function (card) {
+            var id  = card.id.replace("t-ex-card-", "");
+            total += parseInt(document.getElementById("t-ex-val-" + id)?.value) || 0;
+        });
+        exBadge.textContent = total > 0 ? "+" + total : "";
+        exBadge.classList.toggle("t-toggle-badge--on", total > 0);
+    }
 
     document.querySelectorAll(".t-extra-btn").forEach(function (btn) {
         btn.addEventListener("click", function () {
@@ -861,13 +936,15 @@ body {
             var n = parseInt(valEl.value) || 0;
             if (this.classList.contains("t-extra-btn--mas"))   n = Math.min(n + 1, 5);
             if (this.classList.contains("t-extra-btn--menos")) n = Math.max(n - 1, 0);
-            valEl.value     = n;
+            valEl.value       = n;
             numEl.textContent = n;
             numEl.classList.toggle("t-extra-num--cero", n === 0);
             cardEl.classList.toggle("t-extra-card--activo", n > 0);
+            actualizarBadgeExtras();
             actualizarTotal();
         });
     });
+    actualizarBadgeExtras();
 
     /* ── Total ── */
     function actualizarTotal() {
