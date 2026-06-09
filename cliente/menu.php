@@ -83,19 +83,26 @@ $fechaBonita = ($dias[date("l",$ts)] ?? "") . " " . date("j",$ts) . " de " . ($m
 $ordenCat = ["Plato fuerte","Sopa","Complemento","Agua","Cortesia"];
 $iconosCat = ["Plato fuerte"=>"🍽️","Sopa"=>"🥣","Complemento"=>"🥗","Agua"=>"💧","Cortesia"=>"🍬"];
 
-/* ── Platos populares ── */
-$maxConteo = 0;
-foreach ($menusPorTipo as $cats) {
-    foreach ($cats["Plato fuerte"] ?? [] as $p) {
-        $c = $conteosProductos[(int)$p["id_producto"]] ?? 0;
-        if ($c > $maxConteo) $maxConteo = $c;
+/* ── Productos populares (platos fuertes y complementos) ── */
+$popularCats = ["Plato fuerte", "Complemento"];
+$maxConteoPorCat = [];
+foreach ($popularCats as $catPop) {
+    $max = 0;
+    foreach ($menusPorTipo as $cats) {
+        foreach ($cats[$catPop] ?? [] as $p) {
+            $c = $conteosProductos[(int)$p["id_producto"]] ?? 0;
+            if ($c > $max) $max = $c;
+        }
     }
+    $maxConteoPorCat[$catPop] = $max;
 }
 $popularIds = [];
-if ($maxConteo >= 3) {
+foreach ($popularCats as $catPop) {
+    $max = $maxConteoPorCat[$catPop];
+    if ($max < 3) continue;
     foreach ($menusPorTipo as $cats) {
-        foreach ($cats["Plato fuerte"] ?? [] as $p) {
-            if (($conteosProductos[(int)$p["id_producto"]] ?? 0) === $maxConteo) {
+        foreach ($cats[$catPop] ?? [] as $p) {
+            if (($conteosProductos[(int)$p["id_producto"]] ?? 0) === $max) {
                 $popularIds[(int)$p["id_producto"]] = true;
             }
         }
@@ -103,7 +110,7 @@ if ($maxConteo >= 3) {
 }
 
 /* ── Timestamp de cierre para el countdown ── */
-$cierre_ts = strtotime(date('Y-m-d') . ' ' . $menuActivo["pedido_hasta"]);
+$cierre_ts = (int)strtotime(date('Y-m-d') . ' ' . $menuActivo["pedido_hasta"]);
 
 /* ── Calificaciones públicas ── */
 $stmtRatings = $conexion->prepare(
@@ -267,7 +274,7 @@ foreach ($stmtRatingsDist->fetchAll(PDO::FETCH_ASSOC) as $row) {
         margin-top: 5px;
         min-height: 18px;
     }
-    .md-hero__countdown--ok      { color: rgba(255,255,255,.45); }
+    .md-hero__countdown--ok      { color: rgba(255,255,255,.7); }
     .md-hero__countdown--pronto  { color: #facc15; }
     .md-hero__countdown--urgente { color: #f87171; animation: md-pulso .9s ease-in-out infinite; }
     @keyframes md-pulso { 0%,100% { opacity:1; } 50% { opacity:.45; } }
@@ -541,7 +548,11 @@ foreach ($stmtRatingsDist->fetchAll(PDO::FETCH_ASSOC) as $row) {
                                 <?php if (!empty($item["descripcion"])): ?>
                                     <span class="md-chip__desc"><?php echo htmlspecialchars($item["descripcion"]); ?></span>
                                 <?php endif; ?>
-                                <?php if (!empty($item["agotado"])): ?><span class="md-badge-agotado">Agotado</span><?php endif; ?>
+                                <?php if (!empty($item["agotado"])): ?>
+                                    <span class="md-badge-agotado">Agotado</span>
+                                <?php elseif (!empty($popularIds[(int)$item["id_producto"]])): ?>
+                                    <span class="md-badge-popular">🔥 Popular</span>
+                                <?php endif; ?>
                             </span>
                         <?php endforeach; ?>
                     </div>
