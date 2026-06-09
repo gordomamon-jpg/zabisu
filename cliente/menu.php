@@ -267,6 +267,15 @@ foreach ($stmtRatingsDist->fetchAll(PDO::FETCH_ASSOC) as $row) {
         88%  {                                            opacity: 0.4;  }
         100% { transform: translateY(-280px) scale(1.1); opacity: 0;   }
     }
+    /* ── Animación de entrada ── */
+    @keyframes md-entrada {
+        from { opacity: 0; transform: translateY(18px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    .md-animar {
+        animation: md-entrada .38s cubic-bezier(.2, 0, .1, 1) both;
+    }
+
     /* ── Countdown ── */
     .md-hero__countdown {
         font-size: 13px;
@@ -615,15 +624,29 @@ foreach ($stmtRatingsDist->fetchAll(PDO::FETCH_ASSOC) as $row) {
 </div>
 
 <script>
+function animarPanel(panel) {
+    if (!panel) return;
+    var items = panel.querySelectorAll(".md-seccion__cabecera, .md-plato, .md-chip");
+    items.forEach(function (el, i) {
+        el.classList.remove("md-animar");
+        el.style.animationDelay = "";
+        void el.offsetWidth;
+        el.style.animationDelay = (i * 45) + "ms";
+        el.classList.add("md-animar");
+    });
+}
+
 document.querySelectorAll(".md-tab").forEach(function (tab) {
     tab.addEventListener("click", function () {
         document.querySelectorAll(".md-tab").forEach(function (t) { t.classList.remove("md-tab--activo"); });
         document.querySelectorAll(".md-tab-panel").forEach(function (p) { p.classList.remove("md-tab-panel--activo"); });
         this.classList.add("md-tab--activo");
         var panel = document.getElementById("panel-" + this.dataset.tab);
-        if (panel) panel.classList.add("md-tab-panel--activo");
+        if (panel) { panel.classList.add("md-tab-panel--activo"); animarPanel(panel); }
     });
 });
+
+animarPanel(document.querySelector(".md-tab-panel--activo"));
 
 // Al tocar cualquier ítem del menú, bajar al botón y animarlo
 var cta = document.querySelector(".md-cta");
