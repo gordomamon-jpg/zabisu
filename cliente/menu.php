@@ -83,6 +83,28 @@ $fechaBonita = ($dias[date("l",$ts)] ?? "") . " " . date("j",$ts) . " de " . ($m
 $ordenCat = ["Plato fuerte","Sopa","Complemento","Agua","Cortesia"];
 $iconosCat = ["Plato fuerte"=>"🍽️","Sopa"=>"🥣","Complemento"=>"🥗","Agua"=>"💧","Cortesia"=>"🍬"];
 
+/* ── Platos populares ── */
+$maxConteo = 0;
+foreach ($menusPorTipo as $cats) {
+    foreach ($cats["Plato fuerte"] ?? [] as $p) {
+        $c = $conteosProductos[(int)$p["id_producto"]] ?? 0;
+        if ($c > $maxConteo) $maxConteo = $c;
+    }
+}
+$popularIds = [];
+if ($maxConteo >= 3) {
+    foreach ($menusPorTipo as $cats) {
+        foreach ($cats["Plato fuerte"] ?? [] as $p) {
+            if (($conteosProductos[(int)$p["id_producto"]] ?? 0) === $maxConteo) {
+                $popularIds[(int)$p["id_producto"]] = true;
+            }
+        }
+    }
+}
+
+/* ── Timestamp de cierre para el countdown ── */
+$cierre_ts = strtotime(date('Y-m-d') . ' ' . $menuActivo["pedido_hasta"]);
+
 /* ── Calificaciones públicas ── */
 $stmtRatings = $conexion->prepare(
     "SELECT COUNT(*) AS total, ROUND(AVG(calificacion), 1) AS promedio FROM feedback_pedidos"
@@ -237,6 +259,36 @@ foreach ($stmtRatingsDist->fetchAll(PDO::FETCH_ASSOC) as $row) {
         88%  {                                            opacity: 0.4;  }
         100% { transform: translateY(-280px) scale(1.1); opacity: 0;   }
     }
+    /* ── Countdown ── */
+    .md-hero__countdown {
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: .3px;
+        margin-top: 5px;
+        min-height: 18px;
+    }
+    .md-hero__countdown--ok      { color: rgba(255,255,255,.45); }
+    .md-hero__countdown--pronto  { color: #facc15; }
+    .md-hero__countdown--urgente { color: #f87171; animation: md-pulso .9s ease-in-out infinite; }
+    @keyframes md-pulso { 0%,100% { opacity:1; } 50% { opacity:.45; } }
+
+    /* ── Badge popular ── */
+    .md-badge-popular {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #ff7a00;
+        background: rgba(255,122,0,.12);
+        border: 1px solid rgba(255,122,0,.3);
+        border-radius: 99px;
+        padding: 2px 8px;
+        letter-spacing: .2px;
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+
     /* ── Rating pill en el hero ── */
     .md-hero__rating {
         display: inline-flex;
@@ -367,6 +419,7 @@ foreach ($stmtRatingsDist->fetchAll(PDO::FETCH_ASSOC) as $row) {
         <div class="md-hero__cierre">
             Pedidos hasta las <strong><?php echo date("g:i A", strtotime($menuActivo["pedido_hasta"])); ?></strong>
         </div>
+        <div class="md-hero__countdown md-hero__countdown--ok" id="md-countdown"></div>
 
         <?php if ($ratingsTotal >= 3):
             $promR = (float)$ratingsProm;
@@ -506,6 +559,8 @@ foreach ($stmtRatingsDist->fetchAll(PDO::FETCH_ASSOC) as $row) {
                                 </div>
                                 <?php if (!empty($item["agotado"])): ?>
                                     <span class="md-badge-agotado">Agotado</span>
+                                <?php elseif (!empty($popularIds[(int)$item["id_producto"]])): ?>
+                                    <span class="md-badge-popular">🔥 Popular</span>
                                 <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
@@ -600,6 +655,40 @@ document.querySelectorAll(".md-plato:not(.md-plato--agotado), .md-chip:not(.md-c
     document.addEventListener("keydown", function (e) {
         if (e.key === "Escape") cerrar();
     });
+})();
+</script>
+
+<script>
+(function () {
+    var el     = document.getElementById("md-countdown");
+    if (!el) return;
+    var cierre = <?= $cierre_ts ?> * 1000;
+
+    function actualizar() {
+        var diff = cierre - Date.now();
+        if (diff <= 0) {
+            el.textContent = "Pedidos cerrados";
+            el.className = "md-hero__countdown md-hero__countdown--urgente";
+            return;
+        }
+        var h = Math.floor(diff / 3600000);
+        var m = Math.floor((diff % 3600000) / 60000);
+        var s = Math.floor((diff % 60000) / 1000);
+        var texto;
+        if (h > 0)      texto = "Cierra en " + h + "h " + m + "m";
+        else if (m >= 10) texto = "Cierra en " + m + "m";
+        else              texto = "Cierra en " + (m > 0 ? m + "m " : "") + s + "s";
+
+        el.textContent = texto;
+        el.className = "md-hero__countdown " + (
+            diff < 600000  ? "md-hero__countdown--urgente" :
+            diff < 1800000 ? "md-hero__countdown--pronto"  :
+                             "md-hero__countdown--ok"
+        );
+    }
+
+    actualizar();
+    setInterval(actualizar, 1000);
 })();
 </script>
 
