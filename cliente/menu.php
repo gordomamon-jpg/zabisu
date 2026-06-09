@@ -1,5 +1,6 @@
 <?php
 require_once "../config/db.php";
+date_default_timezone_set("America/Mexico_City");
 
 $sqlMenu = "SELECT * FROM menu_dia WHERE activo = 1 ORDER BY fecha DESC LIMIT 1";
 $stmtMenu = $conexion->prepare($sqlMenu);
