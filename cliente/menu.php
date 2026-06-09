@@ -111,7 +111,7 @@ foreach ($popularCats as $catPop) {
 }
 
 /* ── Timestamp de cierre para el countdown ── */
-$cierre_ts = (int)strtotime(date('Y-m-d') . ' ' . $menuActivo["pedido_hasta"]);
+$cierre_ts = (int)strtotime($menuActivo["pedido_hasta"]);
 
 /* ── Calificaciones públicas ── */
 $stmtRatings = $conexion->prepare(
