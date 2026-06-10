@@ -101,181 +101,337 @@ function agruparDetallePorCategoria($detalles)
     <meta name="apple-mobile-web-app-title" content="Zabisu">
     <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
     <link rel="stylesheet" href="../assets/css/styles.css?v=5">
+    <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    /* ── Hero de confirmación ── */
+    .conf-hero {
+        background: linear-gradient(160deg, #0e0e12 0%, #12121e 100%);
+        padding: 48px 24px 36px;
+        text-align: center;
+        border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+
+    /* Checkmark animado */
+    .conf-check { display: flex; justify-content: center; margin-bottom: 20px; }
+    .conf-check svg { overflow: visible; }
+    .conf-check__circle {
+        fill: none; stroke: #4ac86e; stroke-width: 3;
+        stroke-dasharray: 166; stroke-dashoffset: 166;
+        animation: conf-circle .5s cubic-bezier(.65,0,.45,1) .1s forwards;
+    }
+    .conf-check__tick {
+        fill: none; stroke: #4ac86e; stroke-width: 3;
+        stroke-linecap: round; stroke-linejoin: round;
+        stroke-dasharray: 48; stroke-dashoffset: 48;
+        animation: conf-tick .35s cubic-bezier(.65,0,.45,1) .55s forwards;
+    }
+    @keyframes conf-circle {
+        to { stroke-dashoffset: 0; }
+    }
+    @keyframes conf-tick {
+        to { stroke-dashoffset: 0; }
+    }
+
+    .conf-titulo {
+        font-size: 26px; font-weight: 900; color: #fff;
+        margin: 0 0 6px; letter-spacing: -.4px;
+        animation: conf-fadein .4s ease .7s both;
+    }
+    .conf-subtitulo {
+        font-size: 13px; color: rgba(255,255,255,.4);
+        margin: 0 0 22px;
+        animation: conf-fadein .4s ease .8s both;
+    }
+    .conf-folio-wrap {
+        display: inline-block;
+        background: rgba(255,122,0,.1);
+        border: 1px solid rgba(255,122,0,.3);
+        border-radius: 14px;
+        padding: 12px 24px;
+        margin-bottom: 20px;
+        animation: conf-popin .45s cubic-bezier(.34,1.56,.64,1) .85s both;
+    }
+    .conf-folio-label {
+        font-size: 10px; font-weight: 700; letter-spacing: 2px;
+        text-transform: uppercase; color: rgba(255,122,0,.6);
+        display: block; margin-bottom: 4px;
+    }
+    .conf-folio-num {
+        font-size: 22px; font-weight: 900; color: #ff7a00;
+        letter-spacing: 1px;
+    }
+    .conf-pills {
+        display: flex; justify-content: center; flex-wrap: wrap;
+        gap: 8px;
+        animation: conf-fadein .4s ease 1s both;
+    }
+    .conf-pill {
+        display: inline-flex; align-items: center; gap: 5px;
+        background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.09);
+        border-radius: 999px; padding: 6px 14px;
+        font-size: 13px; font-weight: 600; color: rgba(255,255,255,.7);
+    }
+
+    @keyframes conf-fadein {
+        from { opacity: 0; transform: translateY(8px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes conf-popin {
+        from { opacity: 0; transform: scale(.88); }
+        to   { opacity: 1; transform: scale(1); }
+    }
+
+    /* ── Cuerpo ── */
+    .conf-body {
+        max-width: 560px;
+        margin: 0 auto;
+        padding: 24px 16px 48px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    /* ── Tarjetas ── */
+    .conf-card {
+        background: rgba(255,255,255,.03);
+        border: 1px solid rgba(255,255,255,.07);
+        border-radius: 16px;
+        padding: 18px 18px;
+    }
+    .conf-card__titulo {
+        font-size: 12px; font-weight: 700; letter-spacing: 2px;
+        text-transform: uppercase; color: rgba(255,255,255,.3);
+        margin: 0 0 14px;
+    }
+
+    /* Grid de datos */
+    .conf-datos {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px 12px;
+    }
+    .conf-dato__label {
+        font-size: 11px; color: rgba(255,255,255,.3);
+        font-weight: 600; letter-spacing: .5px;
+        text-transform: uppercase; display: block; margin-bottom: 3px;
+    }
+    .conf-dato__val {
+        font-size: 14px; font-weight: 700; color: #e0e0e0;
+    }
+    .conf-dato__val--pagado { color: #4ac86e; }
+    .conf-dato__val--pendiente { color: #facc15; }
+    .conf-obs {
+        margin-top: 14px; padding-top: 14px;
+        border-top: 1px solid rgba(255,255,255,.06);
+        font-size: 13px; color: rgba(255,255,255,.5);
+    }
+    .conf-obs strong { color: rgba(255,255,255,.7); }
+
+    /* Líneas de detalle */
+    .conf-linea {
+        display: flex; justify-content: space-between; align-items: baseline;
+        padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,.05);
+        gap: 12px;
+    }
+    .conf-linea:last-child { border-bottom: none; padding-bottom: 0; }
+    .conf-linea__cat { font-size: 12px; color: rgba(255,255,255,.35); flex-shrink: 0; }
+    .conf-linea__val { font-size: 13px; color: #ccc; text-align: right; }
+    .conf-menu-header {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 10px; padding-bottom: 10px;
+        border-bottom: 1px solid rgba(255,255,255,.07);
+    }
+    .conf-menu-header__nombre { font-size: 13px; font-weight: 700; color: rgba(255,255,255,.6); }
+    .conf-menu-header__precio { font-size: 14px; font-weight: 800; color: #ff7a00; }
+    .conf-menu-sep { margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.05); }
+
+    /* Total */
+    .conf-card--total {
+        display: flex; justify-content: space-between; align-items: center;
+        background: rgba(255,122,0,.07); border-color: rgba(255,122,0,.2);
+    }
+    .conf-total-label { font-size: 15px; font-weight: 700; color: rgba(255,255,255,.5); }
+    .conf-total-val   { font-size: 32px; font-weight: 900; color: #ff7a00; letter-spacing: -1px; }
+
+    /* Feedback */
+    .conf-feedback__estrellas {
+        display: flex; gap: 8px; justify-content: center; margin-bottom: 14px;
+    }
+
+    /* Acciones finales */
+    .conf-acciones {
+        display: flex; flex-direction: column; gap: 10px;
+        text-align: center;
+    }
+    .conf-wa {
+        display: inline-flex; align-items: center; justify-content: center;
+        gap: 8px; background: #25d366; color: #fff; text-decoration: none;
+        font-size: 15px; font-weight: 700; padding: 14px 24px;
+        border-radius: 999px; transition: opacity .15s;
+    }
+    .conf-wa:active { opacity: .85; }
+    .conf-btn-nuevo {
+        display: inline-block; color: rgba(255,255,255,.4);
+        text-decoration: none; font-size: 14px; font-weight: 600;
+        padding: 10px; transition: color .15s;
+    }
+    .conf-btn-nuevo:hover { color: rgba(255,255,255,.7); }
+    .conf-correo {
+        font-size: 12px; color: rgba(255,255,255,.25);
+        line-height: 1.5;
+    }
+    .conf-correo strong { color: rgba(255,255,255,.4); }
+    </style>
 </head>
 <body>
 
-<div class="contenedor">
-    <div class="md-hero">
-        <div class="md-hero__glow-top"></div>
-        <div class="md-hero__glow-bottom"></div>
-        <p class="md-hero__eyebrow">¡Listo!</p>
-        <div class="md-hero__marca-grupo">
-            <img class="md-hero__logo" src="../assets/img/LOGO_BLANCO.png" alt="Zabisu">
-            <h1 class="md-hero__marca">Zabisu</h1>
-        </div>
-        <p class="md-hero__fecha">
-            <?php if (($pedido["metodo_pago"] ?? "") === "Transferencia"): ?>
-                Pedido registrado · pago pendiente de validación
-            <?php else: ?>
-                Pedido registrado · pagarás al recibir
+<?php
+$esPagoEfectivo    = ($pedido["metodo_pago"] ?? "") !== "Transferencia";
+$estadoPagoClass   = str_contains(strtolower($pedido["estado_pago"] ?? ""), "pagado") ? "conf-dato__val--pagado" : "conf-dato__val--pendiente";
+$waPath            = "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z";
+?>
+
+<!-- ══ HERO ══════════════════════════════════════════════════ -->
+<div class="conf-hero">
+    <div class="conf-check">
+        <svg width="72" height="72" viewBox="0 0 52 52">
+            <circle class="conf-check__circle" cx="26" cy="26" r="25"/>
+            <path class="conf-check__tick" d="M14 27 l8 8 l16-16"/>
+        </svg>
+    </div>
+    <h1 class="conf-titulo">¡Pedido confirmado!</h1>
+    <p class="conf-subtitulo"><?php echo $esPagoEfectivo ? "Pagarás al recibir tu pedido" : "Pago pendiente de validación"; ?></p>
+
+    <div class="conf-folio-wrap">
+        <span class="conf-folio-label">Folio</span>
+        <span class="conf-folio-num"><?php echo htmlspecialchars($pedido["folio"]); ?></span>
+    </div>
+
+    <div class="conf-pills">
+        <span class="conf-pill">📍 <?php echo htmlspecialchars($pedido["nombre_ubicacion"]); ?></span>
+        <span class="conf-pill">🕐 <?php echo date("g:i A", strtotime($pedido["hora_entrega"])); ?></span>
+    </div>
+</div>
+
+<!-- ══ CUERPO ════════════════════════════════════════════════ -->
+<div class="conf-body">
+
+    <!-- Datos del pedido -->
+    <div class="conf-card">
+        <p class="conf-card__titulo">Datos del pedido</p>
+        <div class="conf-datos">
+            <div>
+                <span class="conf-dato__label">Cliente</span>
+                <span class="conf-dato__val"><?php echo htmlspecialchars($pedido["nombre_cliente"]); ?></span>
+            </div>
+            <div>
+                <span class="conf-dato__label">Método de pago</span>
+                <span class="conf-dato__val"><?php echo htmlspecialchars($pedido["metodo_pago"]); ?></span>
+            </div>
+            <div>
+                <span class="conf-dato__label">Estado de pago</span>
+                <span class="conf-dato__val <?php echo $estadoPagoClass; ?>"><?php echo htmlspecialchars($pedido["estado_pago"]); ?></span>
+            </div>
+            <?php if (!empty($pedido["telefono"]) && $pedido["telefono"] !== "0000000000"): ?>
+            <div>
+                <span class="conf-dato__label">Teléfono</span>
+                <span class="conf-dato__val"><?php echo htmlspecialchars($pedido["telefono"]); ?></span>
+            </div>
             <?php endif; ?>
-        </p>
+        </div>
+        <?php if (!empty($pedido["observaciones"])): ?>
+        <div class="conf-obs"><strong>Nota:</strong> <?php echo htmlspecialchars($pedido["observaciones"]); ?></div>
+        <?php endif; ?>
+    </div>
+
+    <!-- Detalle del pedido -->
+    <?php if (!empty($menusPedido)): ?>
+    <div class="conf-card">
+        <p class="conf-card__titulo">Tu pedido</p>
+        <?php foreach ($menusPedido as $idx => $menu):
+            $agrupado = agruparDetallePorCategoria($detallePorMenu[$menu["id_pedido_menu"]] ?? []);
+        ?>
+            <?php if ($idx > 0): ?><div class="conf-menu-sep"></div><?php endif; ?>
+            <div class="conf-menu-header">
+                <span class="conf-menu-header__nombre">Menú <?php echo (int)$menu["numero_menu"]; ?> · <?php echo htmlspecialchars($menu["tipo_menu"]); ?></span>
+                <?php if (isset($preciosMenus[$menu["tipo_menu"]])): ?>
+                <span class="conf-menu-header__precio">$<?php echo number_format($preciosMenus[$menu["tipo_menu"]], 2); ?></span>
+                <?php endif; ?>
+            </div>
+            <?php foreach ($agrupado as $categoria => $items): ?>
+            <div class="conf-linea">
+                <span class="conf-linea__cat"><?php echo htmlspecialchars($categoria); ?></span>
+                <span class="conf-linea__val"><?php echo htmlspecialchars(implode(", ", $items)); ?></span>
+            </div>
+            <?php endforeach; ?>
+        <?php endforeach; ?>
+    </div>
+    <?php endif; ?>
+
+    <!-- Extras -->
+    <?php if (!empty($extrasConfirmar)): ?>
+    <div class="conf-card">
+        <p class="conf-card__titulo">Extras</p>
+        <?php $totalExtras = 0; ?>
+        <?php foreach ($extrasConfirmar as $extra):
+            $sub = $extra["cantidad"] * $extra["precio_unitario"];
+            $totalExtras += $sub;
+        ?>
+        <div class="conf-linea">
+            <span class="conf-linea__cat"><?php echo htmlspecialchars($extra["categoria"]); ?></span>
+            <span class="conf-linea__val">
+                <?php echo htmlspecialchars($extra["nombre"]); ?> ×<?php echo (int)$extra["cantidad"]; ?>
+                &nbsp;<strong style="color:#ff7a00;">$<?php echo number_format($sub, 2); ?></strong>
+            </span>
+        </div>
+        <?php endforeach; ?>
+    </div>
+    <?php endif; ?>
+
+    <!-- Total -->
+    <div class="conf-card conf-card--total">
+        <span class="conf-total-label">Total</span>
+        <span class="conf-total-val">$<?php echo number_format((float)$pedido["total"], 2); ?></span>
     </div>
 
     <!-- Feedback -->
-    <div class="bloque-formulario" id="bloque-feedback">
-        <h2>¿Cómo fue tu experiencia?</h2>
-        <p class="nota-formulario" style="margin-bottom:16px;">Tu opinión nos ayuda a mejorar.</p>
-        <div class="zb-estrellas" id="estrellas">
+    <div class="conf-card" id="bloque-feedback">
+        <p class="conf-card__titulo">¿Cómo fue tu experiencia?</p>
+        <div class="conf-feedback__estrellas zb-estrellas" id="estrellas">
             <?php for ($s = 1; $s <= 5; $s++): ?>
                 <button type="button" class="zb-estrella" data-valor="<?php echo $s; ?>">★</button>
             <?php endfor; ?>
         </div>
-        <textarea id="feedback-comentario" class="zb-modal__textarea" placeholder="Comentario opcional..." maxlength="500" rows="3" style="margin-top:14px;"></textarea>
+        <textarea id="feedback-comentario" class="zb-modal__textarea" placeholder="Comentario opcional..." maxlength="500" rows="3"></textarea>
         <button type="button" id="btn-enviar-feedback" class="btn-principal" style="margin-top:12px;width:100%;" disabled>Enviar opinión</button>
-        <p class="zb-modal__gracias" id="feedback-gracias" style="display:none;">¡Gracias! Tu opinión fue registrada 💛</p>
+        <p class="zb-modal__gracias" id="feedback-gracias" style="display:none;text-align:center;margin-top:10px;">¡Gracias! Tu opinión fue registrada 💛</p>
     </div>
 
-    <div class="bloque-formulario resumen-total">
-        <h2>Resumen final</h2>
+    <!-- Acciones -->
+    <div class="conf-acciones">
+        <a class="conf-wa"
+           href="https://wa.me/525560908778?text=Hola%2C%20tengo%20una%20duda%20sobre%20mi%20pedido%20Zabisu%20%F0%9F%8D%BD%EF%B8%8F"
+           target="_blank" rel="noopener">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="<?php echo $waPath; ?>"/></svg>
+            ¿Dudas con tu pedido? Escríbenos
+        </a>
 
-        <div class="ticket-resumen">
-            <div class="ticket-menu">
-                <div class="ticket-linea">
-                    <span>Folio</span>
-                    <span><?php echo htmlspecialchars($pedido["folio"]); ?></span>
-                </div>
-
-                <div class="ticket-linea">
-                    <span>Cliente</span>
-                    <span><?php echo htmlspecialchars($pedido["nombre_cliente"]); ?></span>
-                </div>
-
-                <div class="ticket-linea">
-                    <span>Teléfono</span>
-                    <span><?php echo htmlspecialchars($pedido["telefono"]); ?></span>
-                </div>
-
-                <?php if (!empty($pedido["correo_cliente"])): ?>
-                    <div class="ticket-linea">
-                        <span>Correo</span>
-                        <span><?php echo htmlspecialchars($pedido["correo_cliente"]); ?></span>
-                    </div>
-                <?php endif; ?>
-
-                <div class="ticket-linea">
-                    <span>Método de pago</span>
-                    <span><?php echo htmlspecialchars($pedido["metodo_pago"]); ?></span>
-                </div>
-
-                <div class="ticket-linea">
-                    <span>Estado de pago</span>
-                    <span><?php echo htmlspecialchars($pedido["estado_pago"]); ?></span>
-                </div>
-
-                <div class="ticket-linea">
-                    <span>Ubicación</span>
-                    <span><?php echo htmlspecialchars($pedido["nombre_ubicacion"]); ?></span>
-                </div>
-
-                <div class="ticket-linea">
-                    <span>Hora</span>
-                    <span><?php echo date("g:i A", strtotime($pedido["hora_entrega"])); ?></span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <?php if (!empty($menusPedido)): ?>
-        <div class="bloque-formulario">
-            <h2>Detalle del pedido</h2>
-
-            <div class="ticket-resumen">
-                <?php foreach ($menusPedido as $menu): ?>
-                    <?php $agrupado = agruparDetallePorCategoria($detallePorMenu[$menu["id_pedido_menu"]] ?? []); ?>
-                    <div class="ticket-menu" style="margin-bottom: 18px;">
-                        <div class="ticket-menu__header">
-                            <span>Menú <?php echo (int)$menu["numero_menu"]; ?> — <?php echo htmlspecialchars($menu["tipo_menu"]); ?></span>
-                            <?php if (isset($preciosMenus[$menu["tipo_menu"]])): ?>
-                                <strong style="color:var(--naranja);">$<?php echo number_format($preciosMenus[$menu["tipo_menu"]], 2); ?></strong>
-                            <?php endif; ?>
-                        </div>
-
-                        <?php foreach ($agrupado as $categoria => $items): ?>
-                            <div class="ticket-linea">
-                                <span><?php echo htmlspecialchars($categoria); ?></span>
-                                <span><?php echo htmlspecialchars(implode(", ", $items)); ?></span>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        </div>
-    <?php endif; ?>
-
-    <?php if (!empty($extrasConfirmar)): ?>
-        <div class="bloque-formulario">
-            <h2>Extras</h2>
-            <div class="ticket-resumen">
-                <div class="ticket-menu">
-                    <?php $totalExtras = 0; ?>
-                    <?php foreach ($extrasConfirmar as $extra): ?>
-                        <?php $subtotalExtra = $extra["cantidad"] * $extra["precio_unitario"]; $totalExtras += $subtotalExtra; ?>
-                        <div class="ticket-linea">
-                            <span><?php echo htmlspecialchars($extra["categoria"]); ?></span>
-                            <span>
-                                <?php echo htmlspecialchars($extra["nombre"]); ?> ×<?php echo (int)$extra["cantidad"]; ?>
-                                <strong style="color:var(--naranja);margin-left:8px;">$<?php echo number_format($subtotalExtra, 2); ?></strong>
-                            </span>
-                        </div>
-                    <?php endforeach; ?>
-                    <div class="ticket-subtotal">
-                        <span>Total extras</span>
-                        <strong style="color:var(--naranja);">$<?php echo number_format($totalExtras, 2); ?></strong>
-                    </div>
-                </div>
-            </div>
-        </div>
-    <?php endif; ?>
-
-    <div class="bloque-formulario">
-        <h2>Total</h2>
-        <p class="total-general">
-            <strong>$<?php echo number_format((float)$pedido["total"], 2); ?></strong>
+        <?php if (!empty($pedido["correo_cliente"])): ?>
+        <p class="conf-correo">
+            Te enviamos un correo a <strong><?php echo htmlspecialchars($pedido["correo_cliente"]); ?></strong><br>
+            Si no lo ves, revisa spam.
         </p>
-
-        <?php if (!empty($pedido["observaciones"])): ?>
-            <p class="nota-formulario">
-                <strong>Observaciones:</strong> <?php echo htmlspecialchars($pedido["observaciones"]); ?>
-            </p>
         <?php endif; ?>
 
-        <div class="aviso-correo-confirmacion">
-            <span class="aviso-correo-confirmacion__icono">✉️</span>
-            <p>
-                Recibirás un correo en <strong><?php echo htmlspecialchars($pedido["correo_cliente"]); ?></strong> con la información completa de tu pedido.
-                Si no lo ves en unos minutos, revisa tu carpeta de spam.
-            </p>
-        </div>
-
-        <div style="margin:20px 0 8px;padding:16px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:14px;text-align:center;">
-            <p style="font-size:13px;color:rgba(255,255,255,.45);margin-bottom:10px;">¿Tienes alguna duda sobre tu pedido?</p>
-            <a href="https://wa.me/525560908778?text=Hola%2C%20tengo%20una%20duda%20sobre%20mi%20pedido%20Zabisu%20%F0%9F%8D%BD%EF%B8%8F"
-               target="_blank" rel="noopener"
-               style="display:inline-flex;align-items:center;gap:7px;background:#25d366;color:#fff;text-decoration:none;font-size:14px;font-weight:700;padding:10px 20px;border-radius:999px;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                </svg>
-                Escríbenos por WhatsApp
-            </a>
-        </div>
-
-        <div class="acciones-panel__botones">
-            <a href="pedido.php" class="btn-link">Hacer otro pedido</a>
-        </div>
+        <a href="pedido.php" class="conf-btn-nuevo">+ Hacer otro pedido</a>
     </div>
 
 </div>
+
+<footer class="cliente-footer">
+    <span class="cliente-footer__slogan">© 2026 Zabisu - Sabor y Servicio. Todos los derechos reservados.</span>
+</footer>
 
 <script>
 (function () {
