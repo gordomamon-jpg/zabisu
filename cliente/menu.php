@@ -268,13 +268,9 @@ foreach ($stmtRatingsDist->fetchAll(PDO::FETCH_ASSOC) as $row) {
         100% { transform: translateY(-280px) scale(1.1); opacity: 0;   }
     }
     /* ── Animación de entrada ── */
-    @keyframes md-entrada {
-        from { opacity: 0; transform: translateY(18px); }
-        to   { opacity: 1; transform: translateY(0); }
-    }
-    .md-animar {
-        animation: md-entrada .38s cubic-bezier(.2, 0, .1, 1) both;
-    }
+    .md-seccion__cabecera,
+    .md-plato,
+    .md-chip { will-change: opacity, transform; }
 
     /* ── Countdown ── */
     .md-hero__countdown {
@@ -626,13 +622,27 @@ foreach ($stmtRatingsDist->fetchAll(PDO::FETCH_ASSOC) as $row) {
 <script>
 function animarPanel(panel) {
     if (!panel) return;
-    var items = panel.querySelectorAll(".md-seccion__cabecera, .md-plato, .md-chip");
-    items.forEach(function (el, i) {
-        el.classList.remove("md-animar");
-        el.style.animationDelay = "";
-        void el.offsetWidth;
-        el.style.animationDelay = (i * 45) + "ms";
-        el.classList.add("md-animar");
+    var items = Array.from(panel.querySelectorAll(".md-seccion__cabecera, .md-plato, .md-chip"));
+    var EASE = "cubic-bezier(.2,0,.1,1)";
+    var DUR  = ".4s";
+    var GAP  = 45;
+
+    items.forEach(function (el) {
+        el.style.transition = "none";
+        el.style.opacity    = "0";
+        el.style.transform  = "translateY(16px)";
+    });
+
+    requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+            items.forEach(function (el, i) {
+                var d = (i * GAP) + "ms";
+                el.style.transition = "opacity " + DUR + " " + EASE + " " + d +
+                                      ", transform " + DUR + " " + EASE + " " + d;
+                el.style.opacity   = "1";
+                el.style.transform = "translateY(0)";
+            });
+        });
     });
 }
 
