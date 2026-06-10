@@ -1006,5 +1006,9 @@ document.querySelectorAll(".md-plato:not(.md-plato--agotado), .md-chip:not(.md-c
 
 <?php */ ?>
 
+<script>
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("../sw.js");
+</script>
+
 </body>
 </html>
