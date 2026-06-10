@@ -741,193 +741,266 @@ document.querySelectorAll(".md-plato:not(.md-plato--agotado), .md-chip:not(.md-c
     <span class="cliente-footer__slogan">© 2026 Zabisu - Sabor y Servicio. Todos los derechos reservados.</span>
 </footer>
 
-<!-- ══ PWA BANNER ══════════════════════════════════════════ -->
-<div id="pwa-banner" style="display:none;">
-    <div class="pwa-card">
+<!-- ══ PWA MODAL ═══════════════════════════════════════════ -->
+<div id="pwa-modal" style="display:none;" aria-modal="true" role="dialog">
+    <div class="pwa-overlay" id="pwa-overlay"></div>
+    <div class="pwa-sheet">
         <button class="pwa-close" id="pwa-close" aria-label="Cerrar">✕</button>
-        <div class="pwa-top">
-            <img src="../assets/img/LOGO_NARA.png" class="pwa-logo" alt="Zabisu">
-            <div class="pwa-texto">
-                <strong class="pwa-titulo">Instala Zabisu</strong>
-                <span class="pwa-sub" id="pwa-sub"></span>
+
+        <p class="pwa-eyebrow">Sin descargas · Gratis</p>
+        <h2 class="pwa-titulo">Instala Zabisu</h2>
+
+        <!-- Teléfono 3D -->
+        <div class="pwa-phone-scene">
+            <div class="pwa-phone-float">
+                <div class="pwa-phone">
+                    <div class="pwa-phone__side pwa-phone__side--left"></div>
+                    <div class="pwa-phone__side pwa-phone__side--right"></div>
+                    <div class="pwa-phone__face">
+                        <div class="pwa-phone__island"></div>
+                        <div class="pwa-phone__screen">
+                            <div class="pwa-phone__grid">
+                                <span style="background:#ff6b6b"></span><span style="background:#ff7a00"></span><span style="background:#facc15"></span><span style="background:#4ac86e"></span>
+                                <span style="background:#38bdf8"></span><span style="background:#a78bfa"></span><span style="background:#f472b6"></span><span style="background:#34d399"></span>
+                                <span style="background:#fb923c"></span><span style="background:#60a5fa"></span><span style="background:#e879f9"></span><span style="background:#4ade80"></span>
+                            </div>
+                            <div class="pwa-phone__app">
+                                <div class="pwa-phone__app-icon">
+                                    <img src="../assets/img/LOGO_NARA.png" alt="Zabisu">
+                                </div>
+                                <span class="pwa-phone__app-label">Zabisu</span>
+                            </div>
+                        </div>
+                        <div class="pwa-phone__home"></div>
+                    </div>
+                </div>
             </div>
+            <div class="pwa-phone__glow"></div>
         </div>
-        <div class="pwa-pasos" id="pwa-pasos"></div>
-        <div class="pwa-flecha-wrap" id="pwa-flecha-wrap"></div>
+
+        <!-- Pasos -->
+        <div class="pwa-steps" id="pwa-steps"></div>
     </div>
 </div>
 
 <style>
-#pwa-banner {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    z-index: 999;
-    padding: 0 12px 12px;
-    pointer-events: none;
+/* ── Modal overlay ── */
+#pwa-modal {
+    position: fixed; inset: 0; z-index: 9999;
+    display: flex; align-items: flex-end; justify-content: center;
 }
-.pwa-card {
-    max-width: 480px;
-    margin: 0 auto;
-    background: #16161f;
-    border: 1px solid rgba(255,122,0,.25);
-    border-radius: 20px;
-    padding: 18px 18px 16px;
-    box-shadow: 0 -4px 40px rgba(0,0,0,.5), 0 0 0 1px rgba(255,122,0,.08);
-    pointer-events: all;
-    transform: translateY(110%);
-    transition: transform .45s cubic-bezier(.34,1.28,.64,1);
+.pwa-overlay {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,.7);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    opacity: 0; transition: opacity .35s;
 }
-#pwa-banner.visible .pwa-card {
-    transform: translateY(0);
+#pwa-modal.visible .pwa-overlay { opacity: 1; }
+
+/* ── Sheet ── */
+.pwa-sheet {
+    position: relative; z-index: 1;
+    width: 100%; max-width: 480px;
+    background: #0f0f18;
+    border-radius: 28px 28px 0 0;
+    padding: 28px 24px 40px;
+    text-align: center;
+    transform: translateY(100%);
+    transition: transform .5s cubic-bezier(.34,1.18,.64,1);
+    box-shadow: 0 -2px 60px rgba(255,122,0,.12);
+    border-top: 1px solid rgba(255,122,0,.2);
 }
+#pwa-modal.visible .pwa-sheet { transform: translateY(0); }
+
 .pwa-close {
-    position: absolute; top: 12px; right: 14px;
-    background: none; border: none; color: rgba(255,255,255,.3);
-    font-size: 16px; cursor: pointer; padding: 4px 6px; line-height: 1;
-    transition: color .15s;
+    position: absolute; top: 16px; right: 18px;
+    background: rgba(255,255,255,.08); border: none;
+    color: rgba(255,255,255,.5); border-radius: 50%;
+    width: 32px; height: 32px; font-size: 14px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background .15s, color .15s;
 }
-.pwa-close:hover { color: rgba(255,255,255,.7); }
-.pwa-top {
-    display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
-}
-.pwa-logo {
-    width: 42px; height: 42px; border-radius: 10px;
-    object-fit: contain; flex-shrink: 0;
+.pwa-close:hover { background: rgba(255,255,255,.15); color: #fff; }
+
+.pwa-eyebrow {
+    font-size: 10px; font-weight: 700; letter-spacing: 2.5px;
+    text-transform: uppercase; color: rgba(255,122,0,.6); margin: 0 0 6px;
 }
 .pwa-titulo {
-    display: block; font-size: 15px; font-weight: 800;
-    color: #fff; margin-bottom: 2px;
-}
-.pwa-sub {
-    font-size: 12px; color: rgba(255,255,255,.4);
-}
-.pwa-pasos {
-    display: flex; flex-direction: column; gap: 8px;
-}
-.pwa-paso {
-    display: flex; align-items: center; gap: 10px;
-}
-.pwa-paso__num {
-    width: 22px; height: 22px; border-radius: 50%;
-    background: rgba(255,122,0,.15); border: 1px solid rgba(255,122,0,.3);
-    color: #ff7a00; font-size: 11px; font-weight: 800;
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-}
-.pwa-paso__icon {
-    font-size: 17px; flex-shrink: 0; width: 24px; text-align: center;
-}
-.pwa-paso__txt {
-    font-size: 13px; color: rgba(255,255,255,.75); line-height: 1.3;
-}
-.pwa-paso__txt strong { color: #fff; }
-
-/* Flecha iOS apuntando al botón de compartir */
-.pwa-flecha-ios {
-    display: flex; justify-content: center;
-    margin-top: 12px;
-}
-.pwa-flecha-ios svg {
-    animation: pwa-bounce 1.2s ease-in-out infinite;
-}
-@keyframes pwa-bounce {
-    0%,100% { transform: translateY(0); }
-    50%      { transform: translateY(6px); }
+    font-size: 22px; font-weight: 900; color: #fff;
+    margin: 0 0 20px; letter-spacing: -.3px;
 }
 
-/* Flecha Android apuntando al menú ⋮ */
-.pwa-flecha-android {
-    display: flex; justify-content: flex-end;
-    margin-top: 10px; padding-right: 6px;
+/* ── Teléfono 3D ── */
+.pwa-phone-scene {
+    position: relative; display: flex;
+    justify-content: center; align-items: center;
+    height: 200px; margin-bottom: 8px;
 }
-.pwa-flecha-android svg {
-    animation: pwa-bounce-up 1.2s ease-in-out infinite;
+.pwa-phone-float {
+    animation: pwa-float 3s ease-in-out infinite alternate;
 }
-@keyframes pwa-bounce-up {
-    0%,100% { transform: translateY(0); }
-    50%      { transform: translateY(-5px); }
+@keyframes pwa-float {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-10px); }
 }
+.pwa-phone {
+    position: relative; width: 100px; height: 178px;
+    animation: pwa-spin 4s ease-in-out infinite alternate;
+    transform-style: preserve-3d;
+    transform: perspective(600px) rotateY(-18deg) rotateX(-5deg);
+}
+@keyframes pwa-spin {
+    from { transform: perspective(600px) rotateY(-22deg) rotateX(-5deg); }
+    to   { transform: perspective(600px) rotateY(22deg)  rotateX(-5deg); }
+}
+
+/* Cara frontal */
+.pwa-phone__face {
+    position: absolute; inset: 0;
+    background: linear-gradient(160deg, #1e1e2e 0%, #12121c 100%);
+    border-radius: 22px;
+    border: 2px solid rgba(255,255,255,.18);
+    overflow: hidden;
+    display: flex; flex-direction: column; align-items: center;
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.12),
+        inset -1px 0 0 rgba(255,255,255,.06);
+}
+/* Lados del teléfono para dar volumen */
+.pwa-phone__side {
+    position: absolute; top: 8px; bottom: 8px; width: 4px;
+    background: linear-gradient(180deg, #2a2a3e, #111120);
+    border-radius: 2px;
+}
+.pwa-phone__side--left  { left: -3px;  box-shadow: -1px 0 4px rgba(0,0,0,.4); }
+.pwa-phone__side--right { right: -3px; box-shadow:  1px 0 4px rgba(0,0,0,.4); }
+
+/* Dynamic island */
+.pwa-phone__island {
+    width: 32px; height: 9px;
+    background: #000; border-radius: 99px;
+    margin: 8px auto 6px; flex-shrink: 0;
+}
+/* Pantalla */
+.pwa-phone__screen {
+    flex: 1; width: 100%; padding: 0 8px 6px;
+    display: flex; flex-direction: column;
+    align-items: center; gap: 6px;
+}
+/* Grid de apps */
+.pwa-phone__grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;
+    width: 100%;
+}
+.pwa-phone__grid span {
+    display: block; aspect-ratio: 1;
+    border-radius: 5px; opacity: .85;
+}
+/* App destacada */
+.pwa-phone__app {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    margin-top: 2px;
+}
+.pwa-phone__app-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: #ff7a00;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 10px rgba(255,122,0,.5);
+    overflow: hidden;
+}
+.pwa-phone__app-icon img { width: 28px; height: 28px; object-fit: contain; }
+.pwa-phone__app-label {
+    font-size: 8px; color: rgba(255,255,255,.7); font-weight: 600;
+}
+/* Barra home */
+.pwa-phone__home {
+    width: 36px; height: 4px; border-radius: 99px;
+    background: rgba(255,255,255,.25); margin: 4px auto 6px; flex-shrink: 0;
+}
+/* Glow debajo del teléfono */
+.pwa-phone__glow {
+    position: absolute; bottom: -10px; left: 50%;
+    transform: translateX(-50%);
+    width: 80px; height: 20px;
+    background: radial-gradient(ellipse, rgba(255,122,0,.35) 0%, transparent 70%);
+    filter: blur(6px);
+    animation: pwa-glow 3s ease-in-out infinite alternate;
+}
+@keyframes pwa-glow {
+    from { opacity: .5; transform: translateX(-50%) scaleX(.8); }
+    to   { opacity: 1;  transform: translateX(-50%) scaleX(1.2); }
+}
+
+/* ── Pasos ── */
+.pwa-steps {
+    display: flex; flex-direction: column;
+    gap: 10px; margin-top: 18px; text-align: left;
+}
+.pwa-step {
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 14px; padding: 10px 14px;
+}
+.pwa-step__num {
+    width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+    background: rgba(255,122,0,.15); border: 1px solid rgba(255,122,0,.35);
+    color: #ff7a00; font-size: 12px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+}
+.pwa-step__ico { font-size: 20px; flex-shrink: 0; }
+.pwa-step__txt { font-size: 13px; color: rgba(255,255,255,.7); line-height: 1.4; }
+.pwa-step__txt strong { color: #fff; font-weight: 700; }
 </style>
 
 <script>
 (function () {
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("../sw.js");
 
-    /* No mostrar si ya está instalada como PWA */
     var yaInstalada = window.navigator.standalone === true ||
                       window.matchMedia("(display-mode: standalone)").matches;
     if (yaInstalada) return;
+    try { if (localStorage.getItem("pwa_dismissed")) return; } catch(e) {}
 
-    /* No mostrar si ya la cerró */
-    try { if (localStorage.getItem("pwa_banner_cerrado")) return; } catch(e) {}
-
-    var ua  = navigator.userAgent;
-    var ios = /iPhone|iPad|iPod/.test(ua) && !/CriOS|FxiOS/.test(ua);
-    var android = /Android/.test(ua) && /Chrome/.test(ua) && !/SamsungBrowser/.test(ua);
+    var ua      = navigator.userAgent;
+    var ios     = /iPhone|iPad|iPod/.test(ua) && !/CriOS|FxiOS/.test(ua);
+    var android = /Android/.test(ua) && /Chrome\//.test(ua) && !/SamsungBrowser/.test(ua);
     if (!ios && !android) return;
 
-    var banner = document.getElementById("pwa-banner");
-    var sub    = document.getElementById("pwa-sub");
-    var pasos  = document.getElementById("pwa-pasos");
-    var flechaWrap = document.getElementById("pwa-flecha-wrap");
+    var modal   = document.getElementById("pwa-modal");
+    var stepsEl = document.getElementById("pwa-steps");
 
-    if (ios) {
-        sub.textContent = "Accede más rápido desde Safari";
-        pasos.innerHTML =
-            '<div class="pwa-paso">' +
-                '<span class="pwa-paso__num">1</span>' +
-                '<span class="pwa-paso__icon">⬆️</span>' +
-                '<span class="pwa-paso__txt">Toca el botón de <strong>compartir</strong> en Safari</span>' +
-            '</div>' +
-            '<div class="pwa-paso">' +
-                '<span class="pwa-paso__num">2</span>' +
-                '<span class="pwa-paso__icon">➕</span>' +
-                '<span class="pwa-paso__txt">Elige <strong>"Agregar a pantalla de inicio"</strong></span>' +
-            '</div>' +
-            '<div class="pwa-paso">' +
-                '<span class="pwa-paso__num">3</span>' +
-                '<span class="pwa-paso__icon">✅</span>' +
-                '<span class="pwa-paso__txt">Toca <strong>Agregar</strong> — listo</span>' +
-            '</div>';
-        flechaWrap.innerHTML =
-            '<div class="pwa-flecha-ios">' +
-                '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,122,0,.6)" stroke-width="2.5" stroke-linecap="round">' +
-                    '<polyline points="6 9 12 15 18 9"/>' +
-                '</svg>' +
-            '</div>';
-    } else {
-        sub.textContent = "Accede más rápido desde Chrome";
-        pasos.innerHTML =
-            '<div class="pwa-paso">' +
-                '<span class="pwa-paso__num">1</span>' +
-                '<span class="pwa-paso__icon">⋮</span>' +
-                '<span class="pwa-paso__txt">Toca los <strong>tres puntos</strong> arriba a la derecha</span>' +
-            '</div>' +
-            '<div class="pwa-paso">' +
-                '<span class="pwa-paso__num">2</span>' +
-                '<span class="pwa-paso__icon">📲</span>' +
-                '<span class="pwa-paso__txt">Selecciona <strong>"Instalar app"</strong> o <strong>"Agregar a pantalla"</strong></span>' +
-            '</div>' +
-            '<div class="pwa-paso">' +
-                '<span class="pwa-paso__num">3</span>' +
-                '<span class="pwa-paso__icon">✅</span>' +
-                '<span class="pwa-paso__txt">Confirma — listo</span>' +
-            '</div>';
-        flechaWrap.innerHTML =
-            '<div class="pwa-flecha-android">' +
-                '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,122,0,.6)" stroke-width="2.5" stroke-linecap="round">' +
-                    '<polyline points="18 15 12 9 6 15"/>' +
-                '</svg>' +
-            '</div>';
+    var pasos = ios ? [
+        { ico: "⬆️", txt: "Abre Safari y toca el botón de <strong>Compartir</strong> en la parte inferior" },
+        { ico: "➕", txt: "Desplázate y elige <strong>\"Agregar a pantalla de inicio\"</strong>" },
+        { ico: "✅", txt: "Toca <strong>Agregar</strong> — aparecerá el ícono de Zabisu" }
+    ] : [
+        { ico: "⋮",  txt: "Toca los <strong>tres puntos</strong> en la esquina superior derecha de Chrome" },
+        { ico: "📲", txt: "Selecciona <strong>\"Instalar app\"</strong> o <strong>\"Agregar a pantalla de inicio\"</strong>" },
+        { ico: "✅", txt: "Confirma — aparecerá el ícono de Zabisu" }
+    ];
+
+    stepsEl.innerHTML = pasos.map(function (p, i) {
+        return '<div class="pwa-step">' +
+            '<span class="pwa-step__num">' + (i+1) + '</span>' +
+            '<span class="pwa-step__ico">' + p.ico + '</span>' +
+            '<span class="pwa-step__txt">' + p.txt + '</span>' +
+        '</div>';
+    }).join("");
+
+    modal.style.display = "flex";
+    setTimeout(function () { modal.classList.add("visible"); }, 2800);
+
+    function cerrar() {
+        modal.classList.remove("visible");
+        setTimeout(function () { modal.style.display = "none"; }, 500);
+        try { localStorage.setItem("pwa_dismissed", "1"); } catch(e) {}
     }
 
-    banner.style.display = "block";
-    setTimeout(function () { banner.classList.add("visible"); }, 2500);
-
-    document.getElementById("pwa-close").addEventListener("click", function () {
-        banner.classList.remove("visible");
-        setTimeout(function () { banner.style.display = "none"; }, 450);
-        try { localStorage.setItem("pwa_banner_cerrado", "1"); } catch(e) {}
-    });
+    document.getElementById("pwa-close").addEventListener("click", cerrar);
+    document.getElementById("pwa-overlay").addEventListener("click", cerrar);
 })();
 </script>
 
