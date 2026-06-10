@@ -267,62 +267,23 @@ foreach ($stmtRatingsDist->fetchAll(PDO::FETCH_ASSOC) as $row) {
         88%  {                                            opacity: 0.4;  }
         100% { transform: translateY(-280px) scale(1.1); opacity: 0;   }
     }
-    /* ── WhatsApp contact ── */
+    /* ── WhatsApp contact (sutil) ── */
     .md-wa {
-        max-width: 560px;
-        margin: 0 auto;
-        padding: 0 20px 48px;
         text-align: center;
+        padding: 0 20px 36px;
     }
-    .md-wa__card {
-        background: rgba(255,255,255,.03);
-        border: 1px solid rgba(255,255,255,.07);
-        border-radius: 20px;
-        padding: 28px 24px;
-    }
-    .md-wa__eyebrow {
-        font-size: 10px;
-        font-weight: 700;
-        letter-spacing: 3px;
-        text-transform: uppercase;
-        color: rgba(255,255,255,.35);
-        margin-bottom: 10px;
-    }
-    .md-wa__titulo {
-        font-size: 20px;
-        font-weight: 800;
-        color: #fff;
-        margin-bottom: 6px;
-        line-height: 1.3;
-    }
-    .md-wa__sub {
-        font-size: 14px;
-        color: rgba(255,255,255,.4);
-        margin-bottom: 22px;
-        line-height: 1.5;
-    }
-    .md-wa__btn {
+    .md-wa__link {
         display: inline-flex;
         align-items: center;
-        gap: 10px;
-        background: #25d366;
-        color: #fff;
+        gap: 6px;
+        color: rgba(255,255,255,.3);
         text-decoration: none;
-        font-size: 16px;
-        font-weight: 700;
-        padding: 14px 28px;
-        border-radius: 999px;
-        transition: transform .12s, opacity .12s;
-        letter-spacing: .2px;
+        font-size: 13px;
+        font-weight: 500;
+        transition: color .2s;
     }
-    .md-wa__btn:active { transform: scale(.96); opacity: .9; }
-    .md-wa__btn svg { flex-shrink: 0; }
-    .md-wa__numero {
-        font-size: 12px;
-        color: rgba(255,255,255,.25);
-        margin-top: 14px;
-        letter-spacing: .5px;
-    }
+    .md-wa__link:hover,
+    .md-wa__link:active { color: rgba(255,255,255,.6); }
 
     /* ── Animación de entrada ── */
     .md-seccion__cabecera,
@@ -794,22 +755,16 @@ document.querySelectorAll(".md-plato:not(.md-plato--agotado), .md-chip:not(.md-c
 })();
 </script>
 
-<section class="md-wa">
-    <div class="md-wa__card">
-        <p class="md-wa__eyebrow">Contacto directo</p>
-        <h2 class="md-wa__titulo">¿Tienes dudas o quieres saber más?</h2>
-        <p class="md-wa__sub">Escríbenos por WhatsApp y con gusto te atendemos.</p>
-        <a class="md-wa__btn"
-           href="https://wa.me/525560908778?text=Hola%2C%20me%20interesa%20el%20men%C3%BA%20de%20Zabisu%20%F0%9F%8D%BD%EF%B8%8F"
-           target="_blank" rel="noopener">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-            </svg>
-            Escríbenos por WhatsApp
-        </a>
-        <p class="md-wa__numero">55 6090 8778</p>
-    </div>
-</section>
+<div class="md-wa">
+    <a class="md-wa__link"
+       href="https://wa.me/525560908778?text=Hola%2C%20me%20interesa%20el%20men%C3%BA%20de%20Zabisu%20%F0%9F%8D%BD%EF%B8%8F"
+       target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+        </svg>
+        ¿Dudas? Contáctanos por WhatsApp
+    </a>
+</div>
 
 <footer class="cliente-footer">
     <span class="cliente-footer__slogan">© 2026 Zabisu - Sabor y Servicio. Todos los derechos reservados.</span>
