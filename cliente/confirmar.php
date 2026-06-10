@@ -106,10 +106,14 @@ function agruparDetallePorCategoria($detalles)
 
     /* ── Hero de confirmación ── */
     .conf-hero {
-        background: linear-gradient(160deg, #0e0e12 0%, #12121e 100%);
-        padding: 48px 24px 36px;
+        position: relative;
+        overflow: hidden;
         text-align: center;
-        border-bottom: 1px solid rgba(255,255,255,.06);
+        padding: 48px 24px 40px;
+        background:
+            radial-gradient(ellipse at 50% 0%, rgba(255,122,0,.22) 0%, transparent 65%),
+            linear-gradient(180deg, rgba(255,122,0,.08) 0%, rgba(12,12,15,.7) 100%);
+        border-bottom: 1px solid rgba(255,122,0,.12);
     }
 
     /* Checkmark animado */
@@ -294,13 +298,21 @@ $waPath            = "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.
 
 <!-- ══ HERO ══════════════════════════════════════════════════ -->
 <div class="conf-hero">
+    <div class="md-hero__glow-top"></div>
+    <div class="md-hero__glow-bottom"></div>
+
+    <div class="md-hero__marca-grupo" style="margin-bottom:28px;">
+        <img class="md-hero__logo" src="../assets/img/LOGO_BLANCO.png" alt="Zabisu">
+        <h1 class="md-hero__marca">Zabisu</h1>
+    </div>
+
     <div class="conf-check">
         <svg width="72" height="72" viewBox="0 0 52 52">
             <circle class="conf-check__circle" cx="26" cy="26" r="25"/>
             <path class="conf-check__tick" d="M14 27 l8 8 l16-16"/>
         </svg>
     </div>
-    <h1 class="conf-titulo">¡Pedido confirmado!</h1>
+    <p class="md-hero__eyebrow" style="margin-top:8px;">¡Pedido confirmado!</p>
     <p class="conf-subtitulo"><?php echo $esPagoEfectivo ? "Pagarás al recibir tu pedido" : "Pago pendiente de validación"; ?></p>
 
     <div class="conf-folio-wrap">
