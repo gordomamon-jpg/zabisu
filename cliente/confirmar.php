@@ -429,10 +429,6 @@ $waPath            = "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.
 
 </div>
 
-<footer class="cliente-footer">
-    <span class="cliente-footer__slogan">© 2026 Zabisu - Sabor y Servicio. Todos los derechos reservados.</span>
-</footer>
-
 <script>
 (function () {
     const folio = <?php echo json_encode($pedido["folio"] ?? ""); ?>;
