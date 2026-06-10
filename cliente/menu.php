@@ -741,10 +741,194 @@ document.querySelectorAll(".md-plato:not(.md-plato--agotado), .md-chip:not(.md-c
     <span class="cliente-footer__slogan">© 2026 Zabisu - Sabor y Servicio. Todos los derechos reservados.</span>
 </footer>
 
-<script>
-if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("../sw.js");
+<!-- ══ PWA BANNER ══════════════════════════════════════════ -->
+<div id="pwa-banner" style="display:none;">
+    <div class="pwa-card">
+        <button class="pwa-close" id="pwa-close" aria-label="Cerrar">✕</button>
+        <div class="pwa-top">
+            <img src="../assets/img/LOGO_NARA.png" class="pwa-logo" alt="Zabisu">
+            <div class="pwa-texto">
+                <strong class="pwa-titulo">Instala Zabisu</strong>
+                <span class="pwa-sub" id="pwa-sub"></span>
+            </div>
+        </div>
+        <div class="pwa-pasos" id="pwa-pasos"></div>
+        <div class="pwa-flecha-wrap" id="pwa-flecha-wrap"></div>
+    </div>
+</div>
+
+<style>
+#pwa-banner {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 999;
+    padding: 0 12px 12px;
+    pointer-events: none;
 }
+.pwa-card {
+    max-width: 480px;
+    margin: 0 auto;
+    background: #16161f;
+    border: 1px solid rgba(255,122,0,.25);
+    border-radius: 20px;
+    padding: 18px 18px 16px;
+    box-shadow: 0 -4px 40px rgba(0,0,0,.5), 0 0 0 1px rgba(255,122,0,.08);
+    pointer-events: all;
+    transform: translateY(110%);
+    transition: transform .45s cubic-bezier(.34,1.28,.64,1);
+}
+#pwa-banner.visible .pwa-card {
+    transform: translateY(0);
+}
+.pwa-close {
+    position: absolute; top: 12px; right: 14px;
+    background: none; border: none; color: rgba(255,255,255,.3);
+    font-size: 16px; cursor: pointer; padding: 4px 6px; line-height: 1;
+    transition: color .15s;
+}
+.pwa-close:hover { color: rgba(255,255,255,.7); }
+.pwa-top {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
+}
+.pwa-logo {
+    width: 42px; height: 42px; border-radius: 10px;
+    object-fit: contain; flex-shrink: 0;
+}
+.pwa-titulo {
+    display: block; font-size: 15px; font-weight: 800;
+    color: #fff; margin-bottom: 2px;
+}
+.pwa-sub {
+    font-size: 12px; color: rgba(255,255,255,.4);
+}
+.pwa-pasos {
+    display: flex; flex-direction: column; gap: 8px;
+}
+.pwa-paso {
+    display: flex; align-items: center; gap: 10px;
+}
+.pwa-paso__num {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: rgba(255,122,0,.15); border: 1px solid rgba(255,122,0,.3);
+    color: #ff7a00; font-size: 11px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.pwa-paso__icon {
+    font-size: 17px; flex-shrink: 0; width: 24px; text-align: center;
+}
+.pwa-paso__txt {
+    font-size: 13px; color: rgba(255,255,255,.75); line-height: 1.3;
+}
+.pwa-paso__txt strong { color: #fff; }
+
+/* Flecha iOS apuntando al botón de compartir */
+.pwa-flecha-ios {
+    display: flex; justify-content: center;
+    margin-top: 12px;
+}
+.pwa-flecha-ios svg {
+    animation: pwa-bounce 1.2s ease-in-out infinite;
+}
+@keyframes pwa-bounce {
+    0%,100% { transform: translateY(0); }
+    50%      { transform: translateY(6px); }
+}
+
+/* Flecha Android apuntando al menú ⋮ */
+.pwa-flecha-android {
+    display: flex; justify-content: flex-end;
+    margin-top: 10px; padding-right: 6px;
+}
+.pwa-flecha-android svg {
+    animation: pwa-bounce-up 1.2s ease-in-out infinite;
+}
+@keyframes pwa-bounce-up {
+    0%,100% { transform: translateY(0); }
+    50%      { transform: translateY(-5px); }
+}
+</style>
+
+<script>
+(function () {
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("../sw.js");
+
+    /* No mostrar si ya está instalada como PWA */
+    var yaInstalada = window.navigator.standalone === true ||
+                      window.matchMedia("(display-mode: standalone)").matches;
+    if (yaInstalada) return;
+
+    /* No mostrar si ya la cerró */
+    try { if (localStorage.getItem("pwa_banner_cerrado")) return; } catch(e) {}
+
+    var ua  = navigator.userAgent;
+    var ios = /iPhone|iPad|iPod/.test(ua) && !/CriOS|FxiOS/.test(ua);
+    var android = /Android/.test(ua) && /Chrome/.test(ua) && !/SamsungBrowser/.test(ua);
+    if (!ios && !android) return;
+
+    var banner = document.getElementById("pwa-banner");
+    var sub    = document.getElementById("pwa-sub");
+    var pasos  = document.getElementById("pwa-pasos");
+    var flechaWrap = document.getElementById("pwa-flecha-wrap");
+
+    if (ios) {
+        sub.textContent = "Accede más rápido desde Safari";
+        pasos.innerHTML =
+            '<div class="pwa-paso">' +
+                '<span class="pwa-paso__num">1</span>' +
+                '<span class="pwa-paso__icon">⬆️</span>' +
+                '<span class="pwa-paso__txt">Toca el botón de <strong>compartir</strong> en Safari</span>' +
+            '</div>' +
+            '<div class="pwa-paso">' +
+                '<span class="pwa-paso__num">2</span>' +
+                '<span class="pwa-paso__icon">➕</span>' +
+                '<span class="pwa-paso__txt">Elige <strong>"Agregar a pantalla de inicio"</strong></span>' +
+            '</div>' +
+            '<div class="pwa-paso">' +
+                '<span class="pwa-paso__num">3</span>' +
+                '<span class="pwa-paso__icon">✅</span>' +
+                '<span class="pwa-paso__txt">Toca <strong>Agregar</strong> — listo</span>' +
+            '</div>';
+        flechaWrap.innerHTML =
+            '<div class="pwa-flecha-ios">' +
+                '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,122,0,.6)" stroke-width="2.5" stroke-linecap="round">' +
+                    '<polyline points="6 9 12 15 18 9"/>' +
+                '</svg>' +
+            '</div>';
+    } else {
+        sub.textContent = "Accede más rápido desde Chrome";
+        pasos.innerHTML =
+            '<div class="pwa-paso">' +
+                '<span class="pwa-paso__num">1</span>' +
+                '<span class="pwa-paso__icon">⋮</span>' +
+                '<span class="pwa-paso__txt">Toca los <strong>tres puntos</strong> arriba a la derecha</span>' +
+            '</div>' +
+            '<div class="pwa-paso">' +
+                '<span class="pwa-paso__num">2</span>' +
+                '<span class="pwa-paso__icon">📲</span>' +
+                '<span class="pwa-paso__txt">Selecciona <strong>"Instalar app"</strong> o <strong>"Agregar a pantalla"</strong></span>' +
+            '</div>' +
+            '<div class="pwa-paso">' +
+                '<span class="pwa-paso__num">3</span>' +
+                '<span class="pwa-paso__icon">✅</span>' +
+                '<span class="pwa-paso__txt">Confirma — listo</span>' +
+            '</div>';
+        flechaWrap.innerHTML =
+            '<div class="pwa-flecha-android">' +
+                '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,122,0,.6)" stroke-width="2.5" stroke-linecap="round">' +
+                    '<polyline points="18 15 12 9 6 15"/>' +
+                '</svg>' +
+            '</div>';
+    }
+
+    banner.style.display = "block";
+    setTimeout(function () { banner.classList.add("visible"); }, 2500);
+
+    document.getElementById("pwa-close").addEventListener("click", function () {
+        banner.classList.remove("visible");
+        setTimeout(function () { banner.style.display = "none"; }, 450);
+        try { localStorage.setItem("pwa_banner_cerrado", "1"); } catch(e) {}
+    });
+})();
 </script>
 
 </body>
