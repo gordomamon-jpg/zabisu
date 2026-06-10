@@ -741,7 +741,7 @@ document.querySelectorAll(".md-plato:not(.md-plato--agotado), .md-chip:not(.md-c
     <span class="cliente-footer__slogan">© 2026 Zabisu - Sabor y Servicio. Todos los derechos reservados.</span>
 </footer>
 
-<!-- ══ PWA MODAL ═══════════════════════════════════════════ -->
+<?php /* ══ PWA MODAL (en pausa) ══════════════════════════════ ?>
 <div id="pwa-modal" style="display:none;" aria-modal="true" role="dialog">
     <div class="pwa-overlay" id="pwa-overlay"></div>
     <div class="pwa-sheet">
@@ -1003,6 +1003,8 @@ document.querySelectorAll(".md-plato:not(.md-plato--agotado), .md-chip:not(.md-c
     document.getElementById("pwa-overlay").addEventListener("click", cerrar);
 })();
 </script>
+
+<?php */ ?>
 
 </body>
 </html>
