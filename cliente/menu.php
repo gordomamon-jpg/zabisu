@@ -741,7 +741,7 @@ document.querySelectorAll(".md-plato:not(.md-plato--agotado), .md-chip:not(.md-c
     <span class="cliente-footer__slogan">© 2026 Zabisu - Sabor y Servicio. Todos los derechos reservados.</span>
 </footer>
 
-<?php if (date('Y-m-d') === '2026-06-11'): ?>
+<?php if (in_array(date('Y-m-d'), ['2026-06-10', '2026-06-11'])): ?>
 <!-- ══ AVISO MUNDIAL ═══════════════════════════════════════ -->
 <div id="mundial-overlay">
     <div class="mun-bg">
