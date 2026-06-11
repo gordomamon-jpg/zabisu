@@ -741,6 +741,178 @@ document.querySelectorAll(".md-plato:not(.md-plato--agotado), .md-chip:not(.md-c
     <span class="cliente-footer__slogan">© 2026 Zabisu - Sabor y Servicio. Todos los derechos reservados.</span>
 </footer>
 
+<?php if (date('Y-m-d') === '2026-06-11'): ?>
+<!-- ══ AVISO MUNDIAL ═══════════════════════════════════════ -->
+<div id="mundial-overlay">
+    <div class="mun-bg">
+        <span class="mun-confetti" style="--x:8%;--d:0s;--c:#4ac86e"></span>
+        <span class="mun-confetti" style="--x:18%;--d:.4s;--c:#ff7a00"></span>
+        <span class="mun-confetti" style="--x:30%;--d:.9s;--c:#facc15"></span>
+        <span class="mun-confetti" style="--x:44%;--d:.2s;--c:#4ac86e"></span>
+        <span class="mun-confetti" style="--x:58%;--d:.7s;--c:#ff7a00"></span>
+        <span class="mun-confetti" style="--x:70%;--d:1.1s;--c:#fff"></span>
+        <span class="mun-confetti" style="--x:82%;--d:.5s;--c:#facc15"></span>
+        <span class="mun-confetti" style="--x:92%;--d:.3s;--c:#4ac86e"></span>
+    </div>
+
+    <div class="mun-card">
+        <button class="mun-close" id="mun-close">✕</button>
+
+        <div class="mun-ball-wrap">
+            <div class="mun-ball-bounce">
+                <div class="mun-ball">⚽</div>
+            </div>
+            <div class="mun-shadow"></div>
+        </div>
+
+        <p class="mun-eyebrow">🏆 FIFA World Cup 2026</p>
+        <h2 class="mun-titulo">¡Hoy es día mundialista!</h2>
+        <p class="mun-texto">
+            Nuestro equipo se une a la celebración.<br>
+            <strong>Hoy no contamos con servicio.</strong><br>
+            Nos vemos mañana con todo el sabor de siempre. ⚡
+        </p>
+
+        <div class="mun-flags">🇲🇽 🌍 🇺🇸 🇨🇦</div>
+
+        <button class="mun-btn" id="mun-btn">¡Entendido, buen partido!</button>
+    </div>
+</div>
+
+<style>
+#mundial-overlay {
+    position: fixed; inset: 0; z-index: 9998;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(0,0,0,.85);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    animation: mun-fadein .5s ease both;
+}
+@keyframes mun-fadein { from { opacity:0; } to { opacity:1; } }
+
+/* confetti */
+.mun-bg { position: absolute; inset:0; pointer-events:none; overflow:hidden; }
+.mun-confetti {
+    position: absolute; bottom: -10px; left: var(--x);
+    width: 8px; height: 8px; border-radius: 2px;
+    background: var(--c);
+    animation: mun-rise 3.5s ease-in-out var(--d) infinite;
+    opacity: 0;
+}
+@keyframes mun-rise {
+    0%   { transform: translateY(0) rotate(0deg); opacity:0; }
+    10%  { opacity:.9; }
+    90%  { opacity:.6; }
+    100% { transform: translateY(-110vh) rotate(540deg); opacity:0; }
+}
+
+/* card */
+.mun-card {
+    position: relative; z-index: 1;
+    background: linear-gradient(160deg, #0d1f0d 0%, #0e0e12 60%);
+    border: 1px solid rgba(74,200,110,.25);
+    border-radius: 28px;
+    padding: 36px 28px 32px;
+    max-width: 380px; width: calc(100% - 32px);
+    text-align: center;
+    box-shadow: 0 0 60px rgba(74,200,110,.1), 0 20px 60px rgba(0,0,0,.6);
+    animation: mun-popin .55s cubic-bezier(.34,1.4,.64,1) .15s both;
+}
+@keyframes mun-popin {
+    from { transform: scale(.8) translateY(30px); opacity:0; }
+    to   { transform: scale(1) translateY(0);     opacity:1; }
+}
+
+.mun-close {
+    position:absolute; top:14px; right:16px;
+    background: rgba(255,255,255,.07); border:none; border-radius:50%;
+    width:30px; height:30px; color:rgba(255,255,255,.4);
+    font-size:13px; cursor:pointer; display:flex;
+    align-items:center; justify-content:center;
+    transition: background .15s, color .15s;
+}
+.mun-close:hover { background:rgba(255,255,255,.15); color:#fff; }
+
+/* balón */
+.mun-ball-wrap {
+    position: relative; display:flex;
+    flex-direction:column; align-items:center;
+    margin-bottom: 20px;
+}
+.mun-ball-bounce {
+    animation: mun-bounce 1s cubic-bezier(.4,0,.2,1) infinite alternate;
+}
+@keyframes mun-bounce {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-28px); }
+}
+.mun-ball {
+    font-size: 72px; line-height: 1;
+    animation: mun-spin 1.8s linear infinite;
+    display: inline-block;
+    filter: drop-shadow(0 4px 16px rgba(0,0,0,.5));
+}
+@keyframes mun-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+.mun-shadow {
+    width: 60px; height: 14px;
+    background: radial-gradient(ellipse, rgba(0,0,0,.5) 0%, transparent 70%);
+    border-radius: 50%;
+    margin-top: 4px;
+    animation: mun-shadow-pulse 1s ease-in-out infinite alternate;
+}
+@keyframes mun-shadow-pulse {
+    from { transform: scaleX(.6); opacity:.7; }
+    to   { transform: scaleX(1.1); opacity:.3; }
+}
+
+.mun-eyebrow {
+    font-size: 11px; font-weight:700; letter-spacing:2px;
+    text-transform:uppercase; color: #4ac86e; margin:0 0 8px;
+}
+.mun-titulo {
+    font-size: 24px; font-weight:900; color:#fff;
+    margin:0 0 12px; letter-spacing:-.3px; line-height:1.2;
+}
+.mun-texto {
+    font-size: 14px; color:rgba(255,255,255,.6);
+    line-height:1.7; margin:0 0 18px;
+}
+.mun-texto strong { color:#fff; }
+.mun-flags {
+    font-size: 26px; letter-spacing: 6px; margin-bottom:20px;
+    animation: mun-wave 2s ease-in-out infinite;
+}
+@keyframes mun-wave {
+    0%,100% { transform: scale(1); }
+    50%      { transform: scale(1.1); }
+}
+.mun-btn {
+    width:100%; background: linear-gradient(135deg,#4ac86e,#22a855);
+    border:none; border-radius:14px; color:#fff;
+    font-size:15px; font-weight:800; padding:14px 20px;
+    cursor:pointer; transition: transform .1s, opacity .15s;
+    letter-spacing:.2px;
+}
+.mun-btn:active { transform: scale(.97); opacity:.9; }
+</style>
+
+<script>
+(function () {
+    var overlay = document.getElementById("mundial-overlay");
+    function cerrar() {
+        overlay.style.transition = "opacity .35s";
+        overlay.style.opacity = "0";
+        setTimeout(function () { overlay.style.display = "none"; }, 350);
+    }
+    document.getElementById("mun-close").addEventListener("click", cerrar);
+    document.getElementById("mun-btn").addEventListener("click", cerrar);
+})();
+</script>
+<?php endif; ?>
+
 <?php if (false): // ══ PWA MODAL en pausa ══ ?>
 <div id="pwa-modal" style="display:none;" aria-modal="true" role="dialog">
     <div class="pwa-overlay" id="pwa-overlay"></div>
