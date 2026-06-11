@@ -2,6 +2,68 @@
 require_once "../config/db.php";
 date_default_timezone_set("America/Mexico_City");
 
+/* ── Aviso día mundialista (temporal 10-11 jun 2026) ── */
+if (in_array(date('Y-m-d'), ['2026-06-10', '2026-06-11'])): ?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zabisu</title>
+    <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#FF7A00">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Zabisu">
+    <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
+    <link rel="stylesheet" href="../assets/css/styles.css?v=5">
+    <style>
+    body { margin:0; background:#0a0f0a; display:flex; align-items:center; justify-content:center; min-height:100vh; }
+    .mun-bg { position:fixed; inset:0; pointer-events:none; overflow:hidden; }
+    .mun-confetti { position:absolute; bottom:-10px; left:var(--x); width:8px; height:8px; border-radius:2px; background:var(--c); animation:mun-rise 3.5s ease-in-out var(--d) infinite; opacity:0; }
+    @keyframes mun-rise { 0%{transform:translateY(0) rotate(0deg);opacity:0} 10%{opacity:.9} 90%{opacity:.6} 100%{transform:translateY(-110vh) rotate(540deg);opacity:0} }
+    .mun-card { position:relative; z-index:1; background:linear-gradient(160deg,#0d1f0d 0%,#0e0e12 60%); border:1px solid rgba(74,200,110,.25); border-radius:28px; padding:40px 28px 36px; max-width:380px; width:calc(100% - 32px); text-align:center; box-shadow:0 0 60px rgba(74,200,110,.1),0 20px 60px rgba(0,0,0,.6); animation:mun-popin .55s cubic-bezier(.34,1.4,.64,1) both; }
+    @keyframes mun-popin { from{transform:scale(.8) translateY(30px);opacity:0} to{transform:scale(1) translateY(0);opacity:1} }
+    .mun-ball-wrap { position:relative; display:flex; flex-direction:column; align-items:center; margin-bottom:20px; }
+    .mun-ball-bounce { animation:mun-bounce 1s cubic-bezier(.4,0,.2,1) infinite alternate; }
+    @keyframes mun-bounce { from{transform:translateY(0)} to{transform:translateY(-28px)} }
+    .mun-ball { font-size:80px; line-height:1; animation:mun-spin 1.8s linear infinite; display:inline-block; filter:drop-shadow(0 4px 16px rgba(0,0,0,.5)); }
+    @keyframes mun-spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+    .mun-shadow { width:60px; height:14px; background:radial-gradient(ellipse,rgba(0,0,0,.5) 0%,transparent 70%); border-radius:50%; margin-top:4px; animation:mun-shpulse 1s ease-in-out infinite alternate; }
+    @keyframes mun-shpulse { from{transform:scaleX(.6);opacity:.7} to{transform:scaleX(1.1);opacity:.3} }
+    .mun-eyebrow { font-size:11px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#4ac86e; margin:0 0 8px; }
+    .mun-titulo { font-size:24px; font-weight:900; color:#fff; margin:0 0 12px; letter-spacing:-.3px; line-height:1.2; }
+    .mun-texto { font-size:14px; color:rgba(255,255,255,.6); line-height:1.7; margin:0 0 18px; }
+    .mun-texto strong { color:#fff; }
+    .mun-flags { font-size:26px; letter-spacing:6px; margin-bottom:20px; animation:mun-wave 2s ease-in-out infinite; }
+    @keyframes mun-wave { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+    </style>
+</head>
+<body>
+<div class="mun-bg">
+    <span class="mun-confetti" style="--x:8%;--d:0s;--c:#4ac86e"></span>
+    <span class="mun-confetti" style="--x:18%;--d:.4s;--c:#ff7a00"></span>
+    <span class="mun-confetti" style="--x:30%;--d:.9s;--c:#facc15"></span>
+    <span class="mun-confetti" style="--x:44%;--d:.2s;--c:#4ac86e"></span>
+    <span class="mun-confetti" style="--x:58%;--d:.7s;--c:#ff7a00"></span>
+    <span class="mun-confetti" style="--x:70%;--d:1.1s;--c:#fff"></span>
+    <span class="mun-confetti" style="--x:82%;--d:.5s;--c:#facc15"></span>
+    <span class="mun-confetti" style="--x:92%;--d:.3s;--c:#4ac86e"></span>
+</div>
+<div class="mun-card">
+    <div class="mun-ball-wrap">
+        <div class="mun-ball-bounce"><div class="mun-ball">⚽</div></div>
+        <div class="mun-shadow"></div>
+    </div>
+    <p class="mun-eyebrow">🏆 FIFA World Cup 2026</p>
+    <h2 class="mun-titulo">¡Hoy es día mundialista!</h2>
+    <p class="mun-texto">Nuestro equipo se une a la celebración.<br><strong>Hoy no contamos con servicio.</strong><br>Nos vemos mañana con todo el sabor de siempre. ⚡</p>
+    <div class="mun-flags">🇲🇽 🌍 🇺🇸 🇨🇦</div>
+</div>
+</body>
+</html>
+<?php exit; endif;
+
 $sqlMenu = "SELECT * FROM menu_dia WHERE activo = 1 ORDER BY fecha DESC LIMIT 1";
 $stmtMenu = $conexion->prepare($sqlMenu);
 $stmtMenu->execute();
@@ -741,8 +803,7 @@ document.querySelectorAll(".md-plato:not(.md-plato--agotado), .md-chip:not(.md-c
     <span class="cliente-footer__slogan">© 2026 Zabisu - Sabor y Servicio. Todos los derechos reservados.</span>
 </footer>
 
-<?php if (in_array(date('Y-m-d'), ['2026-06-10', '2026-06-11'])): ?>
-<!-- ══ AVISO MUNDIAL ═══════════════════════════════════════ -->
+<!-- ══ AVISO MUNDIAL (bloque eliminado, ver inicio del archivo) ══
 <div id="mundial-overlay">
     <div class="mun-bg">
         <span class="mun-confetti" style="--x:8%;--d:0s;--c:#4ac86e"></span>
@@ -907,11 +968,7 @@ document.querySelectorAll(".md-plato:not(.md-plato--agotado), .md-chip:not(.md-c
         overlay.style.opacity = "0";
         setTimeout(function () { overlay.style.display = "none"; }, 350);
     }
-    document.getElementById("mun-close").addEventListener("click", cerrar);
-    document.getElementById("mun-btn").addEventListener("click", cerrar);
-})();
-</script>
-<?php endif; ?>
+══ fin bloque eliminado ══ -->
 
 <?php if (false): // ══ PWA MODAL en pausa ══ ?>
 <div id="pwa-modal" style="display:none;" aria-modal="true" role="dialog">
