@@ -44,8 +44,8 @@ if (in_array(date('Y-m-d'), ['2026-06-10', '2026-06-11'])): ?>
         margin-bottom: 28px;
         animation: mun-fadein .4s ease both;
     }
-    .mun-marca img { width: 44px; height: 44px; object-fit:contain; filter: drop-shadow(0 0 10px rgba(255,122,0,.5)); }
-    .mun-marca span { font-size: 26px; font-weight: 900; color: #fff; letter-spacing: -1px; text-shadow: 0 0 30px rgba(255,122,0,.3); }
+    .mun-marca img { width: 60px; height: 60px; object-fit:contain; filter: drop-shadow(0 0 14px rgba(255,122,0,.55)); }
+    .mun-marca span { font-size: 52px; font-weight: 900; color: #fff; letter-spacing: -2px; text-shadow: 0 0 40px rgba(255,122,0,.35); }
     @keyframes mun-fadein { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
 
     /* Card */
