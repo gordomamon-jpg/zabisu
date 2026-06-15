@@ -207,123 +207,241 @@ try {
 
             $mensaje = "
 <!DOCTYPE html>
-<html lang='es'>
-<head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'></head>
-<body style='margin:0;padding:0;background:#0c0c0f;'>
+<html lang='es' bgcolor='#0c0c0f'>
+<head>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width,initial-scale=1'>
+<meta name='color-scheme' content='dark'>
+<meta name='supported-color-schemes' content='dark'>
+<style>
+  body,html{margin:0;padding:0;background:#0c0c0f!important;}
+  @media only screen and (max-width:600px){
+    .email-body{padding:12px 8px 32px!important;}
+    .col-half{display:block!important;width:100%!important;}
+    .col-gap{display:none!important;}
+  }
+</style>
+</head>
+<body bgcolor='#0c0c0f' style='margin:0;padding:0;background:#0c0c0f;-webkit-text-size-adjust:100%;'>
 
-<table width='100%' cellpadding='0' cellspacing='0' bgcolor='#0c0c0f' style='background:#0c0c0f;'>
-<tr><td align='center' style='padding:24px 16px 40px;'>
+<!-- Fondo total oscuro -->
+<table width='100%' cellpadding='0' cellspacing='0' bgcolor='#0c0c0f' style='background:#0c0c0f;min-height:100%;'>
+<tr><td align='center' class='email-body' bgcolor='#0c0c0f' style='background:#0c0c0f;padding:28px 16px 48px;'>
 
-    <table width='100%' cellpadding='0' cellspacing='0' style='max-width:520px;'>
+  <!-- Contenedor central -->
+  <table width='100%' cellpadding='0' cellspacing='0' style='max-width:520px;'>
 
-        <!-- ══ HEADER ══ -->
-        <tr><td bgcolor='#0c0c0f' style='background:#0c0c0f;padding:36px 24px 28px;text-align:center;border-radius:18px 18px 0 0;border:1px solid #1e1e20;border-bottom:none;'>
+    <!-- ══ HEADER: barra naranja superior ══ -->
+    <tr><td bgcolor='#ff7a00' height='4' style='background:#ff7a00;height:4px;border-radius:18px 18px 0 0;font-size:0;line-height:0;'>&nbsp;</td></tr>
 
-            <!-- Eyebrow -->
-            <p style='margin:0 0 18px;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:3px;color:#ff7a00;text-transform:uppercase;'>Zabisu</p>
+    <!-- ══ HEADER: logo + título ══ -->
+    <tr><td bgcolor='#0f0f12' style='background:#0f0f12;padding:36px 28px 32px;text-align:center;border-left:1px solid #1e1e22;border-right:1px solid #1e1e22;'>
 
-            <!-- Checkmark -->
-            <table cellpadding='0' cellspacing='0' align='center' style='margin:0 auto 18px;'>
-                <tr><td bgcolor='#1a2e1a' width='56' height='56' align='center'
-                    style='background:#1a2e1a;width:56px;height:56px;border-radius:50%;border:2px solid #4ac86e;font-size:24px;font-weight:700;color:#4ac86e;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;'>
-                    ✓
-                </td></tr>
+      <!-- Wordmark -->
+      <p style='margin:0 0 24px;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:11px;font-weight:800;letter-spacing:4px;color:#ff7a00;text-transform:uppercase;'>● ZABISU</p>
+
+      <!-- Ícono de confirmación -->
+      <table cellpadding='0' cellspacing='0' align='center' style='margin:0 auto 20px;'>
+        <tr><td width='60' height='60' align='center' bgcolor='#0d200d'
+          style='background:#0d200d;width:60px;height:60px;border-radius:50%;border:2px solid #4ac86e;
+                 font-size:26px;font-weight:900;color:#4ac86e;
+                 font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;'>
+          ✓
+        </td></tr>
+      </table>
+
+      <h1 style='margin:0 0 8px;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:28px;font-weight:900;color:#ffffff;letter-spacing:-.5px;line-height:1.1;'>
+        ¡Tu pedido está<br>confirmado!
+      </h1>
+      <p style='margin:0 0 28px;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:14px;color:rgba(255,255,255,.4);line-height:1.5;'>
+        Hola, <strong style='color:rgba(255,255,255,.8);'>" . htmlspecialchars($nombre_cliente) . "</strong> — ya estamos preparando tu pedido.
+      </p>
+
+      <!-- Folio pill -->
+      <table cellpadding='0' cellspacing='0' align='center'>
+        <tr><td bgcolor='#1c1206' style='background:#1c1206;padding:12px 28px;border-radius:12px;border:1px solid rgba(255,122,0,.35);'>
+          <p style='margin:0 0 3px;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:10px;font-weight:800;letter-spacing:2.5px;color:rgba(255,122,0,.55);text-transform:uppercase;'>Folio del pedido</p>
+          <p style='margin:0;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:22px;font-weight:900;color:#ff7a00;letter-spacing:2px;'>" . htmlspecialchars($folio) . "</p>
+        </td></tr>
+      </table>
+
+    </td></tr>
+
+    <!-- ══ BARRA DIVISORA NARANJA ══ -->
+    <tr><td bgcolor='#ff7a00' height='2' style='background:linear-gradient(90deg,#ff7a00,#ff9a30);height:2px;font-size:0;line-height:0;'>&nbsp;</td></tr>
+
+    <!-- ══ ENTREGA: ubicación + horario ══ -->
+    <tr><td bgcolor='#111114' style='background:#111114;padding:20px 24px;border-left:1px solid #1e1e22;border-right:1px solid #1e1e22;'>
+      <p style='margin:0 0 12px;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:10px;font-weight:800;letter-spacing:2px;color:rgba(255,255,255,.2);text-transform:uppercase;'>Detalles de entrega</p>
+      <table width='100%' cellpadding='0' cellspacing='0'>
+        <tr>
+          <td width='48%' class='col-half' valign='top'>
+            <table cellpadding='0' cellspacing='0' width='100%'>
+              <tr><td bgcolor='#1c1c1f' style='background:#1c1c1f;padding:14px 16px;border-radius:12px;border:1px solid #2a2a2d;'>
+                <p style='margin:0 0 4px;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,.28);text-transform:uppercase;'>📍 Punto de entrega</p>
+                <p style='margin:0;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:14px;font-weight:700;color:#e8e8e8;line-height:1.3;'>" . htmlspecialchars($ubicacionCorreo) . "</p>
+              </td></tr>
             </table>
-
-            <!-- Título -->
-            <h1 style='margin:0 0 6px;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:26px;font-weight:900;color:#ffffff;letter-spacing:-.5px;'>
-                ¡Pedido confirmado!
-            </h1>
-            <p style='margin:0 0 22px;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:14px;color:rgba(255,255,255,.4);'>
-                Hola, <strong style='color:rgba(255,255,255,.75);'>" . htmlspecialchars($nombre_cliente) . "</strong> — tu pedido está en camino.
-            </p>
-
-            <!-- Folio pill -->
-            <table cellpadding='0' cellspacing='0' align='center'>
-                <tr><td bgcolor='#1a1208' style='background:#1a1208;padding:10px 22px;border-radius:10px;border:1px solid rgba(255,122,0,.3);'>
-                    <p style='margin:0 0 2px;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,122,0,.6);text-transform:uppercase;'>Folio</p>
-                    <p style='margin:0;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:20px;font-weight:900;color:#ff7a00;letter-spacing:1px;'>" . htmlspecialchars($folio) . "</p>
-                </td></tr>
+          </td>
+          <td width='4%' class='col-gap'></td>
+          <td width='48%' class='col-half' valign='top'>
+            <table cellpadding='0' cellspacing='0' width='100%'>
+              <tr><td bgcolor='#1c1c1f' style='background:#1c1c1f;padding:14px 16px;border-radius:12px;border:1px solid #2a2a2d;'>
+                <p style='margin:0 0 4px;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,.28);text-transform:uppercase;'>🕐 Horario estimado</p>
+                <p style='margin:0;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:14px;font-weight:700;color:#e8e8e8;line-height:1.3;'>" . htmlspecialchars($horaCorreo) . "</p>
+              </td></tr>
             </table>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
 
+    <!-- ══ PAGO ══ -->
+    <tr><td bgcolor='#111114' style='background:#111114;padding:0 24px 20px;border-left:1px solid #1e1e22;border-right:1px solid #1e1e22;'>
+      <table width='100%' cellpadding='0' cellspacing='0' style='border-radius:12px;overflow:hidden;border:1px solid #272729;'>
+        <tr><td bgcolor='#1c1c1f' style='background:#1c1c1f;padding:11px 16px;border-bottom:1px solid #2a2a2d;'>
+          <p style='margin:0;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:10px;font-weight:800;letter-spacing:2px;color:rgba(255,255,255,.22);text-transform:uppercase;'>💳 Información de pago</p>
+        </td></tr>
+        <tr><td bgcolor='#161619' style='background:#161619;padding:11px 16px;border-bottom:1px solid #222224;'>
+          <table width='100%' cellpadding='0' cellspacing='0'><tr>
+            <td style='font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:12px;color:rgba(255,255,255,.3);font-weight:600;'>Método</td>
+            <td align='right' style='font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:13px;color:#d0d0d0;font-weight:700;'>" . htmlspecialchars($pedido["metodo_pago"]) . "</td>
+          </tr></table>
+        </td></tr>
+        <tr><td bgcolor='#161619' style='background:#161619;padding:11px 16px;'>
+          <table width='100%' cellpadding='0' cellspacing='0'><tr>
+            <td style='font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:12px;color:rgba(255,255,255,.3);font-weight:600;'>Estado</td>
+            <td align='right' style='font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:13px;color:#fbbf24;font-weight:700;'>" . htmlspecialchars($pedido["estado_pago"]) . "</td>
+          </tr></table>
+        </td></tr>
+      </table>
+    </td></tr>
+
+    <!-- ══ DIVISOR SUTIL ══ -->
+    <tr><td bgcolor='#111114' style='background:#111114;padding:0 24px;border-left:1px solid #1e1e22;border-right:1px solid #1e1e22;'>
+      <table width='100%' cellpadding='0' cellspacing='0'><tr><td bgcolor='#222225' height='1' style='background:#222225;height:1px;font-size:0;line-height:0;'>&nbsp;</td></tr></table>
+    </td></tr>
+
+    <!-- ══ MENÚS ══ -->
+    <tr><td bgcolor='#111114' style='background:#111114;padding:20px 24px 0;border-left:1px solid #1e1e22;border-right:1px solid #1e1e22;'>
+      <p style='margin:0 0 14px;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:10px;font-weight:800;letter-spacing:2px;color:rgba(255,255,255,.2);text-transform:uppercase;'>🍱 Tu pedido</p>
+      " . $resumenMenusCorreo . "
+      " . $resumenExtrasCorreo . "
+    </td></tr>
+
+    <!-- ══ TOTAL ══ -->
+    <tr><td bgcolor='#111114' style='background:#111114;padding:4px 24px 24px;border-left:1px solid #1e1e22;border-right:1px solid #1e1e22;'>
+      <table width='100%' cellpadding='0' cellspacing='0' style='border-radius:14px;overflow:hidden;border:1px solid rgba(255,122,0,.25);'>
+        <tr><td bgcolor='#1d1108' style='background:#1d1108;padding:18px 20px;'>
+          <table width='100%' cellpadding='0' cellspacing='0'><tr>
+            <td valign='middle'>
+              <p style='margin:0 0 2px;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:10px;font-weight:800;letter-spacing:2px;color:rgba(255,122,0,.5);text-transform:uppercase;'>Total a pagar</p>
+              <p style='margin:0;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:11px;color:rgba(255,255,255,.25);'>Incluye todos los menús y extras</p>
+            </td>
+            <td align='right' valign='middle'>
+              <p style='margin:0;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:32px;font-weight:900;color:#ff7a00;letter-spacing:-1.5px;line-height:1;'>$" . number_format($totalPedido, 2) . "</p>
+            </td>
+          </tr></table>
+        </td></tr>
+      </table>
+    </td></tr>
+
+    <!-- ══ BARRA DIVISORA ══ -->
+    <tr><td bgcolor='#1e1e22' height='1' style='background:#1e1e22;height:1px;border-left:1px solid #1e1e22;border-right:1px solid #1e1e22;font-size:0;line-height:0;'>&nbsp;</td></tr>
+
+    <!-- ══ ¿QUÉ PASA AHORA? ══ -->
+    <tr><td bgcolor='#0e0e11' style='background:#0e0e11;padding:22px 24px;border-left:1px solid #1e1e22;border-right:1px solid #1e1e22;'>
+      <p style='margin:0 0 16px;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:10px;font-weight:800;letter-spacing:2px;color:rgba(255,255,255,.2);text-transform:uppercase;'>¿Qué pasa ahora?</p>
+      <table width='100%' cellpadding='0' cellspacing='0'>
+
+        <!-- Paso 1 -->
+        <tr><td style='padding-bottom:12px;'>
+          <table cellpadding='0' cellspacing='0' width='100%'>
+            <tr>
+              <td width='36' valign='top'>
+                <table cellpadding='0' cellspacing='0'><tr>
+                  <td width='28' height='28' align='center' bgcolor='#1c1206'
+                    style='background:#1c1206;width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,122,0,.4);
+                           font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:12px;font-weight:800;color:#ff7a00;'>
+                    1
+                  </td>
+                </tr></table>
+              </td>
+              <td valign='middle' style='padding-left:4px;'>
+                <p style='margin:0 0 1px;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:13px;font-weight:700;color:#e0e0e0;'>Preparando tu pedido</p>
+                <p style='margin:0;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:12px;color:rgba(255,255,255,.3);'>Nuestro equipo ya está cocinando tu orden.</p>
+              </td>
+            </tr>
+          </table>
         </td></tr>
 
-        <!-- ══ PILLS ENTREGA ══ -->
-        <tr><td bgcolor='#111113' style='background:#111113;padding:18px 24px;border-left:1px solid #1e1e20;border-right:1px solid #1e1e20;'>
-            <table width='100%' cellpadding='0' cellspacing='0'>
-                <tr>
-                    <td width='48%'>
-                        <table cellpadding='0' cellspacing='0' width='100%'>
-                            <tr><td bgcolor='#1c1c1e' style='background:#1c1c1e;padding:12px 14px;border-radius:10px;border:1px solid #2c2c2e;'>
-                                <p style='margin:0 0 3px;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,.3);text-transform:uppercase;'>📍 Entrega</p>
-                                <p style='margin:0;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:13px;font-weight:700;color:#e0e0e0;'>" . htmlspecialchars($ubicacionCorreo) . "</p>
-                            </td></tr>
-                        </table>
-                    </td>
-                    <td width='4%'></td>
-                    <td width='48%'>
-                        <table cellpadding='0' cellspacing='0' width='100%'>
-                            <tr><td bgcolor='#1c1c1e' style='background:#1c1c1e;padding:12px 14px;border-radius:10px;border:1px solid #2c2c2e;'>
-                                <p style='margin:0 0 3px;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,.3);text-transform:uppercase;'>🕐 Horario</p>
-                                <p style='margin:0;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:13px;font-weight:700;color:#e0e0e0;'>" . htmlspecialchars($horaCorreo) . "</p>
-                            </td></tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
+        <!-- Paso 2 -->
+        <tr><td style='padding-bottom:12px;'>
+          <table cellpadding='0' cellspacing='0' width='100%'>
+            <tr>
+              <td width='36' valign='top'>
+                <table cellpadding='0' cellspacing='0'><tr>
+                  <td width='28' height='28' align='center' bgcolor='#1c1206'
+                    style='background:#1c1206;width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,122,0,.4);
+                           font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:12px;font-weight:800;color:#ff7a00;'>
+                    2
+                  </td>
+                </tr></table>
+              </td>
+              <td valign='middle' style='padding-left:4px;'>
+                <p style='margin:0 0 1px;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:13px;font-weight:700;color:#e0e0e0;'>En camino</p>
+                <p style='margin:0;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:12px;color:rgba(255,255,255,.3);'>Tu repartidor saldrá antes del horario indicado.</p>
+              </td>
+            </tr>
+          </table>
         </td></tr>
 
-        <!-- ══ DATOS DE PAGO ══ -->
-        <tr><td bgcolor='#111113' style='background:#111113;padding:0 24px 18px;border-left:1px solid #1e1e20;border-right:1px solid #1e1e20;'>
-            <table width='100%' cellpadding='0' cellspacing='0' style='border:1px solid #2c2c2e;border-radius:12px;overflow:hidden;'>
-                <tr><td bgcolor='#1c1c1e' style='background:#1c1c1e;padding:12px 16px;border-bottom:1px solid #2c2c2e;'>
-                    <span style='font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,.3);text-transform:uppercase;'>Pago</span>
-                </td></tr>
-                <tr><td bgcolor='#161618' style='background:#161618;padding:10px 16px;border-bottom:1px solid #242426;'>
-                    <table width='100%' cellpadding='0' cellspacing='0'><tr>
-                        <td style='font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:12px;color:rgba(255,255,255,.35);font-weight:600;'>Método</td>
-                        <td align='right' style='font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:13px;color:#ccc;font-weight:700;'>" . htmlspecialchars($pedido["metodo_pago"]) . "</td>
-                    </tr></table>
-                </td></tr>
-                <tr><td bgcolor='#161618' style='background:#161618;padding:10px 16px;'>
-                    <table width='100%' cellpadding='0' cellspacing='0'><tr>
-                        <td style='font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:12px;color:rgba(255,255,255,.35);font-weight:600;'>Estado</td>
-                        <td align='right' style='font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:13px;color:#facc15;font-weight:700;'>" . htmlspecialchars($pedido["estado_pago"]) . "</td>
-                    </tr></table>
-                </td></tr>
-            </table>
+        <!-- Paso 3 -->
+        <tr><td>
+          <table cellpadding='0' cellspacing='0' width='100%'>
+            <tr>
+              <td width='36' valign='top'>
+                <table cellpadding='0' cellspacing='0'><tr>
+                  <td width='28' height='28' align='center' bgcolor='#0d200d'
+                    style='background:#0d200d;width:28px;height:28px;border-radius:50%;border:1px solid rgba(74,200,110,.4);
+                           font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:12px;font-weight:800;color:#4ac86e;'>
+                    3
+                  </td>
+                </tr></table>
+              </td>
+              <td valign='middle' style='padding-left:4px;'>
+                <p style='margin:0 0 1px;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:13px;font-weight:700;color:#e0e0e0;'>¡A disfrutar!</p>
+                <p style='margin:0;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:12px;color:rgba(255,255,255,.3);'>Recibe tu pedido en <strong style='color:rgba(255,255,255,.5);'>" . htmlspecialchars($ubicacionCorreo) . "</strong> a las <strong style='color:rgba(255,255,255,.5);'>" . htmlspecialchars($horaCorreo) . "</strong>.</p>
+              </td>
+            </tr>
+          </table>
         </td></tr>
 
-        <!-- ══ MENÚS ══ -->
-        <tr><td bgcolor='#111113' style='background:#111113;padding:0 24px 6px;border-left:1px solid #1e1e20;border-right:1px solid #1e1e20;'>
-            <p style='margin:0 0 12px;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,.25);text-transform:uppercase;'>Tu pedido</p>
-            " . $resumenMenusCorreo . "
-            " . $resumenExtrasCorreo . "
-        </td></tr>
+      </table>
+    </td></tr>
 
-        <!-- ══ TOTAL ══ -->
-        <tr><td bgcolor='#111113' style='background:#111113;padding:0 24px 24px;border-left:1px solid #1e1e20;border-right:1px solid #1e1e20;'>
-            <table width='100%' cellpadding='0' cellspacing='0' style='border:1px solid rgba(255,122,0,.2);border-radius:12px;overflow:hidden;'>
-                <tr><td bgcolor='#1a1208' style='background:#1a1208;padding:16px 20px;'>
-                    <table width='100%' cellpadding='0' cellspacing='0'><tr>
-                        <td style='font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:14px;font-weight:700;color:rgba(255,255,255,.5);'>Total</td>
-                        <td align='right' style='font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:28px;font-weight:900;color:#ff7a00;letter-spacing:-1px;'>$" . number_format($totalPedido, 2) . "</td>
-                    </tr></table>
-                </td></tr>
-            </table>
-        </td></tr>
+    <!-- ══ FOOTER ══ -->
+    <tr><td bgcolor='#ff7a00' height='2' style='background:#ff7a00;height:2px;font-size:0;line-height:0;'>&nbsp;</td></tr>
+    <tr><td bgcolor='#0a0a0c' style='background:#0a0a0c;padding:28px 24px;text-align:center;border-radius:0 0 18px 18px;border:1px solid #1a1a1c;border-top:none;'>
 
-        <!-- ══ FOOTER ══ -->
-        <tr><td bgcolor='#0c0c0f' style='background:#0c0c0f;padding:24px;text-align:center;border-radius:0 0 18px 18px;border:1px solid #1e1e20;border-top:1px solid #1e1e20;'>
-            <p style='margin:0 0 6px;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:13px;color:rgba(255,255,255,.5);'>
-                Gracias por elegir <strong style='color:#ff7a00;'>Zabisu</strong>. ¡Buen provecho! 🧡
-            </p>
-            <p style='margin:0;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:11px;color:rgba(255,255,255,.2);'>
-                © 2026 Zabisu · Sabor y Servicio
-            </p>
-        </td></tr>
+      <p style='margin:0 0 4px;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:18px;font-weight:900;color:#ff7a00;letter-spacing:1px;'>ZABISU</p>
+      <p style='margin:0 0 18px;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:12px;color:rgba(255,255,255,.25);letter-spacing:.5px;'>Sabor y Servicio</p>
 
-    </table>
+      <table cellpadding='0' cellspacing='0' align='center' style='margin:0 auto 18px;'>
+        <tr>
+          <td style='padding:0 10px;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:12px;color:rgba(255,255,255,.3);border-right:1px solid #2a2a2c;'>¡Buen provecho!</td>
+          <td style='padding:0 10px;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:12px;color:rgba(255,255,255,.3);'>Gracias por tu preferencia</td>
+        </tr>
+      </table>
+
+      <p style='margin:0;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:11px;color:rgba(255,255,255,.15);'>© 2026 Zabisu · Todos los derechos reservados</p>
+
+    </td></tr>
+
+    <!-- ══ ESPACIO INFERIOR (oscuro) ══ -->
+    <tr><td bgcolor='#0c0c0f' height='24' style='background:#0c0c0f;height:24px;font-size:0;line-height:0;'>&nbsp;</td></tr>
+
+  </table>
 
 </td></tr>
 </table>
