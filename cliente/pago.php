@@ -75,7 +75,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
         $errores[] = "Debes seleccionar un método de pago.";
     }
 
-    if (!in_array($metodo_pago, ["Transferencia", "Efectivo", "Tarjeta"])) {
+    if (!in_array($metodo_pago, ["Transferencia", "Efectivo"])) {
         $errores[] = "Método de pago no válido.";
     }
 
@@ -152,10 +152,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
 
             if ($metodo_pago === "Efectivo") {
                 $estado_pago = "Pago en efectivo";
-            }
-
-            if ($metodo_pago === "Tarjeta") {
-                $estado_pago = "Pago con tarjeta";
             }
 
             /*
@@ -532,23 +528,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
 
             <!-- Efectivo -->
             <label class="pago-card pago-card--cash <?php echo (($_POST["metodo_pago"] ?? "") === "Efectivo") ? "pago-card--activo" : ""; ?>"
-                   id="card-cash">
+                   id="card-cash" style="grid-column: 1 / -1;">
                 <input type="radio" name="metodo_pago" value="Efectivo"
                     <?php echo (($_POST["metodo_pago"] ?? "") === "Efectivo") ? "checked" : ""; ?>>
                 <span class="pago-card__icono">💵</span>
                 <strong class="pago-card__nombre">Efectivo</strong>
                 <p class="pago-card__desc">Ten el monto exacto al recibir</p>
-                <div class="pago-card__dot"></div>
-            </label>
-
-            <!-- Tarjeta -->
-            <label class="pago-card pago-card--card <?php echo (($_POST["metodo_pago"] ?? "") === "Tarjeta") ? "pago-card--activo" : ""; ?>"
-                   id="card-tarjeta">
-                <input type="radio" name="metodo_pago" value="Tarjeta"
-                    <?php echo (($_POST["metodo_pago"] ?? "") === "Tarjeta") ? "checked" : ""; ?>>
-                <span class="pago-card__icono">🖥️</span>
-                <strong class="pago-card__nombre">Tarjeta</strong>
-                <p class="pago-card__desc">Llevamos terminal al punto de entrega</p>
                 <div class="pago-card__dot"></div>
             </label>
 
@@ -561,12 +546,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
             <p style="margin:0;">Ten exactamente <strong>$<?php echo number_format($totalPedido, 2); ?></strong> listos al recibir tu pedido. El repartidor no siempre lleva cambio.</p>
         </div>
 
-        <!-- Aviso tarjeta -->
-        <div class="pago-aviso pago-aviso--tarjeta <?php echo (($_POST["metodo_pago"] ?? "") === "Tarjeta") ? "visible" : ""; ?>"
-             id="aviso-tarjeta">
-            <span style="font-size:17px;flex-shrink:0;margin-top:1px;">🖥️</span>
-            <p style="margin:0;">Llevamos terminal al momento de la entrega. <strong>Aceptamos débito y crédito.</strong></p>
-        </div>
     </div>
 
     <!-- ── Datos bancarios ── -->
@@ -650,10 +629,8 @@ document.addEventListener("DOMContentLoaded", function () {
     var radios          = document.querySelectorAll('input[name="metodo_pago"]');
     var cardTransfer    = document.getElementById("card-transfer");
     var cardCash        = document.getElementById("card-cash");
-    var cardTarjeta     = document.getElementById("card-tarjeta");
     var bloquesTransfer = document.querySelectorAll(".bloque-transferencia");
     var avisoEfectivo   = document.getElementById("aviso-efectivo");
-    var avisoTarjeta    = document.getElementById("aviso-tarjeta");
 
     function actualizarVista() {
         var checked = document.querySelector('input[name="metodo_pago"]:checked');
@@ -661,14 +638,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
         cardTransfer.classList.toggle("pago-card--activo", val === "Transferencia");
         cardCash.classList.toggle("pago-card--activo",     val === "Efectivo");
-        cardTarjeta.classList.toggle("pago-card--activo",  val === "Tarjeta");
 
         bloquesTransfer.forEach(function (b) {
             b.style.display = val === "Transferencia" ? "block" : "none";
         });
 
         avisoEfectivo.classList.toggle("visible", val === "Efectivo");
-        avisoTarjeta.classList.toggle("visible",  val === "Tarjeta");
     }
 
     radios.forEach(function (r) { r.addEventListener("change", actualizarVista); });
