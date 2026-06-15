@@ -250,7 +250,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
 
             $conexion->commit();
 
-
             unset($_SESSION["pedido_temporal"]);
 
             header("Location: confirmar.php?folio=" . urlencode($folio));
@@ -276,238 +275,400 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
     <meta name="apple-mobile-web-app-title" content="Zabisu">
     <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
     <link rel="stylesheet" href="../assets/css/styles.css?v=5">
+    <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    /* ── Cuerpo del formulario ── */
+    .pago-body {
+        max-width: 560px;
+        margin: 0 auto;
+        padding: 20px 16px 48px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    /* ── Tarjetas (mismo sistema que confirmar.php) ── */
+    .conf-card {
+        background: rgba(255,255,255,.03);
+        border: 1px solid rgba(255,255,255,.07);
+        border-radius: 16px;
+        padding: 18px;
+    }
+    .conf-card__titulo {
+        font-size: 12px; font-weight: 700; letter-spacing: 2px;
+        text-transform: uppercase; color: rgba(255,255,255,.3);
+        margin: 0 0 16px;
+    }
+
+    /* ── Cards de método de pago ── */
+    .pago-cards {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+
+    .pago-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        padding: 16px 14px 44px;
+        border-radius: 14px;
+        border: 1.5px solid rgba(255,255,255,.07);
+        background: rgba(255,255,255,.02);
+        cursor: pointer;
+        transition: border-color .2s, background .2s, box-shadow .2s;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .pago-card input[type="radio"] {
+        position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;
+    }
+
+    .pago-card--transfer {
+        border-color: rgba(255,122,0,.22);
+        background: rgba(255,122,0,.04);
+    }
+    .pago-card--transfer.pago-card--activo {
+        border-color: #ff7a00;
+        background: rgba(255,122,0,.1);
+        box-shadow: 0 0 0 1px rgba(255,122,0,.2), 0 4px 24px rgba(255,122,0,.1);
+    }
+    .pago-card--cash.pago-card--activo {
+        border-color: rgba(255,255,255,.28);
+        background: rgba(255,255,255,.06);
+    }
+
+    .pago-card__badge {
+        align-self: flex-start;
+        font-size: 9px; font-weight: 700; letter-spacing: 1.5px;
+        text-transform: uppercase; color: #ff7a00;
+        background: rgba(255,122,0,.12);
+        border: 1px solid rgba(255,122,0,.25);
+        border-radius: 99px; padding: 2px 8px;
+        margin-bottom: 10px;
+    }
+    .pago-card__icono { font-size: 26px; margin-bottom: 6px; display: block; }
+    .pago-card__nombre { font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 3px; display: block; }
+    .pago-card__desc { font-size: 12px; color: rgba(255,255,255,.35); line-height: 1.4; margin: 0; }
+
+    .pago-card__dot {
+        position: absolute; bottom: 14px; right: 14px;
+        width: 20px; height: 20px; border-radius: 50%;
+        border: 1.5px solid rgba(255,255,255,.15);
+        display: flex; align-items: center; justify-content: center;
+        transition: border-color .2s;
+    }
+    .pago-card__dot::after {
+        content: ''; width: 8px; height: 8px; border-radius: 50%;
+        background: transparent; transition: background .2s;
+    }
+    .pago-card--transfer.pago-card--activo .pago-card__dot { border-color: #ff7a00; }
+    .pago-card--transfer.pago-card--activo .pago-card__dot::after { background: #ff7a00; }
+    .pago-card--cash.pago-card--activo .pago-card__dot { border-color: rgba(255,255,255,.45); }
+    .pago-card--cash.pago-card--activo .pago-card__dot::after { background: rgba(255,255,255,.6); }
+
+    /* ── Aviso efectivo ── */
+    .pago-aviso-efectivo {
+        display: none;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 13px 14px;
+        background: rgba(250,204,21,.06);
+        border: 1px solid rgba(250,204,21,.2);
+        border-radius: 13px;
+        font-size: 13px;
+        color: rgba(255,255,255,.6);
+        line-height: 1.55;
+    }
+    .pago-aviso-efectivo.visible { display: flex; }
+    .pago-aviso-efectivo strong { color: #facc15; }
+
+    /* ── Líneas de datos bancarios ── */
+    .pago-lineas { display: flex; flex-direction: column; }
+    .pago-linea {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255,255,255,.05);
+        gap: 12px;
+    }
+    .pago-linea:last-child { border-bottom: none; padding-bottom: 0; }
+    .pago-linea__label { font-size: 12px; font-weight: 600; color: rgba(255,255,255,.3); flex-shrink: 0; }
+    .pago-linea__val { font-size: 14px; font-weight: 700; color: #e0e0e0; text-align: right; }
+    .pago-linea__val--monto { color: #ff7a00; font-size: 18px; }
+
+    /* ── Uploader comprobante ── */
+    .pago-upload { display: flex; flex-direction: column; gap: 10px; }
+    .pago-upload__desc { font-size: 13px; color: rgba(255,255,255,.4); line-height: 1.5; margin: 0; }
+    .pago-upload__btn {
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        background: rgba(255,255,255,.05);
+        border: 1px solid rgba(255,255,255,.1);
+        border-radius: 12px;
+        padding: 13px 18px;
+        font-size: 14px; font-weight: 700; color: rgba(255,255,255,.75);
+        cursor: pointer;
+        transition: background .15s, border-color .15s;
+        width: 100%;
+    }
+    .pago-upload__btn:hover { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.18); }
+    .pago-upload__nombre {
+        font-size: 13px; color: rgba(255,255,255,.35);
+        text-align: center; word-break: break-all;
+    }
+    .pago-upload__nombre.tiene-archivo { color: #4ac86e; font-weight: 600; }
+
+    /* ── Botón finalizar ── */
+    .pago-btn-final {
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        width: 100%;
+        background: #ff7a00;
+        color: #fff;
+        border: none;
+        border-radius: 14px;
+        padding: 16px 24px;
+        font-size: 16px; font-weight: 800;
+        cursor: pointer;
+        transition: opacity .15s, transform .1s;
+        letter-spacing: .2px;
+    }
+    .pago-btn-final:active { opacity: .88; transform: scale(.98); }
+    .pago-btn-final__flecha { font-size: 18px; }
+
+    /* ── Error ── */
+    .pago-error {
+        display: flex; align-items: flex-start; gap: 10px;
+        padding: 14px 16px;
+        background: rgba(248,113,113,.07);
+        border: 1px solid rgba(248,113,113,.2);
+        border-radius: 14px;
+        font-size: 13px; color: rgba(255,255,255,.7); line-height: 1.55;
+    }
+    .pago-error ul { margin: 0; padding: 0 0 0 16px; }
+    .pago-error li { margin-bottom: 4px; }
+    .pago-error li:last-child { margin-bottom: 0; }
+    </style>
 </head>
 <body>
 
-<div class="contenedor">
-    <div class="md-hero">
-        <div class="md-hero__glow-top"></div>
-        <div class="md-hero__glow-bottom"></div>
-        <p class="md-hero__eyebrow">Último paso</p>
-        <div class="md-hero__marca-grupo">
-            <img class="md-hero__logo" src="../assets/img/LOGO_BLANCO.png" alt="Zabisu">
-            <h1 class="md-hero__marca">Zabisu</h1>
-        </div>
-        <p class="md-hero__fecha">Elige cómo pagarás tu pedido</p>
+<!-- ══ HERO ══════════════════════════════════════════════════ -->
+<div class="md-hero">
+    <div class="md-hero__glow-top"></div>
+    <div class="md-hero__glow-bottom"></div>
+    <p class="md-hero__eyebrow">Último paso</p>
+    <div class="md-hero__marca-grupo">
+        <img class="md-hero__logo" src="../assets/img/LOGO_BLANCO.png" alt="Zabisu">
+        <h1 class="md-hero__marca">Zabisu</h1>
     </div>
+    <p class="md-hero__fecha">Elige cómo pagarás tu pedido</p>
+</div>
+
+<!-- ══ CUERPO ════════════════════════════════════════════════ -->
+<div class="pago-body">
+<form action="" method="POST" enctype="multipart/form-data">
 
     <?php if (!empty($errores)): ?>
-        <div class="mensaje-error">
-            <ul>
-                <?php foreach ($errores as $error): ?>
-                    <li><?php echo htmlspecialchars($error); ?></li>
-                <?php endforeach; ?>
-            </ul>
-        </div>
+    <div class="pago-error">
+        <ul>
+            <?php foreach ($errores as $error): ?>
+                <li><?php echo htmlspecialchars($error); ?></li>
+            <?php endforeach; ?>
+        </ul>
+    </div>
     <?php endif; ?>
 
-    <form action="" method="POST" enctype="multipart/form-data" class="formulario-pedido">
-        <section class="bloque-formulario">
-            <h2>Método de pago</h2>
+    <!-- ── Método de pago ── -->
+    <div class="conf-card">
+        <p class="conf-card__titulo">Método de pago</p>
 
-            <label class="opcion-producto">
-                <input type="radio" name="metodo_pago" value="Transferencia" <?php echo (($_POST["metodo_pago"] ?? "") === "Transferencia") ? "checked" : ""; ?>>
-                <strong>Transferencia</strong>
+        <div class="pago-cards">
+
+            <!-- Transferencia -->
+            <label class="pago-card pago-card--transfer <?php echo (($_POST["metodo_pago"] ?? "") === "Transferencia") ? "pago-card--activo" : ""; ?>"
+                   id="card-transfer">
+                <input type="radio" name="metodo_pago" value="Transferencia"
+                    <?php echo (($_POST["metodo_pago"] ?? "") === "Transferencia") ? "checked" : ""; ?>>
+                <span class="pago-card__badge">Recomendado</span>
+                <span class="pago-card__icono">💳</span>
+                <strong class="pago-card__nombre">Transferencia</strong>
+                <p class="pago-card__desc">Paga desde tu banco y sube tu comprobante</p>
+                <div class="pago-card__dot"></div>
             </label>
 
-            <label class="opcion-producto">
-                <input type="radio" name="metodo_pago" value="Efectivo" <?php echo (($_POST["metodo_pago"] ?? "") === "Efectivo") ? "checked" : ""; ?>>
-                <strong>Efectivo</strong>
+            <!-- Efectivo -->
+            <label class="pago-card pago-card--cash <?php echo (($_POST["metodo_pago"] ?? "") === "Efectivo") ? "pago-card--activo" : ""; ?>"
+                   id="card-cash">
+                <input type="radio" name="metodo_pago" value="Efectivo"
+                    <?php echo (($_POST["metodo_pago"] ?? "") === "Efectivo") ? "checked" : ""; ?>>
+                <span class="pago-card__icono">💵</span>
+                <strong class="pago-card__nombre">Efectivo</strong>
+                <p class="pago-card__desc">Ten el monto exacto al recibir tu pedido</p>
+                <div class="pago-card__dot"></div>
             </label>
 
-            <p class="nota-formulario">
-                Si eliges transferencia, podrás ver los datos bancarios y subir tu comprobante.
-                Si eliges efectivo, el pedido se generará para pagar al recibirlo.
+        </div>
+
+        <!-- Aviso efectivo -->
+        <div class="pago-aviso-efectivo <?php echo (($_POST["metodo_pago"] ?? "") === "Efectivo") ? "visible" : ""; ?>"
+             id="aviso-efectivo">
+            <span style="font-size:17px;flex-shrink:0;margin-top:1px;">⚠️</span>
+            <p style="margin:0;">Ten exactamente <strong>$<?php echo number_format($totalPedido, 2); ?></strong> listos al recibir tu pedido. El repartidor no siempre lleva cambio.</p>
+        </div>
+    </div>
+
+    <!-- ── Datos bancarios ── -->
+    <div class="conf-card bloque-transferencia" id="bloque-transferencia-datos">
+        <p class="conf-card__titulo">Datos bancarios</p>
+        <div class="pago-lineas">
+            <div class="pago-linea">
+                <span class="pago-linea__label">Banco</span>
+                <span class="pago-linea__val">Mercado Pago</span>
+            </div>
+            <div class="pago-linea">
+                <span class="pago-linea__label">CLABE</span>
+                <button type="button" class="clabe-copiar" id="btn-copiar-clabe" title="Toca para copiar">
+                    <span id="texto-clabe">722969014258283039</span>
+                    <span class="clabe-copiar__icono">⎘</span>
+                    <span class="clabe-copiar__copiado" id="msg-copiado-clabe">¡Copiado!</span>
+                </button>
+            </div>
+            <div class="pago-linea">
+                <span class="pago-linea__label">Titular</span>
+                <span class="pago-linea__val">Diana Piña</span>
+            </div>
+            <div class="pago-linea">
+                <span class="pago-linea__label">Monto</span>
+                <span class="pago-linea__val pago-linea__val--monto">$<?php echo number_format($totalPedido, 2); ?></span>
+            </div>
+        </div>
+
+        <?php $conceptoEjemplo = strtoupper($nombre_cliente) . " " . date("d-m-Y"); ?>
+        <div class="aviso-concepto" style="margin-top:16px;">
+            <div class="aviso-concepto__header">
+                <span class="aviso-concepto__icono">⚠️</span>
+                <strong class="aviso-concepto__titulo">Concepto de la transferencia</strong>
+            </div>
+            <p class="aviso-concepto__texto">
+                Escribe lo siguiente en el campo de <strong>concepto</strong> o <strong>referencia</strong> de tu transferencia:
             </p>
-        </section>
-
-        <section class="bloque-formulario bloque-transferencia" id="bloque-transferencia-datos">
-            <h2>Transferencia bancaria</h2>
-
-            <div class="ticket-resumen">
-                <div class="ticket-menu">
-                    <div class="ticket-linea">
-                        <span>Banco</span>
-                        <span>Mercado Pago</span>
-                    </div>
-                    <div class="ticket-linea">
-                        <span>CLABE</span>
-                        <button type="button" class="clabe-copiar" id="btn-copiar-clabe" title="Toca para copiar">
-                            <span id="texto-clabe">722969014258283039</span>
-                            <span class="clabe-copiar__icono">⎘</span>
-                            <span class="clabe-copiar__copiado" id="msg-copiado-clabe">¡Copiado!</span>
-                        </button>
-                    </div>
-                    <div class="ticket-linea">
-                        <span>Titular</span>
-                        <span>Diana Piña</span>
-                    </div>
-                    <div class="ticket-linea">
-                        <span>Monto</span>
-                        <span>$<?php echo number_format($totalPedido, 2); ?></span>
-                    </div>
-                </div>
+            <div class="aviso-concepto__ejemplo-wrapper">
+                <span class="aviso-concepto__ejemplo-label">Tu concepto debe ser:</span>
+                <button type="button" class="aviso-concepto__ejemplo" id="btn-copiar-concepto" title="Toca para copiar">
+                    <span id="texto-concepto"><?php echo htmlspecialchars($conceptoEjemplo); ?></span>
+                    <span class="aviso-concepto__copiar-icono">⎘</span>
+                </button>
+                <span class="aviso-concepto__copiado" id="msg-copiado">¡Copiado!</span>
             </div>
-
-            <?php
-                $conceptoEjemplo = strtoupper($nombre_cliente) . " " . date("d-m-Y");
-            ?>
-            <div class="aviso-concepto">
-                <div class="aviso-concepto__header">
-                    <span class="aviso-concepto__icono">⚠️</span>
-                    <strong class="aviso-concepto__titulo">Importante: concepto de la transferencia</strong>
-                </div>
-                <p class="aviso-concepto__texto">
-                    Para que tu pago pueda ser identificado y validado correctamente, debes escribir lo siguiente en el campo de <strong>concepto</strong> o <strong>referencia</strong> de tu transferencia:
-                </p>
-                <div class="aviso-concepto__ejemplo-wrapper">
-                    <span class="aviso-concepto__ejemplo-label">Tu concepto debe ser:</span>
-                    <button type="button" class="aviso-concepto__ejemplo" id="btn-copiar-concepto" title="Toca para copiar">
-                        <span id="texto-concepto"><?php echo htmlspecialchars($conceptoEjemplo); ?></span>
-                        <span class="aviso-concepto__copiar-icono">⎘</span>
-                    </button>
-                    <span class="aviso-concepto__copiado" id="msg-copiado">¡Copiado!</span>
-                </div>
-                <div class="aviso-concepto__toque-hint">
-                    <span>👆</span>
-                    <span>Toca el concepto para copiarlo automáticamente</span>
-                </div>
-                <p class="aviso-concepto__formato">
-                    Formato: <strong>NOMBRE COMPLETO EN MAYÚSCULAS · DÍA-MES-AÑO</strong><br>
-                    Sin este concepto tu pago <strong>no podrá ser validado</strong>.
-                </p>
+            <div class="aviso-concepto__toque-hint">
+                <span>👆</span>
+                <span>Toca el concepto para copiarlo automáticamente</span>
             </div>
-        </section>
-
-        <section class="bloque-formulario bloque-transferencia" id="bloque-transferencia-comprobante">
-            <h2>Subir comprobante</h2>
-
-            <div class="bloque-comprobante">
-                <div class="bloque-comprobante__header">
-                    <label for="comprobante_pago" class="titulo-comprobante">Comprobante de pago</label>
-                    <p class="texto-comprobante">
-                        Sube una imagen o PDF donde se vea claramente el monto transferido y la referencia.
-                    </p>
-                </div>
-
-                <div class="bloque-comprobante__acciones">
-                    <label for="comprobante_pago" class="input-file-personalizado">
-                        Elegir archivo
-                    </label>
-
-                    <span class="texto-ayuda-comprobante">Formatos permitidos: JPG, PNG o PDF</span>
-                </div>
-
-                <input type="file" name="comprobante_pago" id="comprobante_pago" accept=".jpg,.jpeg,.png,.pdf" hidden>
-
-                <div class="archivo-seleccionado">
-                    <span class="archivo-seleccionado__label">Archivo seleccionado:</span>
-                    <span id="nombre-archivo" class="nombre-archivo">Ningún archivo seleccionado</span>
-                </div>
-            </div>
-        </section>
-
-        <section class="bloque-formulario">
-            <h2>Finalizar</h2>
-            <p class="nota-formulario">
-                Al continuar, tu pedido se generará oficialmente.
+            <p class="aviso-concepto__formato">
+                Sin este concepto tu pago <strong>no podrá ser validado</strong>.
             </p>
+        </div>
+    </div>
 
-            <button type="submit" name="finalizar_pedido" value="1" class="btn-principal">
-                Finalizar pedido
-            </button>
-        </section>
-    </form>
+    <!-- ── Subir comprobante ── -->
+    <div class="conf-card bloque-transferencia" id="bloque-transferencia-comprobante">
+        <p class="conf-card__titulo">Comprobante de pago</p>
+        <div class="pago-upload">
+            <p class="pago-upload__desc">Sube una imagen o PDF donde se vea claramente el monto transferido y la referencia.</p>
+            <label for="comprobante_pago" class="pago-upload__btn">
+                📎 Elegir archivo
+            </label>
+            <input type="file" name="comprobante_pago" id="comprobante_pago"
+                   accept=".jpg,.jpeg,.png,.pdf" hidden>
+            <p class="pago-upload__nombre" id="nombre-archivo">Ningún archivo seleccionado</p>
+        </div>
+    </div>
+
+    <!-- ── Finalizar ── -->
+    <button type="submit" name="finalizar_pedido" value="1" class="pago-btn-final">
+        Confirmar pedido
+        <span class="pago-btn-final__flecha">→</span>
+    </button>
+
+</form>
 </div>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    const inputArchivo = document.getElementById("comprobante_pago");
-    const nombreArchivo = document.getElementById("nombre-archivo");
-    const radiosMetodoPago = document.querySelectorAll('input[name="metodo_pago"]');
-    const bloquesTransferencia = document.querySelectorAll(".bloque-transferencia");
+    var radios              = document.querySelectorAll('input[name="metodo_pago"]');
+    var cardTransfer        = document.getElementById("card-transfer");
+    var cardCash            = document.getElementById("card-cash");
+    var bloquesTransfer     = document.querySelectorAll(".bloque-transferencia");
+    var avisoEfectivo       = document.getElementById("aviso-efectivo");
 
-    function actualizarVistaPago() {
-        const metodoSeleccionado = document.querySelector('input[name="metodo_pago"]:checked');
-        const esTransferencia = metodoSeleccionado && metodoSeleccionado.value === "Transferencia";
+    function actualizarVista() {
+        var checked = document.querySelector('input[name="metodo_pago"]:checked');
+        var esTransferencia = checked && checked.value === "Transferencia";
+        var esEfectivo      = checked && checked.value === "Efectivo";
 
-        bloquesTransferencia.forEach(function (bloque) {
-            bloque.style.display = esTransferencia ? "block" : "none";
+        cardTransfer.classList.toggle("pago-card--activo", esTransferencia);
+        cardCash.classList.toggle("pago-card--activo", esEfectivo);
+
+        bloquesTransfer.forEach(function (b) {
+            b.style.display = esTransferencia ? "block" : "none";
+        });
+
+        avisoEfectivo.classList.toggle("visible", esEfectivo);
+    }
+
+    radios.forEach(function (r) { r.addEventListener("change", actualizarVista); });
+    actualizarVista();
+
+    // Copiar CLABE
+    var btnClabe    = document.getElementById("btn-copiar-clabe");
+    var msgClabe    = document.getElementById("msg-copiado-clabe");
+    if (btnClabe) {
+        btnClabe.addEventListener("click", function () {
+            var texto = document.getElementById("texto-clabe").textContent.trim();
+            function ok() {
+                msgClabe.classList.add("clabe-copiar__copiado--visible");
+                setTimeout(function () { msgClabe.classList.remove("clabe-copiar__copiado--visible"); }, 2000);
+            }
+            navigator.clipboard.writeText(texto).then(ok).catch(function () {
+                var ta = document.createElement("textarea");
+                ta.value = texto; ta.style.cssText = "position:fixed;opacity:0";
+                document.body.appendChild(ta); ta.select(); document.execCommand("copy");
+                document.body.removeChild(ta); ok();
+            });
         });
     }
 
+    // Copiar concepto
+    var btnConcepto = document.getElementById("btn-copiar-concepto");
+    var msgConcepto = document.getElementById("msg-copiado");
+    if (btnConcepto) {
+        btnConcepto.addEventListener("click", function () {
+            var texto = document.getElementById("texto-concepto").textContent.trim();
+            function ok() {
+                msgConcepto.classList.add("aviso-concepto__copiado--visible");
+                setTimeout(function () { msgConcepto.classList.remove("aviso-concepto__copiado--visible"); }, 2000);
+            }
+            navigator.clipboard.writeText(texto).then(ok).catch(function () {
+                var ta = document.createElement("textarea");
+                ta.value = texto; ta.style.cssText = "position:fixed;opacity:0";
+                document.body.appendChild(ta); ta.select(); document.execCommand("copy");
+                document.body.removeChild(ta); ok();
+            });
+        });
+    }
+
+    // Nombre del archivo seleccionado
+    var inputArchivo  = document.getElementById("comprobante_pago");
+    var nombreArchivo = document.getElementById("nombre-archivo");
     if (inputArchivo && nombreArchivo) {
         inputArchivo.addEventListener("change", function () {
             if (this.files && this.files.length > 0) {
                 nombreArchivo.textContent = this.files[0].name;
+                nombreArchivo.classList.add("tiene-archivo");
             } else {
                 nombreArchivo.textContent = "Ningún archivo seleccionado";
+                nombreArchivo.classList.remove("tiene-archivo");
             }
-        });
-    }
-
-    radiosMetodoPago.forEach(function (radio) {
-        radio.addEventListener("change", function () {
-            actualizarVistaPago();
-        });
-    });
-
-    actualizarVistaPago();
-
-    // Copiar CLABE al portapapeles
-    const btnCopiarClabe = document.getElementById("btn-copiar-clabe");
-    const msgCopiadoClabe = document.getElementById("msg-copiado-clabe");
-
-    if (btnCopiarClabe) {
-        btnCopiarClabe.addEventListener("click", function () {
-            const texto = document.getElementById("texto-clabe").textContent.trim();
-            const copiar = function () {
-                msgCopiadoClabe.classList.add("clabe-copiar__copiado--visible");
-                setTimeout(function () {
-                    msgCopiadoClabe.classList.remove("clabe-copiar__copiado--visible");
-                }, 2000);
-            };
-            navigator.clipboard.writeText(texto).then(copiar).catch(function () {
-                const ta = document.createElement("textarea");
-                ta.value = texto;
-                ta.style.position = "fixed";
-                ta.style.opacity = "0";
-                document.body.appendChild(ta);
-                ta.select();
-                document.execCommand("copy");
-                document.body.removeChild(ta);
-                copiar();
-            });
-        });
-    }
-
-    // Copiar concepto al portapapeles
-    const btnCopiar = document.getElementById("btn-copiar-concepto");
-    const msgCopiado = document.getElementById("msg-copiado");
-
-    if (btnCopiar) {
-        btnCopiar.addEventListener("click", function () {
-            const texto = document.getElementById("texto-concepto").textContent.trim();
-            navigator.clipboard.writeText(texto).then(function () {
-                msgCopiado.classList.add("aviso-concepto__copiado--visible");
-                setTimeout(function () {
-                    msgCopiado.classList.remove("aviso-concepto__copiado--visible");
-                }, 2000);
-            }).catch(function () {
-                // fallback para navegadores sin clipboard API
-                const ta = document.createElement("textarea");
-                ta.value = texto;
-                ta.style.position = "fixed";
-                ta.style.opacity = "0";
-                document.body.appendChild(ta);
-                ta.select();
-                document.execCommand("copy");
-                document.body.removeChild(ta);
-                msgCopiado.classList.add("aviso-concepto__copiado--visible");
-                setTimeout(function () {
-                    msgCopiado.classList.remove("aviso-concepto__copiado--visible");
-                }, 2000);
-            });
         });
     }
 });
