@@ -75,6 +75,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
         $errores[] = "Debes seleccionar un método de pago.";
     }
 
+    if (!in_array($metodo_pago, ["Transferencia", "Efectivo", "Tarjeta"])) {
+        $errores[] = "Método de pago no válido.";
+    }
+
     if ($metodo_pago === "Transferencia") {
         if (!isset($_FILES["comprobante_pago"]) || $_FILES["comprobante_pago"]["error"] !== 0) {
             $errores[] = "Debes subir el comprobante de pago.";
@@ -148,6 +152,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
 
             if ($metodo_pago === "Efectivo") {
                 $estado_pago = "Pago en efectivo";
+            }
+
+            if ($metodo_pago === "Tarjeta") {
+                $estado_pago = "Pago con tarjeta";
             }
 
             /*
@@ -308,6 +316,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
         gap: 10px;
         margin-bottom: 12px;
     }
+    /* Transferencia ocupa el ancho completo arriba */
+    .pago-card--transfer { grid-column: 1 / -1; flex-direction: row; align-items: flex-start; gap: 14px; padding: 18px 18px 18px 18px; }
+    .pago-card--transfer .pago-card__dot { position: static; margin-left: auto; flex-shrink: 0; align-self: center; }
+    .pago-card--transfer .pago-card__badge { margin-bottom: 0; }
+    .pago-card--transfer .pago-card__icono { font-size: 30px; margin-bottom: 0; flex-shrink: 0; align-self: center; }
+    .pago-card--transfer .pago-card__body { display: flex; flex-direction: column; gap: 3px; flex: 1; min-width: 0; }
 
     .pago-card {
         position: relative;
@@ -339,6 +353,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
         border-color: rgba(255,255,255,.28);
         background: rgba(255,255,255,.06);
     }
+    .pago-card--card {
+        border-color: rgba(74,200,110,.18);
+        background: rgba(74,200,110,.03);
+    }
+    .pago-card--card.pago-card--activo {
+        border-color: #4ac86e;
+        background: rgba(74,200,110,.09);
+        box-shadow: 0 0 0 1px rgba(74,200,110,.2), 0 4px 24px rgba(74,200,110,.08);
+    }
+    .pago-card--card.pago-card--activo .pago-card__dot { border-color: #4ac86e; }
+    .pago-card--card.pago-card--activo .pago-card__dot::after { background: #4ac86e; }
 
     .pago-card__badge {
         align-self: flex-start;
@@ -369,21 +394,28 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
     .pago-card--cash.pago-card--activo .pago-card__dot { border-color: rgba(255,255,255,.45); }
     .pago-card--cash.pago-card--activo .pago-card__dot::after { background: rgba(255,255,255,.6); }
 
-    /* ── Aviso efectivo ── */
-    .pago-aviso-efectivo {
+    /* ── Avisos al pie de las cards ── */
+    .pago-aviso {
         display: none;
         align-items: flex-start;
         gap: 10px;
         padding: 13px 14px;
-        background: rgba(250,204,21,.06);
-        border: 1px solid rgba(250,204,21,.2);
         border-radius: 13px;
         font-size: 13px;
         color: rgba(255,255,255,.6);
         line-height: 1.55;
     }
-    .pago-aviso-efectivo.visible { display: flex; }
-    .pago-aviso-efectivo strong { color: #facc15; }
+    .pago-aviso.visible { display: flex; }
+    .pago-aviso--efectivo {
+        background: rgba(250,204,21,.06);
+        border: 1px solid rgba(250,204,21,.2);
+    }
+    .pago-aviso--efectivo strong { color: #facc15; }
+    .pago-aviso--tarjeta {
+        background: rgba(74,200,110,.06);
+        border: 1px solid rgba(74,200,110,.2);
+    }
+    .pago-aviso--tarjeta strong { color: #4ac86e; }
 
     /* ── Líneas de datos bancarios ── */
     .pago-lineas { display: flex; flex-direction: column; }
@@ -484,15 +516,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
 
         <div class="pago-cards">
 
-            <!-- Transferencia -->
+            <!-- Transferencia (ancho completo) -->
             <label class="pago-card pago-card--transfer <?php echo (($_POST["metodo_pago"] ?? "") === "Transferencia") ? "pago-card--activo" : ""; ?>"
                    id="card-transfer">
                 <input type="radio" name="metodo_pago" value="Transferencia"
                     <?php echo (($_POST["metodo_pago"] ?? "") === "Transferencia") ? "checked" : ""; ?>>
-                <span class="pago-card__badge">Recomendado</span>
                 <span class="pago-card__icono">💳</span>
-                <strong class="pago-card__nombre">Transferencia</strong>
-                <p class="pago-card__desc">Paga desde tu banco y sube tu comprobante</p>
+                <div class="pago-card__body">
+                    <span class="pago-card__badge">Recomendado</span>
+                    <strong class="pago-card__nombre">Transferencia</strong>
+                    <p class="pago-card__desc">Paga desde tu banco y sube tu comprobante</p>
+                </div>
                 <div class="pago-card__dot"></div>
             </label>
 
@@ -503,17 +537,35 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
                     <?php echo (($_POST["metodo_pago"] ?? "") === "Efectivo") ? "checked" : ""; ?>>
                 <span class="pago-card__icono">💵</span>
                 <strong class="pago-card__nombre">Efectivo</strong>
-                <p class="pago-card__desc">Ten el monto exacto al recibir tu pedido</p>
+                <p class="pago-card__desc">Ten el monto exacto al recibir</p>
+                <div class="pago-card__dot"></div>
+            </label>
+
+            <!-- Tarjeta -->
+            <label class="pago-card pago-card--card <?php echo (($_POST["metodo_pago"] ?? "") === "Tarjeta") ? "pago-card--activo" : ""; ?>"
+                   id="card-tarjeta">
+                <input type="radio" name="metodo_pago" value="Tarjeta"
+                    <?php echo (($_POST["metodo_pago"] ?? "") === "Tarjeta") ? "checked" : ""; ?>>
+                <span class="pago-card__icono">🖥️</span>
+                <strong class="pago-card__nombre">Tarjeta</strong>
+                <p class="pago-card__desc">Llevamos terminal al punto de entrega</p>
                 <div class="pago-card__dot"></div>
             </label>
 
         </div>
 
         <!-- Aviso efectivo -->
-        <div class="pago-aviso-efectivo <?php echo (($_POST["metodo_pago"] ?? "") === "Efectivo") ? "visible" : ""; ?>"
+        <div class="pago-aviso pago-aviso--efectivo <?php echo (($_POST["metodo_pago"] ?? "") === "Efectivo") ? "visible" : ""; ?>"
              id="aviso-efectivo">
             <span style="font-size:17px;flex-shrink:0;margin-top:1px;">⚠️</span>
             <p style="margin:0;">Ten exactamente <strong>$<?php echo number_format($totalPedido, 2); ?></strong> listos al recibir tu pedido. El repartidor no siempre lleva cambio.</p>
+        </div>
+
+        <!-- Aviso tarjeta -->
+        <div class="pago-aviso pago-aviso--tarjeta <?php echo (($_POST["metodo_pago"] ?? "") === "Tarjeta") ? "visible" : ""; ?>"
+             id="aviso-tarjeta">
+            <span style="font-size:17px;flex-shrink:0;margin-top:1px;">🖥️</span>
+            <p style="margin:0;">Llevamos terminal al momento de la entrega. <strong>Aceptamos débito y crédito.</strong></p>
         </div>
     </div>
 
@@ -595,25 +647,28 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-    var radios              = document.querySelectorAll('input[name="metodo_pago"]');
-    var cardTransfer        = document.getElementById("card-transfer");
-    var cardCash            = document.getElementById("card-cash");
-    var bloquesTransfer     = document.querySelectorAll(".bloque-transferencia");
-    var avisoEfectivo       = document.getElementById("aviso-efectivo");
+    var radios          = document.querySelectorAll('input[name="metodo_pago"]');
+    var cardTransfer    = document.getElementById("card-transfer");
+    var cardCash        = document.getElementById("card-cash");
+    var cardTarjeta     = document.getElementById("card-tarjeta");
+    var bloquesTransfer = document.querySelectorAll(".bloque-transferencia");
+    var avisoEfectivo   = document.getElementById("aviso-efectivo");
+    var avisoTarjeta    = document.getElementById("aviso-tarjeta");
 
     function actualizarVista() {
         var checked = document.querySelector('input[name="metodo_pago"]:checked');
-        var esTransferencia = checked && checked.value === "Transferencia";
-        var esEfectivo      = checked && checked.value === "Efectivo";
+        var val = checked ? checked.value : "";
 
-        cardTransfer.classList.toggle("pago-card--activo", esTransferencia);
-        cardCash.classList.toggle("pago-card--activo", esEfectivo);
+        cardTransfer.classList.toggle("pago-card--activo", val === "Transferencia");
+        cardCash.classList.toggle("pago-card--activo",     val === "Efectivo");
+        cardTarjeta.classList.toggle("pago-card--activo",  val === "Tarjeta");
 
         bloquesTransfer.forEach(function (b) {
-            b.style.display = esTransferencia ? "block" : "none";
+            b.style.display = val === "Transferencia" ? "block" : "none";
         });
 
-        avisoEfectivo.classList.toggle("visible", esEfectivo);
+        avisoEfectivo.classList.toggle("visible", val === "Efectivo");
+        avisoTarjeta.classList.toggle("visible",  val === "Tarjeta");
     }
 
     radios.forEach(function (r) { r.addEventListener("change", actualizarVista); });
