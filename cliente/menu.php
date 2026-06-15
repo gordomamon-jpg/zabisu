@@ -499,6 +499,46 @@ foreach ($stmtRatingsDist->fetchAll(PDO::FETCH_ASSOC) as $row) {
         color: rgba(255,255,255,0.8);
         letter-spacing: 0.2px;
     }
+
+    /* ── Animación de entrada en carga inicial ── */
+    @keyframes md-entrada {
+        from { opacity: 0; transform: translateY(12px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .hamburguer-btn       { animation: md-entrada .45s cubic-bezier(.25,0,.1,1) .05s both; }
+    .md-hero__eyebrow     { animation: md-entrada .5s  cubic-bezier(.25,0,.1,1) .10s both; }
+    .md-hero__marca-grupo { animation: md-entrada .55s cubic-bezier(.25,0,.1,1) .18s both; }
+    .md-hero__fecha       { animation: md-entrada .5s  cubic-bezier(.25,0,.1,1) .28s both; }
+    .md-hero__precios     { animation: md-entrada .5s  cubic-bezier(.25,0,.1,1) .36s both; }
+    .md-hero__cierre      { animation: md-entrada .5s  cubic-bezier(.25,0,.1,1) .43s both; }
+    #md-countdown         { animation: md-entrada .45s cubic-bezier(.25,0,.1,1) .46s both; }
+    .md-hero__rating      { animation: md-entrada .5s  cubic-bezier(.25,0,.1,1) .51s both; }
+    .md-tabs              { animation: md-entrada .5s  cubic-bezier(.25,0,.1,1) .58s both; }
+    .md-cta               { animation: md-entrada .5s  cubic-bezier(.25,0,.1,1) .70s both; }
+    .cliente-footer       { animation: md-entrada .5s  cubic-bezier(.25,0,.1,1) .75s both; }
+
+    /* Items del panel: ocultos hasta que JS los anime en sincronía con el hero */
+    .md-tab-panel .md-seccion__cabecera,
+    .md-tab-panel .md-plato,
+    .md-tab-panel .md-chip {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .hamburguer-btn, .md-hero__eyebrow, .md-hero__marca-grupo,
+        .md-hero__fecha, .md-hero__precios, .md-hero__cierre,
+        #md-countdown, .md-hero__rating, .md-tabs, .md-cta, .cliente-footer {
+            animation: none;
+        }
+        .md-tab-panel .md-seccion__cabecera,
+        .md-tab-panel .md-plato,
+        .md-tab-panel .md-chip {
+            opacity: 1;
+            transform: none;
+        }
+    }
 </style>
 
 <body>
@@ -788,7 +828,16 @@ document.querySelectorAll(".md-tab").forEach(function (tab) {
     });
 });
 
-animarPanel(document.querySelector(".md-tab-panel--activo"));
+(function () {
+    var reducido = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reducido) {
+        animarPanel(document.querySelector(".md-tab-panel--activo"));
+    } else {
+        setTimeout(function () {
+            animarPanel(document.querySelector(".md-tab-panel--activo"));
+        }, 620);
+    }
+})();
 
 // Al tocar cualquier ítem del menú, bajar al botón y animarlo
 var cta = document.querySelector(".md-cta");
