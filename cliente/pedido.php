@@ -488,6 +488,31 @@ if ($scrollDestino === "bloque-entrega") {
     <link rel="stylesheet" href="../assets/css/styles.css?v=5">
     <style>
         .opcion-producto { text-transform: none !important; font-weight: normal !important; letter-spacing: normal !important; }
+
+        /* ── Aviso de autocompletado ── */
+        .autocomplete-aviso {
+            display: flex;
+            align-items: flex-start;
+            gap: 9px;
+            padding: 11px 14px;
+            background: rgba(74,200,110,.07);
+            border: 1px solid rgba(74,200,110,.2);
+            border-radius: 12px;
+            font-size: 13px;
+            color: rgba(255,255,255,.65);
+            line-height: 1.5;
+            margin-top: 14px;
+            opacity: 0;
+            transform: translateY(5px);
+            transition: opacity .3s ease, transform .3s ease;
+            pointer-events: none;
+        }
+        .autocomplete-aviso.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        .autocomplete-aviso__icono { color: #4ac86e; font-weight: 800; flex-shrink: 0; font-size: 14px; margin-top: 1px; }
     </style>
 </head>
 <body>
@@ -587,6 +612,11 @@ if ($scrollDestino === "bloque-entrega") {
                 <p class="nota-formulario nota-correo">
                     ✉️ Aquí recibirás la confirmación y todos los detalles de tu pedido. Asegúrate de que sea correcto.
                 </p>
+
+                <div class="autocomplete-aviso" id="autocomplete-aviso">
+                    <span class="autocomplete-aviso__icono">✓</span>
+                    <span>Completamos tus datos y ubicación de entrega basándonos en tu último pedido. Puedes cambiarlos si lo necesitas.</span>
+                </div>
             </section>
 
             <div class="stepper-nav">
@@ -1137,6 +1167,53 @@ document.addEventListener("DOMContentLoaded", function () {
     if (telefonoInput) {
         telefonoInput.addEventListener("input", function () {
             this.value = this.value.replace(/\D/g, "").slice(0, 10);
+        });
+    }
+
+    // ── Autocompletar desde último pedido ────────────────────────
+    var autocompleteTimer = null;
+    var avisoAutocomp = document.getElementById("autocomplete-aviso");
+
+    if (telefonoInput) {
+        telefonoInput.addEventListener("input", function () {
+            clearTimeout(autocompleteTimer);
+            var tel = this.value;
+            if (tel.length !== 10) return;
+
+            autocompleteTimer = setTimeout(function () {
+                fetch("ultimo_pedido.php?telefono=" + encodeURIComponent(tel))
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        if (!data.encontrado) return;
+
+                        var campoNombre = document.getElementById("nombre_cliente");
+                        var campoCorrEo = document.getElementById("correo_cliente");
+
+                        if (campoNombre && !campoNombre.value.trim()) {
+                            campoNombre.value = data.nombre_cliente;
+                        }
+                        if (campoCorrEo && !campoCorrEo.value.trim()) {
+                            campoCorrEo.value = data.correo_cliente;
+                        }
+
+                        // Pre-seleccionar ubicación y horario para el paso 3
+                        if (data.id_horario) {
+                            var radioHorario = document.querySelector(
+                                "input[name='id_horario'][value='" + data.id_horario + "']"
+                            );
+                            if (radioHorario) radioHorario.checked = true;
+                        }
+                        if (data.id_ubicacion) {
+                            var radioUbicacion = document.querySelector(
+                                "input.radio-ubicacion[value='" + data.id_ubicacion + "']"
+                            );
+                            if (radioUbicacion) radioUbicacion.checked = true;
+                        }
+
+                        if (avisoAutocomp) avisoAutocomp.classList.add("visible");
+                    })
+                    .catch(function () {});
+            }, 500);
         });
     }
 
