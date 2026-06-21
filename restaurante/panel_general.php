@@ -167,19 +167,11 @@ $modoPrueba = (int)($stmtModoPrueba->fetchColumn() ?? 0);
             <?php endif; ?>
         </a>
 
-        <a href="estadisticas.php" class="panel-acceso panel-acceso--estadisticas">
-            <div class="panel-acceso__icono">📊</div>
+        <a href="finanzas.php" class="panel-acceso panel-acceso--estadisticas">
+            <div class="panel-acceso__icono">💰</div>
             <div class="panel-acceso__contenido">
-                <strong class="panel-acceso__titulo">Estadísticas</strong>
-                <span class="panel-acceso__desc">Ventas, métodos de pago y productos populares</span>
-            </div>
-        </a>
-
-        <a href="gastos.php" class="panel-acceso panel-acceso--estadisticas">
-            <div class="panel-acceso__icono">💸</div>
-            <div class="panel-acceso__contenido">
-                <strong class="panel-acceso__titulo">Registro de gastos</strong>
-                <span class="panel-acceso__desc">Ingresos vs. egresos por semana operativa</span>
+                <strong class="panel-acceso__titulo">Finanzas</strong>
+                <span class="panel-acceso__desc">Presupuesto, gastos, ventas y estadísticas</span>
             </div>
         </a>
 
