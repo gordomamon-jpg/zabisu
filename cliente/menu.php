@@ -229,26 +229,46 @@ body {
     z-index: 1;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 14px;
     margin-bottom: 26px;
     animation: nm-fadein .5s cubic-bezier(.25,0,.1,1) .05s both;
 }
 .nm-logo-wrap img {
-    width: 44px; height: 44px;
+    width: 52px; height: 52px;
     object-fit: contain;
-    filter: drop-shadow(0 0 16px rgba(255,122,0,.55));
     animation: nm-logo-glow 3s ease-in-out infinite alternate;
 }
 @keyframes nm-logo-glow {
-    from { filter: drop-shadow(0 0 10px rgba(255,122,0,.4)); }
-    to   { filter: drop-shadow(0 0 22px rgba(255,122,0,.75)); }
+    from { filter: drop-shadow(0 0 10px rgba(255,122,0,.45)); }
+    to   { filter: drop-shadow(0 0 26px rgba(255,122,0,.85)); }
 }
 .nm-logo-wrap span {
-    font-size: 36px;
+    font-size: 62px;
     font-weight: 900;
-    color: #fff;
-    letter-spacing: -1.5px;
-    text-shadow: 0 0 40px rgba(255,122,0,.3);
+    letter-spacing: -3px;
+    line-height: 1;
+    /* Gradiente naranja con shimmer */
+    background: linear-gradient(
+        105deg,
+        #ff6a00 0%,
+        #ff9a40 30%,
+        #ffe0b0 50%,
+        #ff9a40 70%,
+        #ff6a00 100%
+    );
+    background-size: 220% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: nm-shimmer 3.2s linear infinite, nm-texto-entrada .7s cubic-bezier(.34,1.4,.64,1) .08s both;
+}
+@keyframes nm-shimmer {
+    0%   { background-position: 0%   center; }
+    100% { background-position: 220% center; }
+}
+@keyframes nm-texto-entrada {
+    from { opacity: 0; transform: translateY(12px) scale(.88); filter: blur(6px); }
+    to   { opacity: 1; transform: translateY(0)    scale(1);   filter: blur(0); }
 }
 
 /* ── Card ─────────────────────────────────────────────── */
