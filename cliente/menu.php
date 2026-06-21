@@ -139,7 +139,22 @@ $stmtMenu = $conexion->prepare($sqlMenu);
 $stmtMenu->execute();
 $menuActivo = $stmtMenu->fetch(PDO::FETCH_ASSOC);
 
-if (!$menuActivo) { ?>
+if (!$menuActivo) {
+    // Buscar próximo menú programado
+    $stmtNext = $conexion->prepare(
+        "SELECT fecha FROM menu_dia WHERE fecha >= CURDATE() ORDER BY fecha ASC LIMIT 1"
+    );
+    $stmtNext->execute();
+    $nextMenu = $stmtNext->fetch(PDO::FETCH_ASSOC);
+
+    $proximoTexto = '';
+    if ($nextMenu) {
+        $dias   = ['Sunday'=>'Dom','Monday'=>'Lun','Tuesday'=>'Mar','Wednesday'=>'Mié','Thursday'=>'Jue','Friday'=>'Vie','Saturday'=>'Sáb'];
+        $mesesC = ['01'=>'ene','02'=>'feb','03'=>'mar','04'=>'abr','05'=>'may','06'=>'jun','07'=>'jul','08'=>'ago','09'=>'sep','10'=>'oct','11'=>'nov','12'=>'dic'];
+        $ts     = strtotime($nextMenu['fecha']);
+        $proximoTexto = ($dias[date('l',$ts)] ?? '') . ' ' . date('j',$ts) . ' ' . ($mesesC[date('m',$ts)] ?? '');
+    }
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -152,19 +167,394 @@ if (!$menuActivo) { ?>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Zabisu">
     <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
-    <link rel="stylesheet" href="../assets/css/styles.css?v=5">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #09090f;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    overflow: hidden;
+    position: relative;
+}
+
+/* ── Glow de fondo ────────────────────────────────────── */
+.nm-glow-top {
+    position: fixed;
+    top: -120px; left: 50%;
+    transform: translateX(-50%);
+    width: 600px; height: 400px;
+    background: radial-gradient(ellipse, rgba(255,122,0,.18) 0%, transparent 65%);
+    pointer-events: none;
+    animation: nm-glow-pulse 4s ease-in-out infinite alternate;
+}
+@keyframes nm-glow-pulse {
+    from { opacity: .7; transform: translateX(-50%) scale(1); }
+    to   { opacity: 1;  transform: translateX(-50%) scale(1.08); }
+}
+
+/* ── Partículas flotantes ─────────────────────────────── */
+.nm-particles {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+}
+.nm-particle {
+    position: absolute;
+    bottom: -30px;
+    font-size: var(--sz);
+    left: var(--x);
+    opacity: 0;
+    animation: nm-rise var(--dur) ease-in-out var(--delay) infinite;
+    filter: blur(.3px);
+    user-select: none;
+}
+@keyframes nm-rise {
+    0%   { transform: translateY(0)      rotate(0deg)   scale(.8); opacity: 0;   }
+    8%   {                                                           opacity: .45; }
+    85%  {                                                           opacity: .2;  }
+    100% { transform: translateY(-105vh) rotate(var(--rot))  scale(1.1); opacity: 0; }
+}
+
+/* ── Logo ─────────────────────────────────────────────── */
+.nm-logo-wrap {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 26px;
+    animation: nm-fadein .5s cubic-bezier(.25,0,.1,1) .05s both;
+}
+.nm-logo-wrap img {
+    width: 44px; height: 44px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 16px rgba(255,122,0,.55));
+    animation: nm-logo-glow 3s ease-in-out infinite alternate;
+}
+@keyframes nm-logo-glow {
+    from { filter: drop-shadow(0 0 10px rgba(255,122,0,.4)); }
+    to   { filter: drop-shadow(0 0 22px rgba(255,122,0,.75)); }
+}
+.nm-logo-wrap span {
+    font-size: 36px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -1.5px;
+    text-shadow: 0 0 40px rgba(255,122,0,.3);
+}
+
+/* ── Card ─────────────────────────────────────────────── */
+.nm-card {
+    position: relative;
+    z-index: 1;
+    background: linear-gradient(160deg, rgba(255,255,255,.04) 0%, rgba(255,255,255,.02) 100%);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 28px;
+    padding: 38px 28px 34px;
+    max-width: 370px;
+    width: 100%;
+    text-align: center;
+    box-shadow:
+        0 0 0 1px rgba(255,122,0,.07),
+        0 24px 70px rgba(0,0,0,.65),
+        0 0 50px rgba(255,122,0,.05);
+    animation: nm-popin .65s cubic-bezier(.34,1.35,.64,1) .12s both;
+}
+@keyframes nm-popin {
+    from { transform: scale(.82) translateY(28px); opacity: 0; }
+    to   { transform: scale(1)   translateY(0);    opacity: 1; }
+}
+
+/* ── Icono principal ──────────────────────────────────── */
+.nm-icono-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 22px;
+    animation: nm-fadein .5s cubic-bezier(.25,0,.1,1) .3s both;
+}
+.nm-icono-bounce {
+    animation: nm-bounce 2.2s cubic-bezier(.4,0,.2,1) infinite alternate;
+}
+@keyframes nm-bounce {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-14px); }
+}
+.nm-icono {
+    font-size: 70px;
+    line-height: 1;
+    filter: drop-shadow(0 6px 20px rgba(0,0,0,.55));
+}
+/* ── Vapor ────────────────────────────────────────────── */
+.nm-steam {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+    height: 28px;
+    align-items: flex-end;
+    justify-content: center;
+}
+.nm-steam__line {
+    width: 3px;
+    border-radius: 99px;
+    background: rgba(255,255,255,.25);
+    animation: nm-vapor var(--vdur) ease-in-out var(--vdelay) infinite;
+    transform-origin: bottom center;
+}
+.nm-steam__line--1 { --vdur: 1.6s; --vdelay: 0s;    height: 18px; }
+.nm-steam__line--2 { --vdur: 2s;   --vdelay: .35s;  height: 24px; }
+.nm-steam__line--3 { --vdur: 1.8s; --vdelay: .15s;  height: 16px; }
+@keyframes nm-vapor {
+    0%   { transform: scaleX(1)    translateY(0);   opacity: .5; }
+    40%  { transform: scaleX(1.5)  translateY(-6px); opacity: .3; }
+    70%  { transform: scaleX(.8)   translateY(-14px); opacity: .15; }
+    100% { transform: scaleX(1.2)  translateY(-22px); opacity: 0; }
+}
+
+/* ── Textos ───────────────────────────────────────────── */
+.nm-eyebrow {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: rgba(255,122,0,.75);
+    margin-bottom: 8px;
+    animation: nm-fadein .5s cubic-bezier(.25,0,.1,1) .38s both;
+}
+.nm-titulo {
+    font-size: 26px;
+    font-weight: 900;
+    color: #fff;
+    margin-bottom: 10px;
+    letter-spacing: -.4px;
+    line-height: 1.2;
+    animation: nm-fadein .5s cubic-bezier(.25,0,.1,1) .44s both;
+}
+.nm-texto {
+    font-size: 14px;
+    color: rgba(255,255,255,.5);
+    line-height: 1.75;
+    margin-bottom: 16px;
+    animation: nm-fadein .5s cubic-bezier(.25,0,.1,1) .50s both;
+}
+
+/* ── Próximo menú ─────────────────────────────────────── */
+.nm-proximo {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: rgba(255,122,0,.1);
+    border: 1px solid rgba(255,122,0,.25);
+    border-radius: 99px;
+    padding: 7px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #ff9a40;
+    letter-spacing: .2px;
+    margin-bottom: 20px;
+    animation: nm-fadein .5s cubic-bezier(.25,0,.1,1) .56s both;
+}
+
+/* ── Separador ────────────────────────────────────────── */
+.nm-sep {
+    width: 100%;
+    height: 1px;
+    background: rgba(255,255,255,.07);
+    margin: 18px 0;
+    animation: nm-fadein .5s cubic-bezier(.25,0,.1,1) .58s both;
+}
+
+/* ── Auto-refresh indicator ───────────────────────────── */
+.nm-refresh {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 18px;
+    animation: nm-fadein .5s cubic-bezier(.25,0,.1,1) .62s both;
+}
+.nm-refresh__txt {
+    font-size: 12px;
+    color: rgba(255,255,255,.3);
+    letter-spacing: .2px;
+}
+.nm-dots {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+.nm-dot {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: rgba(255,122,0,.5);
+    animation: nm-dot-bounce .9s ease-in-out infinite;
+}
+.nm-dot:nth-child(1) { animation-delay: 0s; }
+.nm-dot:nth-child(2) { animation-delay: .18s; }
+.nm-dot:nth-child(3) { animation-delay: .36s; }
+@keyframes nm-dot-bounce {
+    0%,80%,100% { transform: scale(.7); opacity: .4; }
+    40%          { transform: scale(1.2); opacity: 1; }
+}
+
+/* ── Botón de pedido ──────────────────────────────────── */
+.nm-btn {
+    display: block;
+    width: 100%;
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 14px;
+    color: rgba(255,255,255,.7);
+    font-size: 14px;
+    font-weight: 600;
+    padding: 13px 20px;
+    text-decoration: none;
+    letter-spacing: .2px;
+    transition: background .15s, color .15s, border-color .15s;
+    animation: nm-fadein .5s cubic-bezier(.25,0,.1,1) .66s both;
+}
+.nm-btn:hover {
+    background: rgba(255,255,255,.1);
+    color: #fff;
+    border-color: rgba(255,255,255,.18);
+}
+.nm-btn:active { transform: scale(.98); }
+
+/* ── Footer ───────────────────────────────────────────── */
+.nm-footer {
+    position: relative;
+    z-index: 1;
+    margin-top: 24px;
+    font-size: 11px;
+    color: rgba(255,255,255,.2);
+    letter-spacing: .3px;
+    animation: nm-fadein .5s cubic-bezier(.25,0,.1,1) .72s both;
+}
+
+/* ── Fade-in base ─────────────────────────────────────── */
+@keyframes nm-fadein {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; }
+}
+</style>
 </head>
 <body>
-<div class="contenedor">
-    <div class="hero-zabisu">
-        <div class="hero-zabisu__glow"></div>
-        <div class="hero-zabisu__contenido">
-            <p class="hero-zabisu__eyebrow">ZABISU</p>
-            <h1 class="hero-zabisu__titulo">Sin menú disponible</h1>
-            <p class="hero-zabisu__texto">Aún no hay un menú publicado para hoy. Vuelve pronto.</p>
+
+<div class="nm-glow-top"></div>
+
+<!-- Partículas -->
+<div class="nm-particles" aria-hidden="true">
+    <span class="nm-particle" style="--x:6%;  --sz:20px; --dur:9s;  --delay:0s;    --rot:30deg">🍽️</span>
+    <span class="nm-particle" style="--x:17%; --sz:16px; --dur:11s; --delay:1.4s;  --rot:-20deg">🥄</span>
+    <span class="nm-particle" style="--x:29%; --sz:18px; --dur:8s;  --delay:3.1s;  --rot:45deg">🥗</span>
+    <span class="nm-particle" style="--x:42%; --sz:14px; --dur:12s; --delay:0.7s;  --rot:-15deg">🍲</span>
+    <span class="nm-particle" style="--x:56%; --sz:20px; --dur:10s; --delay:2.2s;  --rot:60deg">🍴</span>
+    <span class="nm-particle" style="--x:68%; --sz:16px; --dur:9.5s;--delay:1.0s;  --rot:-40deg">🥘</span>
+    <span class="nm-particle" style="--x:80%; --sz:18px; --dur:11s; --delay:3.8s;  --rot:25deg">🧂</span>
+    <span class="nm-particle" style="--x:91%; --sz:14px; --dur:8.5s;--delay:2.6s;  --rot:-30deg">🥣</span>
+</div>
+
+<!-- Logo -->
+<div class="nm-logo-wrap">
+    <img src="../assets/img/LOGO_BLANCO.png" alt="Zabisu">
+    <span>Zabisu</span>
+</div>
+
+<!-- Card -->
+<div class="nm-card">
+
+    <div class="nm-icono-wrap">
+        <div class="nm-icono-bounce">
+            <div class="nm-icono">🍽️</div>
+        </div>
+        <div class="nm-steam">
+            <span class="nm-steam__line nm-steam__line--1"></span>
+            <span class="nm-steam__line nm-steam__line--2"></span>
+            <span class="nm-steam__line nm-steam__line--3"></span>
         </div>
     </div>
+
+    <p class="nm-eyebrow">Restaurante Zabisu</p>
+    <h1 class="nm-titulo">Sin menú hoy</h1>
+    <p class="nm-texto">
+        El menú del día aún no está publicado.<br>
+        Vuelve pronto, algo delicioso está en camino.
+    </p>
+
+    <?php if ($proximoTexto): ?>
+    <div class="nm-proximo">
+        <span>📅</span> Próximo: <?php echo htmlspecialchars($proximoTexto); ?>
+    </div>
+    <?php endif; ?>
+
+    <div class="nm-sep"></div>
+
+    <div class="nm-refresh">
+        <div class="nm-dots">
+            <span class="nm-dot"></span>
+            <span class="nm-dot"></span>
+            <span class="nm-dot"></span>
+        </div>
+        <span class="nm-refresh__txt" id="nm-refresh-txt">Revisando automáticamente…</span>
+    </div>
+
+    <a href="estado_pedido.php" class="nm-btn">
+        Consultar mi pedido anterior
+    </a>
 </div>
+
+<p class="nm-footer">© 2026 Zabisu · Sabor y Servicio</p>
+
+<script>
+// Auto-refresh silencioso cada 2 minutos
+(function () {
+    var intervalo = 120; // segundos
+    var restante  = intervalo;
+    var txtEl     = document.getElementById('nm-refresh-txt');
+
+    var timer = setInterval(function () {
+        restante--;
+        if (restante <= 0) {
+            restante = intervalo;
+            // Comprobar si hay menú activo sin recargar la página
+            fetch('menu.php', { method: 'HEAD' })
+                .then(function (r) {
+                    // Si el servidor ya no devuelve la vista de "sin menú",
+                    // recargamos para que el cliente vea el menú
+                    if (r.redirected || r.ok) {
+                        // Verificamos con un GET silencioso
+                        fetch('check_menu.php?_=' + Date.now())
+                            .then(function (r2) { return r2.text(); })
+                            .then(function (txt) {
+                                if (txt.trim() === '1') location.reload();
+                            })
+                            .catch(function () {});
+                    }
+                })
+                .catch(function () {});
+        }
+        if (txtEl) {
+            if (restante <= 10) {
+                txtEl.textContent = 'Revisando en ' + restante + 's…';
+            } else {
+                txtEl.textContent = 'Revisando automáticamente…';
+            }
+        }
+    }, 1000);
+})();
+</script>
 </body>
 </html>
 <?php exit; }
