@@ -949,6 +949,37 @@ foreach ($stmtRatingsDist->fetchAll(PDO::FETCH_ASSOC) as $row) {
             transform: none;
         }
     }
+
+    /* ── Zabisu: gradiente naranja + shimmer ── */
+    .md-hero__marca {
+        font-weight: 900;
+        letter-spacing: -3px;
+        color: unset;
+        text-shadow: none;
+        background: linear-gradient(
+            105deg,
+            #ff6a00 0%,
+            #ff9a40 30%,
+            #ffe0b0 50%,
+            #ff9a40 70%,
+            #ff6a00 100%
+        );
+        background-size: 220% auto;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation:
+            md-marca-shimmer 3.2s linear infinite,
+            md-marca-entrada .7s cubic-bezier(.34,1.4,.64,1) .18s both;
+    }
+    @keyframes md-marca-shimmer {
+        0%   { background-position: 0%   center; }
+        100% { background-position: 220% center; }
+    }
+    @keyframes md-marca-entrada {
+        from { opacity: 0; transform: translateY(12px) scale(.88); filter: blur(6px); }
+        to   { opacity: 1; transform: translateY(0)    scale(1);   filter: blur(0);   }
+    }
 </style>
 
 <body>
