@@ -157,6 +157,7 @@ function formatearFechaBonita($fecha)
                 Administra los menús del día y prepara la operación semanal.
             </p>
             <a href="panel_general.php" class="btn-volver-panel">← Panel general</a>
+            <a href="historico_menus.php" class="btn-volver-panel">📖 Historial de menús</a>
         </div>
     </div>
 

@@ -191,6 +191,14 @@ $modoPrueba = (int)($stmtModoPrueba->fetchColumn() ?? 0);
             </div>
         </a>
 
+        <a href="historico_menus.php" class="panel-acceso panel-acceso--menus">
+            <div class="panel-acceso__icono">📖</div>
+            <div class="panel-acceso__contenido">
+                <strong class="panel-acceso__titulo">Historial de menús</strong>
+                <span class="panel-acceso__desc">Explora menús anteriores para inspirarte</span>
+            </div>
+        </a>
+
         <a href="nuevo_pedido.php" class="panel-acceso panel-acceso--pedidos">
             <div class="panel-acceso__icono">➕</div>
             <div class="panel-acceso__contenido">
