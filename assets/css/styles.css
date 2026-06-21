@@ -182,11 +182,33 @@ h1 {
 .md-hero__marca {
     margin: 0;
     font-size: 72px;
-    font-weight: 800;
-    letter-spacing: -2px;
+    font-weight: 900;
+    letter-spacing: -3px;
     line-height: 1;
-    color: var(--zabisu-white);
-    text-shadow: 0 0 60px rgba(255,122,0,0.3);
+    background: linear-gradient(
+        105deg,
+        #ff6a00 0%,
+        #ff9a40 30%,
+        #ffe0b0 50%,
+        #ff9a40 70%,
+        #ff6a00 100%
+    );
+    background-size: 220% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: md-marca-shimmer 3.2s linear infinite, md-marca-entrada .7s cubic-bezier(.34,1.4,.64,1) .18s both;
+}
+@keyframes md-marca-shimmer {
+    0%   { background-position: 0%   center; }
+    100% { background-position: 220% center; }
+}
+@keyframes md-marca-entrada {
+    from { opacity: 0; transform: translateY(12px) scale(.88); filter: blur(6px); }
+    to   { opacity: 1; transform: translateY(0)    scale(1);   filter: blur(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .md-hero__marca { animation: none; }
 }
 
 .md-hero__fecha {
