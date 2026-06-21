@@ -865,11 +865,19 @@ foreach ($stmtRatingsDist->fetchAll(PDO::FETCH_ASSOC) as $row) {
         color: rgba(255,255,255,.18);
     }
     .md-hero__rating__estrella--llena { color: #ff7a00; }
-    .md-hero__rating__estrella--media {
-        background: linear-gradient(90deg, #ff7a00 50%, rgba(255,255,255,.18) 50%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+    .md-hero__rating__estrella--parcial {
+        position: relative;
+        display: inline-block;
+    }
+    .md-hero__rating__estrella--parcial::after {
+        content: '★';
+        position: absolute;
+        left: 0;
+        top: 0;
+        color: #ff7a00;
+        width: var(--star-pct, 50%);
+        overflow: hidden;
+        white-space: nowrap;
     }
     .md-hero__rating__score {
         font-size: 14px;
@@ -1048,9 +1056,10 @@ foreach ($stmtRatingsDist->fetchAll(PDO::FETCH_ASSOC) as $row) {
         <div class="md-hero__countdown md-hero__countdown--ok" id="md-countdown"></div>
 
         <?php if ($ratingsTotal >= 3):
-            $promR = (float)$ratingsProm;
-            $promPiso = floor($promR);
-            $tieneMediaR = ($promR - $promPiso) >= 0.25;
+            $promR    = (float)$ratingsProm;
+            $promPiso = (int)floor($promR);
+            $fraccion = $promR - $promPiso;
+            $pctEstr  = round($fraccion * 100);
             $etqR = match(true) {
                 $promR >= 4.5 => "Excelente",
                 $promR >= 3.5 => "Bueno",
@@ -1061,12 +1070,15 @@ foreach ($stmtRatingsDist->fetchAll(PDO::FETCH_ASSOC) as $row) {
         <div class="md-hero__rating">
             <div class="md-hero__rating__estrellas">
                 <?php for ($s = 1; $s <= 5; $s++):
-                    if ($s <= $promPiso) $cls = "md-hero__rating__estrella--llena";
-                    elseif ($s === $promPiso + 1 && $tieneMediaR) $cls = "md-hero__rating__estrella--media";
-                    else $cls = "";
-                ?>
-                    <span class="md-hero__rating__estrella <?php echo $cls; ?>">★</span>
-                <?php endfor; ?>
+                    if ($s <= $promPiso): ?>
+                        <span class="md-hero__rating__estrella md-hero__rating__estrella--llena">★</span>
+                    <?php elseif ($s === $promPiso + 1 && $fraccion > 0): ?>
+                        <span class="md-hero__rating__estrella md-hero__rating__estrella--parcial"
+                              style="--star-pct:<?php echo $pctEstr; ?>%">★</span>
+                    <?php else: ?>
+                        <span class="md-hero__rating__estrella">★</span>
+                    <?php endif;
+                endfor; ?>
             </div>
             <span class="md-hero__rating__score"><?php echo number_format($promR, 1); ?></span>
             <span class="md-hero__rating__sep"></span>
