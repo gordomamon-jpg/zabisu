@@ -145,11 +145,15 @@ $gastosPorSemana = [];
 foreach ($rowsGastos as $r) $gastosPorSemana[$r['semana_destino']] = (float)$r['total_gastos'];
 
 $rowsIngresos = $conexion->query(
-    "SELECT DATE_SUB(DATE(fecha_pedido), INTERVAL WEEKDAY(DATE(fecha_pedido)) DAY) AS semana_lunes,
-            SUM(total) AS total_ingresos
-     FROM pedidos
-     WHERE estado != 'Cancelado' AND es_prueba = 0
-       AND DATE(fecha_pedido) >= DATE_SUB(CURDATE(), INTERVAL 84 DAY)
+    "SELECT DATE_SUB(
+                COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)),
+                INTERVAL WEEKDAY(COALESCE(mi.fecha_menu, DATE(p.fecha_pedido))) DAY
+             ) AS semana_lunes,
+            SUM(p.total) AS total_ingresos
+     FROM pedidos p
+     LEFT JOIN $subFecha ON mi.id_pedido = p.id_pedido
+     WHERE p.estado != 'Cancelado' AND p.es_prueba = 0
+       AND COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) >= DATE_SUB(CURDATE(), INTERVAL 84 DAY)
      GROUP BY semana_lunes ORDER BY semana_lunes DESC"
 )->fetchAll(PDO::FETCH_ASSOC);
 
@@ -197,7 +201,7 @@ $stmtKpis = $conexion->prepare(
             COALESCE(SUM(CASE WHEN p.estado_pago = 'Pagado'                   THEN p.total ELSE 0 END), 0) AS total_confirmado,
             COALESCE(SUM(CASE WHEN p.estado_pago = 'Pendiente de validación'  THEN p.total ELSE 0 END), 0) AS total_por_confirmar
      FROM pedidos p LEFT JOIN $subFecha ON mi.id_pedido = p.id_pedido
-     WHERE COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) BETWEEN :fi AND :ff AND p.es_prueba = 0"
+     WHERE COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) BETWEEN :fi AND :ff AND p.es_prueba = 0 AND p.estado != 'Cancelado'"
 );
 $stmtKpis->execute([':fi' => $fechaInicio, ':ff' => $fechaFin]);
 $kpis = $stmtKpis->fetch(PDO::FETCH_ASSOC);
@@ -205,7 +209,7 @@ $kpis = $stmtKpis->fetch(PDO::FETCH_ASSOC);
 $stmtComidas = $conexion->prepare(
     "SELECT COUNT(*) FROM pedido_menus pm INNER JOIN pedidos p ON pm.id_pedido = p.id_pedido
      LEFT JOIN $subFecha ON mi.id_pedido = p.id_pedido
-     WHERE COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) BETWEEN :fi AND :ff AND p.es_prueba = 0"
+     WHERE COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) BETWEEN :fi AND :ff AND p.es_prueba = 0 AND p.estado != 'Cancelado'"
 );
 $stmtComidas->execute([':fi' => $fechaInicio, ':ff' => $fechaFin]);
 $totalComidas = (int)$stmtComidas->fetchColumn();
@@ -214,7 +218,7 @@ $stmtPorDia = $conexion->prepare(
     "SELECT COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) AS fecha,
             COUNT(*) AS pedidos, COALESCE(SUM(p.total), 0) AS total
      FROM pedidos p LEFT JOIN $subFecha ON mi.id_pedido = p.id_pedido
-     WHERE COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) BETWEEN :fi AND :ff AND p.es_prueba = 0
+     WHERE COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) BETWEEN :fi AND :ff AND p.es_prueba = 0 AND p.estado != 'Cancelado'
      GROUP BY COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) ORDER BY fecha ASC"
 );
 $stmtPorDia->execute([':fi' => $fechaInicio, ':ff' => $fechaFin]);
@@ -223,7 +227,7 @@ $ventasPorDia = $stmtPorDia->fetchAll(PDO::FETCH_ASSOC);
 $stmtPorMetodo = $conexion->prepare(
     "SELECT p.metodo_pago, COUNT(*) AS pedidos, COALESCE(SUM(p.total), 0) AS total
      FROM pedidos p LEFT JOIN $subFecha ON mi.id_pedido = p.id_pedido
-     WHERE COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) BETWEEN :fi AND :ff AND p.es_prueba = 0
+     WHERE COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) BETWEEN :fi AND :ff AND p.es_prueba = 0 AND p.estado != 'Cancelado'
      GROUP BY p.metodo_pago ORDER BY total DESC"
 );
 $stmtPorMetodo->execute([':fi' => $fechaInicio, ':ff' => $fechaFin]);
@@ -235,7 +239,7 @@ $stmtPorUbicacion = $conexion->prepare(
      INNER JOIN horarios_ubicacion h ON p.id_horario = h.id_horario
      INNER JOIN ubicaciones u ON h.id_ubicacion = u.id_ubicacion
      LEFT JOIN $subFecha ON mi.id_pedido = p.id_pedido
-     WHERE COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) BETWEEN :fi AND :ff AND p.es_prueba = 0
+     WHERE COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) BETWEEN :fi AND :ff AND p.es_prueba = 0 AND p.estado != 'Cancelado'
      GROUP BY u.id_ubicacion, u.nombre_ubicacion, u.tipo ORDER BY total DESC"
 );
 $stmtPorUbicacion->execute([':fi' => $fechaInicio, ':ff' => $fechaFin]);
@@ -249,7 +253,7 @@ $stmtTopPlatos = $conexion->prepare(
      INNER JOIN productos pr ON pr.id_producto = dp.id_producto
      LEFT JOIN menu_dia md ON md.id_menu = pr.id_menu
      WHERE dp.categoria = 'Plato fuerte'
-       AND COALESCE(md.fecha, DATE(p.fecha_pedido)) BETWEEN :fi AND :ff AND p.es_prueba = 0
+       AND COALESCE(md.fecha, DATE(p.fecha_pedido)) BETWEEN :fi AND :ff AND p.es_prueba = 0 AND p.estado != 'Cancelado'
      GROUP BY dp.nombre_producto ORDER BY total DESC LIMIT 8"
 );
 $stmtTopPlatos->execute([':fi' => $fechaInicio, ':ff' => $fechaFin]);
@@ -263,7 +267,7 @@ $stmtTopComplementos = $conexion->prepare(
      INNER JOIN productos pr ON pr.id_producto = dp.id_producto
      LEFT JOIN menu_dia md ON md.id_menu = pr.id_menu
      WHERE dp.categoria = 'Complemento'
-       AND COALESCE(md.fecha, DATE(p.fecha_pedido)) BETWEEN :fi AND :ff AND p.es_prueba = 0
+       AND COALESCE(md.fecha, DATE(p.fecha_pedido)) BETWEEN :fi AND :ff AND p.es_prueba = 0 AND p.estado != 'Cancelado'
      GROUP BY dp.nombre_producto ORDER BY total DESC LIMIT 8"
 );
 $stmtTopComplementos->execute([':fi' => $fechaInicio, ':ff' => $fechaFin]);
