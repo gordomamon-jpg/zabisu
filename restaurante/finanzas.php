@@ -134,6 +134,14 @@ $stmtPres->execute([':sl' => $lunesActual]);
 $presupuestoActual = $stmtPres->fetch(PDO::FETCH_ASSOC);
 $presupuestoMonto  = $presupuestoActual ? (float)$presupuestoActual['presupuesto'] : 0;
 
+// ── Subquery reutilizable: fecha real del menú ────────────
+$subFecha = "(SELECT pm2.id_pedido, MIN(md2.fecha) AS fecha_menu
+              FROM pedido_menus pm2
+              INNER JOIN detalle_pedido dp2 ON dp2.id_pedido_menu = pm2.id_pedido_menu
+              INNER JOIN productos pr2 ON pr2.id_producto = dp2.id_producto
+              INNER JOIN menu_dia md2 ON md2.id_menu = pr2.id_menu
+              GROUP BY pm2.id_pedido) AS mi";
+
 // ── P&L semanal (últimas 12 semanas) ─────────────────────
 $rowsGastos = $conexion->query(
     "SELECT semana_destino, SUM(monto) AS total_gastos
@@ -185,13 +193,6 @@ $primerDia   = date('Y-m-01');
 $fechaInicio = (isset($_GET['fi']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['fi'])) ? $_GET['fi'] : $primerDia;
 $fechaFin    = (isset($_GET['ff']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['ff'])) ? $_GET['ff'] : $hoy;
 if ($fechaInicio > $fechaFin) [$fechaInicio, $fechaFin] = [$fechaFin, $fechaInicio];
-
-$subFecha = "(SELECT pm2.id_pedido, MIN(md2.fecha) AS fecha_menu
-              FROM pedido_menus pm2
-              INNER JOIN detalle_pedido dp2 ON dp2.id_pedido_menu = pm2.id_pedido_menu
-              INNER JOIN productos pr2 ON pr2.id_producto = dp2.id_producto
-              INNER JOIN menu_dia md2 ON md2.id_menu = pr2.id_menu
-              GROUP BY pm2.id_pedido) AS mi";
 
 $stmtKpis = $conexion->prepare(
     "SELECT COUNT(*) AS total_pedidos,
