@@ -1,11 +1,12 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const http   = require('http');
+const path   = require('path');
 
 let clientReady = false;
 
 const client = new Client({
-    authStrategy: new LocalAuth({ dataPath: './wa_session' }),
+    authStrategy: new LocalAuth({ dataPath: path.join(__dirname, 'wa_session') }),
     webVersion: '2.2412.54',
     webVersionCache: {
         type: 'remote',
