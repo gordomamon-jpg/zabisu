@@ -15,3 +15,8 @@ Thumbs.db
 
 # Logs
 *.log
+
+# WhatsApp service — archivos locales del VPS
+/wa-service/wa_session/
+/wa-service/waweb.html
+/wa-service/node_modules/

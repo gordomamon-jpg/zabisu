@@ -9,8 +9,8 @@ const client = new Client({
     authStrategy: new LocalAuth({ dataPath: path.join(__dirname, 'wa_session') }),
     webVersion: '2.2412.54',
     webVersionCache: {
-        type: 'remote',
-        remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html',
+        type: 'local',
+        path: path.join(__dirname, 'waweb.html'),
     },
     puppeteer: {
         args: [
