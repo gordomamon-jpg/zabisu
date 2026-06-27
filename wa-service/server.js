@@ -4,6 +4,24 @@ const http   = require('http');
 const path   = require('path');
 
 let clientReady = false;
+let readyPoller = null;
+
+function startReadyPoller() {
+    if (readyPoller) return;
+    readyPoller = setInterval(async () => {
+        if (clientReady) { clearInterval(readyPoller); readyPoller = null; return; }
+        try {
+            const state = await client.getState();
+            if (state === 'CONNECTED') {
+                clearInterval(readyPoller);
+                readyPoller = null;
+                clientReady = true;
+                console.log('\n🟢 WhatsApp listo\n');
+            }
+        } catch (e) { /* aún no listo */ }
+    }, 4000);
+    setTimeout(() => { if (readyPoller) { clearInterval(readyPoller); readyPoller = null; } }, 300000);
+}
 
 const client = new Client({
     authStrategy: new LocalAuth({ dataPath: path.join(__dirname, 'wa_session') }),
@@ -33,13 +51,16 @@ client.on('qr', qr => {
 
 client.on('loading_screen', (percent, message) => {
     process.stdout.write('\rCargando WhatsApp... ' + percent + '%  ');
+    if (parseInt(percent) >= 100) setTimeout(startReadyPoller, 5000);
 });
 
 client.on('authenticated', () => {
     console.log('\n✅ Sesión autenticada');
+    setTimeout(startReadyPoller, 10000);
 });
 
 client.on('ready', () => {
+    if (readyPoller) { clearInterval(readyPoller); readyPoller = null; }
     clientReady = true;
     console.log('🟢 WhatsApp listo para enviar mensajes\n');
 });
