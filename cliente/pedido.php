@@ -259,6 +259,19 @@ foreach ($productos as $producto) {
 }
 
 /*
+    3.1 Obtener postre del día
+*/
+$sqlPostres = "SELECT * FROM productos WHERE id_menu = :id_menu AND categoria = 'Postre' AND disponible = 1 LIMIT 5";
+$stmtPostres = $conexion->prepare($sqlPostres);
+$stmtPostres->bindParam(":id_menu", $menuActivo["id_menu"], PDO::PARAM_INT);
+$stmtPostres->execute();
+$postres = $stmtPostres->fetchAll(PDO::FETCH_ASSOC);
+$postresIndexados = [];
+foreach ($postres as $p) {
+    $postresIndexados[(int)$p["id_producto"]] = $p;
+}
+
+/*
     4. Obtener ubicaciones activas
 */
 $sqlUbicaciones = "SELECT * FROM ubicaciones WHERE activo = 1 AND nombre_ubicacion != 'El Bigoton' ORDER BY tipo, nombre_ubicacion";
@@ -443,6 +456,22 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
                 "precio_unitario" => 10.00,
             ];
             $totalPedido += $cantidadHuevo * 10.00;
+        }
+
+        // Postres del día
+        foreach ($_POST["postres"] ?? [] as $idProducto => $cantidad) {
+            $cantidad = min((int)$cantidad, 5);
+            if ($cantidad <= 0 || !isset($postresIndexados[$idProducto])) continue;
+            $prod = $postresIndexados[$idProducto];
+            $precioPostre = (float)($prod["precio"] ?? 0);
+            $extrasSeleccionados[] = [
+                "id_producto"     => (int)$idProducto,
+                "nombre"          => $prod["nombre"],
+                "categoria"       => "Postre",
+                "cantidad"        => $cantidad,
+                "precio_unitario" => $precioPostre,
+            ];
+            $totalPedido += $cantidad * $precioPostre;
         }
 
         $_SESSION["pedido_temporal"] = [
@@ -786,6 +815,35 @@ if ($scrollDestino === "bloque-entrega") {
             }
             $iconosExtra = ["Sopa" => "🥣", "Complemento" => "🥗", "Agua" => "💧"];
             ?>
+
+            <?php if (!empty($postres)): ?>
+            <section class="bloque-formulario" id="bloque-postre">
+                <h2>🍮 Postre del día</h2>
+                <?php foreach ($postres as $postre):
+                    $cantPostre = (int)($_POST["postres"][$postre["id_producto"]] ?? 0);
+                ?>
+                <div class="extra-item <?php echo $cantPostre > 0 ? 'extra-item--activo' : ''; ?>"
+                     data-precio="<?php echo number_format((float)$postre["precio"], 2, ".", ""); ?>">
+                    <div style="flex:1;min-width:0;">
+                        <span class="extra-item__nombre"><?php echo htmlspecialchars($postre["nombre"]); ?></span>
+                        <?php if (!empty($postre["descripcion"])): ?>
+                        <span style="font-size:12px;color:rgba(255,255,255,.4);display:block;margin-top:3px;"><?php echo htmlspecialchars($postre["descripcion"]); ?></span>
+                        <?php endif; ?>
+                    </div>
+                    <span class="extra-item__precio-hint">+$<?php echo number_format((float)$postre["precio"], 2); ?></span>
+                    <div class="extra-item__contador">
+                        <button type="button" class="extra-btn-menos">−</button>
+                        <input type="number"
+                               name="postres[<?php echo (int)$postre["id_producto"]; ?>]"
+                               class="extra-cantidad"
+                               value="<?php echo $cantPostre; ?>"
+                               min="0" max="5" readonly>
+                        <button type="button" class="extra-btn-mas">+</button>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </section>
+            <?php endif; ?>
 
             <section class="bloque-formulario" id="bloque-extras">
                 <h2>Extras</h2>
@@ -1396,10 +1454,27 @@ document.addEventListener("DOMContentLoaded", function () {
             `;
         });
 
+        // Postres (sección independiente)
+        var totalPostres = 0;
+        var htmlPostres  = "";
+        document.querySelectorAll("#bloque-postre .extra-item").forEach(function (item) {
+            var cant = parseInt(item.querySelector(".extra-cantidad").value) || 0;
+            if (cant > 0) {
+                var precio = parseFloat(item.dataset.precio) || 0;
+                var nombre = item.querySelector(".extra-item__nombre").textContent;
+                totalPostres += cant * precio;
+                htmlPostres  += "<div class='ticket-linea'><span>" + nombre + " ×" + cant + "</span><span>$" + (cant * precio).toFixed(2) + "</span></div>";
+            }
+        });
+        if (htmlPostres) {
+            htmlResumen += "<div class='ticket-menu'><div class='ticket-menu__header'><span>🍮 Postre</span><strong>$" + totalPostres.toFixed(2) + "</strong></div>" + htmlPostres + "</div>";
+        }
+        total += totalPostres;
+
         // Extras
         var totalExtras = 0;
         var htmlExtras  = "";
-        document.querySelectorAll(".extra-item").forEach(function (item) {
+        document.querySelectorAll("#bloque-extras .extra-item").forEach(function (item) {
             var cant   = parseInt(item.querySelector(".extra-cantidad").value) || 0;
             if (cant > 0) {
                 var precio = parseFloat(item.dataset.precio) || 25;

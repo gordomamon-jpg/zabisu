@@ -35,6 +35,7 @@ $mensajeExito  = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $productos         = $_POST["productos"] ?? [];
+    $postrePost        = $_POST["postre"] ?? [];
     $activarMenu       = isset($_POST["activar_menu"]) ? 1 : 0;
     $nuevaFecha        = trim($_POST["fecha"] ?? "");
     $nuevoPublicado    = trim($_POST["publicado_desde"] ?? "");
@@ -204,6 +205,33 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $preciosActuales[$r["nombre_menu"]] = (float)$r["precio"];
             }
 
+            // Postre del día (opcional, con su propio precio)
+            $postreNombre = trim($postrePost["nombre"] ?? "");
+            $postreDesc   = trim($postrePost["descripcion"] ?? "");
+            $postrePrecio = (float)str_replace(",", ".", $postrePost["precio"] ?? "0");
+
+            $stmtPostreEx = $conexion->prepare(
+                "SELECT id_producto FROM productos WHERE id_menu = :id_menu AND categoria = 'Postre' LIMIT 1"
+            );
+            $stmtPostreEx->execute([":id_menu" => $id_menu]);
+            $idPostreEx = $stmtPostreEx->fetchColumn();
+
+            if ($postreNombre !== "") {
+                if ($idPostreEx) {
+                    $conexion->prepare(
+                        "UPDATE productos SET nombre=:n, descripcion=:d, precio=:p, disponible=1 WHERE id_producto=:id"
+                    )->execute([":n" => $postreNombre, ":d" => $postreDesc, ":p" => $postrePrecio, ":id" => $idPostreEx]);
+                } else {
+                    $conexion->prepare(
+                        "INSERT INTO productos (id_menu, tipo_menu, categoria, nombre, descripcion, precio, disponible)
+                         VALUES (:id_menu, 'Postre', 'Postre', :n, :d, :p, 1)"
+                    )->execute([":id_menu" => $id_menu, ":n" => $postreNombre, ":d" => $postreDesc, ":p" => $postrePrecio]);
+                }
+            } elseif ($idPostreEx) {
+                $conexion->prepare("UPDATE productos SET disponible=0 WHERE id_producto=:id")
+                         ->execute([":id" => $idPostreEx]);
+            }
+
             // Actualizar estado y fechas del menú
             $conexion->prepare(
                 "UPDATE menu_dia SET activo = :activo, fecha = :fecha,
@@ -237,12 +265,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     Cargar productos ya guardados (para edición)
 */
 $productosGuardados = [];
+$postreGuardado     = null;
 $sqlGuardados = "SELECT * FROM productos WHERE id_menu = :id_menu ORDER BY tipo_menu, categoria, nombre";
 $stmtGuardados = $conexion->prepare($sqlGuardados);
 $stmtGuardados->bindParam(":id_menu", $id_menu, PDO::PARAM_INT);
 $stmtGuardados->execute();
 foreach ($stmtGuardados->fetchAll(PDO::FETCH_ASSOC) as $p) {
-    $productosGuardados[$p["tipo_menu"]][$p["categoria"]][] = $p;
+    if ($p["categoria"] === "Postre") {
+        $postreGuardado = $p;
+    } else {
+        $productosGuardados[$p["tipo_menu"]][$p["categoria"]][] = $p;
+    }
 }
 
 /*
@@ -259,6 +292,7 @@ $iconosCategoria = [
     "Complemento"  => "🥗",
     "Agua"         => "💧",
     "Cortesia"     => "🍬",
+    "Postre"       => "🍮",
 ];
 
 $meses = [
@@ -417,9 +451,10 @@ PLATO EJECUTIVO: Nombre 1 | Nombre 2 | Nombre 3 | Nombre 4
 SOPA: Nombre de la sopa
 COMPLEMENTO: Opción 1 | Opción 2 | Opción 3 | Opción 4 | Opción 5
 AGUA: Nombre del agua
-CORTESIA: Nombre de la cortesia</pre>
+CORTESIA: Nombre de la cortesia
+POSTRE: Nombre del postre (descripción)</pre>
                 <p style="font-size:12px;color:var(--texto-secundario);margin:10px 0 0;">Descripción opcional entre paréntesis: <code style="background:#2a2a2a;padding:1px 5px;border-radius:3px;">Milanesa de res (Con papas y ensalada)</code></p>
-                <p style="font-size:12px;color:var(--texto-secundario);margin:6px 0 0;">Sopa, Complemento, Agua y Cortesia se aplican igual a Zabisu y Ejecutivo.</p>
+                <p style="font-size:12px;color:var(--texto-secundario);margin:6px 0 0;">Sopa, Complemento, Agua y Cortesia se aplican igual a Zabisu y Ejecutivo. El precio del postre se captura manualmente.</p>
             </div>
 
             <textarea id="carga-rapida-texto" rows="8"
@@ -524,6 +559,40 @@ CORTESIA: Nombre de la cortesia</pre>
         </div>
         <?php endforeach; ?>
 
+        <!-- POSTRE DEL DÍA -->
+        <div class="bloque-formulario nm-seccion">
+            <div class="nm-seccion__header">
+                <span class="nm-seccion__icono">🍮</span>
+                <div>
+                    <h2>Postre del día</h2>
+                    <p class="nota-formulario" style="margin:0;">Opcional. Se ofrece a los clientes como extra con costo adicional.</p>
+                </div>
+            </div>
+            <div class="pm-producto-card">
+                <div class="pm-producto-card__campos">
+                    <input type="text" name="postre[nombre]"
+                           placeholder="Nombre del postre…"
+                           value="<?php echo htmlspecialchars($postreGuardado["nombre"] ?? ""); ?>">
+                    <textarea name="postre[descripcion]" rows="2"
+                              placeholder="Descripción opcional…"><?php echo htmlspecialchars($postreGuardado["descripcion"] ?? ""); ?></textarea>
+                    <div class="pm-limite">
+                        <label>Precio adicional</label>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span style="color:var(--texto-secundario);">$</span>
+                            <input type="number" step="0.50" min="0"
+                                   name="postre[precio]"
+                                   placeholder="0.00"
+                                   style="max-width:140px;"
+                                   value="<?php echo ($postreGuardado && (float)$postreGuardado["precio"] > 0)
+                                       ? number_format((float)$postreGuardado["precio"], 2, ".", "")
+                                       : ""; ?>">
+                        </div>
+                        <span class="nm-campo__ayuda">Costo extra que pagarán los clientes. Deja vacío si es cortesía sin costo.</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- GUARDAR -->
         <div class="bloque-formulario nm-seccion">
             <div class="nm-seccion__header">
@@ -619,7 +688,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 "complemento":     function (v) { fillCat("Zabisu", "Complemento", v); fillCat("Ejecutivo", "Complemento", v); },
                 "complementos":    function (v) { fillCat("Zabisu", "Complemento", v); fillCat("Ejecutivo", "Complemento", v); },
                 "agua":            function (v) { fillCat("Zabisu", "Agua", v);        fillCat("Ejecutivo", "Agua", v); },
-                "cortesia":        function (v) { fillCat("Zabisu", "Cortesia", v);    fillCat("Ejecutivo", "Cortesia", v); }
+                "cortesia":        function (v) { fillCat("Zabisu", "Cortesia", v);    fillCat("Ejecutivo", "Cortesia", v); },
+                "postre":          function (v) {
+                    var item = v[0] || { nombre: "", descripcion: "" };
+                    var nombreEl = document.querySelector("input[name='postre[nombre]']");
+                    var descEl   = document.querySelector("textarea[name='postre[descripcion]']");
+                    if (nombreEl) nombreEl.value = item.nombre;
+                    if (descEl)   descEl.value   = item.descripcion;
+                }
             };
 
             var aplicados = 0;

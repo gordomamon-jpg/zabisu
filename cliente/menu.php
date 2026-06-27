@@ -652,6 +652,14 @@ foreach ($popularCats as $catPop) {
     }
 }
 
+/* ── Postre del día ── */
+$stmtPostre = $conexion->prepare(
+    "SELECT * FROM productos WHERE id_menu = :id_menu AND categoria = 'Postre' AND disponible = 1 LIMIT 1"
+);
+$stmtPostre->bindParam(":id_menu", $menuActivo["id_menu"], PDO::PARAM_INT);
+$stmtPostre->execute();
+$postreDelDia = $stmtPostre->fetch(PDO::FETCH_ASSOC);
+
 /* ── Timestamp de cierre para el countdown ── */
 $cierre_ts = (int)strtotime($menuActivo["pedido_hasta"]);
 
@@ -1234,6 +1242,32 @@ foreach ($stmtRatingsDist->fetchAll(PDO::FETCH_ASSOC) as $row) {
         <?php endforeach; ?>
 
     </div><!-- /.md-contenido -->
+
+    <?php if ($postreDelDia): ?>
+    <div class="md-contenido">
+        <div class="md-seccion">
+            <div class="md-seccion__cabecera">
+                <span class="md-seccion__icono">🍮</span>
+                <h2 class="md-seccion__titulo">Postre del día
+                    <span style="font-size:13px;font-weight:700;color:#ff7a00;margin-left:6px;">· Extra</span>
+                </h2>
+            </div>
+            <div class="md-platos">
+                <div class="md-plato">
+                    <div class="md-plato__info">
+                        <strong class="md-plato__nombre"><?php echo htmlspecialchars($postreDelDia["nombre"]); ?></strong>
+                        <?php if (!empty($postreDelDia["descripcion"])): ?>
+                        <p class="md-plato__desc"><?php echo htmlspecialchars($postreDelDia["descripcion"]); ?></p>
+                        <?php endif; ?>
+                    </div>
+                    <?php if ((float)$postreDelDia["precio"] > 0): ?>
+                    <span style="color:#ff7a00;font-weight:800;font-size:14px;flex-shrink:0;">+$<?php echo number_format((float)$postreDelDia["precio"], 2); ?></span>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 
     <div class="md-contenido">
         <!-- ══ CTA ════════════════════════════════════════════ -->
