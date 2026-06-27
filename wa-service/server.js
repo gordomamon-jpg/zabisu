@@ -76,7 +76,13 @@ const server = http.createServer((req, res) => {
                     res.end(JSON.stringify({ ok: false, error: 'WhatsApp no está conectado' }));
                     return;
                 }
-                await client.sendMessage(data.phone + '@c.us', data.message);
+                const numberId = await client.getNumberId(data.phone);
+                if (!numberId) {
+                    res.writeHead(404, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ ok: false, error: 'Número no registrado en WhatsApp: ' + data.phone }));
+                    return;
+                }
+                await client.sendMessage(numberId._serialized, data.message);
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ ok: true }));
 
@@ -93,8 +99,13 @@ const server = http.createServer((req, res) => {
 
                 for (const msg of messages) {
                     try {
-                        await client.sendMessage(msg.phone + '@c.us', msg.message);
-                        console.log('📤 Enviado a', msg.phone);
+                        const numberId = await client.getNumberId(msg.phone);
+                        if (numberId) {
+                            await client.sendMessage(numberId._serialized, msg.message);
+                            console.log('📤 Enviado a', msg.phone);
+                        } else {
+                            console.warn('⚠️ Número sin WhatsApp:', msg.phone);
+                        }
                     } catch (e) {
                         console.error('❌ Error enviando a', msg.phone + ':', e.message);
                     }
