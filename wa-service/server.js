@@ -59,6 +59,15 @@ client.on('authenticated', () => {
     setTimeout(startReadyPoller, 10000);
 });
 
+client.on('change_state', state => {
+    console.log('\nEstado WA:', state);
+    if (state === 'CONNECTED' && !clientReady) {
+        if (readyPoller) { clearInterval(readyPoller); readyPoller = null; }
+        clientReady = true;
+        console.log('🟢 WhatsApp listo (change_state)\n');
+    }
+});
+
 client.on('ready', () => {
     if (readyPoller) { clearInterval(readyPoller); readyPoller = null; }
     clientReady = true;
