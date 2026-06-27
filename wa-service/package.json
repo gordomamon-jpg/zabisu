@@ -1,0 +1,13 @@
+{
+  "name": "wa-service",
+  "version": "1.0.0",
+  "description": "Servicio WhatsApp automático para Zabisu",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "qrcode-terminal": "^0.12.0",
+    "whatsapp-web.js": "^1.23.0"
+  }
+}

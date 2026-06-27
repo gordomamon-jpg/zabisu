@@ -2,6 +2,7 @@
 require_once "../config/db.php";
 require_once "auth_check.php";
 require_once "../includes/enviar_correo.php";
+require_once "../includes/enviar_whatsapp.php";
 
 header("Content-Type: application/json; charset=UTF-8");
 
@@ -182,6 +183,18 @@ $stmtLog->execute([
     ":total_enviados" => count($pedidos),
 ]);
 
+/* ── WhatsApp — notificación masiva de llegada ── */
+$horaBonita = date("g:i A", strtotime($hora_entrega));
+$mensajesWA = [];
+foreach ($pedidos as $p) {
+    if (empty($p["telefono"])) continue;
+    $mensajesWA[] = [
+        "phone"   => $p["telefono"],
+        "message" => "Hola *{$p['nombre_cliente']}* 📍 Tu pedido Zabisu *{$p['folio']}* ya llegó a *{$nombre_ubicacion}*. ¡Pasa a recogerlo antes de las {$horaBonita}! 🍱",
+    ];
+}
+$resultadoWA = enviarWhatsAppBulk($mensajesWA);
+
 $clientesWA = array_values(array_map(function ($p) {
     return [
         "nombre"   => $p["nombre_cliente"],
@@ -191,7 +204,8 @@ $clientesWA = array_values(array_map(function ($p) {
 }, $pedidos));
 
 echo json_encode([
-    "ok"       => true,
-    "total"    => count($pedidos),
+    "ok"      => true,
+    "total"   => count($pedidos),
+    "queued"  => $resultadoWA['queued'] ?? 0,
     "clientes" => $clientesWA,
 ]);

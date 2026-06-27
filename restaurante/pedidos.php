@@ -404,7 +404,7 @@ function formatearFechaBonita($fecha)
     <div class="bloque-formulario bloque-notificacion-ruta" id="bloque-notificacion-ruta" style="display:none;">
         <h2>📍 Notificar llegada al punto</h2>
         <p class="nota-formulario">
-            Genera un link de WhatsApp para cada cliente de una ubicación y horario, para avisarles que su pedido ya llegó.
+            Envía un WhatsApp automático a todos los clientes de una ubicación y horario para avisarles que su pedido ya llegó.
         </p>
 
         <div class="notificacion-ruta__campos">
@@ -437,7 +437,7 @@ function formatearFechaBonita($fecha)
         </div>
 
         <button type="button" id="btn-enviar-notificacion" class="btn-principal" style="margin-top:20px;">
-            Generar links de WhatsApp
+            Notificar llegada por WhatsApp
         </button>
 
         <div id="notificacion-resultado" class="notificacion-resultado" style="display:none;"></div>
@@ -976,9 +976,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 iframeTicket.contentWindow.print();
             };
             iframeTicket.src = "ticket.php?id=" + id;
-
-            // WhatsApp — confirmación de pedido
-            abrirWhatsAppConfirmacion(fila);
         });
     });
 
@@ -998,9 +995,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 iframeTicket.contentWindow.print();
             };
             iframeTicket.src = "ticket.php?id=" + id + "&separado=1";
-
-            // WhatsApp — confirmación de pedido
-            abrirWhatsAppConfirmacion(fila);
         });
     });
 
@@ -1066,20 +1060,27 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (!data.ok) {
                         mostrarResultadoNotif("error", data.mensaje || "Ocurrió un error.");
                     } else {
-                        var horaBonita = formatHoraWA(hora);
-                        var msg = "<p style='margin:0 0 10px;font-weight:700;'>📱 " + data.total + " cliente" + (data.total !== 1 ? "s" : "") + " — toca cada link para enviar el WhatsApp:</p>";
-                        (data.clientes || []).forEach(function (cliente) {
-                            var tel   = normalizarTelefono(cliente.telefono || "");
-                            var texto = encodeURIComponent(
-                                "Hola *" + cliente.nombre + "* 📍 Tu pedido Zabisu *" + cliente.folio +
-                                "* ya llegó a *" + ubicacion + "*. ¡Pasa a recogerlo antes de las " + horaBonita + "! 🍱"
-                            );
-                            if (tel) {
-                                msg += "<a href='https://wa.me/" + tel + "?text=" + texto + "' target='_blank' style='display:block;margin:6px 0;padding:10px 14px;background:#25D366;color:#fff;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;'>📱 " + cliente.nombre + " <span style='opacity:.75;font-weight:400;font-size:12px;'>· " + cliente.folio + "</span></a>";
-                            } else {
-                                msg += "<span style='display:block;margin:6px 0;padding:10px 14px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.4);border-radius:10px;font-size:14px;'>⚠️ " + cliente.nombre + " — sin teléfono registrado</span>";
-                            }
-                        });
+                        var q = data.queued || 0;
+                        var msg = "✅ " + q + " mensaje" + (q !== 1 ? "s" : "") + " enviado" + (q !== 1 ? "s" : "") + " por WhatsApp.";
+
+                        // Links manuales plegables como respaldo
+                        var conTel = (data.clientes || []).filter(function (c) { return c.telefono; });
+                        if (conTel.length > 0) {
+                            var horaBonita = formatHoraWA(hora);
+                            msg += "<details style='margin-top:12px;'><summary style='cursor:pointer;font-size:13px;opacity:.55;'>Ver links manuales (respaldo)</summary><div style='margin-top:8px;'>";
+                            conTel.forEach(function (cliente) {
+                                var tel   = normalizarTelefono(cliente.telefono || "");
+                                var texto = encodeURIComponent(
+                                    "Hola *" + cliente.nombre + "* 📍 Tu pedido Zabisu *" + cliente.folio +
+                                    "* ya llegó a *" + ubicacion + "*. ¡Pasa a recogerlo antes de las " + horaBonita + "! 🍱"
+                                );
+                                if (tel) {
+                                    msg += "<a href='https://wa.me/" + tel + "?text=" + texto + "' target='_blank' style='display:block;margin:4px 0;padding:8px 12px;background:#25D366;color:#fff;border-radius:8px;text-decoration:none;font-size:13px;'>📱 " + cliente.nombre + " · " + cliente.folio + "</a>";
+                                }
+                            });
+                            msg += "</div></details>";
+                        }
+
                         mostrarResultadoNotif("exito", msg);
                     }
                 })
@@ -1088,7 +1089,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 })
                 .finally(function () {
                     btnEnviarNotif.disabled    = false;
-                    btnEnviarNotif.textContent = "Generar links de WhatsApp";
+                    btnEnviarNotif.textContent = "Notificar llegada por WhatsApp";
                 });
         });
     }

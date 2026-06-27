@@ -2,6 +2,7 @@
 require_once "../config/db.php";
 require_once "auth_check.php";
 require_once "../includes/enviar_correo.php";
+require_once "../includes/enviar_whatsapp.php";
 
 $id_pedido = isset($_GET["id"]) ? (int)$_GET["id"] : 0;
 
@@ -458,6 +459,23 @@ try {
         $stmtCorreoEnviado = $conexion->prepare($sqlCorreoEnviado);
         $stmtCorreoEnviado->bindParam(":id_pedido", $id_pedido, PDO::PARAM_INT);
         $stmtCorreoEnviado->execute();
+    }
+
+    /* ── WhatsApp — confirmación de pedido (una sola vez) ── */
+    if ((int)$pedido["correo_enviado"] === 0) {
+        $waMsg = "Hola *" . ($pedido["nombre_cliente"] ?? "") . "* 👋 Tu pedido Zabisu está confirmado ✅\n"
+               . "*Folio:* " . strtoupper($pedido["folio"] ?? "") . "\n"
+               . "*Punto de entrega:* " . ($pedido["nombre_ubicacion"] ?? "") . "\n"
+               . "*Horario:* " . (!empty($pedido["hora_entrega"]) ? date("g:i A", strtotime($pedido["hora_entrega"])) : "") . "\n"
+               . "*Total:* $" . number_format((float)($pedido["total"] ?? 0), 2) . "\n"
+               . "¡Gracias por tu preferencia! 🍱";
+
+        if (!empty($pedido["telefono"])) {
+            enviarWhatsApp($pedido["telefono"], $waMsg);
+        }
+
+        $conexion->prepare("UPDATE pedidos SET correo_enviado = 1 WHERE id_pedido = :id")
+                 ->execute([":id" => $id_pedido]);
     }
 
     /*
