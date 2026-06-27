@@ -25,11 +25,6 @@ function startReadyPoller() {
 
 const client = new Client({
     authStrategy: new LocalAuth({ dataPath: path.join(__dirname, 'wa_session') }),
-    webVersion: '2.3000.1039772387-alpha',
-    webVersionCache: {
-        type: 'local',
-        path: path.join(__dirname, 'waweb.html'),
-    },
     puppeteer: {
         args: [
             '--no-sandbox',
