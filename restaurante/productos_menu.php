@@ -224,7 +224,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 } else {
                     $conexion->prepare(
                         "INSERT INTO productos (id_menu, tipo_menu, categoria, nombre, descripcion, precio, disponible)
-                         VALUES (:id_menu, 'Postre', 'Postre', :n, :d, :p, 1)"
+                         VALUES (:id_menu, 'Zabisu', 'Postre', :n, :d, :p, 1)"
                     )->execute([":id_menu" => $id_menu, ":n" => $postreNombre, ":d" => $postreDesc, ":p" => $postrePrecio]);
                 }
             } elseif ($idPostreEx) {
