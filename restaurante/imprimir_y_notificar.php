@@ -181,7 +181,7 @@ try {
     /*
         5. Enviar correo solo si no se ha enviado antes
     */
-    if ((int)$pedido["correo_enviado"] === 0) {
+    if (false) { /* correo desactivado — reemplazado por WhatsApp; restaurar: (int)$pedido["correo_enviado"] === 0 */
         $correo_cliente = trim($pedido["correo_cliente"] ?? "");
         $nombre_cliente = trim($pedido["nombre_cliente"] ?? "Cliente");
         $folio          = trim($pedido["folio"] ?? "");

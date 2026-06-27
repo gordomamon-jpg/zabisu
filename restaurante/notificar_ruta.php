@@ -62,6 +62,7 @@ $sql = "SELECT
             p.folio,
             p.nombre_cliente,
             p.correo_cliente,
+            p.telefono,
             p.total,
             h.hora_entrega,
             u.nombre_ubicacion
@@ -101,6 +102,9 @@ if (empty($pedidos)) {
 $enviados  = 0;
 $sinCorreo = 0;
 $errores   = 0;
+
+/* correo desactivado — reemplazado por WhatsApp */
+if (false) {
 
 $ubicacionBonita = htmlspecialchars($nombre_ubicacion);
 $horaBonita      = date("g:i A", strtotime($hora_entrega));
@@ -165,6 +169,7 @@ foreach ($pedidos as $pedido) {
         $errores++;
     }
 }
+} /* fin correo desactivado */
 
 /* ── Registrar notificación enviada ── */
 $stmtLog = $conexion->prepare("
@@ -174,13 +179,19 @@ $stmtLog = $conexion->prepare("
 $stmtLog->execute([
     ":fecha"          => $fecha,
     ":id_horario"     => $id_horario,
-    ":total_enviados" => $enviados,
+    ":total_enviados" => count($pedidos),
 ]);
 
+$clientesWA = array_values(array_map(function ($p) {
+    return [
+        "nombre"   => $p["nombre_cliente"],
+        "telefono" => $p["telefono"] ?? "",
+        "folio"    => $p["folio"],
+    ];
+}, $pedidos));
+
 echo json_encode([
-    "ok"        => true,
-    "total"     => count($pedidos),
-    "enviados"  => $enviados,
-    "sin_correo"=> $sinCorreo,
-    "errores"   => $errores,
+    "ok"       => true,
+    "total"    => count($pedidos),
+    "clientes" => $clientesWA,
 ]);

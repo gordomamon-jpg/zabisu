@@ -404,8 +404,7 @@ function formatearFechaBonita($fecha)
     <div class="bloque-formulario bloque-notificacion-ruta" id="bloque-notificacion-ruta" style="display:none;">
         <h2>📍 Notificar llegada al punto</h2>
         <p class="nota-formulario">
-            Envía un correo a todos los clientes de una ubicación y horario específico para avisarles que su pedido ya llegó.
-            Solo se notificará a quienes registraron correo electrónico.
+            Genera un link de WhatsApp para cada cliente de una ubicación y horario, para avisarles que su pedido ya llegó.
         </p>
 
         <div class="notificacion-ruta__campos">
@@ -438,7 +437,7 @@ function formatearFechaBonita($fecha)
         </div>
 
         <button type="button" id="btn-enviar-notificacion" class="btn-principal" style="margin-top:20px;">
-            Enviar notificación
+            Generar links de WhatsApp
         </button>
 
         <div id="notificacion-resultado" class="notificacion-resultado" style="display:none;"></div>
@@ -693,7 +692,10 @@ function formatearFechaBonita($fecha)
                                         data-folio="<?php echo strtolower(htmlspecialchars($pedido["folio"])); ?>"
                                         data-id="<?php echo (int)$pedido["id_pedido"]; ?>"
                                         data-ubicacion="<?php echo htmlspecialchars($pedido["nombre_ubicacion"]); ?>"
-                                        data-hora="<?php echo htmlspecialchars($pedido["hora_entrega"]); ?>">
+                                        data-hora="<?php echo htmlspecialchars($pedido["hora_entrega"]); ?>"
+                                        data-telefono="<?php echo htmlspecialchars($pedido["telefono"] ?? ''); ?>"
+                                        data-nombre="<?php echo htmlspecialchars($pedido["nombre_cliente"] ?? ''); ?>"
+                                        data-total="<?php echo number_format((float)$pedido["total"], 2); ?>">
                                         <td>
                                             <div class="folio-pedido">
                                                 <strong><?php echo htmlspecialchars($pedido["folio"]); ?></strong>
@@ -777,6 +779,47 @@ function formatearFechaBonita($fecha)
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+
+    // ============================================================
+    // HELPERS WHATSAPP
+    // ============================================================
+    function normalizarTelefono(tel) {
+        if (!tel) return "";
+        var digitos = tel.replace(/\D/g, "");
+        if (digitos.length === 10) digitos = "52" + digitos;
+        return digitos;
+    }
+
+    function formatHoraWA(hora24) {
+        if (!hora24) return hora24;
+        var partes = hora24.split(":");
+        var h = parseInt(partes[0], 10);
+        var m = partes[1] || "00";
+        var ampm = h >= 12 ? "PM" : "AM";
+        if (h > 12) h -= 12;
+        if (h === 0) h = 12;
+        return h + ":" + m + " " + ampm;
+    }
+
+    function abrirWhatsAppConfirmacion(fila) {
+        if (!fila) return;
+        var tel      = normalizarTelefono(fila.dataset.telefono || "");
+        var nombre   = fila.dataset.nombre    || "";
+        var folio    = (fila.dataset.folio    || "").toUpperCase();
+        var ubicacion = fila.dataset.ubicacion || "";
+        var horaRaw  = fila.dataset.hora      || "";
+        var total    = fila.dataset.total     || "";
+        if (!tel) return;
+        var texto = encodeURIComponent(
+            "Hola *" + nombre + "* 👋 Tu pedido Zabisu está confirmado ✅\n" +
+            "*Folio:* " + folio + "\n" +
+            "*Punto de entrega:* " + ubicacion + "\n" +
+            "*Horario:* " + formatHoraWA(horaRaw) + "\n" +
+            "*Total:* $" + total + "\n" +
+            "¡Gracias por tu preferencia! 🍱"
+        );
+        window.open("https://wa.me/" + tel + "?text=" + texto, "_blank");
+    }
 
     // ============================================================
     // TOGGLE PEDIDOS DE PRUEBA
@@ -924,7 +967,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (badge) badge.remove();
             }
 
-            // Llamar imprimir_y_notificar para marcar visto y enviar correo
+            // Llamar imprimir_y_notificar para marcar visto (correo desactivado)
             fetch("imprimir_y_notificar.php?id=" + id, { cache: "no-store" });
 
             // Cargar ticket en iframe oculto y disparar print
@@ -933,6 +976,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 iframeTicket.contentWindow.print();
             };
             iframeTicket.src = "ticket.php?id=" + id;
+
+            // WhatsApp — confirmación de pedido
+            abrirWhatsAppConfirmacion(fila);
         });
     });
 
@@ -952,6 +998,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 iframeTicket.contentWindow.print();
             };
             iframeTicket.src = "ticket.php?id=" + id + "&separado=1";
+
+            // WhatsApp — confirmación de pedido
+            abrirWhatsAppConfirmacion(fila);
         });
     });
 
@@ -1004,7 +1053,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             btnEnviarNotif.disabled    = true;
-            btnEnviarNotif.textContent = "Enviando…";
+            btnEnviarNotif.textContent = "Cargando…";
 
             const datos = new FormData();
             datos.append("fecha",            fecha);
@@ -1017,13 +1066,20 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (!data.ok) {
                         mostrarResultadoNotif("error", data.mensaje || "Ocurrió un error.");
                     } else {
-                        let msg = `✅ Notificación enviada. <strong>${data.enviados}</strong> correo${data.enviados !== 1 ? "s" : ""} enviado${data.enviados !== 1 ? "s" : ""} de ${data.total} pedido${data.total !== 1 ? "s" : ""}.`;
-                        if (data.sin_correo > 0) {
-                            msg += ` <span class="notif-aviso">(${data.sin_correo} sin correo registrado)</span>`;
-                        }
-                        if (data.errores > 0) {
-                            msg += ` <span class="notif-aviso">(${data.errores} con error al enviar)</span>`;
-                        }
+                        var horaBonita = formatHoraWA(hora);
+                        var msg = "<p style='margin:0 0 10px;font-weight:700;'>📱 " + data.total + " cliente" + (data.total !== 1 ? "s" : "") + " — toca cada link para enviar el WhatsApp:</p>";
+                        (data.clientes || []).forEach(function (cliente) {
+                            var tel   = normalizarTelefono(cliente.telefono || "");
+                            var texto = encodeURIComponent(
+                                "Hola *" + cliente.nombre + "* 📍 Tu pedido Zabisu *" + cliente.folio +
+                                "* ya llegó a *" + ubicacion + "*. ¡Pasa a recogerlo antes de las " + horaBonita + "! 🍱"
+                            );
+                            if (tel) {
+                                msg += "<a href='https://wa.me/" + tel + "?text=" + texto + "' target='_blank' style='display:block;margin:6px 0;padding:10px 14px;background:#25D366;color:#fff;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;'>📱 " + cliente.nombre + " <span style='opacity:.75;font-weight:400;font-size:12px;'>· " + cliente.folio + "</span></a>";
+                            } else {
+                                msg += "<span style='display:block;margin:6px 0;padding:10px 14px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.4);border-radius:10px;font-size:14px;'>⚠️ " + cliente.nombre + " — sin teléfono registrado</span>";
+                            }
+                        });
                         mostrarResultadoNotif("exito", msg);
                     }
                 })
@@ -1032,7 +1088,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 })
                 .finally(function () {
                     btnEnviarNotif.disabled    = false;
-                    btnEnviarNotif.textContent = "Enviar notificación";
+                    btnEnviarNotif.textContent = "Generar links de WhatsApp";
                 });
         });
     }
