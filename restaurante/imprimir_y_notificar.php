@@ -169,6 +169,21 @@ function construirResumenWA($menusPedido, $detallePorMenu, $preciosMenus)
     return $texto;
 }
 
+function construirExtrasWA($extras)
+{
+    if (empty($extras)) return "";
+
+    $texto      = "\n*Extras*\n";
+    $totalExtras = 0;
+    foreach ($extras as $extra) {
+        $sub         = $extra["cantidad"] * $extra["precio_unitario"];
+        $totalExtras += $sub;
+        $texto .= "  🍬 " . $extra["nombre"] . " ×" . (int)$extra["cantidad"] . "\n";
+    }
+    $texto .= "  _$" . number_format($totalExtras, 2) . "_\n";
+    return $texto;
+}
+
 function construirExtrasCorreo($extras)
 {
     if (empty($extras)) return "";
@@ -489,9 +504,16 @@ try {
 
     /* ── WhatsApp — confirmación de pedido (una sola vez) ── */
     if ((int)$pedido["correo_enviado"] === 0) {
-        $horaWA     = !empty($pedido["hora_entrega"]) ? date("g:i A", strtotime($pedido["hora_entrega"])) : "";
-        $ubicWA     = $pedido["nombre_ubicacion"] ?? "";
-        $resumenWA  = construirResumenWA($menusPedido, $detallePorMenu, $preciosMenus);
+        $horaWA    = !empty($pedido["hora_entrega"]) ? date("g:i A", strtotime($pedido["hora_entrega"])) : "";
+        $ubicWA    = $pedido["nombre_ubicacion"] ?? "";
+        $resumenWA = construirResumenWA($menusPedido, $detallePorMenu, $preciosMenus);
+
+        $stmtExtrasWA = $conexion->prepare(
+            "SELECT nombre, categoria, cantidad, precio_unitario FROM pedido_extras WHERE id_pedido = :id ORDER BY id_extra ASC"
+        );
+        $stmtExtrasWA->execute([":id" => $id_pedido]);
+        $extrasWA = $stmtExtrasWA->fetchAll(PDO::FETCH_ASSOC);
+        $extrasTextoWA = construirExtrasWA($extrasWA);
 
         $waMsg = "✅ *¡Tu pedido está confirmado!*\n\n"
                . "Hola *" . ($pedido["nombre_cliente"] ?? "") . "* 👋 Ya estamos preparando tu pedido.\n\n"
@@ -503,7 +525,8 @@ try {
                . "*Método:* " . ($pedido["metodo_pago"] ?? "") . "\n"
                . "*Estado:* " . ($pedido["estado_pago"] ?? "") . "\n\n"
                . "🍱 *Tu pedido*"
-               . $resumenWA . "\n"
+               . $resumenWA
+               . $extrasTextoWA . "\n"
                . "*Total: $" . number_format((float)($pedido["total"] ?? 0), 2) . "*\n\n"
                . "━━━━━━━━\n"
                . "1️⃣ Preparando tu pedido — nuestro equipo ya cocina tu orden\n"
