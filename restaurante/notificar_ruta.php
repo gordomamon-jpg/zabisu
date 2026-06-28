@@ -190,7 +190,7 @@ foreach ($pedidos as $p) {
     if (empty($p["telefono"])) continue;
     $mensajesWA[] = [
         "phone"   => $p["telefono"],
-        "message" => "Hola *{$p['nombre_cliente']}* 📍 Tu pedido Zabisu *{$p['folio']}* ya llegó a *{$nombre_ubicacion}*. ¡Pasa a recogerlo antes de las {$horaBonita}! 🍱",
+        "message" => "📍 *¡Tu pedido llegó al punto!*\n\nHola *{$p['nombre_cliente']}* 👋\n\n🎉 Tu pedido de Zabisu ya se encuentra en el punto de entrega. ¡Pasa a recogerlo!\n\n*Folio:* " . strtoupper($p['folio']) . "\n*Punto de entrega:* {$nombre_ubicacion}\n*Retira antes de:* {$horaBonita}\n\n_Si tienes alguna duda, comunícate con nosotros._ 🍱",
     ];
 }
 $resultadoWA = enviarWhatsAppBulk($mensajesWA);
