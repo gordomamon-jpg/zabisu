@@ -620,15 +620,15 @@ if ($scrollDestino === "bloque-entrega") {
             <section class="bloque-formulario" id="bloque-datos-cliente">
                 <h2>Tus datos</h2>
 
-                <label for="nombre_cliente">Nombre completo</label>
-                <input type="text" name="nombre_cliente" id="nombre_cliente"
-                       maxlength="100" autocomplete="name"
-                       value="<?php echo htmlspecialchars($_POST["nombre_cliente"] ?? ""); ?>">
-
                 <label for="telefono">Teléfono</label>
                 <input type="text" name="telefono" id="telefono"
                        maxlength="10" inputmode="numeric" autocomplete="tel"
                        value="<?php echo htmlspecialchars($_POST["telefono"] ?? ""); ?>">
+
+                <label for="nombre_cliente">Nombre completo</label>
+                <input type="text" name="nombre_cliente" id="nombre_cliente"
+                       maxlength="100" autocomplete="name"
+                       value="<?php echo htmlspecialchars($_POST["nombre_cliente"] ?? ""); ?>">
 
                 <div class="autocomplete-aviso" id="autocomplete-aviso">
                     <span class="autocomplete-aviso__icono">✓</span>
