@@ -329,7 +329,7 @@ $scrollDestino = "";
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
     $nombre_cliente  = trim($_POST["nombre_cliente"] ?? "");
     $telefono        = trim($_POST["telefono"] ?? "");
-    $correo_cliente  = trim($_POST["correo_cliente"] ?? "");
+    $correo_cliente  = "";
     $observaciones   = trim($_POST["observaciones"] ?? "");
     $id_horario      = $_POST["id_horario"] ?? "";
     $menusRecibidos  = $_POST["menus"] ?? [];
@@ -346,11 +346,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
         $errores[] = "El teléfono debe contener exactamente 10 dígitos.";
     }
 
-    if ($correo_cliente === "") {
-        $errores[] = "El correo electrónico es obligatorio.";
-    } elseif (!filter_var($correo_cliente, FILTER_VALIDATE_EMAIL)) {
-        $errores[] = "Debes capturar un correo electrónico válido.";
-    }
+
 
     if (empty($menusRecibidos)) {
         $errores[] = "Debes capturar al menos un menú.";
@@ -633,14 +629,6 @@ if ($scrollDestino === "bloque-entrega") {
                 <input type="text" name="telefono" id="telefono"
                        maxlength="10" inputmode="numeric" autocomplete="tel"
                        value="<?php echo htmlspecialchars($_POST["telefono"] ?? ""); ?>">
-
-                <label for="correo_cliente">Correo electrónico</label>
-                <input type="email" name="correo_cliente" id="correo_cliente"
-                       maxlength="150" autocomplete="email"
-                       value="<?php echo htmlspecialchars($_POST["correo_cliente"] ?? ""); ?>">
-                <p class="nota-formulario nota-correo">
-                    ✉️ Aquí recibirás la confirmación y todos los detalles de tu pedido. Asegúrate de que sea correcto.
-                </p>
 
                 <div class="autocomplete-aviso" id="autocomplete-aviso">
                     <span class="autocomplete-aviso__icono">✓</span>
@@ -1105,7 +1093,6 @@ document.addEventListener("DOMContentLoaded", function () {
         if (n === 1) {
             const nombre = (document.getElementById("nombre_cliente").value || "").trim();
             const telefono = (document.getElementById("telefono").value || "").trim();
-            const correo = (document.getElementById("correo_cliente").value || "").trim();
 
             if (!nombre) {
                 errores.push("El nombre es obligatorio.");
@@ -1117,12 +1104,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 errores.push("El teléfono es obligatorio.");
             } else if (!/^\d{10}$/.test(telefono)) {
                 errores.push("El teléfono debe tener exactamente 10 dígitos.");
-            }
-
-            if (!correo) {
-                errores.push("El correo electrónico es obligatorio.");
-            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
-                errores.push("Captura un correo electrónico válido.");
             }
         }
 
@@ -1245,13 +1226,9 @@ document.addEventListener("DOMContentLoaded", function () {
                         if (!data.encontrado) return;
 
                         var campoNombre = document.getElementById("nombre_cliente");
-                        var campoCorrEo = document.getElementById("correo_cliente");
 
                         if (campoNombre && !campoNombre.value.trim()) {
                             campoNombre.value = data.nombre_cliente;
-                        }
-                        if (campoCorrEo && !campoCorrEo.value.trim()) {
-                            campoCorrEo.value = data.correo_cliente;
                         }
 
                         // Pre-seleccionar ubicación y horario para el paso 3
