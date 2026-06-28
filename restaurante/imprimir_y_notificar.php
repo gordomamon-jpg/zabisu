@@ -143,6 +143,32 @@ function construirResumenCorreoNotificacion($menusPedido, $detallePorMenu, $prec
     return $html;
 }
 
+function construirResumenWA($menusPedido, $detallePorMenu, $preciosMenus)
+{
+    $texto  = "";
+    $iconos = ["Plato fuerte"=>"🍽️","Sopa"=>"🥣","Complemento"=>"🥗","Agua"=>"💧","Cortesia"=>"🍬"];
+    $orden  = ["Plato fuerte","Sopa","Complemento","Agua","Cortesia"];
+
+    foreach ($menusPedido as $menu) {
+        $idPedidoMenu = $menu["id_pedido_menu"];
+        $agrupado     = [];
+        foreach (($detallePorMenu[$idPedidoMenu] ?? []) as $d) {
+            $agrupado[$d["categoria"]][] = $d["nombre_producto"];
+        }
+        $precio = $preciosMenus[$menu["tipo_menu"]] ?? null;
+
+        $texto .= "\n*Menú " . $menu["numero_menu"] . "* · " . $menu["tipo_menu"] . "\n";
+        foreach ($orden as $cat) {
+            if (empty($agrupado[$cat])) continue;
+            $texto .= "  " . ($iconos[$cat] ?? "·") . " " . implode(", ", $agrupado[$cat]) . "\n";
+        }
+        if ($precio !== null) {
+            $texto .= "  _$" . number_format((float)$precio, 2) . "_\n";
+        }
+    }
+    return $texto;
+}
+
 function construirExtrasCorreo($extras)
 {
     if (empty($extras)) return "";
@@ -463,12 +489,27 @@ try {
 
     /* ── WhatsApp — confirmación de pedido (una sola vez) ── */
     if ((int)$pedido["correo_enviado"] === 0) {
-        $waMsg = "Hola *" . ($pedido["nombre_cliente"] ?? "") . "* 👋 Tu pedido Zabisu está confirmado ✅\n"
-               . "*Folio:* " . strtoupper($pedido["folio"] ?? "") . "\n"
-               . "*Punto de entrega:* " . ($pedido["nombre_ubicacion"] ?? "") . "\n"
-               . "*Horario:* " . (!empty($pedido["hora_entrega"]) ? date("g:i A", strtotime($pedido["hora_entrega"])) : "") . "\n"
-               . "*Total:* $" . number_format((float)($pedido["total"] ?? 0), 2) . "\n"
-               . "¡Gracias por tu preferencia! 🍱";
+        $horaWA     = !empty($pedido["hora_entrega"]) ? date("g:i A", strtotime($pedido["hora_entrega"])) : "";
+        $ubicWA     = $pedido["nombre_ubicacion"] ?? "";
+        $resumenWA  = construirResumenWA($menusPedido, $detallePorMenu, $preciosMenus);
+
+        $waMsg = "✅ *¡Tu pedido está confirmado!*\n\n"
+               . "Hola *" . ($pedido["nombre_cliente"] ?? "") . "* 👋 Ya estamos preparando tu pedido.\n\n"
+               . "*Folio:* " . strtoupper($pedido["folio"] ?? "") . "\n\n"
+               . "📍 *Detalles de entrega*\n"
+               . "*Punto:* {$ubicWA}\n"
+               . "*Horario estimado:* {$horaWA}\n\n"
+               . "💳 *Pago*\n"
+               . "*Método:* " . ($pedido["metodo_pago"] ?? "") . "\n"
+               . "*Estado:* " . ($pedido["estado_pago"] ?? "") . "\n\n"
+               . "🍱 *Tu pedido*"
+               . $resumenWA . "\n"
+               . "*Total: $" . number_format((float)($pedido["total"] ?? 0), 2) . "*\n\n"
+               . "━━━━━━━━\n"
+               . "1️⃣ Preparando tu pedido — nuestro equipo ya cocina tu orden\n"
+               . "2️⃣ En camino — tu repartidor saldrá antes del horario indicado\n"
+               . "3️⃣ ¡A disfrutar en *{$ubicWA}* a las *{$horaWA}*!\n\n"
+               . "¡Gracias por tu preferencia! 🙌";
 
         if (!empty($pedido["telefono"])) {
             enviarWhatsApp($pedido["telefono"], $waMsg);
