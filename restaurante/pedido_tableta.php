@@ -3,7 +3,7 @@ require_once "../config/db.php";
 require_once "auth_check.php";
 date_default_timezone_set("America/Mexico_City");
 
-$stmtMenu = $conexion->prepare("SELECT * FROM menu_dia ORDER BY fecha DESC LIMIT 1");
+$stmtMenu = $conexion->prepare("SELECT * FROM menu_dia WHERE activo = 1 ORDER BY fecha DESC LIMIT 1");
 $stmtMenu->execute();
 $menuActivo = $stmtMenu->fetch(PDO::FETCH_ASSOC);
 
