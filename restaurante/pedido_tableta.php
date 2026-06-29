@@ -75,7 +75,14 @@ foreach (["Sopa", "Complemento", "Agua"] as $catEx) {
         }
     }
 }
-$iconosExtra = ["Sopa" => "🥣", "Complemento" => "🥗", "Agua" => "💧"];
+
+/* ── Postre extra (precio desde la BD) ── */
+$postreExtra = $menusPorTipo["Zabisu"]["Postre"][0] ?? null;
+if ($postreExtra && (float)($postreExtra["precio"] ?? 0) > 0) {
+    $extrasForm["Postre"][] = $postreExtra;
+}
+
+$iconosExtra = ["Sopa" => "🥣", "Complemento" => "🥗", "Agua" => "💧", "Postre" => "🍮"];
 
 $stmtUbic = $conexion->prepare("SELECT * FROM ubicaciones WHERE activo = 1 ORDER BY tipo, nombre_ubicacion");
 $stmtUbic->execute();
@@ -136,7 +143,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
             $cantidad = min((int)$cantidad, 5);
             if ($cantidad <= 0 || !isset($productosIndexados[$idProducto])) continue;
             $prod = $productosIndexados[$idProducto];
-            $precioExtra = $PRECIOS_EXTRA[$prod["categoria"]] ?? 25.00;
+            $precioExtra = ($prod["categoria"] === "Postre")
+                ? (float)($prod["precio"] ?? 0)
+                : ($PRECIOS_EXTRA[$prod["categoria"]] ?? 25.00);
             $extrasGuardar[] = [
                 "id_producto"     => (int)$idProducto,
                 "nombre"          => $prod["nombre"],
@@ -698,16 +707,18 @@ body {
     <div class="t-toggle-body <?= $hayExtrasPrev ? 't-toggle-body--abierto' : '' ?>" id="t-ex-body">
     <div class="t-extra-grid">
         <?php foreach ($extrasForm as $cat => $items): ?>
-        <span class="t-extra-cat-label"><?= $iconosExtra[$cat] ?> <?= htmlspecialchars($cat) ?> extra · $<?= $PRECIOS_EXTRA[$cat] ?> c/u</span>
+        <?php $precioMostrar = ($cat === "Postre") ? number_format((float)($items[0]["precio"] ?? 0), 0) : $PRECIOS_EXTRA[$cat]; ?>
+        <span class="t-extra-cat-label"><?= $iconosExtra[$cat] ?> <?= htmlspecialchars($cat) ?> extra · $<?= $precioMostrar ?> c/u</span>
         <?php foreach ($items as $prod):
             $cantPrev = (int)($_POST["extras"][$prod["id_producto"]] ?? 0);
+            $precioCard = ($cat === "Postre") ? (float)($prod["precio"] ?? 0) : ($PRECIOS_EXTRA[$cat] ?? 25);
         ?>
         <div class="t-extra-card <?= $cantPrev > 0 ? 't-extra-card--activo' : '' ?>"
              id="t-ex-card-<?= (int)$prod["id_producto"] ?>"
-             data-precio="<?= $PRECIOS_EXTRA[$cat] ?>">
+             data-precio="<?= $precioCard ?>">
             <div class="t-extra-card__info">
                 <span class="t-extra-card__nombre"><?= htmlspecialchars($prod["nombre"]) ?></span>
-                <span class="t-extra-card__precio">$<?= $PRECIOS_EXTRA[$cat] ?> por pieza</span>
+                <span class="t-extra-card__precio">$<?= number_format($precioCard, 0) ?> por pieza</span>
             </div>
             <div class="t-extra-contador">
                 <button type="button" class="t-extra-btn t-extra-btn--menos"
