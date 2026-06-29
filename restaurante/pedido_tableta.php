@@ -118,6 +118,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
     if ($cantidadMenus === 0) {
         $hayExtras = false;
         foreach ($_POST["extras"] ?? [] as $cant) { if ((int)$cant > 0) { $hayExtras = true; break; } }
+        if (!$hayExtras) {
+            foreach ($_POST["extras_custom"] ?? [] as $c) {
+                if (trim($c["nombre"] ?? "") !== "" && (float)($c["precio"] ?? 0) > 0) { $hayExtras = true; break; }
+            }
+        }
         if (!$hayExtras) $errores[] = "Agrega al menos un extra.";
     }
 
@@ -157,6 +162,21 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
                 "categoria"       => $prod["categoria"],
                 "cantidad"        => $cantidad,
                 "precio_unitario" => $precioExtra,
+            ];
+        }
+
+        /* Extras personalizados */
+        foreach ($_POST["extras_custom"] ?? [] as $custom) {
+            $nombre   = trim($custom["nombre"] ?? "");
+            $precio   = max(0.0, (float)str_replace(",", ".", $custom["precio"] ?? "0"));
+            $cantidad = max(1, min(10, (int)($custom["cantidad"] ?? 1)));
+            if ($nombre === "" || $precio <= 0) continue;
+            $extrasGuardar[] = [
+                "id_producto"     => null,
+                "nombre"          => $nombre,
+                "categoria"       => "Personalizado",
+                "cantidad"        => $cantidad,
+                "precio_unitario" => $precio,
             ];
         }
 
@@ -460,10 +480,10 @@ body {
 .t-toggle-body {
     overflow: hidden;
     max-height: 0;
-    transition: max-height .3s cubic-bezier(.4,0,.2,1), opacity .25s;
+    transition: max-height .4s cubic-bezier(.4,0,.2,1), opacity .3s;
     opacity: 0;
 }
-.t-toggle-body--abierto { max-height: 800px; opacity: 1; }
+.t-toggle-body--abierto { max-height: 3000px; opacity: 1; }
 .t-toggle-body > * { margin-top: 16px; }
 
 /* BADGE de cantidad activa en header */
@@ -526,6 +546,39 @@ body {
     min-width: 42px; text-align: center;
 }
 .t-extra-num--cero { color: #333; }
+
+/* EXTRAS PERSONALIZADOS */
+.t-custom-sep { border: none; border-top: 1px solid #252535; margin: 16px 0 12px; }
+.t-custom-row {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+}
+.t-custom-nombre {
+    flex: 1; background: #1e1e2e; border: 2px solid #333345; border-radius: 10px;
+    color: #fff; font-size: 16px; padding: 11px 13px; outline: none;
+    caret-color: #ff7a00; font-family: inherit;
+}
+.t-custom-nombre:focus { border-color: #ff7a00; }
+.t-custom-nombre::placeholder { color: #444; }
+.t-custom-precio {
+    width: 82px; background: #1e1e2e; border: 2px solid #333345; border-radius: 10px;
+    color: #ff7a00; font-size: 17px; font-weight: 700; padding: 11px 8px;
+    outline: none; text-align: center; caret-color: #ff7a00; font-family: inherit;
+}
+.t-custom-precio:focus { border-color: #ff7a00; }
+.t-custom-precio::placeholder { color: #333; font-weight: 400; font-size: 14px; }
+.t-custom-remove {
+    background: #2a1a1a; border: none; border-radius: 50%;
+    width: 40px; height: 40px; color: #ff6b6b; font-size: 20px;
+    cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    transition: background .12s;
+}
+.t-custom-remove:active { background: #3a1a1a; }
+.t-add-custom-btn {
+    width: 100%; background: transparent; border: 2px dashed #333345; border-radius: 10px;
+    color: #555; font-size: 16px; padding: 13px; cursor: pointer; margin-top: 4px;
+    font-family: inherit; transition: border-color .15s, color .15s;
+}
+.t-add-custom-btn:active { border-color: #ff7a00; color: #ff7a00; }
 
 /* RESPONSIVE */
 @media (max-width: 540px) {
@@ -742,6 +795,13 @@ body {
         <?php endforeach; ?>
         <?php endforeach; ?>
     </div>
+
+    <!-- Extra personalizado -->
+    <hr class="t-custom-sep">
+    <span class="t-extra-cat-label">✏️ Extra personalizado · precio libre</span>
+    <div id="t-custom-list"></div>
+    <button type="button" id="t-add-custom" class="t-add-custom-btn">＋ Agregar extra personalizado</button>
+
     </div><!-- /.t-toggle-body -->
 </div>
 <?php endif; ?>
@@ -953,6 +1013,9 @@ body {
             var id  = card.id.replace("t-ex-card-", "");
             total += parseInt(document.getElementById("t-ex-val-" + id)?.value) || 0;
         });
+        document.querySelectorAll(".t-custom-cant-hidden").forEach(function (inp) {
+            total += parseInt(inp.value) || 0;
+        });
         exBadge.textContent = total > 0 ? "+" + total : "";
         exBadge.classList.toggle("t-toggle-badge--on", total > 0);
     }
@@ -977,6 +1040,92 @@ body {
     });
     actualizarBadgeExtras();
 
+    /* ── Extras personalizados ── */
+    var customCount = 0;
+
+    function crearFilaCustom(idx) {
+        var row = document.createElement("div");
+        row.className = "t-custom-row";
+
+        var nombre = document.createElement("input");
+        nombre.type = "text";
+        nombre.name = "extras_custom[" + idx + "][nombre]";
+        nombre.placeholder = "Nombre del extra...";
+        nombre.className = "t-custom-nombre";
+        nombre.autocomplete = "off";
+
+        var precio = document.createElement("input");
+        precio.type = "number";
+        precio.name = "extras_custom[" + idx + "][precio]";
+        precio.placeholder = "$";
+        precio.className = "t-custom-precio";
+        precio.min = "0";
+        precio.step = "1";
+        precio.inputMode = "numeric";
+
+        var cantHidden = document.createElement("input");
+        cantHidden.type = "hidden";
+        cantHidden.name = "extras_custom[" + idx + "][cantidad]";
+        cantHidden.value = "1";
+        cantHidden.className = "t-custom-cant-hidden";
+
+        var numSpan = document.createElement("span");
+        numSpan.className = "t-extra-num";
+        numSpan.textContent = "1";
+
+        var btnMenos = document.createElement("button");
+        btnMenos.type = "button";
+        btnMenos.className = "t-extra-btn t-extra-btn--menos";
+        btnMenos.textContent = "−";
+
+        var btnMas = document.createElement("button");
+        btnMas.type = "button";
+        btnMas.className = "t-extra-btn t-extra-btn--mas";
+        btnMas.textContent = "+";
+
+        var contador = document.createElement("div");
+        contador.className = "t-extra-contador";
+        contador.appendChild(btnMenos);
+        contador.appendChild(numSpan);
+        contador.appendChild(btnMas);
+        contador.appendChild(cantHidden);
+
+        var btnRemove = document.createElement("button");
+        btnRemove.type = "button";
+        btnRemove.className = "t-custom-remove";
+        btnRemove.textContent = "✕";
+
+        row.appendChild(nombre);
+        row.appendChild(precio);
+        row.appendChild(contador);
+        row.appendChild(btnRemove);
+
+        btnMenos.addEventListener("click", function () {
+            var n = Math.max(1, parseInt(cantHidden.value) - 1);
+            cantHidden.value = n; numSpan.textContent = n;
+            actualizarBadgeExtras(); actualizarTotal();
+        });
+        btnMas.addEventListener("click", function () {
+            var n = Math.min(10, parseInt(cantHidden.value) + 1);
+            cantHidden.value = n; numSpan.textContent = n;
+            actualizarBadgeExtras(); actualizarTotal();
+        });
+        btnRemove.addEventListener("click", function () {
+            row.remove(); actualizarBadgeExtras(); actualizarTotal();
+        });
+        nombre.addEventListener("input", actualizarTotal);
+        precio.addEventListener("input", function () { actualizarBadgeExtras(); actualizarTotal(); });
+
+        return row;
+    }
+
+    var addCustomBtn = document.getElementById("t-add-custom");
+    if (addCustomBtn) {
+        addCustomBtn.addEventListener("click", function () {
+            document.getElementById("t-custom-list").appendChild(crearFilaCustom(customCount++));
+        });
+    }
+
     /* ── Total ── */
     function actualizarTotal() {
         var total = 0;
@@ -991,6 +1140,11 @@ body {
             var val   = parseInt(document.getElementById("t-ex-val-" + id)?.value) || 0;
             var precio = parseFloat(card.dataset.precio) || 25;
             total += val * precio;
+        });
+        document.querySelectorAll(".t-custom-row").forEach(function (row) {
+            var precio = parseFloat(row.querySelector(".t-custom-precio")?.value) || 0;
+            var cant   = parseInt(row.querySelector(".t-custom-cant-hidden")?.value) || 1;
+            total += precio * cant;
         });
         var el = document.getElementById("t-total");
         if (el) el.textContent = "$" + total.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
