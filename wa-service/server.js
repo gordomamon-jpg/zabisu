@@ -1,4 +1,4 @@
-const { Client, LocalAuth } = require('whatsapp-web.js');
+const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const http   = require('http');
 const path   = require('path');
@@ -143,6 +143,39 @@ const server = http.createServer((req, res) => {
                     await new Promise(r => setTimeout(r, 1500));
                 }
                 console.log('✅ Bulk completado:', messages.length, 'mensajes');
+
+            // POST /send-broadcast — imagen + caption a lista de teléfonos
+            } else if (req.url === '/send-broadcast') {
+                if (!clientReady) {
+                    res.writeHead(503, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ ok: false, error: 'WhatsApp no está conectado' }));
+                    return;
+                }
+                const phones  = data.phones  || [];
+                const caption = data.caption || '';
+                const img     = data.image;   // { data: base64, mimetype, filename }
+
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ ok: true, queued: phones.length }));
+
+                const media = img ? new MessageMedia(img.mimetype, img.data, img.filename) : null;
+
+                for (const phone of phones) {
+                    try {
+                        const numberId = await client.getNumberId(phone);
+                        if (!numberId) { console.warn('⚠️ Sin WA:', phone); continue; }
+                        if (media) {
+                            await client.sendMessage(numberId._serialized, media, { caption });
+                        } else if (caption) {
+                            await client.sendMessage(numberId._serialized, caption);
+                        }
+                        console.log('📤 Broadcast a', phone);
+                    } catch (e) {
+                        console.error('❌ Broadcast error', phone + ':', e.message);
+                    }
+                    await new Promise(r => setTimeout(r, 2500));
+                }
+                console.log('✅ Broadcast completado:', phones.length, 'contactos');
 
             } else {
                 res.writeHead(404);

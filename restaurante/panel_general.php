@@ -207,6 +207,14 @@ $modoPrueba = (int)($stmtModoPrueba->fetchColumn() ?? 0);
             </div>
         </a>
 
+        <a href="difusion.php" class="panel-acceso panel-acceso--menus">
+            <div class="panel-acceso__icono">📣</div>
+            <div class="panel-acceso__contenido">
+                <strong class="panel-acceso__titulo">Difusión WhatsApp</strong>
+                <span class="panel-acceso__desc">Envía el menú del día a todos tus clientes</span>
+            </div>
+        </a>
+
         <a href="pedido_tableta.php" class="panel-acceso">
             <div class="panel-acceso__icono">📱</div>
             <div class="panel-acceso__contenido">

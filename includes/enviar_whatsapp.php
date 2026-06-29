@@ -56,3 +56,35 @@ function enviarWhatsAppBulk(array $mensajes): array
     if ($err || !$response) return ['ok' => false, 'queued' => 0, 'error' => 'Servicio WA no disponible'];
     return json_decode($response, true) ?? ['ok' => false, 'queued' => 0];
 }
+
+function enviarBroadcastWA(array $telefonos, string $caption, ?array $imagen = null): array
+{
+    $phones = [];
+    foreach ($telefonos as $t) {
+        $d = preg_replace('/\D/', '', $t);
+        if (strlen($d) === 10) $d = '52' . $d;
+        if (strlen($d) >= 12) $phones[] = $d;
+    }
+    if (empty($phones)) return ['ok' => false, 'queued' => 0, 'error' => 'Sin teléfonos válidos'];
+
+    $payload = ['phones' => $phones, 'caption' => $caption];
+    if ($imagen) $payload['image'] = $imagen;
+
+    $json = json_encode($payload);
+
+    $ch = curl_init('http://127.0.0.1:3001/send-broadcast');
+    curl_setopt_array($ch, [
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => $json,
+        CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 10,
+        CURLOPT_CONNECTTIMEOUT => 3,
+    ]);
+    $response = curl_exec($ch);
+    $err      = curl_error($ch);
+    curl_close($ch);
+
+    if ($err || !$response) return ['ok' => false, 'queued' => 0, 'error' => 'Servicio WA no disponible'];
+    return json_decode($response, true) ?? ['ok' => false, 'queued' => 0];
+}
