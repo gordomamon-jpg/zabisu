@@ -33,16 +33,17 @@ if ($menuActivo) {
     $fechaMenuFormateada = $dias[date('l', $ts)] . " " . date('j', $ts) . " de " . ($meses[date('m', $ts)] ?? "");
 }
 
-/* ── Platos fuertes y complementos organizados por tipo_menu ── */
-$platosPorTipo        = [];
-$complementosPorTipo  = [];
-$productosIndexados   = [];
+/* ── Productos organizados por tipo_menu ── */
+$platosPorTipo       = [];
+$complementosPorTipo = [];
+$autoIncluirPorTipo  = []; // Sopa, Agua, Cortesia → se insertan automáticamente
+$productosIndexados  = [];
 
 if ($menuActivo) {
     $stmtProd = $conexion->prepare(
         "SELECT * FROM productos
          WHERE id_menu = :id_menu AND disponible = 1
-           AND categoria IN ('Plato fuerte', 'Complemento')
+           AND categoria IN ('Plato fuerte', 'Complemento', 'Sopa', 'Agua', 'Cortesia')
          ORDER BY tipo_menu, categoria, nombre"
     );
     $stmtProd->execute([":id_menu" => $menuActivo["id_menu"]]);
@@ -72,6 +73,10 @@ if ($menuActivo) {
             $platosPorTipo[$p["tipo_menu"]][] = $p;
         } elseif ($p["categoria"] === "Complemento") {
             $complementosPorTipo[$p["tipo_menu"]][] = $p;
+        } elseif (in_array($p["categoria"], ["Sopa", "Agua", "Cortesia"])) {
+            if (!isset($autoIncluirPorTipo[$p["tipo_menu"]][$p["categoria"]])) {
+                $autoIncluirPorTipo[$p["tipo_menu"]][$p["categoria"]] = $p;
+            }
         }
     }
 }
@@ -230,6 +235,18 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["ordenar"])) {
                     ":nombre"    => $productosIndexados[$cid]["nombre"],
                 ]);
                 $nombresComp[] = $productosIndexados[$cid]["nombre"];
+            }
+
+            // Sopa, Agua y Cortesia (auto-incluir según tipo de menú)
+            foreach (["Sopa", "Agua", "Cortesia"] as $catAuto) {
+                $prodAuto = $autoIncluirPorTipo[$tipoMenu][$catAuto] ?? null;
+                if (!$prodAuto) continue;
+                $stmtDP->execute([
+                    ":id_pm"     => $id_pedido_menu,
+                    ":id_prod"   => (int)$prodAuto["id_producto"],
+                    ":categoria" => $catAuto,
+                    ":nombre"    => $prodAuto["nombre"],
+                ]);
             }
 
             $lineaConf = trim($personas[$i]["nombre"]) . " — " . $prod["nombre"];
