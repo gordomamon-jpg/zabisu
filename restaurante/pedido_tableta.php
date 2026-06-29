@@ -98,7 +98,7 @@ $stmtHor = $conexion->prepare(
 $stmtHor->execute();
 $horarios = $stmtHor->fetchAll(PDO::FETCH_ASSOC);
 
-$cantidadMenus = isset($_POST["cantidad_menus"]) ? max(1, min(10, (int)$_POST["cantidad_menus"])) : 1;
+$cantidadMenus = isset($_POST["cantidad_menus"]) ? max(0, min(10, (int)$_POST["cantidad_menus"])) : 1;
 
 $errores      = [];
 $erroresMenus = [];
@@ -114,7 +114,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
 
     if ($nombre_cliente === "") $errores[] = "El nombre del cliente es obligatorio.";
     if ($id_horario === "")    $errores[] = "Selecciona un punto de entrega y horario.";
-    if (empty($menusRecibidos)) $errores[] = "Agrega al menos una comida.";
+    if ($cantidadMenus > 0 && empty($menusRecibidos)) $errores[] = "Agrega al menos una comida.";
+    if ($cantidadMenus === 0) {
+        $hayExtras = false;
+        foreach ($_POST["extras"] ?? [] as $cant) { if ((int)$cant > 0) { $hayExtras = true; break; } }
+        if (!$hayExtras) $errores[] = "Agrega al menos un extra.";
+    }
 
     foreach ($menusRecibidos as $nMenu => $menu) {
         $tipo_menu    = $menu["tipo_menu"]    ?? "";
@@ -602,7 +607,8 @@ body {
         <input type="hidden" name="cantidad_menus" id="t-cantidad" value="<?= (int)$cantidadMenus ?>">
         <button type="button" class="t-counter__btn t-counter__plus"  id="t-mas">+</button>
     </div>
-    <p class="t-counter__hint">máximo 10 comidas por ticket</p>
+    <p class="t-counter__hint" id="t-hint-max" <?= $cantidadMenus === 0 ? 'style="display:none;"' : '' ?>>máximo 10 comidas por ticket</p>
+    <p class="t-counter__hint" id="t-hint-extras" style="<?= $cantidadMenus === 0 ? '' : 'display:none;' ?>color:#ff7a00;font-weight:700;">Solo extras</p>
 </div>
 
 <!-- BLOQUES DE MENÚ -->
@@ -829,13 +835,27 @@ body {
     var inputCant  = document.getElementById("t-cantidad");
 
     function setCantidad(n) {
-        if (n < 1) n = 1;
+        if (n < 0) n = 0;
         if (n > MAX) n = MAX;
         cantidadActual = n;
         numDisplay.textContent = n;
         inputCant.value = n;
         actualizarBloques();
         actualizarTotal();
+
+        var hintMax    = document.getElementById("t-hint-max");
+        var hintExtras = document.getElementById("t-hint-extras");
+        if (hintMax)    hintMax.style.display    = n === 0 ? "none" : "";
+        if (hintExtras) hintExtras.style.display = n === 0 ? "" : "none";
+
+        if (n === 0) {
+            var exBody   = document.getElementById("t-ex-body");
+            var exHeader = document.getElementById("t-ex-header");
+            if (exBody && !exBody.classList.contains("t-toggle-body--abierto")) {
+                exBody.classList.add("t-toggle-body--abierto");
+                if (exHeader) exHeader.classList.add("t-toggle-header--abierto");
+            }
+        }
     }
 
     document.getElementById("t-menos").addEventListener("click", function () { setCantidad(cantidadActual - 1); });
