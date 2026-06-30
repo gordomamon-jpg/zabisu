@@ -2,8 +2,8 @@
 require_once "../config/db.php";
 date_default_timezone_set("America/Mexico_City");
 
-/* ── Aviso día mundialista (temporal 10-11 jun 2026) ── */
-if (in_array(date('Y-m-d'), ['2026-06-10', '2026-06-11'])): ?>
+/* ── Aviso día mundialista (temporal 29-30 jun 2026) ── */
+if (in_array(date('Y-m-d'), ['2026-06-29', '2026-06-30'])): ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -126,8 +126,8 @@ if (in_array(date('Y-m-d'), ['2026-06-10', '2026-06-11'])): ?>
     </div>
     <p class="mun-eyebrow">🏆 FIFA World Cup 2026</p>
     <h2 class="mun-titulo">¡Hoy es día mundialista!</h2>
-    <p class="mun-texto">Nuestro equipo se une a la celebración.<br><strong>Hoy no contamos con servicio.</strong></p>
-    <span class="mun-vuelta">📅 Nos vemos el lunes con todo el sabor</span>
+    <p class="mun-texto">Nuestro equipo se une a la celebración.<br><strong>Hoy y mañana no contamos con servicio.</strong></p>
+    <span class="mun-vuelta">📅 Nos vemos el martes con todo el sabor</span>
     <div class="mun-flags">🇲🇽 🌍 🇺🇸 🇨🇦</div>
 </div>
 </body>
