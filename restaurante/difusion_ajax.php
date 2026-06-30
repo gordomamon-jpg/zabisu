@@ -43,6 +43,45 @@ if ($accion === "agregar") {
     exit;
 }
 
+// ── Importar lista de números ─────────────────────────────────
+if ($accion === "importar") {
+    $texto = trim($_POST["numeros"] ?? "");
+    if ($texto === "") {
+        echo json_encode(["ok" => false, "error" => "No se recibieron números."]);
+        exit;
+    }
+
+    $lineas     = preg_split('/\r\n|\r|\n/', $texto);
+    $agregados  = 0;
+    $duplicados = 0;
+    $invalidos  = 0;
+    $nuevos     = [];
+
+    $stmtCheck = $conexion->prepare(
+        "SELECT id_contacto FROM difusion_contactos WHERE telefono = :tel AND activo = 1 LIMIT 1"
+    );
+    $stmtIns = $conexion->prepare(
+        "INSERT INTO difusion_contactos (nombre, telefono, activo) VALUES ('', :tel, 1)"
+    );
+
+    foreach ($lineas as $linea) {
+        $tel = preg_replace('/\D/', '', trim($linea));
+        if ($tel === "") continue;
+        if (strlen($tel) !== 10) { $invalidos++; continue; }
+
+        $stmtCheck->execute([":tel" => $tel]);
+        if ($stmtCheck->fetchColumn()) { $duplicados++; continue; }
+
+        $stmtIns->execute([":tel" => $tel]);
+        $id = (int)$conexion->lastInsertId();
+        $nuevos[]  = ["id" => $id, "telefono" => $tel];
+        $agregados++;
+    }
+
+    echo json_encode(["ok" => true, "agregados" => $agregados, "duplicados" => $duplicados, "invalidos" => $invalidos, "nuevos" => $nuevos]);
+    exit;
+}
+
 // ── Eliminar contacto ─────────────────────────────────────────
 if ($accion === "eliminar") {
     $id = (int)($_POST["id"] ?? 0);

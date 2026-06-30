@@ -246,6 +246,76 @@ $totalContactos = count($contactos);
             text-align: center;
             margin-top: 4px;
         }
+
+        /* Carga rápida */
+        .dif-carga-toggle {
+            font-size: 12px;
+            color: #ff7a00;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            margin-bottom: 10px;
+            display: block;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+        .dif-carga-panel {
+            display: none;
+            background: #141418;
+            border: 1px solid #2a2a2e;
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 14px;
+        }
+        .dif-carga-panel.abierto { display: block; }
+        .dif-carga-panel textarea {
+            width: 100%;
+            background: #1a1a1f;
+            border: 1px solid #2a2a2e;
+            border-radius: 8px;
+            color: #e8e8e8;
+            font-size: 13px;
+            padding: 10px 12px;
+            resize: vertical;
+            min-height: 100px;
+            outline: none;
+            font-family: monospace;
+            box-sizing: border-box;
+            transition: border-color .2s;
+        }
+        .dif-carga-panel textarea:focus { border-color: #ff7a00; }
+        .dif-carga-panel label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            text-transform: uppercase;
+            color: #555;
+            margin-bottom: 8px;
+        }
+        .btn-importar {
+            background: #ff7a00;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 9px 18px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background .2s;
+        }
+        .btn-importar:hover { background: #e06800; }
+        .btn-importar:disabled { opacity: .5; cursor: not-allowed; }
+        .dif-carga-resultado {
+            font-size: 12px;
+            color: #888;
+            margin-top: 8px;
+            min-height: 18px;
+        }
+        .dif-carga-resultado.ok { color: #25d366; }
+        .dif-carga-resultado.err { color: #ff6666; }
     </style>
 </head>
 <body>
@@ -282,6 +352,14 @@ $totalContactos = count($contactos);
                     <input type="text" id="input-tel" placeholder="Teléfono (10 dígitos)" maxlength="10" inputmode="numeric">
                     <input type="text" id="input-nombre" placeholder="Nombre (opcional)" maxlength="80">
                     <button class="btn-agregar-contacto" id="btn-agregar" title="Agregar">+</button>
+                </div>
+
+                <button class="dif-carga-toggle" id="btn-toggle-carga">⚡ Carga rápida (pegar lista)</button>
+                <div class="dif-carga-panel" id="panel-carga">
+                    <label>Un número por línea (solo dígitos)</label>
+                    <textarea id="textarea-numeros" placeholder="5512345678&#10;5598765432&#10;5511223344&#10;..."></textarea>
+                    <button class="btn-importar" id="btn-importar">Importar números</button>
+                    <div class="dif-carga-resultado" id="carga-resultado"></div>
                 </div>
 
                 <div class="dif-lista" id="lista-contactos">
@@ -402,6 +480,73 @@ $totalContactos = count($contactos);
                 actualizarContador();
             })
             .catch(function () { alert("Error de red."); });
+    });
+
+    // ── Carga rápida ─────────────────────────────────────────────
+    document.getElementById("btn-toggle-carga").addEventListener("click", function () {
+        var panel = document.getElementById("panel-carga");
+        panel.classList.toggle("abierto");
+        this.textContent = panel.classList.contains("abierto")
+            ? "▲ Cerrar carga rápida"
+            : "⚡ Carga rápida (pegar lista)";
+    });
+
+    document.getElementById("btn-importar").addEventListener("click", function () {
+        var texto  = document.getElementById("textarea-numeros").value.trim();
+        var resEl  = document.getElementById("carga-resultado");
+        if (!texto) { resEl.textContent = "Pega al menos un número."; resEl.className = "dif-carga-resultado err"; return; }
+
+        var btn = this;
+        btn.disabled    = true;
+        btn.textContent = "Importando…";
+        resEl.textContent = "";
+        resEl.className   = "dif-carga-resultado";
+
+        var fd = new FormData();
+        fd.append("accion", "importar");
+        fd.append("numeros", texto);
+
+        fetch("difusion_ajax.php", { method: "POST", body: fd })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                btn.disabled    = false;
+                btn.textContent = "Importar números";
+
+                if (!data.ok) { resEl.textContent = "❌ " + (data.error || "Error."); resEl.className = "dif-carga-resultado err"; return; }
+
+                var msg = "✅ " + data.agregados + " agregados";
+                if (data.duplicados > 0) msg += " · " + data.duplicados + " ya existían";
+                if (data.invalidos  > 0) msg += " · " + data.invalidos  + " inválidos";
+                resEl.textContent = msg;
+                resEl.className   = "dif-carga-resultado ok";
+
+                // Insertar filas nuevas en la lista
+                (data.nuevos || []).forEach(function (c) {
+                    var vacios = listaEl.querySelector(".dif-lista-vacia");
+                    if (vacios) vacios.style.display = "none";
+
+                    var div = document.createElement("div");
+                    div.className  = "dif-contacto";
+                    div.dataset.id = c.id;
+                    div.innerHTML  =
+                        '<div class="dif-contacto__info">'
+                        + '<div class="dif-contacto__nombre">—</div>'
+                        + '<div class="dif-contacto__tel">' + c.telefono + '</div>'
+                        + '</div>'
+                        + '<button class="btn-eliminar-contacto" data-id="' + c.id + '" title="Eliminar">✕</button>';
+                    div.querySelector(".btn-eliminar-contacto").addEventListener("click", eliminarContacto);
+                    listaEl.appendChild(div);
+                });
+                actualizarContador();
+
+                if (data.agregados > 0) document.getElementById("textarea-numeros").value = "";
+            })
+            .catch(function () {
+                btn.disabled    = false;
+                btn.textContent = "Importar números";
+                resEl.textContent = "❌ Error de red.";
+                resEl.className   = "dif-carga-resultado err";
+            });
     });
 
     // Enter en inputs → agregar
