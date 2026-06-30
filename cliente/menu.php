@@ -126,8 +126,8 @@ if (in_array(date('Y-m-d'), ['2026-06-29', '2026-06-30'])): ?>
     </div>
     <p class="mun-eyebrow">🏆 FIFA World Cup 2026</p>
     <h2 class="mun-titulo">¡Hoy es día mundialista!</h2>
-    <p class="mun-texto">Nuestro equipo se une a la celebración.<br><strong>Hoy y mañana no contamos con servicio.</strong></p>
-    <span class="mun-vuelta">📅 Nos vemos el martes con todo el sabor</span>
+    <p class="mun-texto"><strong>Hoy y mañana no contamos con servicio.</strong></p>
+    <span class="mun-vuelta">📅 ¡Los esperamos el miércoles con todo el sabor!</span>
     <div class="mun-flags">🇲🇽 🌍 🇺🇸 🇨🇦</div>
 </div>
 </body>
