@@ -2,6 +2,132 @@
 require_once "../config/db.php";
 date_default_timezone_set("America/Mexico_City");
 
+/* ── Aviso día mundialista (activar: cambiar false por in_array(date('Y-m-d'), ['YYYY-MM-DD', ...])) ── */
+if (false): ?>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zabisu</title>
+    <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="theme-color" content="#FF7A00">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Zabisu">
+    <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
+    <link rel="stylesheet" href="../assets/css/styles.css?v=5">
+    <style>
+    *, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
+    body {
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        background: #0a0e0a;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        min-height: 100vh; padding: 20px;
+    }
+    body::before {
+        content:''; position:fixed; inset:0; pointer-events:none;
+        background:
+            radial-gradient(ellipse at 50% -10%, rgba(255,122,0,.18) 0%, transparent 55%),
+            radial-gradient(ellipse at 50% 110%, rgba(74,200,110,.12) 0%, transparent 55%);
+    }
+    .mun-bg { position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:0; }
+    .mun-confetti { position:absolute; bottom:-10px; left:var(--x); width:8px; height:8px; border-radius:2px; background:var(--c); animation:mun-rise 3.5s ease-in-out var(--d) infinite; opacity:0; }
+    @keyframes mun-rise { 0%{transform:translateY(0) rotate(0deg);opacity:0} 10%{opacity:.9} 90%{opacity:.6} 100%{transform:translateY(-110vh) rotate(540deg);opacity:0} }
+
+    .mun-marca {
+        position: relative; z-index:1;
+        display: flex; align-items: center; gap: 10px;
+        margin-bottom: 28px;
+        animation: mun-fadein .4s ease both;
+    }
+    .mun-marca img { width: 60px; height: 60px; object-fit:contain; filter: drop-shadow(0 0 14px rgba(255,122,0,.55)); }
+    .mun-marca span { font-size: 52px; font-weight: 900; color: #fff; letter-spacing: -2px; text-shadow: 0 0 40px rgba(255,122,0,.35); }
+    @keyframes mun-fadein { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+
+    .mun-card {
+        position: relative; z-index:1;
+        background: linear-gradient(160deg, #111a11 0%, #0e0e14 55%, #0e0e12 100%);
+        border: 1px solid rgba(255,122,0,.2);
+        border-radius: 28px;
+        padding: 36px 26px 32px;
+        max-width: 380px; width: 100%;
+        text-align: center;
+        box-shadow:
+            0 0 0 1px rgba(74,200,110,.1),
+            0 0 50px rgba(255,122,0,.08),
+            0 20px 60px rgba(0,0,0,.7);
+        animation: mun-popin .55s cubic-bezier(.34,1.4,.64,1) .15s both;
+    }
+    @keyframes mun-popin { from{transform:scale(.85) translateY(20px);opacity:0} to{transform:scale(1) translateY(0);opacity:1} }
+
+    .mun-ball-wrap { display:flex; flex-direction:column; align-items:center; margin-bottom:22px; }
+    .mun-ball-bounce { animation:mun-bounce 1s cubic-bezier(.4,0,.2,1) infinite alternate; }
+    @keyframes mun-bounce { from{transform:translateY(0)} to{transform:translateY(-26px)} }
+    .mun-ball { font-size:76px; line-height:1; animation:mun-spin 1.8s linear infinite; display:inline-block; filter:drop-shadow(0 6px 18px rgba(0,0,0,.6)); }
+    @keyframes mun-spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+    .mun-shadow { width:56px; height:12px; background:radial-gradient(ellipse,rgba(0,0,0,.55) 0%,transparent 70%); border-radius:50%; margin-top:6px; animation:mun-shpulse 1s ease-in-out infinite alternate; }
+    @keyframes mun-shpulse { from{transform:scaleX(.55);opacity:.6} to{transform:scaleX(1.1);opacity:.25} }
+
+    .mun-eyebrow {
+        font-size:10px; font-weight:700; letter-spacing:2.5px;
+        text-transform:uppercase;
+        background: linear-gradient(90deg, #ff7a00, #4ac86e);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom:8px;
+    }
+    .mun-titulo { font-size:23px; font-weight:900; color:#fff; margin-bottom:12px; letter-spacing:-.3px; line-height:1.25; }
+    .mun-texto { font-size:14px; color:rgba(255,255,255,.55); line-height:1.75; margin-bottom:18px; }
+    .mun-texto strong { color:#fff; }
+    .mun-vuelta {
+        display: inline-block;
+        font-size:13px; font-weight:700;
+        color: #ff7a00;
+        background: rgba(255,122,0,.1);
+        border: 1px solid rgba(255,122,0,.25);
+        border-radius: 99px;
+        padding: 5px 14px;
+        margin-bottom: 18px;
+        letter-spacing: .3px;
+    }
+    .mun-flags { font-size:24px; letter-spacing:6px; animation:mun-wave 2s ease-in-out infinite; }
+    @keyframes mun-wave { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+    </style>
+</head>
+<body>
+<div class="mun-bg">
+    <span class="mun-confetti" style="--x:5%;--d:0s;--c:#ff7a00"></span>
+    <span class="mun-confetti" style="--x:15%;--d:.5s;--c:#4ac86e"></span>
+    <span class="mun-confetti" style="--x:27%;--d:.9s;--c:#facc15"></span>
+    <span class="mun-confetti" style="--x:40%;--d:.2s;--c:#ff7a00"></span>
+    <span class="mun-confetti" style="--x:55%;--d:.7s;--c:#4ac86e"></span>
+    <span class="mun-confetti" style="--x:67%;--d:1.1s;--c:#fff"></span>
+    <span class="mun-confetti" style="--x:78%;--d:.4s;--c:#ff7a00"></span>
+    <span class="mun-confetti" style="--x:90%;--d:.6s;--c:#facc15"></span>
+</div>
+
+<div class="mun-marca">
+    <img src="../assets/img/LOGO_BLANCO.png" alt="Zabisu">
+    <span>Zabisu</span>
+</div>
+
+<div class="mun-card">
+    <div class="mun-ball-wrap">
+        <div class="mun-ball-bounce"><div class="mun-ball">⚽</div></div>
+        <div class="mun-shadow"></div>
+    </div>
+    <p class="mun-eyebrow">🏆 FIFA World Cup 2026</p>
+    <h2 class="mun-titulo">¡Hoy es día mundialista!</h2>
+    <p class="mun-texto"><strong>No contamos con servicio.</strong></p>
+    <span class="mun-vuelta">📅 ¡Los esperamos el miércoles con todo el sabor!</span>
+    <div class="mun-flags">🇲🇽 🌍 🇺🇸 🇨🇦</div>
+</div>
+</body>
+</html>
+<?php exit; endif;
+
 
 $sqlMenu = "SELECT * FROM menu_dia WHERE activo = 1 ORDER BY fecha DESC LIMIT 1";
 $stmtMenu = $conexion->prepare($sqlMenu);
