@@ -145,9 +145,8 @@ function construirResumenCorreoNotificacion($menusPedido, $detallePorMenu, $prec
 
 function construirResumenWA($menusPedido, $detallePorMenu, $preciosMenus)
 {
-    $texto  = "";
-    $iconos = ["Plato fuerte"=>"🍽️","Sopa"=>"🥣","Complemento"=>"🥗","Agua"=>"💧","Cortesia"=>"🍬"];
-    $orden  = ["Plato fuerte","Sopa","Complemento","Agua","Cortesia"];
+    $texto = "";
+    $orden = ["Plato fuerte","Sopa","Complemento","Agua","Cortesia"];
 
     foreach ($menusPedido as $menu) {
         $idPedidoMenu = $menu["id_pedido_menu"];
@@ -157,13 +156,13 @@ function construirResumenWA($menusPedido, $detallePorMenu, $preciosMenus)
         }
         $precio = $preciosMenus[$menu["tipo_menu"]] ?? null;
 
-        $texto .= "\n*Menú " . $menu["numero_menu"] . "* · " . $menu["tipo_menu"] . "\n";
+        $texto .= "\n*Menú " . $menu["numero_menu"] . "* — " . $menu["tipo_menu"] . "\n";
         foreach ($orden as $cat) {
             if (empty($agrupado[$cat])) continue;
-            $texto .= "  " . ($iconos[$cat] ?? "·") . " " . implode(", ", $agrupado[$cat]) . "\n";
+            $texto .= "  " . $cat . ": " . implode(", ", $agrupado[$cat]) . "\n";
         }
         if ($precio !== null) {
-            $texto .= "  _$" . number_format((float)$precio, 2) . "_\n";
+            $texto .= "  $" . number_format((float)$precio, 2) . "\n";
         }
     }
     return $texto;
@@ -173,14 +172,14 @@ function construirExtrasWA($extras)
 {
     if (empty($extras)) return "";
 
-    $texto      = "\n*Extras*\n";
+    $texto       = "\n*Extras*\n";
     $totalExtras = 0;
     foreach ($extras as $extra) {
-        $sub         = $extra["cantidad"] * $extra["precio_unitario"];
+        $sub          = $extra["cantidad"] * $extra["precio_unitario"];
         $totalExtras += $sub;
-        $texto .= "  🍬 " . $extra["nombre"] . " ×" . (int)$extra["cantidad"] . "\n";
+        $texto .= "  " . $extra["nombre"] . " ×" . (int)$extra["cantidad"] . "\n";
     }
-    $texto .= "  _$" . number_format($totalExtras, 2) . "_\n";
+    $texto .= "  $" . number_format($totalExtras, 2) . "\n";
     return $texto;
 }
 
@@ -515,24 +514,23 @@ try {
         $extrasWA = $stmtExtrasWA->fetchAll(PDO::FETCH_ASSOC);
         $extrasTextoWA = construirExtrasWA($extrasWA);
 
-        $waMsg = "✅ *¡Tu pedido está confirmado!*\n\n"
-               . "Hola *" . ($pedido["nombre_cliente"] ?? "") . "* 👋 Ya estamos preparando tu pedido.\n\n"
-               . "*Folio:* " . strtoupper($pedido["folio"] ?? "") . "\n\n"
-               . "📍 *Detalles de entrega*\n"
-               . "*Punto:* {$ubicWA}\n"
-               . "*Horario estimado:* {$horaWA}\n\n"
-               . "💳 *Pago*\n"
-               . "*Método:* " . ($pedido["metodo_pago"] ?? "") . "\n"
-               . "*Estado:* " . ($pedido["estado_pago"] ?? "") . "\n\n"
-               . "🍱 *Tu pedido*"
+        $waMsg = "*Pedido confirmado* · Zabisu\n\n"
+               . "Hola, " . ($pedido["nombre_cliente"] ?? "") . ". Tu orden ya está en preparación.\n\n"
+               . "Folio: *" . strtoupper($pedido["folio"] ?? "") . "*\n\n"
+               . "─────────────────\n"
+               . "*Entrega*\n"
+               . "{$ubicWA}\n"
+               . "{$horaWA}\n\n"
+               . "*Pago*\n"
+               . ($pedido["metodo_pago"] ?? "") . " · " . ($pedido["estado_pago"] ?? "") . "\n"
+               . "─────────────────\n"
+               . "*Tu pedido*"
                . $resumenWA
-               . $extrasTextoWA . "\n"
-               . "*Total: $" . number_format((float)($pedido["total"] ?? 0), 2) . "*\n\n"
-               . "━━━━━━━━\n"
-               . "1️⃣ Preparando tu pedido — nuestro equipo ya cocina tu orden\n"
-               . "2️⃣ En camino — tu repartidor saldrá antes del horario indicado\n"
-               . "3️⃣ ¡A disfrutar en *{$ubicWA}* a las *{$horaWA}*!\n\n"
-               . "¡Gracias por tu preferencia! 🙌";
+               . $extrasTextoWA
+               . "\n*Total  $" . number_format((float)($pedido["total"] ?? 0), 2) . "*\n\n"
+               . "─────────────────\n"
+               . "Te avisaremos cuando tu pedido llegue al punto de entrega.\n"
+               . "_Zabisu — Sabor y Servicio_";
 
         if (!empty($pedido["telefono"])) {
             enviarWhatsApp($pedido["telefono"], $waMsg);
