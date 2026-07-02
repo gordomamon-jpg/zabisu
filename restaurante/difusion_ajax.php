@@ -115,8 +115,18 @@ if ($accion === "broadcast") {
 
     // Procesar imagen si viene
     $imagen = null;
-    if (!empty($_FILES["imagen"]["tmp_name"]) && $_FILES["imagen"]["error"] === UPLOAD_ERR_OK) {
-        $mime     = mime_content_type($_FILES["imagen"]["tmp_name"]);
+    if (isset($_FILES["imagen"]) && $_FILES["imagen"]["error"] !== UPLOAD_ERR_NO_FILE) {
+        $uploadError = $_FILES["imagen"]["error"];
+        if ($uploadError !== UPLOAD_ERR_OK) {
+            $errMsg = match($uploadError) {
+                UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => "La imagen es demasiado grande. Redúcela a menos de 8 MB.",
+                UPLOAD_ERR_PARTIAL  => "La imagen no se subió completa. Intenta de nuevo.",
+                default             => "Error al subir la imagen (código {$uploadError}).",
+            };
+            echo json_encode(["ok" => false, "error" => $errMsg]);
+            exit;
+        }
+        $mime       = mime_content_type($_FILES["imagen"]["tmp_name"]);
         $permitidos = ["image/jpeg", "image/png", "image/webp", "image/gif"];
         if (!in_array($mime, $permitidos)) {
             echo json_encode(["ok" => false, "error" => "Formato de imagen no permitido."]);
