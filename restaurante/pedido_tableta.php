@@ -42,11 +42,7 @@ if ($menuActivo) {
 
     foreach ($stmtProd->fetchAll(PDO::FETCH_ASSOC) as $p) {
         $idP = (int)$p["id_producto"];
-        $p["agotado"] = (
-            $p["categoria"] === "Plato fuerte" &&
-            !empty($p["limite_pedidos"]) &&
-            ($conteos[$idP] ?? 0) >= (int)$p["limite_pedidos"]
-        );
+        $p["agotado"] = false; // la tableta ignora agotado — sin restricciones
         $menusPorTipo[$p["tipo_menu"]][$p["categoria"]][] = $p;
         $productosIndexados[$idP] = $p;
     }
@@ -135,8 +131,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
             $erroresMenus[$nMenu][] = "Selecciona el tipo de menú.";
         if ($plato_fuerte === "") {
             $erroresMenus[$nMenu][] = "Falta el guisado.";
-        } elseif (isset($productosIndexados[(int)$plato_fuerte]) && !empty($productosIndexados[(int)$plato_fuerte]["agotado"])) {
-            $erroresMenus[$nMenu][] = "El guisado está agotado.";
         }
         if (empty($complementos))      $erroresMenus[$nMenu][] = "Falta al menos un complemento.";
         if (count($complementos) > 2)  $erroresMenus[$nMenu][] = "Máximo 2 complementos.";
