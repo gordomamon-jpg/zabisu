@@ -683,13 +683,12 @@ function formatearFechaBonita($fecha)
                             <div class="resumen-produccion-dia__grid">
                                 <?php foreach ($resumenPlatosPorFecha[$fecha] as $plato): ?>
                                     <?php
-                                        $esHoy       = ($fecha === date('Y-m-d'));
-                                        $idProd      = (int)($plato["id_producto"] ?? 0);
-                                        $disponible  = (int)($plato["disponible"] ?? 1);
-                                        $claseExtra  = $disponible ? '' : 'tarjeta-produccion--agotado';
+                                        $idProd     = (int)($plato["id_producto"] ?? 0);
+                                        $disponible = (int)($plato["disponible"] ?? 1);
+                                        $claseExtra = $disponible ? '' : 'tarjeta-produccion--agotado';
                                     ?>
                                     <div class="tarjeta-produccion <?php echo $claseExtra; ?>"
-                                         <?php if ($esHoy && $idProd): ?>
+                                         <?php if ($idProd): ?>
                                              data-id-producto="<?php echo $idProd; ?>"
                                              data-disponible="<?php echo $disponible; ?>"
                                              data-nombre="<?php echo htmlspecialchars($plato['nombre_producto']); ?>"
@@ -713,13 +712,12 @@ function formatearFechaBonita($fecha)
                             <div class="resumen-produccion-dia__grid">
                                 <?php foreach ($resumenComplementosPorFecha[$fecha] as $complemento): ?>
                                     <?php
-                                        $esHoy      = ($fecha === date('Y-m-d'));
                                         $idProd     = (int)($complemento["id_producto"] ?? 0);
                                         $disponible = (int)($complemento["disponible"] ?? 1);
                                         $claseExtra = $disponible ? '' : 'tarjeta-produccion--agotado';
                                     ?>
                                     <div class="tarjeta-produccion <?php echo $claseExtra; ?>"
-                                         <?php if ($esHoy && $idProd): ?>
+                                         <?php if ($idProd): ?>
                                              data-id-producto="<?php echo $idProd; ?>"
                                              data-disponible="<?php echo $disponible; ?>"
                                              data-nombre="<?php echo htmlspecialchars($complemento['nombre_producto']); ?>"
