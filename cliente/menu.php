@@ -601,7 +601,8 @@ $menusPorTipo = [];
 foreach ($stmtProductos->fetchAll(PDO::FETCH_ASSOC) as $p) {
     $totalActual = $conteosProductos[(int)$p["id_producto"]] ?? 0;
     $limite = isset($p["limite_pedidos"]) ? (int)$p["limite_pedidos"] : 0;
-    $p["agotado"] = ($p["categoria"] === "Plato fuerte" && $limite > 0 && $totalActual >= $limite);
+    $p["agotado"] = ($p["categoria"] === "Plato fuerte" && $limite > 0 && $totalActual >= $limite)
+                 || !empty($p["agotado_manual"]);
     $menusPorTipo[$p["tipo_menu"]][$p["categoria"]][] = $p;
 }
 
