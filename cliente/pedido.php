@@ -745,13 +745,17 @@ if ($scrollDestino === "bloque-entrega") {
                                 <div class="grupo-categoria grupo-complementos" data-max="2">
                                     <h3>🥗 Complementos <span class="cat-hint complementos-hint">· elige hasta 2</span></h3>
                                     <?php foreach ($menusPorTipo[$tipoMenu]["Complemento"] as $item): ?>
-                                        <label class="opcion-producto">
+                                        <label class="opcion-producto <?php echo !empty($item['agotado']) ? 'producto-agotado' : ''; ?>">
                                             <input type="checkbox"
                                                    name="menus[<?php echo $i; ?>][complementos][]"
                                                    value="<?php echo $item["id_producto"]; ?>"
-                                                   <?php echo (in_array($item["id_producto"], $_POST["menus"][$i]["complementos"] ?? [])) ? "checked" : ""; ?>>
+                                                   <?php echo (in_array($item["id_producto"], $_POST["menus"][$i]["complementos"] ?? [])) ? "checked" : ""; ?>
+                                                   <?php echo !empty($item["agotado"]) ? 'disabled' : ''; ?>>
                                             <strong><?php echo htmlspecialchars($item["nombre"]); ?></strong> —
                                             <?php echo htmlspecialchars($item["descripcion"]); ?>
+                                            <?php if (!empty($item["agotado"])): ?>
+                                                <span class="badge-agotado">Agotado</span>
+                                            <?php endif; ?>
                                         </label>
                                     <?php endforeach; ?>
                                 </div>
