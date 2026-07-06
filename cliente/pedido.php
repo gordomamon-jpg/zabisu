@@ -254,6 +254,10 @@ foreach ($productos as $producto) {
         $producto["agotado"] = true;
     }
 
+    if (!empty($producto["agotado_manual"])) {
+        $producto["agotado"] = true;
+    }
+
     $menusPorTipo[$tipoMenu][$categoria][] = $producto;
     $productosIndexados[$idProducto] = $producto;
 }

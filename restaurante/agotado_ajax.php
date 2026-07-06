@@ -12,9 +12,9 @@ if ($id_producto <= 0 || !in_array($accion, ["agotado", "disponible"])) {
     exit;
 }
 
-$disponible = $accion === "disponible" ? 1 : 0;
+$agotado = $accion === "agotado" ? 1 : 0;
 
-$stmt = $conexion->prepare("UPDATE productos SET disponible = :disponible WHERE id_producto = :id");
-$stmt->execute([":disponible" => $disponible, ":id" => $id_producto]);
+$stmt = $conexion->prepare("UPDATE productos SET agotado_manual = :agotado WHERE id_producto = :id");
+$stmt->execute([":agotado" => $agotado, ":id" => $id_producto]);
 
-echo json_encode(["ok" => true, "disponible" => $disponible]);
+echo json_encode(["ok" => true, "disponible" => $agotado === 0 ? 1 : 0]);

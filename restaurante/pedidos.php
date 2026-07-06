@@ -101,8 +101,8 @@ $sqlResumenPlatos = "SELECT
                         COALESCE(md.fecha, DATE(p.fecha_pedido)) AS fecha_grupo,
                         dp.nombre_producto,
                         COUNT(*) AS total,
-                        MIN(pr.id_producto) AS id_producto,
-                        MIN(pr.disponible)  AS disponible
+                        MIN(pr.id_producto)    AS id_producto,
+                        MAX(pr.agotado_manual) AS agotado_manual
                      FROM detalle_pedido dp
                      INNER JOIN pedido_menus pm ON dp.id_pedido_menu = pm.id_pedido_menu
                      INNER JOIN pedidos p ON pm.id_pedido = p.id_pedido
@@ -122,8 +122,8 @@ foreach ($resumenPlatosDB as $fila) {
     $resumenPlatosPorFecha[$fechaGrupo][] = [
         "nombre_producto" => $fila["nombre_producto"],
         "total"           => (int)$fila["total"],
-        "id_producto"     => (int)$fila["id_producto"],
-        "disponible"      => (int)$fila["disponible"],
+        "id_producto"    => (int)$fila["id_producto"],
+        "agotado_manual" => (int)$fila["agotado_manual"],
     ];
 }
 
@@ -134,8 +134,8 @@ $sqlResumenComplementos = "SELECT
                               COALESCE(md.fecha, DATE(p.fecha_pedido)) AS fecha_grupo,
                               dp.nombre_producto,
                               COUNT(*) AS total,
-                              MIN(pr.id_producto) AS id_producto,
-                              MIN(pr.disponible)  AS disponible
+                              MIN(pr.id_producto)    AS id_producto,
+                              MAX(pr.agotado_manual) AS agotado_manual
                            FROM detalle_pedido dp
                            INNER JOIN pedido_menus pm ON dp.id_pedido_menu = pm.id_pedido_menu
                            INNER JOIN pedidos p ON pm.id_pedido = p.id_pedido
@@ -155,8 +155,8 @@ foreach ($resumenComplementosDB as $fila) {
     $resumenComplementosPorFecha[$fechaGrupo][$fila["nombre_producto"]] = [
         "nombre_producto" => $fila["nombre_producto"],
         "total"           => (int)$fila["total"],
-        "id_producto"     => (int)$fila["id_producto"],
-        "disponible"      => (int)$fila["disponible"],
+        "id_producto"    => (int)$fila["id_producto"],
+        "agotado_manual" => (int)$fila["agotado_manual"],
     ];
 }
 
@@ -683,14 +683,14 @@ function formatearFechaBonita($fecha)
                             <div class="resumen-produccion-dia__grid">
                                 <?php foreach ($resumenPlatosPorFecha[$fecha] as $plato): ?>
                                     <?php
-                                        $idProd     = (int)($plato["id_producto"] ?? 0);
-                                        $disponible = (int)($plato["disponible"] ?? 1);
-                                        $claseExtra = $disponible ? '' : 'tarjeta-produccion--agotado';
+                                        $idProd        = (int)($plato["id_producto"] ?? 0);
+                                        $agotadoManual = (int)($plato["agotado_manual"] ?? 0);
+                                        $claseExtra    = $agotadoManual ? 'tarjeta-produccion--agotado' : '';
                                     ?>
                                     <div class="tarjeta-produccion <?php echo $claseExtra; ?>"
                                          <?php if ($idProd): ?>
                                              data-id-producto="<?php echo $idProd; ?>"
-                                             data-disponible="<?php echo $disponible; ?>"
+                                             data-disponible="<?php echo $agotadoManual ? '0' : '1'; ?>"
                                              data-nombre="<?php echo htmlspecialchars($plato['nombre_producto']); ?>"
                                          <?php endif; ?>>
                                         <span class="tarjeta-produccion__nombre">
@@ -712,14 +712,14 @@ function formatearFechaBonita($fecha)
                             <div class="resumen-produccion-dia__grid">
                                 <?php foreach ($resumenComplementosPorFecha[$fecha] as $complemento): ?>
                                     <?php
-                                        $idProd     = (int)($complemento["id_producto"] ?? 0);
-                                        $disponible = (int)($complemento["disponible"] ?? 1);
-                                        $claseExtra = $disponible ? '' : 'tarjeta-produccion--agotado';
+                                        $idProd        = (int)($complemento["id_producto"] ?? 0);
+                                        $agotadoManual = (int)($complemento["agotado_manual"] ?? 0);
+                                        $claseExtra    = $agotadoManual ? 'tarjeta-produccion--agotado' : '';
                                     ?>
                                     <div class="tarjeta-produccion <?php echo $claseExtra; ?>"
                                          <?php if ($idProd): ?>
                                              data-id-producto="<?php echo $idProd; ?>"
-                                             data-disponible="<?php echo $disponible; ?>"
+                                             data-disponible="<?php echo $agotadoManual ? '0' : '1'; ?>"
                                              data-nombre="<?php echo htmlspecialchars($complemento['nombre_producto']); ?>"
                                          <?php endif; ?>>
                                         <span class="tarjeta-produccion__nombre">
