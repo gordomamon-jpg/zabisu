@@ -100,7 +100,9 @@ foreach ($pedidos as $pedido) {
 $sqlResumenPlatos = "SELECT
                         COALESCE(md.fecha, DATE(p.fecha_pedido)) AS fecha_grupo,
                         dp.nombre_producto,
-                        COUNT(*) AS total
+                        COUNT(*) AS total,
+                        MIN(pr.id_producto) AS id_producto,
+                        MIN(pr.disponible)  AS disponible
                      FROM detalle_pedido dp
                      INNER JOIN pedido_menus pm ON dp.id_pedido_menu = pm.id_pedido_menu
                      INNER JOIN pedidos p ON pm.id_pedido = p.id_pedido
@@ -119,7 +121,9 @@ foreach ($resumenPlatosDB as $fila) {
     $fechaGrupo = $fila["fecha_grupo"];
     $resumenPlatosPorFecha[$fechaGrupo][] = [
         "nombre_producto" => $fila["nombre_producto"],
-        "total" => (int)$fila["total"]
+        "total"           => (int)$fila["total"],
+        "id_producto"     => (int)$fila["id_producto"],
+        "disponible"      => (int)$fila["disponible"],
     ];
 }
 
@@ -129,7 +133,9 @@ foreach ($resumenPlatosDB as $fila) {
 $sqlResumenComplementos = "SELECT
                               COALESCE(md.fecha, DATE(p.fecha_pedido)) AS fecha_grupo,
                               dp.nombre_producto,
-                              COUNT(*) AS total
+                              COUNT(*) AS total,
+                              MIN(pr.id_producto) AS id_producto,
+                              MIN(pr.disponible)  AS disponible
                            FROM detalle_pedido dp
                            INNER JOIN pedido_menus pm ON dp.id_pedido_menu = pm.id_pedido_menu
                            INNER JOIN pedidos p ON pm.id_pedido = p.id_pedido
@@ -148,7 +154,9 @@ foreach ($resumenComplementosDB as $fila) {
     $fechaGrupo = $fila["fecha_grupo"];
     $resumenComplementosPorFecha[$fechaGrupo][$fila["nombre_producto"]] = [
         "nombre_producto" => $fila["nombre_producto"],
-        "total"           => (int)$fila["total"]
+        "total"           => (int)$fila["total"],
+        "id_producto"     => (int)$fila["id_producto"],
+        "disponible"      => (int)$fila["disponible"],
     ];
 }
 
@@ -368,6 +376,40 @@ function formatearFechaBonita($fecha)
     <title>Pedidos | Restaurante Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
     <link rel="stylesheet" href="../assets/css/styles.css?v=5">
+    <style>
+        .tarjeta-produccion[data-id-producto] {
+            cursor: pointer;
+            user-select: none;
+            transition: opacity .15s, transform .1s;
+        }
+        .tarjeta-produccion[data-id-producto]:hover {
+            opacity: .75;
+            transform: scale(.97);
+        }
+        .tarjeta-produccion--agotado {
+            position: relative;
+            opacity: .45;
+        }
+        .tarjeta-produccion--agotado::after {
+            content: 'AGOTADO';
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(220, 38, 38, .12);
+            border: 1px solid rgba(220, 38, 38, .35);
+            border-radius: inherit;
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            color: #ef4444;
+        }
+        .tarjeta-produccion--agotado .tarjeta-produccion__nombre,
+        .tarjeta-produccion--agotado .tarjeta-produccion__total {
+            text-decoration: line-through;
+        }
+    </style>
 </head>
 <body>
 
@@ -640,7 +682,18 @@ function formatearFechaBonita($fecha)
 
                             <div class="resumen-produccion-dia__grid">
                                 <?php foreach ($resumenPlatosPorFecha[$fecha] as $plato): ?>
-                                    <div class="tarjeta-produccion">
+                                    <?php
+                                        $esHoy       = ($fecha === date('Y-m-d'));
+                                        $idProd      = (int)($plato["id_producto"] ?? 0);
+                                        $disponible  = (int)($plato["disponible"] ?? 1);
+                                        $claseExtra  = $disponible ? '' : 'tarjeta-produccion--agotado';
+                                    ?>
+                                    <div class="tarjeta-produccion <?php echo $claseExtra; ?>"
+                                         <?php if ($esHoy && $idProd): ?>
+                                             data-id-producto="<?php echo $idProd; ?>"
+                                             data-disponible="<?php echo $disponible; ?>"
+                                             data-nombre="<?php echo htmlspecialchars($plato['nombre_producto']); ?>"
+                                         <?php endif; ?>>
                                         <span class="tarjeta-produccion__nombre">
                                             <?php echo htmlspecialchars($plato["nombre_producto"]); ?>
                                         </span>
@@ -659,7 +712,18 @@ function formatearFechaBonita($fecha)
 
                             <div class="resumen-produccion-dia__grid">
                                 <?php foreach ($resumenComplementosPorFecha[$fecha] as $complemento): ?>
-                                    <div class="tarjeta-produccion">
+                                    <?php
+                                        $esHoy      = ($fecha === date('Y-m-d'));
+                                        $idProd     = (int)($complemento["id_producto"] ?? 0);
+                                        $disponible = (int)($complemento["disponible"] ?? 1);
+                                        $claseExtra = $disponible ? '' : 'tarjeta-produccion--agotado';
+                                    ?>
+                                    <div class="tarjeta-produccion <?php echo $claseExtra; ?>"
+                                         <?php if ($esHoy && $idProd): ?>
+                                             data-id-producto="<?php echo $idProd; ?>"
+                                             data-disponible="<?php echo $disponible; ?>"
+                                             data-nombre="<?php echo htmlspecialchars($complemento['nombre_producto']); ?>"
+                                         <?php endif; ?>>
                                         <span class="tarjeta-produccion__nombre">
                                             <?php echo htmlspecialchars($complemento["nombre_producto"]); ?>
                                         </span>
@@ -1100,6 +1164,36 @@ document.addEventListener("DOMContentLoaded", function () {
         resultadoNotif.innerHTML = html;
         resultadoNotif.style.display = "block";
     }
+
+    // ============================================================
+    // MARCAR PRODUCTO AGOTADO / RESTAURAR
+    // ============================================================
+    document.querySelectorAll(".tarjeta-produccion[data-id-producto]").forEach(function (tarjeta) {
+        tarjeta.addEventListener("click", function () {
+            var idProducto  = tarjeta.dataset.idProducto;
+            var nombre      = tarjeta.dataset.nombre || "este producto";
+            var disponible  = tarjeta.dataset.disponible === "1";
+            var accion      = disponible ? "agotado" : "disponible";
+            var msg         = disponible
+                ? "¿Marcar \"" + nombre + "\" como AGOTADO?\nLos clientes ya no podrán seleccionarlo."
+                : "¿Restaurar disponibilidad de \"" + nombre + "\"?\nLos clientes podrán volver a seleccionarlo.";
+
+            if (!confirm(msg)) return;
+
+            var fd = new FormData();
+            fd.append("id_producto", idProducto);
+            fd.append("accion", accion);
+
+            fetch("agotado_ajax.php", { method: "POST", body: fd })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (!data.ok) { alert("Error: " + (data.error || "No se pudo actualizar.")); return; }
+                    tarjeta.dataset.disponible = data.disponible ? "1" : "0";
+                    tarjeta.classList.toggle("tarjeta-produccion--agotado", !data.disponible);
+                })
+                .catch(function () { alert("Error de red al actualizar el producto."); });
+        });
+    });
 
     // ============================================================
     // AUTO-IMPRESIÓN DE TICKETS TAB- (desde tableta)
