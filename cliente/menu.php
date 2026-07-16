@@ -996,6 +996,8 @@ foreach ($stmtRatingsDist->fetchAll(PDO::FETCH_ASSOC) as $row) {
 
 <body>
 
+<?php require_once "../includes/aviso_birria.php"; ?>
+
 <!-- ── Hamburger ── -->
 <button class="hamburguer-btn" id="hamburguer-btn" aria-label="Menú">
     <span></span><span></span><span></span>

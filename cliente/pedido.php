@@ -546,6 +546,8 @@ if ($scrollDestino === "bloque-entrega") {
 </head>
 <body>
 
+<?php require_once "../includes/aviso_birria.php"; ?>
+
 <!-- Modal: Sugerencia de plato fuerte -->
 <!-- Burbuja flotante -->
 <button type="button" id="burbuja-sugerencia" class="zb-burbuja" aria-label="Sugerir plato fuerte">
