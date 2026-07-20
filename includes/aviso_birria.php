@@ -5,7 +5,7 @@
    que los jueves hay birria. Se muestra una vez por día (localStorage).
    Para desactivar el aviso por completo: cambiar false por true abajo.
    ────────────────────────────────────────────────────────────── */
-if (true):
+if (false):
     date_default_timezone_set("America/Mexico_City");
 
     $diaHoyISO = (int)date('N'); // 1=Lunes ... 7=Domingo
