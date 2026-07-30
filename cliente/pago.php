@@ -292,9 +292,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
         content: '';
         position: fixed; inset: 0; z-index: -1; pointer-events: none;
         background:
-            radial-gradient(48vw 42vh at 8% 4%,    rgba(var(--zb-naranja-rgb), .24), transparent 65%),
-            radial-gradient(42vw 38vh at 100% 46%, rgba(var(--zb-naranja-rgb), .13), transparent 62%),
-            radial-gradient(48vw 42vh at 4% 94%,   rgba(var(--zb-naranja-rgb), .13), transparent 62%),
+            radial-gradient(36vw 30vh at 8% 4%,    rgba(var(--zb-naranja-rgb), .12), transparent 68%),
+            radial-gradient(30vw 26vh at 100% 46%, rgba(var(--zb-naranja-rgb), .07), transparent 65%),
+            radial-gradient(36vw 30vh at 4% 94%,   rgba(var(--zb-naranja-rgb), .07), transparent 65%),
             var(--zb-negro);
     }
     body::after {
