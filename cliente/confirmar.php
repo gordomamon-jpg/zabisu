@@ -101,19 +101,76 @@ function agruparDetallePorCategoria($detalles)
     <meta name="apple-mobile-web-app-title" content="Zabisu">
     <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
     <link rel="stylesheet" href="../assets/css/styles.css?v=5">
+    <link rel="stylesheet" href="../assets/css/cliente-rediseno.css?v=4">
     <style>
     *, *::before, *::after { box-sizing: border-box; }
+
+    /* ── Rediseño: tipografía, marca sólida, vidrio y atmósfera ── */
+    body, button, input, textarea, select {
+        font-family: 'Instrument Sans', Arial, sans-serif;
+    }
+    body { position: relative; background: var(--zb-negro) !important; }
+    body::before {
+        content: '';
+        position: fixed; inset: 0; z-index: -1; pointer-events: none;
+        background:
+            radial-gradient(60vw 55vh at 8% 6%,    rgba(var(--zb-naranja-rgb), .55), transparent 62%),
+            radial-gradient(55vw 50vh at 100% 46%, rgba(var(--zb-naranja-rgb), .30), transparent 60%),
+            radial-gradient(60vw 55vh at 4% 92%,   rgba(var(--zb-naranja-rgb), .30), transparent 60%),
+            var(--zb-negro);
+    }
+    body::after {
+        content: '';
+        position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .4; mix-blend-mode: overlay;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.05 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    }
+
+    .contenedor {
+        background: rgba(30,24,20,.28) !important;
+        backdrop-filter: blur(22px) saturate(160%);
+        -webkit-backdrop-filter: blur(22px) saturate(160%);
+        box-shadow: inset 0 1px 0 rgba(247,236,220,.14) !important;
+    }
+    .conf-hero {
+        background: rgba(30,24,20,.16) !important;
+        backdrop-filter: blur(18px) saturate(160%);
+        -webkit-backdrop-filter: blur(18px) saturate(160%);
+    }
+    .conf-card {
+        backdrop-filter: blur(16px) saturate(150%);
+        -webkit-backdrop-filter: blur(16px) saturate(150%);
+    }
+    .md-hero__marca {
+        font-weight: 800;
+        letter-spacing: -.02em;
+        background: none !important;
+        -webkit-background-clip: initial !important;
+        background-clip: initial !important;
+        -webkit-text-fill-color: var(--zb-crema) !important;
+        color: var(--zb-crema) !important;
+        text-shadow: 0 0 40px rgba(var(--zb-naranja-rgb), .5);
+    }
+    .md-hero__logo { filter: drop-shadow(0 0 26px rgba(var(--zb-naranja-rgb), .6)) !important; }
+    .md-hero__tagline {
+        font-family: 'Instrument Serif', serif;
+        font-style: italic;
+        font-size: 16px;
+        color: var(--zb-naranja);
+        margin: 4px 0 0;
+    }
 
     /* ── Hero de confirmación ── */
     .conf-hero {
         position: relative;
         overflow: hidden;
         text-align: center;
-        padding: 48px 24px 40px;
+        padding: 40px 24px 32px;
+        margin-bottom: 18px;
+        border-radius: 26px;
         background:
             radial-gradient(ellipse at 50% 0%, rgba(255,122,0,.22) 0%, transparent 65%),
             linear-gradient(180deg, rgba(255,122,0,.08) 0%, rgba(12,12,15,.7) 100%);
-        border-bottom: 1px solid rgba(255,122,0,.12);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 12px 30px -18px rgba(0,0,0,.5);
     }
 
     /* Checkmark animado */
@@ -151,7 +208,7 @@ function agruparDetallePorCategoria($detalles)
         display: inline-block;
         background: rgba(255,122,0,.1);
         border: 1px solid rgba(255,122,0,.3);
-        border-radius: 14px;
+        border-radius: 18px;
         padding: 12px 24px;
         margin-bottom: 20px;
         animation: conf-popin .45s cubic-bezier(.34,1.56,.64,1) .85s both;
@@ -190,18 +247,19 @@ function agruparDetallePorCategoria($detalles)
     .conf-body {
         max-width: 560px;
         margin: 0 auto;
-        padding: 24px 16px 48px;
+        padding: 0 16px 48px;
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 18px;
     }
 
     /* ── Tarjetas ── */
     .conf-card {
-        background: rgba(255,255,255,.03);
-        border: 1px solid rgba(255,255,255,.07);
-        border-radius: 16px;
-        padding: 18px 18px;
+        background: rgba(255,255,255,.055);
+        border: 1px solid rgba(247,236,220,.14);
+        border-radius: 22px;
+        padding: 20px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 12px 30px -18px rgba(0,0,0,.5);
     }
     .conf-card__titulo {
         font-size: 12px; font-weight: 700; letter-spacing: 2px;
@@ -290,21 +348,27 @@ function agruparDetallePorCategoria($detalles)
 </head>
 <body>
 
+<!-- ── Marca de agua fija ── -->
+<img class="zb-marca-watermark" src="../assets/img/LOGO_BLANCO.png" alt="">
+
 <?php
 $esPagoEfectivo    = ($pedido["metodo_pago"] ?? "") !== "Transferencia";
 $estadoPagoClass   = str_contains(strtolower($pedido["estado_pago"] ?? ""), "pagado") ? "conf-dato__val--pagado" : "conf-dato__val--pendiente";
 $waPath            = "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z";
 ?>
 
+<div class="contenedor">
+
 <!-- ══ HERO ══════════════════════════════════════════════════ -->
 <div class="conf-hero">
     <div class="md-hero__glow-top"></div>
     <div class="md-hero__glow-bottom"></div>
 
-    <div class="md-hero__marca-grupo" style="margin-bottom:28px;">
+    <div class="md-hero__marca-grupo" style="margin-bottom:6px;">
         <img class="md-hero__logo" src="../assets/img/LOGO_BLANCO.png" alt="Zabisu">
         <h1 class="md-hero__marca">Zabisu</h1>
     </div>
+    <p class="md-hero__tagline" style="margin-bottom:22px;">Sabor y Servicio</p>
 
     <div class="conf-check">
         <svg width="72" height="72" viewBox="0 0 52 52">
@@ -321,8 +385,8 @@ $waPath            = "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.
     </div>
 
     <div class="conf-pills">
-        <span class="conf-pill">📍 <?php echo htmlspecialchars($pedido["nombre_ubicacion"]); ?></span>
-        <span class="conf-pill">🕐 <?php echo date("g:i A", strtotime($pedido["hora_entrega"])); ?></span>
+        <span class="conf-pill"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.1-7-11.5A7 7 0 0 1 19 9.5C19 14.9 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.4"/></svg> <?php echo htmlspecialchars($pedido["nombre_ubicacion"]); ?></span>
+        <span class="conf-pill"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg> <?php echo date("g:i A", strtotime($pedido["hora_entrega"])); ?></span>
     </div>
 </div>
 
@@ -417,7 +481,7 @@ $waPath            = "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.
         </div>
         <textarea id="feedback-comentario" class="zb-modal__textarea" placeholder="Comentario opcional..." maxlength="500" rows="3"></textarea>
         <button type="button" id="btn-enviar-feedback" class="btn-principal" style="margin-top:12px;width:100%;" disabled>Enviar opinión</button>
-        <p class="zb-modal__gracias" id="feedback-gracias" style="display:none;text-align:center;margin-top:10px;">¡Gracias! Tu opinión fue registrada 💛</p>
+        <p class="zb-modal__gracias" id="feedback-gracias" style="display:none;text-align:center;margin-top:10px;">¡Gracias! Tu opinión fue registrada.</p>
     </div>
 
     <!-- Acciones -->
@@ -440,6 +504,8 @@ $waPath            = "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.
     </div>
 
 </div>
+
+</div><!-- /.contenedor -->
 
 <script>
 (function () {

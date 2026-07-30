@@ -60,6 +60,16 @@ if (!$menuActivo) {
         <meta name="apple-mobile-web-app-title" content="Zabisu">
         <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
         <link rel="stylesheet" href="../assets/css/styles.css?v=5">
+        <link rel="stylesheet" href="../assets/css/cliente-rediseno.css?v=4">
+        <style>
+            body, button, input, textarea, select { font-family: 'Instrument Sans', Arial, sans-serif; }
+            body { background: var(--zb-negro) !important; }
+            .md-hero__marca {
+                background: none !important; -webkit-background-clip: initial !important; background-clip: initial !important;
+                -webkit-text-fill-color: var(--zb-crema) !important; color: var(--zb-crema) !important;
+                font-weight: 800; text-shadow: 0 0 40px rgba(var(--zb-naranja-rgb), .5);
+            }
+        </style>
     </head>
     <body>
         <div class="contenedor">
@@ -71,7 +81,7 @@ if (!$menuActivo) {
                     <img class="md-hero__logo" src="../assets/img/LOGO_BLANCO.png" alt="Zabisu">
                     <h1 class="md-hero__marca">Zabisu</h1>
                 </div>
-                <p class="md-hero__fecha">Ya cerramos por hoy 🍽️</p>
+                <p class="md-hero__fecha">Ya cerramos por hoy</p>
             </div>
 
             <div class="bloque-formulario resumen-total">
@@ -91,7 +101,7 @@ if (!$menuActivo) {
                         $horaCierra = date("g:i A", $tsCierre);
                     ?>
                     <div class="aviso-proximo-menu">
-                        <span class="aviso-proximo-menu__icono">🕐</span>
+                        <span class="aviso-proximo-menu__icono"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span>
                         <div>
                             <strong>Próxima apertura de pedidos</strong>
                             <p>
@@ -102,14 +112,14 @@ if (!$menuActivo) {
                     </div>
                 <?php else: ?>
                     <div class="sinmenu-card">
-                        <div class="sinmenu-card__icono">🍳</div>
+                        <div class="sinmenu-card__icono"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 13c0-3.5 3-6 6.5-6 1 0 1.8.4 2.6 1 1-1.6 2.8-2.6 4.9-2.6 3.6 0 6.5 2.6 6.5 6.4 0 3.9-3.4 7.2-9 7.2S3 16.9 3 13Z"/><circle cx="13" cy="12" r="2.4" fill="currentColor" stroke="none"/></svg></div>
                         <h3 class="sinmenu-card__titulo">Vuelve más tarde</h3>
                         <p class="sinmenu-card__texto">
                             El menú del día se publica a las <strong style="color:var(--naranja);">6:00 PM</strong>.<br>
                             Regresa en ese horario para hacer tu pedido.
                         </p>
                         <div class="sinmenu-card__divider"></div>
-                        <p class="sinmenu-card__slogan">Sabor y Servicio — Zabisu 🧡</p>
+                        <p class="sinmenu-card__slogan">Sabor y Servicio — Zabisu</p>
                     </div>
                 <?php endif; ?>
             </div>
@@ -142,6 +152,16 @@ if (!$recibiendoPedidos) {
     <meta name="apple-mobile-web-app-title" content="Zabisu">
     <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
     <link rel="stylesheet" href="../assets/css/styles.css?v=5">
+    <link rel="stylesheet" href="../assets/css/cliente-rediseno.css?v=4">
+    <style>
+        body, button, input, textarea, select { font-family: 'Instrument Sans', Arial, sans-serif; }
+        body { background: var(--zb-negro) !important; }
+        .md-hero__marca {
+            background: none !important; -webkit-background-clip: initial !important; background-clip: initial !important;
+            -webkit-text-fill-color: var(--zb-crema) !important; color: var(--zb-crema) !important;
+            font-weight: 800; text-shadow: 0 0 40px rgba(var(--zb-naranja-rgb), .5);
+        }
+    </style>
     </head>
     <body>
     <div class="contenedor">
@@ -170,6 +190,16 @@ if (!$recibiendoPedidos) {
 }
 
 setlocale(LC_TIME, 'es_MX.UTF-8', 'es_ES.UTF-8', 'spanish');
+
+/* ── Íconos SVG (reemplazan emojis en todo el flujo de pedido) ── */
+$icoPlato = "<svg width='1em' height='1em' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='8.4'/><circle cx='12' cy='12' r='3.6'/></svg>";
+$icoSopa  = "<svg width='1em' height='1em' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M3.5 12h17a7.5 7.5 0 0 1-15 0Z'/><path d='M9 8c-.9-.9-.9-1.8 0-2.7M14.5 8c-.9-.9-.9-1.8 0-2.7'/></svg>";
+$icoComplemento = "<svg width='1em' height='1em' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M4.5 19.5c8.5 0 15-6.5 15-15-8.5 0-15 6.5-15 15Z'/><path d='M5 19c3.2-4 6.3-7.2 10.5-10.5'/></svg>";
+$icoAgua  = "<svg width='1em' height='1em' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M6.2 3.5h11.6l-1.3 15.2a2 2 0 0 1-2 1.8H9.5a2 2 0 0 1-2-1.8L6.2 3.5Z'/><path d='M6.8 8.3h10.4'/></svg>";
+$icoCortesia = "<svg width='1em' height='1em' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><rect x='4' y='9.5' width='16' height='9.5' rx='1.4'/><path d='M4 9.5h16M12 9.5v9.5'/><path d='M12 9.5c-1.6-3.8-5.8-3.7-5.8-1.1 0 1.1 1 1.1 5.8 1.1Zm0 0c1.6-3.8 5.8-3.7 5.8-1.1 0 1.1-1 1.1-5.8 1.1Z'/></svg>";
+$icoPostre = "<svg width='1em' height='1em' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M4 11a8 8 0 0 1 16 0Z'/><path d='M2.5 11h19M6.3 11l.9 7.4a1.4 1.4 0 0 0 1.4 1.2h6.8a1.4 1.4 0 0 0 1.4-1.2l.9-7.4'/></svg>";
+$icoHuevo  = "<svg width='1em' height='1em' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M3 13c0-3.5 3-6 6.5-6 1 0 1.8.4 2.6 1 1-1.6 2.8-2.6 4.9-2.6 3.6 0 6.5 2.6 6.5 6.4 0 3.9-3.4 7.2-9 7.2S3 16.9 3 13Z'/><circle cx='13' cy='12' r='2.4' fill='currentColor' stroke='none'/></svg>";
+$icoAlerta = "<svg width='1em' height='1em' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M12 3.5 22 20.5H2Z'/><path d='M12 9.5v5M12 17.5h.01'/></svg>";
 
 $fechaMenuFormateada = "";
 if (!empty($menuActivo["fecha"])) {
@@ -515,7 +545,84 @@ if ($scrollDestino === "bloque-entrega") {
     <meta name="apple-mobile-web-app-title" content="Zabisu">
     <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
     <link rel="stylesheet" href="../assets/css/styles.css?v=5">
+    <link rel="stylesheet" href="../assets/css/cliente-rediseno.css?v=4">
     <style>
+        /* ── Rediseño: tipografía, marca sólida, vidrio y atmósfera ── */
+        body, button, input, textarea, select {
+            font-family: 'Instrument Sans', Arial, sans-serif;
+        }
+
+        body { position: relative; background: var(--zb-negro) !important; }
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background:
+                radial-gradient(60vw 55vh at 8% 6%,    rgba(var(--zb-naranja-rgb), .55), transparent 62%),
+                radial-gradient(55vw 50vh at 100% 46%, rgba(var(--zb-naranja-rgb), .30), transparent 60%),
+                radial-gradient(60vw 55vh at 4% 92%,   rgba(var(--zb-naranja-rgb), .30), transparent 60%),
+                var(--zb-negro);
+        }
+        body::after {
+            content: '';
+            position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .4; mix-blend-mode: overlay;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.05 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+        }
+
+        .contenedor {
+            background: rgba(30,24,20,.28) !important;
+            backdrop-filter: blur(22px) saturate(160%);
+            -webkit-backdrop-filter: blur(22px) saturate(160%);
+            box-shadow: inset 0 1px 0 rgba(247,236,220,.14) !important;
+        }
+        .md-hero {
+            background: rgba(30,24,20,.16) !important;
+            backdrop-filter: blur(16px) saturate(150%);
+            -webkit-backdrop-filter: blur(16px) saturate(150%);
+            box-shadow: inset 0 1px 0 rgba(247,236,220,.16) !important;
+        }
+        .bloque-formulario {
+            background: rgba(255,255,255,.045) !important;
+            border-color: rgba(247,236,220,.12) !important;
+            backdrop-filter: blur(16px) saturate(150%);
+            -webkit-backdrop-filter: blur(16px) saturate(150%);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.1);
+        }
+        .opcion-producto, .extra-item, .ticket-menu, .stepper-circulo {
+            backdrop-filter: blur(12px) saturate(150%);
+            -webkit-backdrop-filter: blur(12px) saturate(150%);
+        }
+
+        /* Marca sólida — resetea el degradado/shimmer heredado */
+        .md-hero__marca {
+            font-weight: 800;
+            letter-spacing: -.02em;
+            background: none !important;
+            -webkit-background-clip: initial !important;
+            background-clip: initial !important;
+            -webkit-text-fill-color: var(--zb-crema) !important;
+            color: var(--zb-crema) !important;
+            text-shadow: 0 0 40px rgba(var(--zb-naranja-rgb), .5);
+        }
+        .md-hero__logo {
+            filter: drop-shadow(0 0 26px rgba(var(--zb-naranja-rgb), .6)) !important;
+        }
+        .md-hero__tagline {
+            font-family: 'Instrument Serif', serif;
+            font-style: italic;
+            font-size: 16px;
+            color: var(--zb-naranja);
+            margin: 4px 0 6px;
+        }
+
+        .grupo-categoria h3, .menu-incluye__titulo, .titulo-tipo-ubicacion {
+            display: flex; align-items: center; gap: 8px; color: var(--zb-naranja);
+        }
+        .grupo-categoria h3 svg, .menu-incluye__item-emoji svg, .extras-toggle__icono svg { flex-shrink: 0; }
+        .menu-incluye__item-emoji { color: var(--zb-naranja); display: inline-flex; align-items: center; }
+
         .opcion-producto { text-transform: none !important; font-weight: normal !important; letter-spacing: normal !important; }
 
         /* ── Aviso de autocompletado ── */
@@ -546,18 +653,31 @@ if ($scrollDestino === "bloque-entrega") {
 </head>
 <body>
 
+<!-- ── Marca de agua fija (se queda fija al hacer scroll, le da vida al vidrio) ── -->
+<img class="zb-marca-watermark" src="../assets/img/LOGO_BLANCO.png" alt="">
+
+<!-- ── Splash de apertura ── -->
+<div class="zb-splash" id="zbSplash">
+    <div class="zb-splash__glow"></div>
+    <img class="zb-splash__icono" src="../assets/img/LOGO_BLANCO.png" alt="Zabisu">
+    <div class="zb-splash__nombre">Zabisu</div>
+    <div class="zb-splash__tagline">Sabor y Servicio</div>
+    <div class="zb-splash__barra"><i></i></div>
+</div>
+
 <?php require_once "../includes/aviso_birria.php"; ?>
+<?php require_once "../includes/aviso_incremento.php"; ?>
 
 <!-- Modal: Sugerencia de plato fuerte -->
 <!-- Burbuja flotante -->
 <button type="button" id="burbuja-sugerencia" class="zb-burbuja" aria-label="Sugerir plato fuerte">
-    🍽️
+    <?php echo $icoPlato; ?>
 </button>
 
 <!-- Tarjeta flotante -->
 <div id="modal-sugerencia" class="zb-flotante">
     <div class="zb-flotante__header">
-        <span class="zb-flotante__titulo">¿Qué se te antoja? 🍽️</span>
+        <span class="zb-flotante__titulo"><?php echo $icoPlato; ?> ¿Qué se te antoja?</span>
         <button type="button" id="btn-omitir-sugerencia" class="zb-flotante__cerrar" aria-label="Cerrar">✕</button>
     </div>
     <p class="zb-flotante__desc">¡Tu opinión cuenta! Cuéntanos qué platillos te gustaría ver en futuros menús y haz que tu idea llegue al plato.</p>
@@ -565,7 +685,7 @@ if ($scrollDestino === "bloque-entrega") {
     <div class="zb-flotante__acciones">
         <button type="button" id="btn-enviar-sugerencia" class="btn-principal" style="flex:1;">Enviar</button>
     </div>
-    <p class="zb-modal__gracias" id="sugerencia-gracias" style="display:none;">¡Gracias! 🙌</p>
+    <p class="zb-modal__gracias" id="sugerencia-gracias" style="display:none;">¡Gracias!</p>
 </div>
 
 <div class="contenedor">
@@ -578,6 +698,7 @@ if ($scrollDestino === "bloque-entrega") {
             <img class="md-hero__logo" src="../assets/img/LOGO_BLANCO.png" alt="Zabisu">
             <h1 class="md-hero__marca">Zabisu</h1>
         </div>
+        <p class="md-hero__tagline">Sabor y Servicio</p>
         <p class="md-hero__fecha"><?php echo htmlspecialchars($fechaMenuFormateada); ?></p>
         <a href="menu.php" class="btn-volver-panel">← Ver menú del día</a>
     </div>
@@ -724,7 +845,7 @@ if ($scrollDestino === "bloque-entrega") {
 
                             <?php if (!empty($menusPorTipo[$tipoMenu]["Plato fuerte"])): ?>
                                 <div class="grupo-categoria">
-                                    <h3>🍽️ Plato fuerte <span class="cat-hint">· elige 1</span></h3>
+                                    <h3><?php echo $icoPlato; ?> Plato fuerte <span class="cat-hint">· elige 1</span></h3>
                                     <?php foreach ($menusPorTipo[$tipoMenu]["Plato fuerte"] as $item): ?>
                                         <label class="opcion-producto <?php echo !empty($item["agotado"]) ? 'producto-agotado' : ''; ?>">
                                             <input type="radio"
@@ -745,7 +866,7 @@ if ($scrollDestino === "bloque-entrega") {
 
                             <?php if (!empty($menusPorTipo[$tipoMenu]["Complemento"])): ?>
                                 <div class="grupo-categoria grupo-complementos" data-max="2">
-                                    <h3>🥗 Complementos <span class="cat-hint complementos-hint">· elige hasta 2</span></h3>
+                                    <h3><?php echo $icoComplemento; ?> Complementos <span class="cat-hint complementos-hint">· elige hasta 2</span></h3>
                                     <?php foreach ($menusPorTipo[$tipoMenu]["Complemento"] as $item): ?>
                                         <label class="opcion-producto <?php echo !empty($item['agotado']) ? 'producto-agotado' : ''; ?>">
                                             <input type="checkbox"
@@ -769,19 +890,19 @@ if ($scrollDestino === "bloque-entrega") {
                                 <div class="menu-incluye__items">
                                     <?php if ($sopaIncluida): ?>
                                         <div class="menu-incluye__item">
-                                            <span class="menu-incluye__item-emoji">🥣</span>
+                                            <span class="menu-incluye__item-emoji"><?php echo $icoSopa; ?></span>
                                             <span class="menu-incluye__item-nombre"><?php echo htmlspecialchars($sopaIncluida); ?></span>
                                         </div>
                                     <?php endif; ?>
                                     <?php if ($aguaIncluida): ?>
                                         <div class="menu-incluye__item">
-                                            <span class="menu-incluye__item-emoji">💧</span>
+                                            <span class="menu-incluye__item-emoji"><?php echo $icoAgua; ?></span>
                                             <span class="menu-incluye__item-nombre"><?php echo htmlspecialchars($aguaIncluida); ?></span>
                                         </div>
                                     <?php endif; ?>
                                     <?php if ($cortesiaIncluida): ?>
                                         <div class="menu-incluye__item">
-                                            <span class="menu-incluye__item-emoji">🍬</span>
+                                            <span class="menu-incluye__item-emoji"><?php echo $icoCortesia; ?></span>
                                             <span class="menu-incluye__item-nombre"><?php echo htmlspecialchars($cortesiaIncluida); ?></span>
                                         </div>
                                     <?php endif; ?>
@@ -811,12 +932,12 @@ if ($scrollDestino === "bloque-entrega") {
                     }
                 }
             }
-            $iconosExtra = ["Sopa" => "🥣", "Complemento" => "🥗", "Agua" => "💧"];
+            $iconosExtra = ["Sopa" => $icoSopa, "Complemento" => $icoComplemento, "Agua" => $icoAgua];
             ?>
 
             <?php if (!empty($postres)): ?>
             <section class="bloque-formulario" id="bloque-postre">
-                <h2>🍮 Postre del día</h2>
+                <h2><?php echo $icoPostre; ?> Postre del día</h2>
                 <?php foreach ($postres as $postre):
                     $cantPostre = (int)($_POST["postres"][$postre["id_producto"]] ?? 0);
                 ?>
@@ -875,7 +996,7 @@ if ($scrollDestino === "bloque-entrega") {
 
                     <!-- Extra fijo: Huevo sobre arroz -->
                     <div class="grupo-categoria">
-                        <h3>🍳 Extra especial</h3>
+                        <h3><?php echo $icoHuevo; ?> Extra especial</h3>
                         <div class="extra-item <?php echo (int)($_POST["huevo_extra"] ?? 0) > 0 ? 'extra-item--activo' : ''; ?>" data-precio="10">
                             <span class="extra-item__nombre">Huevo sobre arroz</span>
                             <span class="extra-item__precio-hint">$10 c/u</span>
@@ -1071,7 +1192,7 @@ document.addEventListener("DOMContentLoaded", function () {
             var item = document.createElement("div");
             item.className = "pedido-toast-item";
             item.innerHTML =
-                "<span class='pedido-toast-item__icono'>⚠️</span>" +
+                "<span class='pedido-toast-item__icono'><?php echo $icoAlerta; ?></span>" +
                 "<span class='pedido-toast-item__texto'>" + m + "</span>";
             stack.appendChild(item);
 
@@ -1419,17 +1540,17 @@ document.addEventListener("DOMContentLoaded", function () {
                     </div>
 
                     <div class="ticket-linea ticket-linea--incluido">
-                        <span>🥣 Sopa</span>
+                        <span><svg width='1em' height='1em' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M3.5 12h17a7.5 7.5 0 0 1-15 0Z'/><path d='M9 8c-.9-.9-.9-1.8 0-2.7M14.5 8c-.9-.9-.9-1.8 0-2.7'/></svg> Sopa</span>
                         <span>${sopaNombre}</span>
                     </div>
 
                     <div class="ticket-linea ticket-linea--incluido">
-                        <span>💧 Agua</span>
+                        <span><svg width='1em' height='1em' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M6.2 3.5h11.6l-1.3 15.2a2 2 0 0 1-2 1.8H9.5a2 2 0 0 1-2-1.8L6.2 3.5Z'/><path d='M6.8 8.3h10.4'/></svg> Agua</span>
                         <span>${aguaNombre}</span>
                     </div>
 
                     <div class="ticket-linea ticket-linea--incluido">
-                        <span>🍬 Cortesia</span>
+                        <span><svg width='1em' height='1em' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><rect x='4' y='9.5' width='16' height='9.5' rx='1.4'/><path d='M4 9.5h16M12 9.5v9.5'/><path d='M12 9.5c-1.6-3.8-5.8-3.7-5.8-1.1 0 1.1 1 1.1 5.8 1.1Zm0 0c1.6-3.8 5.8-3.7 5.8-1.1 0 1.1-1 1.1-5.8 1.1Z'/></svg> Cortesia</span>
                         <span>${cortesiaNombre}</span>
                     </div>
 
@@ -1454,7 +1575,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
         if (htmlPostres) {
-            htmlResumen += "<div class='ticket-menu'><div class='ticket-menu__header'><span>🍮 Postre</span><strong>$" + totalPostres.toFixed(2) + "</strong></div>" + htmlPostres + "</div>";
+            htmlResumen += "<div class='ticket-menu'><div class='ticket-menu__header'><span><svg width='1em' height='1em' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M4 11a8 8 0 0 1 16 0Z'/><path d='M2.5 11h19M6.3 11l.9 7.4a1.4 1.4 0 0 0 1.4 1.2h6.8a1.4 1.4 0 0 0 1.4-1.2l.9-7.4'/></svg> Postre</span><strong>$" + totalPostres.toFixed(2) + "</strong></div>" + htmlPostres + "</div>";
         }
         total += totalPostres;
 
@@ -1705,6 +1826,19 @@ function actualizarOpcionesMenu(numeroMenu) {
 
     // Mostrar burbuja con pequeño delay
     setTimeout(function () { burbuja.classList.add("zb-burbuja--visible"); }, 800);
+})();
+</script>
+
+<script>
+(function () {
+    var splash = document.getElementById("zbSplash");
+    if (!splash) return;
+    var reducido = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var espera = reducido ? 400 : 1800;
+    setTimeout(function () {
+        splash.classList.add("zb-splash--salir");
+        setTimeout(function () { splash.style.display = "none"; }, 650);
+    }, espera);
 })();
 </script>
 

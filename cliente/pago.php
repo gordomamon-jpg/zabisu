@@ -279,8 +279,65 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
     <meta name="apple-mobile-web-app-title" content="Zabisu">
     <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
     <link rel="stylesheet" href="../assets/css/styles.css?v=5">
+    <link rel="stylesheet" href="../assets/css/cliente-rediseno.css?v=4">
     <style>
     *, *::before, *::after { box-sizing: border-box; }
+
+    /* ── Rediseño: tipografía, marca sólida, vidrio y atmósfera ── */
+    body, button, input, textarea, select {
+        font-family: 'Instrument Sans', Arial, sans-serif;
+    }
+    body { position: relative; background: var(--zb-negro) !important; }
+    body::before {
+        content: '';
+        position: fixed; inset: 0; z-index: -1; pointer-events: none;
+        background:
+            radial-gradient(60vw 55vh at 8% 6%,    rgba(var(--zb-naranja-rgb), .55), transparent 62%),
+            radial-gradient(55vw 50vh at 100% 46%, rgba(var(--zb-naranja-rgb), .30), transparent 60%),
+            radial-gradient(60vw 55vh at 4% 92%,   rgba(var(--zb-naranja-rgb), .30), transparent 60%),
+            var(--zb-negro);
+    }
+    body::after {
+        content: '';
+        position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .4; mix-blend-mode: overlay;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.05 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    }
+
+    .contenedor {
+        background: rgba(30,24,20,.28) !important;
+        backdrop-filter: blur(22px) saturate(160%);
+        -webkit-backdrop-filter: blur(22px) saturate(160%);
+        box-shadow: inset 0 1px 0 rgba(247,236,220,.14) !important;
+    }
+    .md-hero {
+        background: rgba(30,24,20,.16) !important;
+        backdrop-filter: blur(18px) saturate(160%);
+        -webkit-backdrop-filter: blur(18px) saturate(160%);
+        box-shadow: inset 0 1px 0 rgba(247,236,220,.16) !important;
+    }
+    .md-hero__marca {
+        font-weight: 800;
+        letter-spacing: -.02em;
+        background: none !important;
+        -webkit-background-clip: initial !important;
+        background-clip: initial !important;
+        -webkit-text-fill-color: var(--zb-crema) !important;
+        color: var(--zb-crema) !important;
+        text-shadow: 0 0 40px rgba(var(--zb-naranja-rgb), .5);
+    }
+    .md-hero__logo { filter: drop-shadow(0 0 26px rgba(var(--zb-naranja-rgb), .6)) !important; }
+    .md-hero__tagline {
+        font-family: 'Instrument Serif', serif;
+        font-style: italic;
+        font-size: 16px;
+        color: var(--zb-naranja);
+        margin: 4px 0 6px;
+    }
+
+    .conf-card, .pago-card {
+        backdrop-filter: blur(16px) saturate(150%);
+        -webkit-backdrop-filter: blur(16px) saturate(150%);
+    }
 
     /* ── Cuerpo del formulario ── */
     .pago-body {
@@ -480,6 +537,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
 </head>
 <body>
 
+<!-- ── Marca de agua fija ── -->
+<img class="zb-marca-watermark" src="../assets/img/LOGO_BLANCO.png" alt="">
+
+<div class="contenedor">
+
 <!-- ══ HERO ══════════════════════════════════════════════════ -->
 <div class="md-hero">
     <div class="md-hero__glow-top"></div>
@@ -489,6 +551,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
         <img class="md-hero__logo" src="../assets/img/LOGO_BLANCO.png" alt="Zabisu">
         <h1 class="md-hero__marca">Zabisu</h1>
     </div>
+    <p class="md-hero__tagline">Sabor y Servicio</p>
     <p class="md-hero__fecha">Elige cómo pagarás tu pedido</p>
 </div>
 
@@ -517,7 +580,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
                    id="card-transfer">
                 <input type="radio" name="metodo_pago" value="Transferencia"
                     <?php echo (($_POST["metodo_pago"] ?? "") === "Transferencia") ? "checked" : ""; ?>>
-                <span class="pago-card__icono">💳</span>
+                <span class="pago-card__icono"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10 12 4l9 6"/><path d="M5 10v9M10 10v9M14 10v9M19 10v9"/><path d="M3 19h18"/></svg></span>
                 <div class="pago-card__body">
                     <span class="pago-card__badge">Recomendado</span>
                     <strong class="pago-card__nombre">Transferencia</strong>
@@ -531,7 +594,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
                    id="card-cash" style="grid-column: 1 / -1;">
                 <input type="radio" name="metodo_pago" value="Efectivo"
                     <?php echo (($_POST["metodo_pago"] ?? "") === "Efectivo") ? "checked" : ""; ?>>
-                <span class="pago-card__icono">💵</span>
+                <span class="pago-card__icono"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/></svg></span>
                 <strong class="pago-card__nombre">Efectivo</strong>
                 <p class="pago-card__desc">Ten el monto exacto al recibir</p>
                 <div class="pago-card__dot"></div>
@@ -542,7 +605,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
         <!-- Aviso efectivo -->
         <div class="pago-aviso pago-aviso--efectivo <?php echo (($_POST["metodo_pago"] ?? "") === "Efectivo") ? "visible" : ""; ?>"
              id="aviso-efectivo">
-            <span style="font-size:17px;flex-shrink:0;margin-top:1px;">⚠️</span>
+            <span style="font-size:17px;flex-shrink:0;margin-top:1px;"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 22 20.5H2Z"/><path d="M12 9.5v5M12 17.5h.01"/></svg></span>
             <p style="margin:0;">Ten exactamente <strong>$<?php echo number_format($totalPedido, 2); ?></strong> listos al recibir tu pedido. El repartidor no siempre lleva cambio.</p>
         </div>
 
@@ -577,7 +640,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
         <?php $conceptoEjemplo = strtoupper($nombre_cliente) . " " . date("d-m-Y"); ?>
         <div class="aviso-concepto" style="margin-top:16px;">
             <div class="aviso-concepto__header">
-                <span class="aviso-concepto__icono">⚠️</span>
+                <span class="aviso-concepto__icono"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 22 20.5H2Z"/><path d="M12 9.5v5M12 17.5h.01"/></svg></span>
                 <strong class="aviso-concepto__titulo">Concepto de la transferencia</strong>
             </div>
             <p class="aviso-concepto__texto">
@@ -592,7 +655,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
                 <span class="aviso-concepto__copiado" id="msg-copiado">¡Copiado!</span>
             </div>
             <div class="aviso-concepto__toque-hint">
-                <span>👆</span>
+                <span><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7.5" stroke-dasharray="2 3.2"/></svg></span>
                 <span>Toca el concepto para copiarlo automáticamente</span>
             </div>
             <p class="aviso-concepto__formato">
@@ -607,7 +670,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
         <div class="pago-upload">
             <p class="pago-upload__desc">Sube una imagen o PDF donde se vea claramente el monto transferido y la referencia.</p>
             <label for="comprobante_pago" class="pago-upload__btn">
-                📎 Elegir archivo
+                <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 12.5 15 4.5a3.5 3.5 0 0 1 5 5L10.5 19a5.5 5.5 0 0 1-8-8L11 2.5"/></svg>
+                Elegir archivo
             </label>
             <input type="file" name="comprobante_pago" id="comprobante_pago"
                    accept=".jpg,.jpeg,.png,.pdf" hidden>
@@ -623,6 +687,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
 
 </form>
 </div>
+
+</div><!-- /.contenedor -->
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {

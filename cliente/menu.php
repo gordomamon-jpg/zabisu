@@ -620,7 +620,16 @@ $ts         = strtotime($menuActivo["fecha"]);
 $fechaBonita = ($dias[date("l",$ts)] ?? "") . " " . date("j",$ts) . " de " . ($meses[date("m",$ts)] ?? "");
 
 $ordenCat = ["Plato fuerte","Sopa","Complemento","Agua","Cortesia"];
-$iconosCat = ["Plato fuerte"=>"🍽️","Sopa"=>"🥣","Complemento"=>"🥗","Agua"=>"💧","Cortesia"=>"🍬"];
+$icoPlato = "<svg width='1em' height='1em' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='8.4'/><circle cx='12' cy='12' r='3.6'/></svg>";
+$iconosCat = [
+    "Plato fuerte" => $icoPlato,
+    "Sopa"         => "<svg width='1em' height='1em' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M3.5 12h17a7.5 7.5 0 0 1-15 0Z'/><path d='M9 8c-.9-.9-.9-1.8 0-2.7M14.5 8c-.9-.9-.9-1.8 0-2.7'/></svg>",
+    "Complemento"  => "<svg width='1em' height='1em' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M4.5 19.5c8.5 0 15-6.5 15-15-8.5 0-15 6.5-15 15Z'/><path d='M5 19c3.2-4 6.3-7.2 10.5-10.5'/></svg>",
+    "Agua"         => "<svg width='1em' height='1em' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M6.2 3.5h11.6l-1.3 15.2a2 2 0 0 1-2 1.8H9.5a2 2 0 0 1-2-1.8L6.2 3.5Z'/><path d='M6.8 8.3h10.4'/></svg>",
+    "Cortesia"     => "<svg width='1em' height='1em' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><rect x='4' y='9.5' width='16' height='9.5' rx='1.4'/><path d='M4 9.5h16M12 9.5v9.5'/><path d='M12 9.5c-1.6-3.8-5.8-3.7-5.8-1.1 0 1.1 1 1.1 5.8 1.1Zm0 0c1.6-3.8 5.8-3.7 5.8-1.1 0 1.1-1 1.1-5.8 1.1Z'/></svg>",
+];
+$icoPopular = "<svg width='1em' height='1em' viewBox='0 0 24 24' fill='currentColor'><path d='M12 2.2c1 3-2.6 4.2-2.6 8a2.6 2.6 0 0 0 5.2 0c1.3.9 1.8 2.3 1.8 3.5a4.4 4.4 0 0 1-8.8 0c0-4.6 4.4-5.6 4.4-11.5Z'/></svg>";
+$icoPostre = "<svg width='1em' height='1em' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'><path d='M4 11a8 8 0 0 1 16 0Z'/><path d='M2.5 11h19M6.3 11l.9 7.4a1.4 1.4 0 0 0 1.4 1.2h6.8a1.4 1.4 0 0 0 1.4-1.2l.9-7.4'/></svg>";
 
 /* ── Productos populares (platos fuertes y complementos) ── */
 $popularCats = ["Plato fuerte", "Complemento"];
@@ -693,8 +702,19 @@ foreach ($stmtRatingsDist->fetchAll(PDO::FETCH_ASSOC) as $row) {
     <meta name="apple-mobile-web-app-title" content="Zabisu">
     <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
     <link rel="stylesheet" href="../assets/css/styles.css?v=5">
+    <link rel="stylesheet" href="../assets/css/cliente-rediseno.css?v=4">
 </head>
 <style>
+    /* ── Rediseño: tipografía y acento único de marca ── */
+    body, button, input, textarea, select {
+        font-family: 'Instrument Sans', Arial, sans-serif;
+    }
+    .md-hero__eyebrow, .md-seccion__titulo, .nav-drawer__titulo,
+    .md-tab__nombre, .md-tab__precio, .md-badge-popular, .md-badge-agotado,
+    .md-hero__rating__label, .md-precio-pill, .cliente-footer__slogan {
+        font-family: 'Instrument Sans', Arial, sans-serif;
+    }
+
     .hamburguer-btn {
         position: fixed;
         top: 16px;
@@ -962,41 +982,136 @@ foreach ($stmtRatingsDist->fetchAll(PDO::FETCH_ASSOC) as $row) {
         }
     }
 
-    /* ── Zabisu: gradiente naranja + shimmer ── */
+    /* ── Zabisu: marca sólida, sin shimmer ──
+       (el color/-webkit-text-fill-color/background-clip se resetean
+       explícitamente: la regla original en styles.css deja el texto
+       transparente esperando un fondo con gradiente para "recortar") */
     .md-hero__marca {
-        font-weight: 900;
-        letter-spacing: -3px;
-        color: unset;
-        text-shadow: none;
-        background: linear-gradient(
-            105deg,
-            #ff6a00 0%,
-            #ff9a40 30%,
-            #ffe0b0 50%,
-            #ff9a40 70%,
-            #ff6a00 100%
-        );
-        background-size: 220% auto;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        animation:
-            md-marca-shimmer 3.2s linear infinite,
-            md-marca-entrada .7s cubic-bezier(.34,1.4,.64,1) .18s both;
-    }
-    @keyframes md-marca-shimmer {
-        0%   { background-position: 0%   center; }
-        100% { background-position: 220% center; }
+        font-weight: 800;
+        letter-spacing: -.02em;
+        background: none !important;
+        -webkit-background-clip: initial !important;
+        background-clip: initial !important;
+        -webkit-text-fill-color: var(--zb-crema) !important;
+        color: var(--zb-crema) !important;
+        text-shadow: 0 0 40px rgba(var(--zb-naranja-rgb), .5);
+        animation: md-marca-entrada .7s cubic-bezier(.34,1.4,.64,1) .18s both;
     }
     @keyframes md-marca-entrada {
         from { opacity: 0; transform: translateY(12px) scale(.88); filter: blur(6px); }
         to   { opacity: 1; transform: translateY(0)    scale(1);   filter: blur(0);   }
     }
+    .md-hero__logo {
+        width: 112px !important;
+        height: 112px !important;
+        filter: drop-shadow(0 0 26px rgba(var(--zb-naranja-rgb), .6)) !important;
+    }
+    .md-hero__tagline {
+        font-family: 'Instrument Serif', serif;
+        font-style: italic;
+        font-size: 16px;
+        color: var(--zb-naranja);
+        margin: 4px 0 20px;
+        animation: md-entrada .5s cubic-bezier(.25,0,.1,1) .24s both;
+    }
+    @media (max-width: 520px) {
+        .md-hero__logo { width: 84px !important; height: 84px !important; }
+    }
+    @media (prefers-reduced-motion: reduce) { .md-hero__tagline { animation: none; } }
+
+    /* ── Atmósfera fija: sin esto detrás, el vidrio no se nota ── */
+    body { position: relative; background: var(--zb-negro) !important; }
+    body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        background:
+            radial-gradient(60vw 55vh at 8% 6%,    rgba(var(--zb-naranja-rgb), .55), transparent 62%),
+            radial-gradient(55vw 50vh at 100% 46%, rgba(var(--zb-naranja-rgb), .30), transparent 60%),
+            radial-gradient(60vw 55vh at 4% 92%,   rgba(var(--zb-naranja-rgb), .30), transparent 60%),
+            var(--zb-negro);
+    }
+    body::after {
+        content: '';
+        position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: .4; mix-blend-mode: overlay;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.05 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    }
+
+    /* ── Vidrio real: el panel y las tarjetas dejan ver la atmósfera de atrás ── */
+    .md-contenido {
+        background: rgba(30,24,20,.28) !important;
+        backdrop-filter: blur(24px) saturate(170%);
+        -webkit-backdrop-filter: blur(24px) saturate(170%);
+        box-shadow: inset 0 1px 0 rgba(247,236,220,.14) !important;
+    }
+    .md-hero {
+        background: rgba(30,24,20,.16) !important;
+        backdrop-filter: blur(18px) saturate(160%);
+        -webkit-backdrop-filter: blur(18px) saturate(160%);
+        box-shadow: inset 0 1px 0 rgba(247,236,220,.16) !important;
+    }
+    .md-precio-pill, .md-fila-simple__col {
+        background: rgba(255,255,255,.08) !important;
+        backdrop-filter: blur(14px) saturate(150%);
+        -webkit-backdrop-filter: blur(14px) saturate(150%);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.14);
+    }
+    /* ── Iconos SVG en lugar de emoji ── */
+    .md-seccion__icono, .nav-drawer__item__icono {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--zb-naranja);
+    }
+    .md-badge-popular svg { flex-shrink: 0; }
+
+    .md-plato, .md-chip {
+        background: rgba(255,255,255,.065) !important;
+        border-color: rgba(247,236,220,.14) !important;
+        backdrop-filter: blur(16px) saturate(150%);
+        -webkit-backdrop-filter: blur(16px) saturate(150%);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.12);
+        transition: background .2s var(--zb-ease), border-color .2s var(--zb-ease);
+    }
+    .md-plato:hover, .md-chip:hover {
+        background: rgba(255,255,255,.1) !important;
+        border-color: rgba(var(--zb-naranja-rgb),.4) !important;
+    }
+    .md-tabs { position: relative; }
+    .md-tabs__pill {
+        position: absolute;
+        top: 6px; bottom: 6px; left: 0;
+        background: rgba(var(--zb-naranja-rgb), .1);
+        border-radius: 14px;
+        transition: transform .35s var(--zb-ease);
+        pointer-events: none;
+        z-index: 0;
+    }
+    .md-tab { position: relative; z-index: 1; }
+
+    /* ── Splash de apertura (encima de todo) ── */
+    .zb-splash__nombre, .zb-splash__tagline { font-family: 'Instrument Sans', Arial, sans-serif; }
+    .zb-splash__tagline { font-family: 'Instrument Serif', serif; }
 </style>
 
 <body>
 
+<!-- ── Marca de agua fija (se queda fija al hacer scroll, le da vida al vidrio) ── -->
+<img class="zb-marca-watermark" src="../assets/img/LOGO_BLANCO.png" alt="">
+
+<!-- ── Splash de apertura ── -->
+<div class="zb-splash" id="zbSplash">
+    <div class="zb-splash__glow"></div>
+    <img class="zb-splash__icono" src="../assets/img/LOGO_BLANCO.png" alt="Zabisu">
+    <div class="zb-splash__nombre">Zabisu</div>
+    <div class="zb-splash__tagline">Sabor y Servicio</div>
+    <div class="zb-splash__barra"><i></i></div>
+</div>
+
 <?php require_once "../includes/aviso_birria.php"; ?>
+<?php require_once "../includes/aviso_incremento.php"; ?>
 
 <!-- ── Hamburger ── -->
 <button class="hamburguer-btn" id="hamburguer-btn" aria-label="Menú">
@@ -1010,15 +1125,15 @@ foreach ($stmtRatingsDist->fetchAll(PDO::FETCH_ASSOC) as $row) {
 <nav class="nav-drawer" id="nav-drawer">
     <div class="nav-drawer__titulo">Zabisu</div>
     <a class="nav-drawer__item" href="estado_pedido.php">
-        <span class="nav-drawer__item__icono">🔍</span>
+        <span class="nav-drawer__item__icono"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span>
         Consultar mi pedido
     </a>
     <a class="nav-drawer__item" href="menu.php">
-        <span class="nav-drawer__item__icono">🍽️</span>
+        <span class="nav-drawer__item__icono"><?php echo $icoPlato; ?></span>
         Ver menú del día
     </a>
     <a class="nav-drawer__item" href="pedido.php">
-        <span class="nav-drawer__item__icono">🛒</span>
+        <span class="nav-drawer__item__icono"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.2 12a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.6L20.5 8H6.2"/><circle cx="9.3" cy="20" r="1.3"/><circle cx="16.8" cy="20" r="1.3"/></svg></span>
         Hacer un pedido
     </a>
 </nav>
@@ -1042,6 +1157,7 @@ foreach ($stmtRatingsDist->fetchAll(PDO::FETCH_ASSOC) as $row) {
             <img class="md-hero__logo" src="../assets/img/LOGO_BLANCO.png" alt="Zabisu">
             <h1 class="md-hero__marca">Zabisu</h1>
         </div>
+        <p class="md-hero__tagline">Sabor y Servicio</p>
         <p class="md-hero__fecha"><?php echo htmlspecialchars($fechaBonita); ?></p>
 
         <div class="md-hero__precios">
@@ -1102,6 +1218,7 @@ foreach ($stmtRatingsDist->fetchAll(PDO::FETCH_ASSOC) as $row) {
     <div class="md-contenido">
 
         <div class="md-tabs" role="tablist">
+            <span class="md-tabs__pill" id="mdTabsPill"></span>
             <?php foreach (["Zabisu","Ejecutivo"] as $i => $t): ?>
                 <?php if (empty($menusPorTipo[$t])) continue; ?>
                 <button class="md-tab <?php echo $i === 0 ? 'md-tab--activo' : ''; ?>"
@@ -1188,7 +1305,7 @@ foreach ($stmtRatingsDist->fetchAll(PDO::FETCH_ASSOC) as $row) {
                                 <?php if (!empty($item["agotado"])): ?>
                                     <span class="md-badge-agotado">Agotado</span>
                                 <?php elseif (!empty($popularIds[(int)$item["id_producto"]])): ?>
-                                    <span class="md-badge-popular">🔥 Popular</span>
+                                    <span class="md-badge-popular"><?php echo $icoPopular; ?> Popular</span>
                                 <?php endif; ?>
                             </span>
                         <?php endforeach; ?>
@@ -1208,7 +1325,7 @@ foreach ($stmtRatingsDist->fetchAll(PDO::FETCH_ASSOC) as $row) {
                                 <?php if (!empty($item["agotado"])): ?>
                                     <span class="md-badge-agotado">Agotado</span>
                                 <?php elseif (!empty($popularIds[(int)$item["id_producto"]])): ?>
-                                    <span class="md-badge-popular">🔥 Popular</span>
+                                    <span class="md-badge-popular"><?php echo $icoPopular; ?> Popular</span>
                                 <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
@@ -1245,7 +1362,7 @@ foreach ($stmtRatingsDist->fetchAll(PDO::FETCH_ASSOC) as $row) {
     <div class="md-contenido">
         <div class="md-seccion">
             <div class="md-seccion__cabecera">
-                <span class="md-seccion__icono">🍮</span>
+                <span class="md-seccion__icono"><?php echo $icoPostre; ?></span>
                 <h2 class="md-seccion__titulo">Postre del día
                     <span style="font-size:13px;font-weight:700;color:#ff7a00;margin-left:6px;">· Extra</span>
                 </h2>
@@ -1302,6 +1419,28 @@ function animarPanel(panel) {
         });
     });
 }
+
+// Cápsula deslizante detrás de la pestaña activa
+(function () {
+    var pill = document.getElementById("mdTabsPill");
+    var tabs = document.querySelectorAll(".md-tab");
+    if (!pill || !tabs.length) return;
+
+    function moverPill(tab) {
+        pill.style.width = tab.offsetWidth + "px";
+        pill.style.transform = "translateX(" + tab.offsetLeft + "px)";
+    }
+
+    var activa = document.querySelector(".md-tab--activo") || tabs[0];
+    moverPill(activa);
+    window.addEventListener("resize", function () {
+        moverPill(document.querySelector(".md-tab--activo") || tabs[0]);
+    });
+
+    tabs.forEach(function (tab) {
+        tab.addEventListener("click", function () { moverPill(this); });
+    });
+})();
 
 document.querySelectorAll(".md-tab").forEach(function (tab) {
     tab.addEventListener("click", function () {
@@ -1400,6 +1539,19 @@ document.querySelectorAll(".md-plato:not(.md-plato--agotado), .md-chip:not(.md-c
 
     actualizar();
     setInterval(actualizar, 1000);
+})();
+</script>
+
+<script>
+(function () {
+    var splash = document.getElementById("zbSplash");
+    if (!splash) return;
+    var reducido = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var espera = reducido ? 400 : 1800;
+    setTimeout(function () {
+        splash.classList.add("zb-splash--salir");
+        setTimeout(function () { splash.style.display = "none"; }, 650);
+    }, espera);
 })();
 </script>
 

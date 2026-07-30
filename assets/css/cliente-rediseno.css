@@ -1,0 +1,126 @@
+/* ══════════════════════════════════════════════════════════════
+   Zabisu — sistema visual del cliente (negro + naranja de marca)
+   Un solo acento (--naranja-rgb), una sola curva de easing.
+   ══════════════════════════════════════════════════════════════ */
+
+@font-face{
+  font-family:'Instrument Sans';font-weight:400;font-style:normal;font-display:swap;
+  src:url('../fonts/instrument-sans-400.woff2') format('woff2');
+}
+@font-face{
+  font-family:'Instrument Sans';font-weight:500;font-style:normal;font-display:swap;
+  src:url('../fonts/instrument-sans-500.woff2') format('woff2');
+}
+@font-face{
+  font-family:'Instrument Sans';font-weight:600;font-style:normal;font-display:swap;
+  src:url('../fonts/instrument-sans-600.woff2') format('woff2');
+}
+@font-face{
+  font-family:'Instrument Sans';font-weight:700;font-style:normal;font-display:swap;
+  src:url('../fonts/instrument-sans-700.woff2') format('woff2');
+}
+@font-face{
+  font-family:'Instrument Serif';font-weight:400;font-style:italic;font-display:swap;
+  src:url('../fonts/instrument-serif-italic-400.woff2') format('woff2');
+}
+
+:root{
+  --zb-negro:      #0a0908;
+  --zb-negro-2:    #141110;
+  --zb-negro-3:    #1b1613;
+  --zb-crema:      #f7ecdc;
+  --zb-muted:      #ac9f90;
+  --zb-naranja-rgb: 255,122,0;
+  --zb-naranja:    rgb(var(--zb-naranja-rgb));
+  --zb-hoja:       #7fa65c;
+  --zb-rojo:       #f2604a;
+  --zb-glass-bd:   rgba(247,236,220,.12);
+  --zb-ease:       cubic-bezier(.16,1,.3,1);
+  --zb-dur-fast:   .22s;
+  --zb-dur-base:   .5s;
+}
+
+/* ── Superficie de vidrio reutilizable ── */
+.zb-glass{
+  background: rgba(255,255,255,.045);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  border: 1px solid var(--zb-glass-bd);
+}
+
+/* ── Marca de agua fija: se posiciona relativa al CENTRO de la columna de
+   contenido (.md-pagina / .contenedor están centrados con margin:auto, así
+   que 50% del viewport siempre coincide con su centro, sea móvil o escritorio) ── */
+.zb-marca-watermark{
+  position: fixed;
+  top: 90px;
+  left: calc(50% + clamp(40px, 22vw, 220px));
+  width: clamp(200px, 55vw, 320px);
+  height: clamp(200px, 55vw, 320px);
+  transform: translateX(-50%);
+  object-fit: contain;
+  object-position: center;
+  opacity: .45;
+  filter: drop-shadow(0 0 30px rgba(var(--zb-naranja-rgb), .5));
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ── Entrada escalonada ── */
+@keyframes zbFadeUp{ from{ opacity:0; transform:translateY(12px); } to{ opacity:1; transform:translateY(0); } }
+.zb-reveal{ opacity:0; animation: zbFadeUp var(--zb-dur-base) var(--zb-ease) both; }
+
+@media (prefers-reduced-motion: reduce){
+  .zb-reveal{ opacity:1; animation:none; }
+}
+
+/* ── Masthead de marca (logo + wordmark) ── */
+.zb-masthead{ display:flex; align-items:center; gap:12px; }
+.zb-masthead__icono{ width:40px; height:40px; object-fit:contain; flex-shrink:0; filter: drop-shadow(0 0 14px rgba(var(--zb-naranja-rgb),.5)); }
+.zb-masthead__nombre{ font-family:'Instrument Sans', sans-serif; font-weight:700; font-size:20px; letter-spacing:-.02em; color:var(--zb-crema); line-height:1; }
+.zb-masthead__tagline{ font-family:'Instrument Serif', serif; font-style:italic; font-size:11.5px; color:var(--zb-naranja); margin-top:2px; display:block; }
+
+/* ── Splash de apertura ── */
+.zb-splash{
+  position:fixed; inset:0; z-index:9999;
+  background:var(--zb-negro);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+  transition: opacity .5s var(--zb-ease), transform .6s var(--zb-ease);
+}
+.zb-splash__glow{
+  position:absolute; width:60vw; height:60vw; max-width:420px; max-height:420px; border-radius:50%;
+  background:radial-gradient(circle, rgba(var(--zb-naranja-rgb),.35), transparent 68%);
+  filter:blur(20px);
+  animation: zbSplashPulso 1.8s var(--zb-ease) infinite;
+}
+@keyframes zbSplashPulso{ 0%,100%{ opacity:.6; transform:scale(1); } 50%{ opacity:1; transform:scale(1.12); } }
+.zb-splash__icono{
+  width:88px; height:88px; object-fit:contain; position:relative;
+  filter: drop-shadow(0 0 22px rgba(var(--zb-naranja-rgb),.55));
+  opacity:0; animation: zbSplashIcono .7s var(--zb-ease) .1s both;
+}
+@keyframes zbSplashIcono{ from{ opacity:0; transform:scale(.75); filter:blur(6px); } to{ opacity:1; transform:scale(1); filter:blur(0); } }
+.zb-splash__nombre{
+  position:relative; font-family:'Instrument Sans', sans-serif; font-weight:700; font-size:27px; letter-spacing:-.02em; color:var(--zb-crema);
+  opacity:0; animation: zbFadeUp .5s var(--zb-ease) .45s both;
+}
+.zb-splash__tagline{
+  position:relative; font-family:'Instrument Serif', serif; font-style:italic; font-size:14px; color:var(--zb-naranja);
+  opacity:0; animation: zbFadeUp .5s var(--zb-ease) .58s both;
+}
+.zb-splash__barra{
+  position:relative; width:120px; height:2px; border-radius:2px; background:rgba(255,255,255,.12); overflow:hidden;
+  margin-top:6px; opacity:0; animation: zbFadeUp .4s var(--zb-ease) .7s both;
+}
+.zb-splash__barra i{ position:absolute; inset:0; background:var(--zb-naranja); width:0%; animation: zbSplashCarga 1.3s var(--zb-ease) .75s both; }
+@keyframes zbSplashCarga{ to{ width:100%; } }
+.zb-splash.zb-splash--salir{ opacity:0; transform:scale(1.04); pointer-events:none; }
+
+@media (prefers-reduced-motion: reduce){
+  .zb-splash__glow{ animation:none; }
+  .zb-splash__icono, .zb-splash__nombre, .zb-splash__tagline, .zb-splash__barra{ animation:none; opacity:1; }
+}
+
+/* ── Cápsula deslizante genérica (tabs / chips) ── */
+.zb-slider{ position:relative; }
+.zb-slider__pill{ position:absolute; background:var(--zb-naranja); transition: transform var(--zb-dur-fast) var(--zb-ease); }
