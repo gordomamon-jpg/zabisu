@@ -26,6 +26,7 @@ function startReadyPoller() {
 const client = new Client({
     authStrategy: new LocalAuth({ dataPath: path.join(__dirname, 'wa_session') }),
     puppeteer: {
+        protocolTimeout: 300000, // 5 min — el default (180s) se quedaba corto y tronaba con "Runtime.callFunctionOn timed out"
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
