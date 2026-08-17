@@ -162,12 +162,13 @@ if (!$menuActivo) {
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Zabisu">
     <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
+    <link rel="stylesheet" href="../assets/css/cliente-rediseno.css?v=4">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    background: #09090f;
+    font-family: 'Instrument Sans', Arial, sans-serif;
+    background: var(--zb-negro);
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
@@ -184,7 +185,7 @@ body {
     top: -120px; left: 50%;
     transform: translateX(-50%);
     width: 600px; height: 400px;
-    background: radial-gradient(ellipse, rgba(255,122,0,.18) 0%, transparent 65%);
+    background: radial-gradient(ellipse, rgba(var(--zb-naranja-rgb),.18) 0%, transparent 65%);
     pointer-events: none;
     animation: nm-glow-pulse 4s ease-in-out infinite alternate;
 }
@@ -200,17 +201,19 @@ body {
     pointer-events: none;
     overflow: hidden;
     z-index: 0;
+    color: rgba(var(--zb-naranja-rgb),.4);
 }
 .nm-particle {
     position: absolute;
     bottom: -30px;
-    font-size: var(--sz);
+    width: var(--sz);
+    height: var(--sz);
     left: var(--x);
     opacity: 0;
     animation: nm-rise var(--dur) ease-in-out var(--delay) infinite;
     filter: blur(.3px);
-    user-select: none;
 }
+.nm-particle svg { width: 100%; height: 100%; display: block; }
 @keyframes nm-rise {
     0%   { transform: translateY(0)      rotate(0deg)   scale(.8); opacity: 0;   }
     8%   {                                                           opacity: .45; }
@@ -226,7 +229,7 @@ body {
     align-items: center;
     gap: 14px;
     margin-bottom: 26px;
-    animation: nm-fadein .5s cubic-bezier(.25,0,.1,1) .05s both;
+    animation: nm-fadein .5s var(--zb-ease) .05s both;
 }
 .nm-logo-wrap img {
     width: 52px; height: 52px;
@@ -234,32 +237,17 @@ body {
     animation: nm-logo-glow 3s ease-in-out infinite alternate;
 }
 @keyframes nm-logo-glow {
-    from { filter: drop-shadow(0 0 10px rgba(255,122,0,.45)); }
-    to   { filter: drop-shadow(0 0 26px rgba(255,122,0,.85)); }
+    from { filter: drop-shadow(0 0 10px rgba(var(--zb-naranja-rgb),.45)); }
+    to   { filter: drop-shadow(0 0 26px rgba(var(--zb-naranja-rgb),.85)); }
 }
 .nm-logo-wrap span {
-    font-size: 62px;
-    font-weight: 900;
-    letter-spacing: -3px;
+    font-family: 'Instrument Sans', Arial, sans-serif;
+    font-size: 44px;
+    font-weight: 700;
+    letter-spacing: -1.5px;
     line-height: 1;
-    /* Gradiente naranja con shimmer */
-    background: linear-gradient(
-        105deg,
-        #ff6a00 0%,
-        #ff9a40 30%,
-        #ffe0b0 50%,
-        #ff9a40 70%,
-        #ff6a00 100%
-    );
-    background-size: 220% auto;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    animation: nm-shimmer 3.2s linear infinite, nm-texto-entrada .7s cubic-bezier(.34,1.4,.64,1) .08s both;
-}
-@keyframes nm-shimmer {
-    0%   { background-position: 0%   center; }
-    100% { background-position: 220% center; }
+    color: var(--zb-crema);
+    animation: nm-texto-entrada .7s cubic-bezier(.34,1.4,.64,1) .08s both;
 }
 @keyframes nm-texto-entrada {
     from { opacity: 0; transform: translateY(12px) scale(.88); filter: blur(6px); }
@@ -270,17 +258,19 @@ body {
 .nm-card {
     position: relative;
     z-index: 1;
-    background: linear-gradient(160deg, rgba(255,255,255,.04) 0%, rgba(255,255,255,.02) 100%);
-    border: 1px solid rgba(255,255,255,.08);
+    background: rgba(255,255,255,.045);
+    backdrop-filter: blur(16px) saturate(150%);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+    border: 1px solid var(--zb-glass-bd);
     border-radius: 28px;
     padding: 38px 28px 34px;
     max-width: 370px;
     width: 100%;
     text-align: center;
     box-shadow:
-        0 0 0 1px rgba(255,122,0,.07),
+        0 0 0 1px rgba(var(--zb-naranja-rgb),.07),
         0 24px 70px rgba(0,0,0,.65),
-        0 0 50px rgba(255,122,0,.05);
+        0 0 50px rgba(var(--zb-naranja-rgb),.05);
     animation: nm-popin .65s cubic-bezier(.34,1.35,.64,1) .12s both;
 }
 @keyframes nm-popin {
@@ -294,7 +284,7 @@ body {
     flex-direction: column;
     align-items: center;
     margin-bottom: 22px;
-    animation: nm-fadein .5s cubic-bezier(.25,0,.1,1) .3s both;
+    animation: nm-fadein .5s var(--zb-ease) .3s both;
 }
 .nm-icono-bounce {
     animation: nm-bounce 2.2s cubic-bezier(.4,0,.2,1) infinite alternate;
@@ -304,10 +294,11 @@ body {
     to   { transform: translateY(-14px); }
 }
 .nm-icono {
-    font-size: 70px;
-    line-height: 1;
+    width: 64px; height: 64px;
+    color: var(--zb-naranja);
     filter: drop-shadow(0 6px 20px rgba(0,0,0,.55));
 }
+.nm-icono svg { width: 100%; height: 100%; display: block; }
 /* ── Vapor ────────────────────────────────────────────── */
 .nm-steam {
     display: flex;
@@ -340,25 +331,25 @@ body {
     font-weight: 700;
     letter-spacing: 2.5px;
     text-transform: uppercase;
-    color: rgba(255,122,0,.75);
+    color: rgba(var(--zb-naranja-rgb),.75);
     margin-bottom: 8px;
-    animation: nm-fadein .5s cubic-bezier(.25,0,.1,1) .38s both;
+    animation: nm-fadein .5s var(--zb-ease) .38s both;
 }
 .nm-titulo {
     font-size: 26px;
-    font-weight: 900;
-    color: #fff;
+    font-weight: 700;
+    color: var(--zb-crema);
     margin-bottom: 10px;
     letter-spacing: -.4px;
     line-height: 1.2;
-    animation: nm-fadein .5s cubic-bezier(.25,0,.1,1) .44s both;
+    animation: nm-fadein .5s var(--zb-ease) .44s both;
 }
 .nm-texto {
     font-size: 14px;
-    color: rgba(255,255,255,.5);
+    color: var(--zb-muted);
     line-height: 1.75;
     margin-bottom: 16px;
-    animation: nm-fadein .5s cubic-bezier(.25,0,.1,1) .50s both;
+    animation: nm-fadein .5s var(--zb-ease) .50s both;
 }
 
 /* ── Próximo menú ─────────────────────────────────────── */
@@ -366,25 +357,26 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 7px;
-    background: rgba(255,122,0,.1);
-    border: 1px solid rgba(255,122,0,.25);
+    background: rgba(var(--zb-naranja-rgb),.1);
+    border: 1px solid rgba(var(--zb-naranja-rgb),.25);
     border-radius: 99px;
     padding: 7px 16px;
     font-size: 13px;
     font-weight: 700;
-    color: #ff9a40;
+    color: var(--zb-naranja);
     letter-spacing: .2px;
     margin-bottom: 20px;
-    animation: nm-fadein .5s cubic-bezier(.25,0,.1,1) .56s both;
+    animation: nm-fadein .5s var(--zb-ease) .56s both;
 }
+.nm-proximo svg { width: 14px; height: 14px; flex-shrink: 0; }
 
 /* ── Separador ────────────────────────────────────────── */
 .nm-sep {
     width: 100%;
     height: 1px;
-    background: rgba(255,255,255,.07);
+    background: var(--zb-glass-bd);
     margin: 18px 0;
-    animation: nm-fadein .5s cubic-bezier(.25,0,.1,1) .58s both;
+    animation: nm-fadein .5s var(--zb-ease) .58s both;
 }
 
 /* ── Auto-refresh indicator ───────────────────────────── */
@@ -394,11 +386,11 @@ body {
     justify-content: center;
     gap: 8px;
     margin-bottom: 18px;
-    animation: nm-fadein .5s cubic-bezier(.25,0,.1,1) .62s both;
+    animation: nm-fadein .5s var(--zb-ease) .62s both;
 }
 .nm-refresh__txt {
     font-size: 12px;
-    color: rgba(255,255,255,.3);
+    color: var(--zb-muted);
     letter-spacing: .2px;
 }
 .nm-dots {
@@ -409,7 +401,7 @@ body {
 .nm-dot {
     width: 4px; height: 4px;
     border-radius: 50%;
-    background: rgba(255,122,0,.5);
+    background: rgba(var(--zb-naranja-rgb),.5);
     animation: nm-dot-bounce .9s ease-in-out infinite;
 }
 .nm-dot:nth-child(1) { animation-delay: 0s; }
@@ -424,22 +416,23 @@ body {
 .nm-btn {
     display: block;
     width: 100%;
-    background: rgba(255,255,255,.06);
-    border: 1px solid rgba(255,255,255,.1);
+    background: rgba(255,255,255,.045);
+    backdrop-filter: blur(16px) saturate(150%);
+    -webkit-backdrop-filter: blur(16px) saturate(150%);
+    border: 1px solid var(--zb-glass-bd);
     border-radius: 14px;
-    color: rgba(255,255,255,.7);
+    color: var(--zb-crema);
     font-size: 14px;
     font-weight: 600;
     padding: 13px 20px;
     text-decoration: none;
     letter-spacing: .2px;
-    transition: background .15s, color .15s, border-color .15s;
-    animation: nm-fadein .5s cubic-bezier(.25,0,.1,1) .66s both;
+    transition: background .15s, border-color .15s;
+    animation: nm-fadein .5s var(--zb-ease) .66s both;
 }
 .nm-btn:hover {
-    background: rgba(255,255,255,.1);
-    color: #fff;
-    border-color: rgba(255,255,255,.18);
+    background: rgba(var(--zb-naranja-rgb),.12);
+    border-color: rgba(var(--zb-naranja-rgb),.35);
 }
 .nm-btn:active { transform: scale(.98); }
 
@@ -449,9 +442,10 @@ body {
     z-index: 1;
     margin-top: 24px;
     font-size: 11px;
-    color: rgba(255,255,255,.2);
+    color: var(--zb-muted);
+    opacity: .6;
     letter-spacing: .3px;
-    animation: nm-fadein .5s cubic-bezier(.25,0,.1,1) .72s both;
+    animation: nm-fadein .5s var(--zb-ease) .72s both;
 }
 
 /* ── Fade-in base ─────────────────────────────────────── */
@@ -471,14 +465,14 @@ body {
 
 <!-- Partículas -->
 <div class="nm-particles" aria-hidden="true">
-    <span class="nm-particle" style="--x:6%;  --sz:20px; --dur:9s;  --delay:0s;    --rot:30deg">🍽️</span>
-    <span class="nm-particle" style="--x:17%; --sz:16px; --dur:11s; --delay:1.4s;  --rot:-20deg">🥄</span>
-    <span class="nm-particle" style="--x:29%; --sz:18px; --dur:8s;  --delay:3.1s;  --rot:45deg">🥗</span>
-    <span class="nm-particle" style="--x:42%; --sz:14px; --dur:12s; --delay:0.7s;  --rot:-15deg">🍲</span>
-    <span class="nm-particle" style="--x:56%; --sz:20px; --dur:10s; --delay:2.2s;  --rot:60deg">🍴</span>
-    <span class="nm-particle" style="--x:68%; --sz:16px; --dur:9.5s;--delay:1.0s;  --rot:-40deg">🥘</span>
-    <span class="nm-particle" style="--x:80%; --sz:18px; --dur:11s; --delay:3.8s;  --rot:25deg">🧂</span>
-    <span class="nm-particle" style="--x:91%; --sz:14px; --dur:8.5s;--delay:2.6s;  --rot:-30deg">🥣</span>
+    <span class="nm-particle" style="--x:6%;  --sz:20px; --dur:9s;  --delay:0s;    --rot:30deg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.4"/><circle cx="12" cy="12" r="3.6"/></svg></span>
+    <span class="nm-particle" style="--x:17%; --sz:16px; --dur:11s; --delay:1.4s;  --rot:-20deg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12h17a7.5 7.5 0 0 1-15 0Z"/><path d="M9 8c-.9-.9-.9-1.8 0-2.7M14.5 8c-.9-.9-.9-1.8 0-2.7"/></svg></span>
+    <span class="nm-particle" style="--x:29%; --sz:18px; --dur:8s;  --delay:3.1s;  --rot:45deg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.2 3.5h11.6l-1.3 15.2a2 2 0 0 1-2 1.8H9.5a2 2 0 0 1-2-1.8L6.2 3.5Z"/><path d="M6.8 8.3h10.4"/></svg></span>
+    <span class="nm-particle" style="--x:42%; --sz:14px; --dur:12s; --delay:0.7s;  --rot:-15deg"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.2c1 3-2.6 4.2-2.6 8a2.6 2.6 0 0 0 5.2 0c1.3.9 1.8 2.3 1.8 3.5a4.4 4.4 0 0 1-8.8 0c0-4.6 4.4-5.6 4.4-11.5Z"/></svg></span>
+    <span class="nm-particle" style="--x:56%; --sz:20px; --dur:10s; --delay:2.2s;  --rot:60deg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.4"/><circle cx="12" cy="12" r="3.6"/></svg></span>
+    <span class="nm-particle" style="--x:68%; --sz:16px; --dur:9.5s;--delay:1.0s;  --rot:-40deg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a8 8 0 0 1 16 0Z"/><path d="M2.5 11h19M6.3 11l.9 7.4a1.4 1.4 0 0 0 1.4 1.2h6.8a1.4 1.4 0 0 0 1.4-1.2l.9-7.4"/></svg></span>
+    <span class="nm-particle" style="--x:80%; --sz:18px; --dur:11s; --delay:3.8s;  --rot:25deg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6.2 3.5h11.6l-1.3 15.2a2 2 0 0 1-2 1.8H9.5a2 2 0 0 1-2-1.8L6.2 3.5Z"/><path d="M6.8 8.3h10.4"/></svg></span>
+    <span class="nm-particle" style="--x:91%; --sz:14px; --dur:8.5s;--delay:2.6s;  --rot:-30deg"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.2c1 3-2.6 4.2-2.6 8a2.6 2.6 0 0 0 5.2 0c1.3.9 1.8 2.3 1.8 3.5a4.4 4.4 0 0 1-8.8 0c0-4.6 4.4-5.6 4.4-11.5Z"/></svg></span>
 </div>
 
 <!-- Logo -->
@@ -492,7 +486,7 @@ body {
 
     <div class="nm-icono-wrap">
         <div class="nm-icono-bounce">
-            <div class="nm-icono">🍽️</div>
+            <div class="nm-icono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.4"/><circle cx="12" cy="12" r="3.6"/></svg></div>
         </div>
         <div class="nm-steam">
             <span class="nm-steam__line nm-steam__line--1"></span>
@@ -510,7 +504,8 @@ body {
 
     <?php if ($proximoTexto): ?>
     <div class="nm-proximo">
-        <span>📅</span> Próximo: <?php echo htmlspecialchars($proximoTexto); ?>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.2"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>
+        Próximo: <?php echo htmlspecialchars($proximoTexto); ?>
     </div>
     <?php endif; ?>
 
