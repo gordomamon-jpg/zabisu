@@ -146,8 +146,12 @@ if (!$menuActivo) {
     if ($nextMenu) {
         $dias   = ['Sunday'=>'Dom','Monday'=>'Lun','Tuesday'=>'Mar','Wednesday'=>'Mié','Thursday'=>'Jue','Friday'=>'Vie','Saturday'=>'Sáb'];
         $mesesC = ['01'=>'ene','02'=>'feb','03'=>'mar','04'=>'abr','05'=>'may','06'=>'jun','07'=>'jul','08'=>'ago','09'=>'sep','10'=>'oct','11'=>'nov','12'=>'dic'];
-        $ts     = strtotime($nextMenu['fecha']);
-        $proximoTexto = ($dias[date('l',$ts)] ?? '') . ' ' . date('j',$ts) . ' ' . ($mesesC[date('m',$ts)] ?? '');
+        $formatoDia = function ($ts) use ($dias, $mesesC) {
+            return ($dias[date('l',$ts)] ?? '') . ' ' . date('j',$ts) . ' ' . ($mesesC[date('m',$ts)] ?? '');
+        };
+        $tsPublica = strtotime($nextMenu['fecha']);
+        $tsSirve   = strtotime('+1 day', $tsPublica);
+        $proximoTexto = $formatoDia($tsPublica) . '|' . $formatoDia($tsSirve);
     }
 ?>
 <!DOCTYPE html>
@@ -354,21 +358,24 @@ body {
 
 /* ── Próximo menú ─────────────────────────────────────── */
 .nm-proximo {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    text-align: left;
     background: rgba(var(--zb-naranja-rgb),.1);
     border: 1px solid rgba(var(--zb-naranja-rgb),.25);
-    border-radius: 99px;
-    padding: 7px 16px;
-    font-size: 13px;
-    font-weight: 700;
+    border-radius: 16px;
+    padding: 10px 14px;
+    font-size: 12.5px;
+    font-weight: 400;
     color: var(--zb-naranja);
-    letter-spacing: .2px;
+    letter-spacing: .1px;
+    line-height: 1.5;
     margin-bottom: 20px;
     animation: nm-fadein .5s var(--zb-ease) .56s both;
 }
-.nm-proximo svg { width: 14px; height: 14px; flex-shrink: 0; }
+.nm-proximo svg { width: 14px; height: 14px; margin-top: 2px; flex-shrink: 0; }
+.nm-proximo strong { font-weight: 700; }
 
 /* ── Separador ────────────────────────────────────────── */
 .nm-sep {
@@ -502,10 +509,10 @@ body {
         Vuelve pronto, algo delicioso está en camino.
     </p>
 
-    <?php if ($proximoTexto): ?>
+    <?php if ($proximoTexto): list($proximoPublica, $proximoSirve) = explode('|', $proximoTexto); ?>
     <div class="nm-proximo">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.2"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>
-        Próximo: <?php echo htmlspecialchars($proximoTexto); ?>
+        <span>Se publica la noche del <strong><?php echo htmlspecialchars($proximoPublica); ?></strong>, para el <strong><?php echo htmlspecialchars($proximoSirve); ?></strong></span>
     </div>
     <?php endif; ?>
 
