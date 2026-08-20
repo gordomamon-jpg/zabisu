@@ -10,20 +10,30 @@
 if (true):
     date_default_timezone_set("America/Mexico_City");
 
-    $ss_fechaCierre = "2026-08-20"; // día sin servicio
+    $ss_fechaCierre  = "2026-08-20"; // primer día sin servicio
+    $ss_fechaRegreso = "2026-08-24"; // día en que se reanuda el servicio
 
-    if (date("Y-m-d") <= $ss_fechaCierre):
+    if (date("Y-m-d") < $ss_fechaRegreso):
         $ss_diasSem = ['Sunday'=>'domingo','Monday'=>'lunes','Tuesday'=>'martes','Wednesday'=>'miércoles','Thursday'=>'jueves','Friday'=>'viernes','Saturday'=>'sábado'];
         $ss_meses   = ['01'=>'enero','02'=>'febrero','03'=>'marzo','04'=>'abril','05'=>'mayo','06'=>'junio','07'=>'julio','08'=>'agosto','09'=>'septiembre','10'=>'octubre','11'=>'noviembre','12'=>'diciembre'];
 
-        $ss_tsCierre  = strtotime($ss_fechaCierre);
-        $ss_tsRegreso = strtotime('+1 day', $ss_tsCierre);
+        $ss_formatoFecha = function ($ts) use ($ss_diasSem, $ss_meses) {
+            return $ss_diasSem[date('l', $ts)] . ' ' . (int)date('j', $ts) . ' de ' . $ss_meses[date('m', $ts)];
+        };
 
-        $ss_fechaCierreTexto  = $ss_diasSem[date('l', $ss_tsCierre)] . ' ' . (int)date('j', $ss_tsCierre) . ' de ' . $ss_meses[date('m', $ss_tsCierre)];
-        $ss_fechaRegresoTexto = $ss_diasSem[date('l', $ss_tsRegreso)];
+        $ss_tsCierre     = strtotime($ss_fechaCierre);
+        $ss_tsRegreso    = strtotime($ss_fechaRegreso);
+        $ss_tsUltimoDia  = strtotime('-1 day', $ss_tsRegreso);
 
-        $ss_esHoy = (date('Y-m-d') === $ss_fechaCierre);
-        $ss_titulo = $ss_esHoy ? 'Hoy no tenemos servicio' : 'Mañana no tendremos servicio';
+        $ss_fechaCierreTexto  = $ss_formatoFecha($ss_tsCierre);
+        $ss_fechaRegresoTexto = $ss_formatoFecha($ss_tsRegreso);
+
+        $ss_rangoTexto = ($ss_tsCierre === $ss_tsUltimoDia)
+            ? $ss_fechaCierreTexto
+            : $ss_diasSem[date('l', $ss_tsCierre)] . ' ' . (int)date('j', $ss_tsCierre) . ' – ' . $ss_formatoFecha($ss_tsUltimoDia);
+
+        $ss_yaCerrado = (date('Y-m-d') >= $ss_fechaCierre);
+        $ss_titulo = $ss_yaCerrado ? 'No tenemos servicio estos días' : 'Mañana no tendremos servicio';
 
         $ss_clave = 'zb_aviso_sin_servicio_' . date('Y-m-d');
 ?>
@@ -140,13 +150,13 @@ if (true):
         <p class="ss-eyebrow">Aviso importante</p>
         <h2 class="ss-titulo"><?php echo htmlspecialchars($ss_titulo); ?></h2>
         <p class="ss-texto">
-            Por causas de fuerza mayor, este <strong><?php echo htmlspecialchars($ss_fechaCierreTexto); ?></strong>
+            Por causas de fuerza mayor, del <strong><?php echo htmlspecialchars($ss_rangoTexto); ?></strong>
             no podremos tomar ni entregar pedidos.
         </p>
-        <p class="ss-disculpa">Disculpa las molestias, regresamos el <?php echo htmlspecialchars($ss_fechaRegresoTexto); ?> con todo el sabor de siempre.</p>
+        <p class="ss-disculpa">Disculpa las molestias, reanudamos el <?php echo htmlspecialchars($ss_fechaRegresoTexto); ?> con todo el sabor de siempre.</p>
         <span class="ss-badge">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.2"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg>
-            Sin servicio: <?php echo htmlspecialchars($ss_fechaCierreTexto); ?>
+            Sin servicio: <?php echo htmlspecialchars($ss_rangoTexto); ?>
         </span>
         <button type="button" class="ss-btn" id="ss-entendido">Entendido</button>
     </div>
