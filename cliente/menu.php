@@ -536,6 +536,8 @@ body {
 
 <p class="nm-footer">© 2026 Zabisu · Sabor y Servicio</p>
 
+<?php require_once "../includes/aviso_sin_servicio.php"; ?>
+
 <script>
 // Auto-refresh silencioso cada 2 minutos
 (function () {
