@@ -1,19 +1,22 @@
 <?php
 /* ──────────────────────────────────────────────────────────────
-   Aviso: sin servicio por un día (evento puntual)
-   Popup grande y llamativo que aparece al entrar el cliente,
-   avisando con anticipación que un día no habrá servicio.
-   Se muestra una vez por día (localStorage) y deja de mostrarse
-   solo una vez pasada la fecha del cierre.
+   Aviso previo: avisa CON ANTICIPACIÓN (antes de que empiece el
+   cierre) que se acercan días sin servicio. Es un popup que se
+   puede cerrar, para no bloquear pedidos de hoy. Siempre aparece
+   al cargar la página (sin recordar cierres anteriores) hasta que
+   el cliente lo cierra en esa vista.
+   El día en que el cierre YA empieza, esta ventana ni se llega a
+   ejecutar: includes/bloqueo_sin_servicio.php toma el control
+   primero y reemplaza toda la página (sin poder cerrarse).
    Para desactivar el aviso a mano: cambiar true por false.
    ────────────────────────────────────────────────────────────── */
 if (true):
     date_default_timezone_set("America/Mexico_City");
 
-    $ss_fechaCierre  = "2026-08-20"; // primer día sin servicio
-    $ss_fechaRegreso = "2026-08-24"; // día en que se reanuda el servicio
+    $ss_fechaCierre  = "2026-08-20"; // primer día sin servicio (debe coincidir con bloqueo_sin_servicio.php)
+    $ss_fechaRegreso = "2026-08-24"; // día en que se reanuda el servicio (debe coincidir con bloqueo_sin_servicio.php)
 
-    if (date("Y-m-d") < $ss_fechaRegreso):
+    if (date("Y-m-d") < $ss_fechaCierre):
         $ss_diasSem = ['Sunday'=>'domingo','Monday'=>'lunes','Tuesday'=>'martes','Wednesday'=>'miércoles','Thursday'=>'jueves','Friday'=>'viernes','Saturday'=>'sábado'];
         $ss_meses   = ['01'=>'enero','02'=>'febrero','03'=>'marzo','04'=>'abril','05'=>'mayo','06'=>'junio','07'=>'julio','08'=>'agosto','09'=>'septiembre','10'=>'octubre','11'=>'noviembre','12'=>'diciembre'];
 
@@ -24,6 +27,7 @@ if (true):
         $ss_tsCierre     = strtotime($ss_fechaCierre);
         $ss_tsRegreso    = strtotime($ss_fechaRegreso);
         $ss_tsUltimoDia  = strtotime('-1 day', $ss_tsRegreso);
+        $ss_tsManana     = strtotime('+1 day');
 
         $ss_fechaCierreTexto  = $ss_formatoFecha($ss_tsCierre);
         $ss_fechaRegresoTexto = $ss_formatoFecha($ss_tsRegreso);
@@ -32,10 +36,8 @@ if (true):
             ? $ss_fechaCierreTexto
             : $ss_diasSem[date('l', $ss_tsCierre)] . ' ' . (int)date('j', $ss_tsCierre) . ' – ' . $ss_formatoFecha($ss_tsUltimoDia);
 
-        $ss_yaCerrado = (date('Y-m-d') >= $ss_fechaCierre);
-        $ss_titulo = $ss_yaCerrado ? 'No tenemos servicio estos días' : 'Mañana no tendremos servicio';
-
-        $ss_clave = 'zb_aviso_sin_servicio_' . date('Y-m-d');
+        $ss_esManana = (date('Y-m-d', $ss_tsManana) === $ss_fechaCierre);
+        $ss_titulo = $ss_esManana ? 'Mañana no tendremos servicio' : 'Próximamente no tendremos servicio';
 ?>
 <style>
 .ss-overlay {
@@ -163,17 +165,11 @@ if (true):
 </div>
 <script>
 (function () {
-    var clave = <?php echo json_encode($ss_clave); ?>;
-    try {
-        if (localStorage.getItem(clave)) return;
-    } catch (e) {}
-
     var overlay = document.getElementById('ss-overlay');
     if (!overlay) return;
 
     function cerrar() {
         overlay.classList.remove('ss-visible');
-        try { localStorage.setItem(clave, '1'); } catch (e) {}
     }
 
     requestAnimationFrame(function () {

@@ -2,6 +2,8 @@
 require_once "../config/db.php";
 date_default_timezone_set("America/Mexico_City");
 
+require_once "../includes/bloqueo_sin_servicio.php";
+
 /* ── Aviso día mundialista (activar: cambiar false por in_array(date('Y-m-d'), ['YYYY-MM-DD', ...])) ── */
 if (false): ?>
 <!DOCTYPE html>
