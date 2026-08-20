@@ -33,7 +33,8 @@
   --zb-naranja-rgb: 255,122,0;
   --zb-naranja:    rgb(var(--zb-naranja-rgb));
   --zb-hoja:       #7fa65c;
-  --zb-rojo:       #f2604a;
+  --zb-rojo-rgb:   242,96,74;
+  --zb-rojo:       rgb(var(--zb-rojo-rgb));
   --zb-glass-bd:   rgba(247,236,220,.12);
   --zb-ease:       cubic-bezier(.16,1,.3,1);
   --zb-dur-fast:   .22s;
