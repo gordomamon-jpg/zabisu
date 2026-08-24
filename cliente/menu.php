@@ -2,8 +2,6 @@
 require_once "../config/db.php";
 date_default_timezone_set("America/Mexico_City");
 
-require_once "../includes/bloqueo_sin_servicio.php";
-
 /* ── Aviso día mundialista (activar: cambiar false por in_array(date('Y-m-d'), ['YYYY-MM-DD', ...])) ── */
 if (false): ?>
 <!DOCTYPE html>
@@ -535,8 +533,6 @@ body {
 </div>
 
 <p class="nm-footer">© 2026 Zabisu · Sabor y Servicio</p>
-
-<?php require_once "../includes/aviso_sin_servicio.php"; ?>
 
 <script>
 // Auto-refresh silencioso cada 2 minutos
@@ -1118,7 +1114,6 @@ foreach ($stmtRatingsDist->fetchAll(PDO::FETCH_ASSOC) as $row) {
 
 <?php require_once "../includes/aviso_birria.php"; ?>
 <?php require_once "../includes/aviso_incremento.php"; ?>
-<?php require_once "../includes/aviso_sin_servicio.php"; ?>
 
 <!-- ── Hamburger ── -->
 <button class="hamburguer-btn" id="hamburguer-btn" aria-label="Menú">
