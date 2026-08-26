@@ -172,17 +172,6 @@ foreach ($pedidos as $pedido) {
 }
 } /* fin correo desactivado */
 
-/* ── Registrar notificación enviada ── */
-$stmtLog = $conexion->prepare("
-    INSERT IGNORE INTO notificaciones_ruta (fecha_menu, id_horario, enviado_en, tipo, total_enviados)
-    VALUES (:fecha, :id_horario, NOW(), 'manual', :total_enviados)
-");
-$stmtLog->execute([
-    ":fecha"          => $fecha,
-    ":id_horario"     => $id_horario,
-    ":total_enviados" => count($pedidos),
-]);
-
 /* ── WhatsApp — notificación masiva de llegada ── */
 $horaBonita = date("g:i A", strtotime($hora_entrega));
 $mensajesWA = [];
@@ -201,6 +190,25 @@ foreach ($pedidos as $p) {
     ];
 }
 $resultadoWA = enviarWhatsAppBulk($mensajesWA);
+
+if (!($resultadoWA["ok"] ?? false)) {
+    echo json_encode([
+        "ok"      => false,
+        "mensaje" => "No se pudo poner en cola el envío de WhatsApp (" . ($resultadoWA["error"] ?? "servicio no disponible") . "). Nada quedó registrado como enviado — puedes reintentar.",
+    ]);
+    exit;
+}
+
+/* ── Registrar notificación enviada (solo si WhatsApp confirmó que la puso en cola) ── */
+$stmtLog = $conexion->prepare("
+    INSERT IGNORE INTO notificaciones_ruta (fecha_menu, id_horario, enviado_en, tipo, total_enviados)
+    VALUES (:fecha, :id_horario, NOW(), 'manual', :total_enviados)
+");
+$stmtLog->execute([
+    ":fecha"          => $fecha,
+    ":id_horario"     => $id_horario,
+    ":total_enviados" => count($pedidos),
+]);
 
 $clientesWA = array_values(array_map(function ($p) {
     return [
