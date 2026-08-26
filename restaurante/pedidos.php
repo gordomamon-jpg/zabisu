@@ -1122,10 +1122,22 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (!data.ok) {
                         mostrarResultadoNotif("error", data.mensaje || "Ocurrió un error.");
                     } else {
-                        var q = data.queued || 0;
-                        var msg = "✅ " + q + " mensaje" + (q !== 1 ? "s" : "") + " enviado" + (q !== 1 ? "s" : "") + " por WhatsApp.";
+                        var enviados  = data.enviados || 0;
+                        var fallidos  = data.fallidos || [];
+                        var total     = data.total || 0;
+                        var tipo      = fallidos.length > 0 ? "advertencia" : "exito";
+                        var msg       = "✅ " + enviados + " de " + total + " mensaje" + (total !== 1 ? "s" : "") + " confirmado" + (enviados !== 1 ? "s" : "") + " por WhatsApp.";
 
-                        // Links manuales plegables como respaldo
+                        if (fallidos.length > 0) {
+                            msg += "<div style='margin-top:8px;color:#c0392b;font-size:13px;'>⚠️ " + fallidos.length + " no se pudo" + (fallidos.length !== 1 ? "ieron" : "") + " confirmar:</div>";
+                            msg += "<ul style='margin:6px 0 0;padding-left:18px;font-size:13px;'>";
+                            fallidos.forEach(function (f) {
+                                msg += "<li>" + f.nombre + " (" + f.folio + ") — " + f.error + "</li>";
+                            });
+                            msg += "</ul>";
+                        }
+
+                        // Links manuales plegables como respaldo — sobre todo útiles para los que fallaron
                         var conTel = (data.clientes || []).filter(function (c) { return c.telefono; });
                         if (conTel.length > 0) {
                             var horaBonita = formatHoraWA(hora);
@@ -1143,7 +1155,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             msg += "</div></details>";
                         }
 
-                        mostrarResultadoNotif("exito", msg);
+                        mostrarResultadoNotif(tipo, msg);
                     }
                 })
                 .catch(function () {

@@ -6,6 +6,18 @@ const path   = require('path');
 let clientReady = false;
 let readyPoller = null;
 
+// Tope por mensaje individual dentro de /send-bulk, para que un envío
+// colgado (sesión degradada) no deje esperando al panel varios minutos —
+// se reporta como fallido y se sigue con el resto del lote.
+const BULK_PER_MESSAGE_TIMEOUT_MS = 20000;
+
+function withTimeout(promise, ms) {
+    return Promise.race([
+        promise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Tiempo de espera agotado')), ms)),
+    ]);
+}
+
 function startReadyPoller() {
     if (readyPoller) return;
     readyPoller = setInterval(async () => {
@@ -118,7 +130,8 @@ const server = http.createServer((req, res) => {
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ ok: true }));
 
-            // POST /send-bulk — envío masivo (responde inmediato, envía en segundo plano)
+            // POST /send-bulk — lotes chicos (notificación de llegada a un punto/horario),
+            // espera a que terminen todos los envíos y regresa el resultado real por número.
             } else if (req.url === '/send-bulk') {
                 if (!clientReady) {
                     res.writeHead(503, { 'Content-Type': 'application/json' });
@@ -126,24 +139,31 @@ const server = http.createServer((req, res) => {
                     return;
                 }
                 const messages = data.messages || [];
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ ok: true, queued: messages.length }));
+                const resultados = [];
 
                 for (const msg of messages) {
                     try {
-                        const numberId = await client.getNumberId(msg.phone);
+                        const numberId = await withTimeout(client.getNumberId(msg.phone), BULK_PER_MESSAGE_TIMEOUT_MS);
                         if (numberId) {
-                            await client.sendMessage(numberId._serialized, msg.message);
+                            await withTimeout(client.sendMessage(numberId._serialized, msg.message), BULK_PER_MESSAGE_TIMEOUT_MS);
                             console.log('📤 Enviado a', msg.phone);
+                            resultados.push({ phone: msg.phone, ok: true });
                         } else {
                             console.warn('⚠️ Número sin WhatsApp:', msg.phone);
+                            resultados.push({ phone: msg.phone, ok: false, error: 'Número no registrado en WhatsApp' });
                         }
                     } catch (e) {
                         console.error('❌ Error enviando a', msg.phone + ':', e.message);
+                        resultados.push({ phone: msg.phone, ok: false, error: e.message });
                     }
                     await new Promise(r => setTimeout(r, 1500));
                 }
-                console.log('✅ Bulk completado:', messages.length, 'mensajes');
+
+                const exitosos = resultados.filter(r => r.ok).length;
+                console.log('✅ Bulk completado:', exitosos, 'de', messages.length, 'mensajes');
+
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ ok: true, queued: messages.length, resultados }));
 
             // POST /send-broadcast — imagen + caption a lista de teléfonos
             } else if (req.url === '/send-broadcast') {
@@ -192,6 +212,10 @@ const server = http.createServer((req, res) => {
         }
     });
 });
+
+// /send-bulk ahora espera a que termine todo el lote antes de responder —
+// sube el timeout del socket para que no se corte a media espera.
+server.setTimeout(600000);
 
 server.listen(3001, '127.0.0.1', () => {
     console.log('🚀 wa-service corriendo en localhost:3001');

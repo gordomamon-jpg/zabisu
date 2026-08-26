@@ -4042,6 +4042,12 @@ input[type="checkbox"] {
     color: var(--zabisu-error-text);
 }
 
+.notificacion-resultado--advertencia {
+    background: rgba(255, 176, 32, 0.1);
+    border: 1px solid rgba(255, 176, 32, 0.35);
+    color: rgba(255, 210, 130, 0.95);
+}
+
 .notif-aviso {
     color: var(--zabisu-gray);
     font-size: 13px;

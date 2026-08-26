@@ -4,6 +4,10 @@ require_once "auth_check.php";
 require_once "../includes/enviar_correo.php";
 require_once "../includes/enviar_whatsapp.php";
 
+// /send-bulk ahora espera la confirmación real de cada mensaje (hasta
+// ~20s por número) antes de responder — el default de 30s se queda corto.
+set_time_limit(310);
+
 header("Content-Type: application/json; charset=UTF-8");
 
 if ($_SERVER["REQUEST_METHOD"] !== "POST") {
@@ -194,12 +198,43 @@ $resultadoWA = enviarWhatsAppBulk($mensajesWA);
 if (!($resultadoWA["ok"] ?? false)) {
     echo json_encode([
         "ok"      => false,
-        "mensaje" => "No se pudo poner en cola el envío de WhatsApp (" . ($resultadoWA["error"] ?? "servicio no disponible") . "). Nada quedó registrado como enviado — puedes reintentar.",
+        "mensaje" => "No se pudo enviar el WhatsApp (" . ($resultadoWA["error"] ?? "servicio no disponible") . "). Nada quedó registrado como enviado — puedes reintentar.",
     ]);
     exit;
 }
 
-/* ── Registrar notificación enviada (solo si WhatsApp confirmó que la puso en cola) ── */
+/* ── Clasificar el resultado real por número (no solo "se puso en cola") ── */
+function nrz_normalizarTel(?string $tel): string
+{
+    $d = preg_replace('/\D/', '', $tel ?? '');
+    if (strlen($d) === 10) $d = '52' . $d;
+    return $d;
+}
+
+$resultadosPorTel = [];
+foreach (($resultadoWA["resultados"] ?? []) as $r) {
+    $resultadosPorTel[$r["phone"]] = $r;
+}
+
+$enviadosOk  = [];
+$fallidos    = [];
+$sinTelefono = [];
+
+foreach ($pedidos as $p) {
+    $telNorm = nrz_normalizarTel($p["telefono"] ?? "");
+    if ($telNorm === "") {
+        $sinTelefono[] = $p;
+        continue;
+    }
+    $r = $resultadosPorTel[$telNorm] ?? null;
+    if ($r && $r["ok"]) {
+        $enviadosOk[] = $p;
+    } else {
+        $fallidos[] = ["pedido" => $p, "error" => $r["error"] ?? "No se pudo confirmar el envío"];
+    }
+}
+
+/* ── Registrar notificación con el conteo REAL de enviados ── */
 $stmtLog = $conexion->prepare("
     INSERT IGNORE INTO notificaciones_ruta (fecha_menu, id_horario, enviado_en, tipo, total_enviados)
     VALUES (:fecha, :id_horario, NOW(), 'manual', :total_enviados)
@@ -207,7 +242,7 @@ $stmtLog = $conexion->prepare("
 $stmtLog->execute([
     ":fecha"          => $fecha,
     ":id_horario"     => $id_horario,
-    ":total_enviados" => count($pedidos),
+    ":total_enviados" => count($enviadosOk),
 ]);
 
 $clientesWA = array_values(array_map(function ($p) {
@@ -219,8 +254,17 @@ $clientesWA = array_values(array_map(function ($p) {
 }, $pedidos));
 
 echo json_encode([
-    "ok"      => true,
-    "total"   => count($pedidos),
-    "queued"  => $resultadoWA['queued'] ?? 0,
-    "clientes" => $clientesWA,
+    "ok"        => true,
+    "total"     => count($pedidos),
+    "enviados"  => count($enviadosOk),
+    "fallidos"  => array_map(function ($f) {
+        return [
+            "nombre"   => $f["pedido"]["nombre_cliente"],
+            "telefono" => $f["pedido"]["telefono"] ?? "",
+            "folio"    => $f["pedido"]["folio"],
+            "error"    => $f["error"],
+        ];
+    }, $fallidos),
+    "sin_telefono" => count($sinTelefono),
+    "clientes"  => $clientesWA,
 ]);

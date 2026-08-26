@@ -46,7 +46,9 @@ function enviarWhatsAppBulk(array $mensajes): array
         CURLOPT_POSTFIELDS     => $payload,
         CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
         CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT        => 10,
+        // /send-bulk ahora espera a que termine todo el lote (hasta ~20s
+        // por número) antes de responder, para regresar el resultado real.
+        CURLOPT_TIMEOUT        => 300,
         CURLOPT_CONNECTTIMEOUT => 3,
     ]);
     $response = curl_exec($ch);
