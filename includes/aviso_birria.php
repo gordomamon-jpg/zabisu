@@ -3,9 +3,12 @@
    Aviso: Birria los jueves
    Popup llamativo que aparece al entrar el cliente para avisar
    que los jueves hay birria. Se muestra una vez por día (localStorage).
-   Para desactivar el aviso por completo: cambiar false por true abajo.
+   Activado puntualmente para jueves 27 de agosto 2026 (y el día
+   previo, avisando con anticipación). Después de esa fecha el
+   aviso se apaga solo — para reactivarlo otra semana, actualizar
+   las fechas del in_array de abajo.
    ────────────────────────────────────────────────────────────── */
-if (false):
+if (in_array(date('Y-m-d'), ['2026-08-26', '2026-08-27'])):
     date_default_timezone_set("America/Mexico_City");
 
     $diaHoyISO = (int)date('N'); // 1=Lunes ... 7=Domingo
