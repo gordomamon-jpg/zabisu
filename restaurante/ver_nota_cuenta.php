@@ -128,11 +128,18 @@ function fmtFecha($f) {
             <div><strong>Día(s) agregado(s) correctamente.</strong></div>
         </div>
         <?php endif; ?>
+        <?php if (isset($_GET["editada"])): ?>
+        <div class="nm-exito" style="margin-bottom:0;">
+            <span class="nm-exito__icono">✓</span>
+            <div><strong>Nota actualizada correctamente.</strong></div>
+        </div>
+        <?php endif; ?>
 
         <!-- ACCIONES -->
         <div class="bloque-formulario">
             <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
                 <a href="agregar_dias_nota.php?id=<?php echo $id; ?>" class="btn-principal">+ Agregar más días</a>
+                <a href="editar_nota_cuenta.php?id=<?php echo $id; ?>" class="btn-limpiar-filtros">✏️ Editar nota</a>
                 <a href="ticket_nota_cuenta.php?id=<?php echo $id; ?>" target="_blank" class="btn-limpiar-filtros">🖨️ Imprimir ticket</a>
                 <button onclick="window.print();" class="btn-limpiar-filtros">📄 Imprimir / PDF</button>
                 <div style="margin-left:auto;">
