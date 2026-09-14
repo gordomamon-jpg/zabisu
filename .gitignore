@@ -20,3 +20,7 @@ Thumbs.db
 /wa-service/wa_session/
 /wa-service/waweb.html
 /wa-service/node_modules/
+/wa-service/.secret
+
+# Estado de login (intentos fallidos) — no es código, se regenera solo
+/config/login_intentos.json

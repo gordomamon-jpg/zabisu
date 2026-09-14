@@ -147,16 +147,24 @@ foreach ($horarios as $horario) {
         }
     }
 
-    /* ── Registrar notificación automática ── */
-    $stmtLog = $conexion->prepare("
-        INSERT IGNORE INTO notificaciones_ruta (fecha_menu, id_horario, enviado_en, tipo, total_enviados)
-        VALUES (:fecha, :id_horario, NOW(), 'automatico', :total_enviados)
-    ");
-    $stmtLog->execute([
-        ":fecha"          => $fechaHoy,
-        ":id_horario"     => $id_horario,
-        ":total_enviados" => $enviados,
-    ]);
+    /*
+        Registrar notificación automática — solo si de verdad se envió algo.
+        El correo al cliente ya no se usa (reemplazado por WhatsApp), así que
+        si $enviados es 0 este cron no mandó nada real; registrar igual
+        pondría el mismo candado que usa "notificar llegada" del panel y
+        bloquearía para siempre el reenvío manual real por WhatsApp.
+    */
+    if ($enviados > 0) {
+        $stmtLog = $conexion->prepare("
+            INSERT IGNORE INTO notificaciones_ruta (fecha_menu, id_horario, enviado_en, tipo, total_enviados)
+            VALUES (:fecha, :id_horario, NOW(), 'automatico', :total_enviados)
+        ");
+        $stmtLog->execute([
+            ":fecha"          => $fechaHoy,
+            ":id_horario"     => $id_horario,
+            ":total_enviados" => $enviados,
+        ]);
+    }
 
     echo "  Total pedidos: " . count($pedidos) . " | Enviados: {$enviados} | Sin correo: {$sinCorreo} | Errores: {$errores}\n";
 }

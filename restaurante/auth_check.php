@@ -1,7 +1,7 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once __DIR__ . "/../includes/seguridad.php";
+iniciarSesionSegura();
+verificarOrigenPeticion();
 
 if (empty($_SESSION["restaurante_auth"])) {
     /*

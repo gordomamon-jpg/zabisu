@@ -144,7 +144,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $diasParaJs = array_values($diasAgrupados);
 }
 
-$diasJson = json_encode($diasParaJs);
+$diasJson = json_encode($diasParaJs, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
 ?>
 <!DOCTYPE html>
 <html lang="es">

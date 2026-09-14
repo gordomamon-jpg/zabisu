@@ -2,6 +2,24 @@ const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
 const http   = require('http');
 const path   = require('path');
+const fs     = require('fs');
+const crypto = require('crypto');
+
+// Token compartido con el PHP que llama a este servicio (includes/enviar_whatsapp.php).
+// Se genera solo una vez y se guarda en un archivo local (fuera de git) para que
+// ambos lados lean el mismo valor sin tener que configurarlo a mano.
+const SECRET_PATH = path.join(__dirname, '.secret');
+let sharedSecret;
+try {
+    sharedSecret = fs.readFileSync(SECRET_PATH, 'utf8').trim();
+} catch (e) {
+    sharedSecret = crypto.randomBytes(24).toString('hex');
+    fs.writeFileSync(SECRET_PATH, sharedSecret, { mode: 0o600 });
+}
+
+function autenticado(req) {
+    return req.headers['x-wa-token'] === sharedSecret;
+}
 
 let clientReady = false;
 let readyPoller = null;
@@ -104,6 +122,12 @@ const server = http.createServer((req, res) => {
     if (req.method !== 'POST') {
         res.writeHead(405);
         res.end();
+        return;
+    }
+
+    if (!autenticado(req)) {
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: 'No autorizado' }));
         return;
     }
 

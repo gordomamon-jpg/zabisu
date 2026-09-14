@@ -1,9 +1,7 @@
 <?php
 require_once "../config/db.php";
-
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once "../includes/seguridad.php";
+iniciarSesionSegura();
 
 /* Si ya está logueado, ir directo al panel */
 if (!empty($_SESSION["restaurante_auth"])) {
@@ -14,28 +12,40 @@ if (!empty($_SESSION["restaurante_auth"])) {
 $error = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    verificarOrigenPeticion();
+
     $usuario  = trim($_POST["usuario"]  ?? "");
     $password = trim($_POST["password"] ?? "");
 
     if ($usuario === "" || $password === "") {
         $error = "Ingresa tu usuario y contraseña.";
     } else {
-        $sql  = "SELECT id_usuario, nombre, password_hash
-                 FROM usuarios_restaurante
-                 WHERE usuario = :usuario AND activo = 1
-                 LIMIT 1";
-        $stmt = $conexion->prepare($sql);
-        $stmt->execute([":usuario" => $usuario]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        [$puedeIntentar, $segundosRestantes] = loginPuedeIntentar($usuario);
 
-        if ($user && password_verify($password, $user["password_hash"])) {
-            $_SESSION["restaurante_auth"]    = true;
-            $_SESSION["restaurante_usuario"] = $user["usuario"];
-            $_SESSION["restaurante_nombre"]  = $user["nombre"];
-            header("Location: panel_general.php");
-            exit;
+        if (!$puedeIntentar) {
+            $minutos = max(1, (int)ceil($segundosRestantes / 60));
+            $error = "Demasiados intentos fallidos. Intenta de nuevo en {$minutos} minuto" . ($minutos === 1 ? "" : "s") . ".";
         } else {
-            $error = "Usuario o contraseña incorrectos.";
+            $sql  = "SELECT id_usuario, nombre, password_hash
+                     FROM usuarios_restaurante
+                     WHERE usuario = :usuario AND activo = 1
+                     LIMIT 1";
+            $stmt = $conexion->prepare($sql);
+            $stmt->execute([":usuario" => $usuario]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($user && password_verify($password, $user["password_hash"])) {
+                loginLimpiarIntentos($usuario);
+                session_regenerate_id(true);
+                $_SESSION["restaurante_auth"]    = true;
+                $_SESSION["restaurante_usuario"] = $user["usuario"];
+                $_SESSION["restaurante_nombre"]  = $user["nombre"];
+                header("Location: panel_general.php");
+                exit;
+            } else {
+                loginRegistrarFallo($usuario);
+                $error = "Usuario o contraseña incorrectos.";
+            }
         }
     }
 }

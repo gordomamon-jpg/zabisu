@@ -1,4 +1,7 @@
-<?php require_once "../config/db.php"; ?>
+<?php
+require_once "../config/db.php";
+require_once "auth_check.php";
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>

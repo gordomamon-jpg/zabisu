@@ -1,6 +1,7 @@
 <?php
 require_once "../config/db.php";
-session_start();
+require_once "../includes/seguridad.php";
+iniciarSesionSegura();
 
 if (empty($_SESSION["pedido_temporal"])) {
     die("No hay un pedido temporal disponible.");
@@ -69,6 +70,8 @@ $errores = [];
 $mensajeExito = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) {
+    verificarOrigenPeticion();
+
     $metodo_pago = trim($_POST["metodo_pago"] ?? "");
 
     if ($metodo_pago === "") {
@@ -79,38 +82,28 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
         $errores[] = "Método de pago no válido.";
     }
 
+    // Extensión de salida decidida por el tipo real del archivo (no por lo
+    // que mande el navegador en el nombre) — evita subir un ejecutable
+    // disfrazado de comprobante.
+    $extensionComprobante = "";
+    $mimesComprobantePermitidos = [
+        "image/jpeg"       => "jpg",
+        "image/png"        => "png",
+        "application/pdf"  => "pdf",
+    ];
+
     if ($metodo_pago === "Transferencia") {
         if (!isset($_FILES["comprobante_pago"]) || $_FILES["comprobante_pago"]["error"] !== 0) {
             $errores[] = "Debes subir el comprobante de pago.";
-        }
-    }
+        } else {
+            $finfo    = finfo_open(FILEINFO_MIME_TYPE);
+            $mimeReal = finfo_file($finfo, $_FILES["comprobante_pago"]["tmp_name"]);
+            finfo_close($finfo);
 
-    if (empty($errores)) {
-        // Verificar que ningún plato fuerte seleccionado haya alcanzado su límite
-        $stmtContPago = $conexion->prepare(
-            "SELECT dp2.id_producto, COUNT(*) AS total
-             FROM detalle_pedido dp2
-             INNER JOIN pedido_menus pm2 ON dp2.id_pedido_menu = pm2.id_pedido_menu
-             INNER JOIN pedidos p2       ON pm2.id_pedido = p2.id_pedido
-             INNER JOIN productos pr2    ON dp2.id_producto = pr2.id_producto
-             WHERE p2.estado != 'Cancelado'
-               AND p2.es_prueba = 0
-               AND pr2.categoria = 'Plato fuerte'
-             GROUP BY dp2.id_producto"
-        );
-        $stmtContPago->execute();
-        $conteosActuales = [];
-        foreach ($stmtContPago->fetchAll(PDO::FETCH_ASSOC) as $fila) {
-            $conteosActuales[(int)$fila["id_producto"]] = (int)$fila["total"];
-        }
-
-        foreach ($menusRecibidos as $numMenu => $menu) {
-            $idPlato = (int)($menu["plato_fuerte"] ?? 0);
-            if (!$idPlato || !isset($productosIndexados[$idPlato])) continue;
-            $prod = $productosIndexados[$idPlato];
-            $limite = isset($prod["limite_pedidos"]) ? (int)$prod["limite_pedidos"] : 0;
-            if ($limite > 0 && ($conteosActuales[$idPlato] ?? 0) >= $limite) {
-                $errores[] = "El plato \"" . htmlspecialchars($prod["nombre"]) . "\" (menú {$numMenu}) ya está agotado. Regresa y elige otro.";
+            if (!isset($mimesComprobantePermitidos[$mimeReal])) {
+                $errores[] = "El comprobante debe ser una imagen (JPG/PNG) o un PDF.";
+            } else {
+                $extensionComprobante = $mimesComprobantePermitidos[$mimeReal];
             }
         }
     }
@@ -118,6 +111,53 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
     if (empty($errores)) {
         try {
             $conexion->beginTransaction();
+
+            // Bloquear las filas de los platos fuertes involucrados: evita
+            // que dos pagos casi simultáneos para el último lugar del mismo
+            // plato pasen ambos la validación de abajo.
+            $idsPlatosLock = [];
+            foreach ($menusRecibidos as $menu) {
+                $idPlato = (int)($menu["plato_fuerte"] ?? 0);
+                if ($idPlato) $idsPlatosLock[] = $idPlato;
+            }
+            $idsPlatosLock = array_values(array_unique($idsPlatosLock));
+            if (!empty($idsPlatosLock)) {
+                $marcadores = implode(",", array_fill(0, count($idsPlatosLock), "?"));
+                $stmtLockProd = $conexion->prepare("SELECT id_producto FROM productos WHERE id_producto IN ($marcadores) FOR UPDATE");
+                $stmtLockProd->execute($idsPlatosLock);
+            }
+
+            // Verificar que ningún plato fuerte seleccionado haya alcanzado su límite
+            $stmtContPago = $conexion->prepare(
+                "SELECT dp2.id_producto, COUNT(*) AS total
+                 FROM detalle_pedido dp2
+                 INNER JOIN pedido_menus pm2 ON dp2.id_pedido_menu = pm2.id_pedido_menu
+                 INNER JOIN pedidos p2       ON pm2.id_pedido = p2.id_pedido
+                 INNER JOIN productos pr2    ON dp2.id_producto = pr2.id_producto
+                 WHERE p2.estado != 'Cancelado'
+                   AND p2.es_prueba = 0
+                   AND pr2.categoria = 'Plato fuerte'
+                 GROUP BY dp2.id_producto"
+            );
+            $stmtContPago->execute();
+            $conteosActuales = [];
+            foreach ($stmtContPago->fetchAll(PDO::FETCH_ASSOC) as $fila) {
+                $conteosActuales[(int)$fila["id_producto"]] = (int)$fila["total"];
+            }
+
+            foreach ($menusRecibidos as $numMenu => $menu) {
+                $idPlato = (int)($menu["plato_fuerte"] ?? 0);
+                if (!$idPlato || !isset($productosIndexados[$idPlato])) continue;
+                $prod = $productosIndexados[$idPlato];
+                $limite = isset($prod["limite_pedidos"]) ? (int)$prod["limite_pedidos"] : 0;
+                if ($limite > 0 && ($conteosActuales[$idPlato] ?? 0) >= $limite) {
+                    $errores[] = "El plato \"" . htmlspecialchars($prod["nombre"]) . "\" (menú {$numMenu}) ya está agotado. Regresa y elige otro.";
+                }
+            }
+
+            if (!empty($errores)) {
+                $conexion->rollBack();
+            } else {
 
             $folio = "ZAB-" . date("Ymd") . "-" . strtoupper(substr(md5(uniqid()), 0, 5));
             $referencia_pago = $folio;
@@ -128,8 +168,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
 
             if ($metodo_pago === "Transferencia") {
                 $nombreOriginal = basename($_FILES["comprobante_pago"]["name"]);
-                $extension = pathinfo($nombreOriginal, PATHINFO_EXTENSION);
-                $nombreArchivo = time() . "_" . preg_replace('/[^A-Za-z0-9_\-]/', '_', pathinfo($nombreOriginal, PATHINFO_FILENAME)) . "." . $extension;
+                $nombreArchivo = time() . "_" . preg_replace('/[^A-Za-z0-9_\-]/', '_', pathinfo($nombreOriginal, PATHINFO_FILENAME)) . "." . $extensionComprobante;
 
                 $carpetaDestino = __DIR__ . "/../uploads/comprobantes/";
 
@@ -258,6 +297,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
 
             header("Location: confirmar.php?folio=" . urlencode($folio));
             exit;
+
+            }
 
         } catch (Exception $e) {
             $conexion->rollBack();

@@ -61,6 +61,40 @@ if ($stmtCheck->fetchColumn()) {
     exit;
 }
 
+/*
+    ── Reservar el candado ANTES de mandar los WhatsApp ──
+    Si dos clics (o dos personas) disparan la acción casi al mismo tiempo,
+    el chequeo de arriba puede pasar en ambos antes de que exista el
+    candado. Al insertarlo aquí (con UNIQUE(fecha_menu, id_horario)), solo
+    una de las dos peticiones lo consigue; la otra recibe el mismo mensaje
+    de "ya fue enviada" en vez de mandar los mensajes por segunda vez.
+*/
+/*
+    total_enviados = -1 marca "reservado, todavía enviando" — el enum
+    `tipo` de esta tabla solo acepta 'manual'/'automatico', así que se usa
+    este valor imposible (nunca hay -1 mensajes reales) como marca temporal.
+*/
+$stmtReservar = $conexion->prepare("
+    INSERT IGNORE INTO notificaciones_ruta (fecha_menu, id_horario, enviado_en, tipo, total_enviados)
+    VALUES (:fecha, :id_horario, NOW(), 'manual', -1)
+");
+$stmtReservar->execute([":fecha" => $fecha, ":id_horario" => $id_horario]);
+if ($stmtReservar->rowCount() === 0) {
+    echo json_encode([
+        "ok"      => false,
+        "mensaje" => "La notificación para esta ubicación y horario ya fue enviada anteriormente."
+    ]);
+    exit;
+}
+
+function nrz_liberarCandado(PDO $conexion, string $fecha, $id_horario): void
+{
+    $conexion->prepare("
+        DELETE FROM notificaciones_ruta
+        WHERE fecha_menu = :fecha AND id_horario = :id_horario AND total_enviados = -1
+    ")->execute([":fecha" => $fecha, ":id_horario" => $id_horario]);
+}
+
 /* ── Obtener pedidos del grupo ── */
 $sql = "SELECT
             p.id_pedido,
@@ -97,6 +131,7 @@ $stmt->execute([
 $pedidos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 if (empty($pedidos)) {
+    nrz_liberarCandado($conexion, $fecha, $id_horario);
     echo json_encode([
         "ok"      => false,
         "mensaje" => "No se encontraron pedidos para esa ubicación, horario y fecha."
@@ -196,6 +231,7 @@ foreach ($pedidos as $p) {
 $resultadoWA = enviarWhatsAppBulk($mensajesWA);
 
 if (!($resultadoWA["ok"] ?? false)) {
+    nrz_liberarCandado($conexion, $fecha, $id_horario);
     echo json_encode([
         "ok"      => false,
         "mensaje" => "No se pudo enviar el WhatsApp (" . ($resultadoWA["error"] ?? "servicio no disponible") . "). Nada quedó registrado como enviado — puedes reintentar.",
@@ -234,10 +270,11 @@ foreach ($pedidos as $p) {
     }
 }
 
-/* ── Registrar notificación con el conteo REAL de enviados ── */
+/* ── Confirmar el candado ya reservado, con el conteo REAL de enviados ── */
 $stmtLog = $conexion->prepare("
-    INSERT IGNORE INTO notificaciones_ruta (fecha_menu, id_horario, enviado_en, tipo, total_enviados)
-    VALUES (:fecha, :id_horario, NOW(), 'manual', :total_enviados)
+    UPDATE notificaciones_ruta
+    SET enviado_en = NOW(), tipo = 'manual', total_enviados = :total_enviados
+    WHERE fecha_menu = :fecha AND id_horario = :id_horario
 ");
 $stmtLog->execute([
     ":fecha"          => $fecha,

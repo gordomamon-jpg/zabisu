@@ -1,5 +1,15 @@
 <?php
 
+function waToken(): string
+{
+    static $token = null;
+    if ($token === null) {
+        $ruta  = __DIR__ . "/../wa-service/.secret";
+        $token = is_readable($ruta) ? trim((string)file_get_contents($ruta)) : "";
+    }
+    return $token;
+}
+
 function enviarWhatsApp(string $telefono, string $mensaje): bool
 {
     $digitos = preg_replace('/\D/', '', $telefono);
@@ -12,7 +22,7 @@ function enviarWhatsApp(string $telefono, string $mensaje): bool
     curl_setopt_array($ch, [
         CURLOPT_POST           => true,
         CURLOPT_POSTFIELDS     => $payload,
-        CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+        CURLOPT_HTTPHEADER     => ['Content-Type: application/json', 'X-WA-Token: ' . waToken()],
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT        => 15,
         CURLOPT_CONNECTTIMEOUT => 3,
@@ -44,7 +54,7 @@ function enviarWhatsAppBulk(array $mensajes): array
     curl_setopt_array($ch, [
         CURLOPT_POST           => true,
         CURLOPT_POSTFIELDS     => $payload,
-        CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+        CURLOPT_HTTPHEADER     => ['Content-Type: application/json', 'X-WA-Token: ' . waToken()],
         CURLOPT_RETURNTRANSFER => true,
         // /send-bulk ahora espera a que termine todo el lote (hasta ~20s
         // por número) antes de responder, para regresar el resultado real.
@@ -78,7 +88,7 @@ function enviarBroadcastWA(array $telefonos, string $caption, ?array $imagen = n
     curl_setopt_array($ch, [
         CURLOPT_POST           => true,
         CURLOPT_POSTFIELDS     => $json,
-        CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+        CURLOPT_HTTPHEADER     => ['Content-Type: application/json', 'X-WA-Token: ' . waToken()],
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT        => 10,
         CURLOPT_CONNECTTIMEOUT => 3,

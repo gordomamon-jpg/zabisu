@@ -14,6 +14,12 @@ $stmtMP->execute();
 $modoPrueba = (int)($stmtMP->fetchColumn() ?? 0);
 
 /*
+    Ventana de fecha para no escanear todo el historial en cada carga —
+    los pedidos aún no vistos siempre se incluyen sin importar su fecha.
+*/
+$fechaMinPedidos = date("Y-m-d", strtotime("-60 days"));
+
+/*
     Obtener pedidos con ubicación y horario
 */
 $sqlBase = "SELECT
@@ -52,9 +58,10 @@ $sqlBase = "SELECT
                ) AS mc ON mc.id_pedido = p.id_pedido";
 
 $sqlPedidos = $sqlBase . " WHERE p.es_prueba = 0
+               AND (COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) >= :fecha_min OR p.visto = 0)
                ORDER BY COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) DESC, p.visto ASC, p.fecha_pedido DESC, p.id_pedido DESC";
 $stmtPedidos = $conexion->prepare($sqlPedidos);
-$stmtPedidos->execute();
+$stmtPedidos->execute([":fecha_min" => $fechaMinPedidos]);
 $pedidos = $stmtPedidos->fetchAll(PDO::FETCH_ASSOC);
 
 $sqlPedidosPrueba = $sqlBase . " WHERE p.es_prueba = 1
@@ -82,7 +89,7 @@ $tabAutoprintJS = json_encode(array_map(function ($p) {
         "folio"     => $p["folio"],
         "num_menus" => (int)$p["num_menus"],
     ];
-}, $tabAutoprint));
+}, $tabAutoprint), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
 
 /*
     Agrupar pedidos por fecha
@@ -109,10 +116,11 @@ $sqlResumenPlatos = "SELECT
                      INNER JOIN productos pr ON pr.id_producto = dp.id_producto
                      LEFT JOIN menu_dia md ON md.id_menu = pr.id_menu
                      WHERE dp.categoria = 'Plato fuerte' AND p.es_prueba = 0
+                       AND (COALESCE(md.fecha, DATE(p.fecha_pedido)) >= :fecha_min OR p.visto = 0)
                      GROUP BY COALESCE(md.fecha, DATE(p.fecha_pedido)), dp.nombre_producto
                      ORDER BY COALESCE(md.fecha, DATE(p.fecha_pedido)) DESC, dp.nombre_producto ASC";
 $stmtResumenPlatos = $conexion->prepare($sqlResumenPlatos);
-$stmtResumenPlatos->execute();
+$stmtResumenPlatos->execute([":fecha_min" => $fechaMinPedidos]);
 $resumenPlatosDB = $stmtResumenPlatos->fetchAll(PDO::FETCH_ASSOC);
 
 $resumenPlatosPorFecha = [];
@@ -142,10 +150,11 @@ $sqlResumenComplementos = "SELECT
                            INNER JOIN productos pr ON pr.id_producto = dp.id_producto
                            LEFT JOIN menu_dia md ON md.id_menu = pr.id_menu
                            WHERE dp.categoria IN ('Complemento', 'Agua') AND p.es_prueba = 0
+                             AND (COALESCE(md.fecha, DATE(p.fecha_pedido)) >= :fecha_min OR p.visto = 0)
                            GROUP BY COALESCE(md.fecha, DATE(p.fecha_pedido)), dp.nombre_producto
                            ORDER BY COALESCE(md.fecha, DATE(p.fecha_pedido)) DESC, dp.nombre_producto ASC";
 $stmtResumenComplementos = $conexion->prepare($sqlResumenComplementos);
-$stmtResumenComplementos->execute();
+$stmtResumenComplementos->execute([":fecha_min" => $fechaMinPedidos]);
 $resumenComplementosDB = $stmtResumenComplementos->fetchAll(PDO::FETCH_ASSOC);
 
 $resumenComplementosPorFecha = [];
@@ -176,10 +185,11 @@ $sqlAguasExtra = "SELECT
                       GROUP BY pm2.id_pedido
                   ) AS mi ON mi.id_pedido = p.id_pedido
                   WHERE pe.categoria = 'Agua' AND p.es_prueba = 0
+                    AND (COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) >= :fecha_min OR p.visto = 0)
                   GROUP BY fecha_grupo, pe.nombre
                   ORDER BY fecha_grupo DESC, pe.nombre ASC";
 $stmtAguasExtra = $conexion->prepare($sqlAguasExtra);
-$stmtAguasExtra->execute();
+$stmtAguasExtra->execute([":fecha_min" => $fechaMinPedidos]);
 foreach ($stmtAguasExtra->fetchAll(PDO::FETCH_ASSOC) as $fila) {
     $fechaGrupo = $fila["fecha_grupo"];
     $nombre     = $fila["nombre_producto"];
@@ -230,11 +240,12 @@ LEFT JOIN (
     GROUP BY pm2.id_pedido
 ) AS mi ON mi.id_pedido = p.id_pedido
 WHERE p.es_prueba = 0 AND p.estado != 'Cancelado'
+  AND (COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) >= :fecha_min OR p.visto = 0)
 GROUP BY fecha_grupo, u.nombre_ubicacion, h.hora_entrega
 ORDER BY fecha_grupo DESC, h.hora_entrega ASC, u.nombre_ubicacion ASC";
 
 $stmtResumenRuta = $conexion->prepare($sqlResumenRuta);
-$stmtResumenRuta->execute();
+$stmtResumenRuta->execute([":fecha_min" => $fechaMinPedidos]);
 $resumenRutaDB = $stmtResumenRuta->fetchAll(PDO::FETCH_ASSOC);
 
 /*
@@ -259,11 +270,12 @@ LEFT JOIN (
     GROUP BY pm2.id_pedido
 ) AS mi ON mi.id_pedido = p.id_pedido
 WHERE p.es_prueba = 0 AND p.estado != 'Cancelado'
+  AND (COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) >= :fecha_min OR p.visto = 0)
 GROUP BY fecha_grupo, u.nombre_ubicacion, h.hora_entrega, pe.nombre
 ORDER BY fecha_grupo DESC, h.hora_entrega ASC, u.nombre_ubicacion ASC, pe.nombre ASC";
 
 $stmtExtrasRuta = $conexion->prepare($sqlExtrasRuta);
-$stmtExtrasRuta->execute();
+$stmtExtrasRuta->execute([":fecha_min" => $fechaMinPedidos]);
 $extrasRutaDB = $stmtExtrasRuta->fetchAll(PDO::FETCH_ASSOC);
 
 // Indexar: [fecha][ubicacion||hora] = ['nombre_ubicacion', 'hora_entrega', 'total_menus', 'extras']

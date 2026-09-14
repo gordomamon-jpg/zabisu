@@ -1,6 +1,7 @@
 <?php
 require_once "../config/db.php";
-session_start();
+require_once "../includes/seguridad.php";
+iniciarSesionSegura();
 
 /*
     Modo prueba: omite restricción de horario para poder simular pedidos

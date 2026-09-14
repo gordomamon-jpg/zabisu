@@ -144,7 +144,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     ]);
 }
 
-$itemsJson = json_encode(array_values($itemsExistentes));
+$itemsJson = json_encode(array_values($itemsExistentes), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP);
 ?>
 <!DOCTYPE html>
 <html lang="es">

@@ -532,12 +532,18 @@ try {
                . "Te avisaremos cuando tu pedido llegue al punto de entrega.\n"
                . "_Zabisu — Sabor y Servicio_";
 
+        // Solo se marca como enviado si el WhatsApp realmente salió (o si no
+        // había teléfono al que mandarlo, para no reintentar por siempre algo
+        // imposible) — mismo patrón que ya se corrigió en notificar_ruta.php.
+        $waConfirmado = true;
         if (!empty($pedido["telefono"])) {
-            enviarWhatsApp($pedido["telefono"], $waMsg);
+            $waConfirmado = enviarWhatsApp($pedido["telefono"], $waMsg);
         }
 
-        $conexion->prepare("UPDATE pedidos SET correo_enviado = 1 WHERE id_pedido = :id")
-                 ->execute([":id" => $id_pedido]);
+        if ($waConfirmado) {
+            $conexion->prepare("UPDATE pedidos SET correo_enviado = 1 WHERE id_pedido = :id")
+                     ->execute([":id" => $id_pedido]);
+        }
     }
 
     /*
@@ -593,23 +599,33 @@ try {
              VALUES (:id_item, 'descuento', :cantidad, :id_pedido)"
         );
 
-        foreach ($descuentos as $id_item => $cantidad) {
-            if ($cantidad > 0) {
-                $stmtDescItem->execute([
-                    ":cantidad" => $cantidad,
-                    ":id_item"  => $id_item,
-                ]);
-                $stmtInsertMov->execute([
-                    ":id_item"   => $id_item,
-                    ":cantidad"  => -$cantidad,
-                    ":id_pedido" => $id_pedido,
-                ]);
+        // Transacción propia para este bloque: si algo falla a la mitad,
+        // ningún artículo queda descontado dos veces en un reintento.
+        $conexion->beginTransaction();
+        try {
+            foreach ($descuentos as $id_item => $cantidad) {
+                if ($cantidad > 0) {
+                    $stmtDescItem->execute([
+                        ":cantidad" => $cantidad,
+                        ":id_item"  => $id_item,
+                    ]);
+                    $stmtInsertMov->execute([
+                        ":id_item"   => $id_item,
+                        ":cantidad"  => -$cantidad,
+                        ":id_pedido" => $id_pedido,
+                    ]);
+                }
             }
-        }
 
-        $conexion->prepare(
-            "UPDATE pedidos SET inventario_descontado = 1 WHERE id_pedido = :id_pedido"
-        )->execute([":id_pedido" => $id_pedido]);
+            $conexion->prepare(
+                "UPDATE pedidos SET inventario_descontado = 1 WHERE id_pedido = :id_pedido"
+            )->execute([":id_pedido" => $id_pedido]);
+
+            $conexion->commit();
+        } catch (Exception $e) {
+            $conexion->rollBack();
+            throw $e;
+        }
     }
 
     header("Location: ticket.php?id=" . urlencode($id_pedido));
