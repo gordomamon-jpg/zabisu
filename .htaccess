@@ -25,10 +25,21 @@ RewriteRule ^$ /cliente/menu.php [L,R=302]
 </Files>
 
 
-# ── Ocultar errores PHP en producción ────────────────────────
+# ── Ocultar errores PHP en producción + límites sanos ─────────
+# El servidor traía memory_limit y max_execution_time sin tope (-1 y 0):
+# un script con un bug podría consumir toda la RAM o quedarse corriendo
+# para siempre, ocupando un worker de Apache indefinidamente. El límite de
+# subida de archivos (2MB por defecto) también se queda corto para una
+# foto de comprobante tomada con el celular — se sube a los mismos valores
+# que ya usa restaurante/.htaccess, para que cliente/ (donde el cliente
+# sube su comprobante de pago) tenga el mismo margen.
 <IfModule mod_php.c>
     php_flag display_errors off
     php_value error_reporting 0
+    php_value memory_limit 128M
+    php_value max_execution_time 60
+    php_value upload_max_filesize 20M
+    php_value post_max_size 25M
 </IfModule>
 
 # ── Compresión de texto/CSS/JS ────────────────────────────────
