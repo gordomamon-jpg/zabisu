@@ -1133,51 +1133,104 @@ document.addEventListener("DOMContentLoaded", function () {
                 .then(function (data) {
                     if (!data.ok) {
                         mostrarResultadoNotif("error", data.mensaje || "Ocurrió un error.");
-                    } else {
-                        var enviados  = data.enviados || 0;
-                        var fallidos  = data.fallidos || [];
-                        var total     = data.total || 0;
-                        var tipo      = fallidos.length > 0 ? "advertencia" : "exito";
-                        var msg       = "✅ " + enviados + " de " + total + " mensaje" + (total !== 1 ? "s" : "") + " confirmado" + (enviados !== 1 ? "s" : "") + " por WhatsApp.";
-
-                        if (fallidos.length > 0) {
-                            msg += "<div style='margin-top:8px;color:#c0392b;font-size:13px;'>⚠️ " + fallidos.length + " no se pudo" + (fallidos.length !== 1 ? "ieron" : "") + " confirmar:</div>";
-                            msg += "<ul style='margin:6px 0 0;padding-left:18px;font-size:13px;'>";
-                            fallidos.forEach(function (f) {
-                                msg += "<li>" + f.nombre + " (" + f.folio + ") — " + f.error + "</li>";
-                            });
-                            msg += "</ul>";
-                        }
-
-                        // Links manuales plegables como respaldo — sobre todo útiles para los que fallaron
-                        var conTel = (data.clientes || []).filter(function (c) { return c.telefono; });
-                        if (conTel.length > 0) {
-                            var horaBonita = formatHoraWA(hora);
-                            msg += "<details style='margin-top:12px;'><summary style='cursor:pointer;font-size:13px;opacity:.55;'>Ver links manuales (respaldo)</summary><div style='margin-top:8px;'>";
-                            conTel.forEach(function (cliente) {
-                                var tel   = normalizarTelefono(cliente.telefono || "");
-                                var texto = encodeURIComponent(
-                                    "Hola *" + cliente.nombre + "* 📍 Tu pedido Zabisu *" + cliente.folio +
-                                    "* ya llegó a *" + ubicacion + "*. ¡Pasa a recogerlo antes de las " + horaBonita + "! 🍱"
-                                );
-                                if (tel) {
-                                    msg += "<a href='https://wa.me/" + tel + "?text=" + texto + "' target='_blank' style='display:block;margin:4px 0;padding:8px 12px;background:#25D366;color:#fff;border-radius:8px;text-decoration:none;font-size:13px;'>📱 " + cliente.nombre + " · " + cliente.folio + "</a>";
-                                }
-                            });
-                            msg += "</div></details>";
-                        }
-
-                        mostrarResultadoNotif(tipo, msg);
+                        restablecerBotonNotif();
+                        return;
                     }
+
+                    // El envío real ya no bloquea esta petición — se hace en
+                    // segundo plano en wa-service. Se avisa de inmediato y se
+                    // consulta el resultado real cada pocos segundos, sin
+                    // dejar el panel colgado ni ocupar el servidor.
+                    var total = data.total || 0;
+                    btnEnviarNotif.textContent = "Enviando…";
+                    mostrarResultadoNotif("info", "📨 Enviando WhatsApp a " + total + " cliente" + (total !== 1 ? "s" : "") + "… puedes seguir usando el panel mientras tanto.");
+                    consultarEstadoNotificacion(data.job_id, fecha, ubicacion, hora, 0);
                 })
                 .catch(function () {
                     mostrarResultadoNotif("error", "No se pudo conectar con el servidor.");
-                })
-                .finally(function () {
-                    btnEnviarNotif.disabled    = false;
-                    btnEnviarNotif.textContent = "Notificar llegada por WhatsApp";
+                    restablecerBotonNotif();
                 });
         });
+    }
+
+    function restablecerBotonNotif() {
+        if (!btnEnviarNotif) return;
+        btnEnviarNotif.disabled    = false;
+        btnEnviarNotif.textContent = "Notificar llegada por WhatsApp";
+    }
+
+    function consultarEstadoNotificacion(jobId, fecha, ubicacion, hora, intento) {
+        // Tope de ~6 minutos de reintentos (120 x 3s) — más que suficiente
+        // incluso en el peor caso conocido de sesión de WhatsApp degradada.
+        if (intento > 120) {
+            mostrarResultadoNotif("error", "No se pudo confirmar el envío después de varios minutos. Revisa el resumen de ruta o reintenta más tarde.");
+            restablecerBotonNotif();
+            return;
+        }
+
+        const datos = new FormData();
+        datos.append("job_id",           jobId);
+        datos.append("fecha",            fecha);
+        datos.append("nombre_ubicacion", ubicacion);
+        datos.append("hora_entrega",     hora);
+
+        fetch("notificar_ruta_estado.php", { method: "POST", body: datos })
+            .then(r => r.json())
+            .then(function (data) {
+                if (!data.ok) {
+                    mostrarResultadoNotif("error", data.mensaje || "No se pudo confirmar el envío.");
+                    restablecerBotonNotif();
+                    return;
+                }
+
+                if (data.en_proceso) {
+                    setTimeout(function () {
+                        consultarEstadoNotificacion(jobId, fecha, ubicacion, hora, intento + 1);
+                    }, 3000);
+                    return;
+                }
+
+                var enviados  = data.enviados || 0;
+                var fallidos  = data.fallidos || [];
+                var total     = data.total || 0;
+                var tipo      = fallidos.length > 0 ? "advertencia" : "exito";
+                var msg       = "✅ " + enviados + " de " + total + " mensaje" + (total !== 1 ? "s" : "") + " confirmado" + (enviados !== 1 ? "s" : "") + " por WhatsApp.";
+
+                if (fallidos.length > 0) {
+                    msg += "<div style='margin-top:8px;color:#c0392b;font-size:13px;'>⚠️ " + fallidos.length + " no se pudo" + (fallidos.length !== 1 ? "ieron" : "") + " confirmar:</div>";
+                    msg += "<ul style='margin:6px 0 0;padding-left:18px;font-size:13px;'>";
+                    fallidos.forEach(function (f) {
+                        msg += "<li>" + f.nombre + " (" + f.folio + ") — " + f.error + "</li>";
+                    });
+                    msg += "</ul>";
+                }
+
+                // Links manuales plegables como respaldo — sobre todo útiles para los que fallaron
+                var conTel = (data.clientes || []).filter(function (c) { return c.telefono; });
+                if (conTel.length > 0) {
+                    var horaBonita = formatHoraWA(hora);
+                    msg += "<details style='margin-top:12px;'><summary style='cursor:pointer;font-size:13px;opacity:.55;'>Ver links manuales (respaldo)</summary><div style='margin-top:8px;'>";
+                    conTel.forEach(function (cliente) {
+                        var tel   = normalizarTelefono(cliente.telefono || "");
+                        var texto = encodeURIComponent(
+                            "Hola *" + cliente.nombre + "* 📍 Tu pedido Zabisu *" + cliente.folio +
+                            "* ya llegó a *" + ubicacion + "*. ¡Pasa a recogerlo antes de las " + horaBonita + "! 🍱"
+                        );
+                        if (tel) {
+                            msg += "<a href='https://wa.me/" + tel + "?text=" + texto + "' target='_blank' style='display:block;margin:4px 0;padding:8px 12px;background:#25D366;color:#fff;border-radius:8px;text-decoration:none;font-size:13px;'>📱 " + cliente.nombre + " · " + cliente.folio + "</a>";
+                        }
+                    });
+                    msg += "</div></details>";
+                }
+
+                mostrarResultadoNotif(tipo, msg);
+                restablecerBotonNotif();
+            })
+            .catch(function () {
+                setTimeout(function () {
+                    consultarEstadoNotificacion(jobId, fecha, ubicacion, hora, intento + 1);
+                }, 5000);
+            });
     }
 
     function mostrarResultadoNotif(tipo, html) {

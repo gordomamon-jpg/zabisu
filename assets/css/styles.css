@@ -4048,6 +4048,12 @@ input[type="checkbox"] {
     color: rgba(255, 210, 130, 0.95);
 }
 
+.notificacion-resultado--info {
+    background: rgba(90, 170, 255, 0.1);
+    border: 1px solid rgba(90, 170, 255, 0.35);
+    color: rgba(160, 210, 255, 0.95);
+}
+
 .notif-aviso {
     color: var(--zabisu-gray);
     font-size: 13px;

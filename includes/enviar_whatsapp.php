@@ -56,9 +56,10 @@ function enviarWhatsAppBulk(array $mensajes): array
         CURLOPT_POSTFIELDS     => $payload,
         CURLOPT_HTTPHEADER     => ['Content-Type: application/json', 'X-WA-Token: ' . waToken()],
         CURLOPT_RETURNTRANSFER => true,
-        // /send-bulk ahora espera a que termine todo el lote (hasta ~20s
-        // por número) antes de responder, para regresar el resultado real.
-        CURLOPT_TIMEOUT        => 300,
+        // /send-bulk ahora solo encola el envío y responde de inmediato con
+        // un job_id — el envío real ocurre en segundo plano en wa-service y
+        // se consulta con consultarEstadoWhatsAppBulk().
+        CURLOPT_TIMEOUT        => 10,
         CURLOPT_CONNECTTIMEOUT => 3,
     ]);
     $response = curl_exec($ch);
@@ -67,6 +68,27 @@ function enviarWhatsAppBulk(array $mensajes): array
 
     if ($err || !$response) return ['ok' => false, 'queued' => 0, 'error' => 'Servicio WA no disponible'];
     return json_decode($response, true) ?? ['ok' => false, 'queued' => 0];
+}
+
+function consultarEstadoWhatsAppBulk(string $jobId): array
+{
+    $payload = json_encode(['job_id' => $jobId]);
+
+    $ch = curl_init('http://127.0.0.1:3001/bulk-status');
+    curl_setopt_array($ch, [
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => $payload,
+        CURLOPT_HTTPHEADER     => ['Content-Type: application/json', 'X-WA-Token: ' . waToken()],
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 10,
+        CURLOPT_CONNECTTIMEOUT => 3,
+    ]);
+    $response = curl_exec($ch);
+    $err      = curl_error($ch);
+    curl_close($ch);
+
+    if ($err || !$response) return ['ok' => false, 'error' => 'Servicio WA no disponible'];
+    return json_decode($response, true) ?? ['ok' => false, 'error' => 'Respuesta inválida del servicio WA'];
 }
 
 function enviarBroadcastWA(array $telefonos, string $caption, ?array $imagen = null): array

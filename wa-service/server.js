@@ -36,6 +36,40 @@ function withTimeout(promise, ms) {
     ]);
 }
 
+// Trabajos de /send-bulk en curso — permite responder de inmediato al panel
+// y que el envío real (que puede tardar varios minutos) ocurra en segundo
+// plano sin dejar ocupado el proceso PHP que lo pidió.
+const bulkJobs = new Map();
+
+async function procesarBulkEnSegundoPlano(jobId, messages) {
+    const resultados = [];
+
+    for (const msg of messages) {
+        try {
+            const numberId = await withTimeout(client.getNumberId(msg.phone), BULK_PER_MESSAGE_TIMEOUT_MS);
+            if (numberId) {
+                await withTimeout(client.sendMessage(numberId._serialized, msg.message), BULK_PER_MESSAGE_TIMEOUT_MS);
+                console.log('📤 Enviado a', msg.phone);
+                resultados.push({ phone: msg.phone, ok: true });
+            } else {
+                console.warn('⚠️ Número sin WhatsApp:', msg.phone);
+                resultados.push({ phone: msg.phone, ok: false, error: 'Número no registrado en WhatsApp' });
+            }
+        } catch (e) {
+            console.error('❌ Error enviando a', msg.phone + ':', e.message);
+            resultados.push({ phone: msg.phone, ok: false, error: e.message });
+        }
+        await new Promise(r => setTimeout(r, 1500));
+    }
+
+    const exitosos = resultados.filter(r => r.ok).length;
+    console.log('✅ Bulk completado:', exitosos, 'de', messages.length, 'mensajes (job ' + jobId + ')');
+
+    bulkJobs.set(jobId, { status: 'done', total: messages.length, resultados });
+    // Limpieza — nadie debería tardar más de unos minutos en consultarlo.
+    setTimeout(() => bulkJobs.delete(jobId), 15 * 60 * 1000);
+}
+
 function startReadyPoller() {
     if (readyPoller) return;
     readyPoller = setInterval(async () => {
@@ -154,8 +188,11 @@ const server = http.createServer((req, res) => {
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ ok: true }));
 
-            // POST /send-bulk — lotes chicos (notificación de llegada a un punto/horario),
-            // espera a que terminen todos los envíos y regresa el resultado real por número.
+            // POST /send-bulk — lotes chicos (notificación de llegada a un punto/horario).
+            // Responde de inmediato con un job_id; el envío real (que puede tardar varios
+            // minutos si la sesión está degradada) ocurre en segundo plano para no dejar
+            // esperando al proceso PHP que lo pidió. El resultado real se consulta en
+            // /bulk-status.
             } else if (req.url === '/send-bulk') {
                 if (!clientReady) {
                     res.writeHead(503, { 'Content-Type': 'application/json' });
@@ -163,31 +200,25 @@ const server = http.createServer((req, res) => {
                     return;
                 }
                 const messages = data.messages || [];
-                const resultados = [];
-
-                for (const msg of messages) {
-                    try {
-                        const numberId = await withTimeout(client.getNumberId(msg.phone), BULK_PER_MESSAGE_TIMEOUT_MS);
-                        if (numberId) {
-                            await withTimeout(client.sendMessage(numberId._serialized, msg.message), BULK_PER_MESSAGE_TIMEOUT_MS);
-                            console.log('📤 Enviado a', msg.phone);
-                            resultados.push({ phone: msg.phone, ok: true });
-                        } else {
-                            console.warn('⚠️ Número sin WhatsApp:', msg.phone);
-                            resultados.push({ phone: msg.phone, ok: false, error: 'Número no registrado en WhatsApp' });
-                        }
-                    } catch (e) {
-                        console.error('❌ Error enviando a', msg.phone + ':', e.message);
-                        resultados.push({ phone: msg.phone, ok: false, error: e.message });
-                    }
-                    await new Promise(r => setTimeout(r, 1500));
-                }
-
-                const exitosos = resultados.filter(r => r.ok).length;
-                console.log('✅ Bulk completado:', exitosos, 'de', messages.length, 'mensajes');
+                const jobId = crypto.randomBytes(8).toString('hex');
+                bulkJobs.set(jobId, { status: 'processing', total: messages.length, resultados: [] });
 
                 res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ ok: true, queued: messages.length, resultados }));
+                res.end(JSON.stringify({ ok: true, job_id: jobId, total: messages.length }));
+
+                procesarBulkEnSegundoPlano(jobId, messages);
+
+            // GET /bulk-status (vía POST, como el resto de este servicio) — consulta el
+            // resultado de un job de /send-bulk.
+            } else if (req.url === '/bulk-status') {
+                const job = bulkJobs.get(data.job_id);
+                if (!job) {
+                    res.writeHead(404, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ ok: false, error: 'job_id no encontrado o ya expiró' }));
+                    return;
+                }
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ ok: true, status: job.status, total: job.total, resultados: job.resultados }));
 
             // POST /send-broadcast — imagen + caption a lista de teléfonos
             } else if (req.url === '/send-broadcast') {

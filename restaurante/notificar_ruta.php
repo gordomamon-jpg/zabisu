@@ -4,10 +4,6 @@ require_once "auth_check.php";
 require_once "../includes/enviar_correo.php";
 require_once "../includes/enviar_whatsapp.php";
 
-// /send-bulk ahora espera la confirmación real de cada mensaje (hasta
-// ~20s por número) antes de responder — el default de 30s se queda corto.
-set_time_limit(310);
-
 header("Content-Type: application/json; charset=UTF-8");
 
 if ($_SERVER["REQUEST_METHOD"] !== "POST") {
@@ -228,6 +224,13 @@ foreach ($pedidos as $p) {
                    . "_Zabisu — Sabor y Servicio_",
     ];
 }
+/*
+    enviarWhatsAppBulk() ya no espera a que termine todo el lote — solo lo
+    encola en wa-service y regresa un job_id de inmediato. Así este proceso
+    PHP (y el worker de Apache que lo atiende) no queda ocupado hasta 5
+    minutos si la sesión de WhatsApp está lenta. El panel consulta el
+    resultado real después con notificar_ruta_estado.php.
+*/
 $resultadoWA = enviarWhatsAppBulk($mensajesWA);
 
 if (!($resultadoWA["ok"] ?? false)) {
@@ -239,69 +242,9 @@ if (!($resultadoWA["ok"] ?? false)) {
     exit;
 }
 
-/* ── Clasificar el resultado real por número (no solo "se puso en cola") ── */
-function nrz_normalizarTel(?string $tel): string
-{
-    $d = preg_replace('/\D/', '', $tel ?? '');
-    if (strlen($d) === 10) $d = '52' . $d;
-    return $d;
-}
-
-$resultadosPorTel = [];
-foreach (($resultadoWA["resultados"] ?? []) as $r) {
-    $resultadosPorTel[$r["phone"]] = $r;
-}
-
-$enviadosOk  = [];
-$fallidos    = [];
-$sinTelefono = [];
-
-foreach ($pedidos as $p) {
-    $telNorm = nrz_normalizarTel($p["telefono"] ?? "");
-    if ($telNorm === "") {
-        $sinTelefono[] = $p;
-        continue;
-    }
-    $r = $resultadosPorTel[$telNorm] ?? null;
-    if ($r && $r["ok"]) {
-        $enviadosOk[] = $p;
-    } else {
-        $fallidos[] = ["pedido" => $p, "error" => $r["error"] ?? "No se pudo confirmar el envío"];
-    }
-}
-
-/* ── Confirmar el candado ya reservado, con el conteo REAL de enviados ── */
-$stmtLog = $conexion->prepare("
-    UPDATE notificaciones_ruta
-    SET enviado_en = NOW(), tipo = 'manual', total_enviados = :total_enviados
-    WHERE fecha_menu = :fecha AND id_horario = :id_horario
-");
-$stmtLog->execute([
-    ":fecha"          => $fecha,
-    ":id_horario"     => $id_horario,
-    ":total_enviados" => count($enviadosOk),
-]);
-
-$clientesWA = array_values(array_map(function ($p) {
-    return [
-        "nombre"   => $p["nombre_cliente"],
-        "telefono" => $p["telefono"] ?? "",
-        "folio"    => $p["folio"],
-    ];
-}, $pedidos));
-
 echo json_encode([
-    "ok"        => true,
-    "total"     => count($pedidos),
-    "enviados"  => count($enviadosOk),
-    "fallidos"  => array_map(function ($f) {
-        return [
-            "nombre"   => $f["pedido"]["nombre_cliente"],
-            "telefono" => $f["pedido"]["telefono"] ?? "",
-            "folio"    => $f["pedido"]["folio"],
-            "error"    => $f["error"],
-        ];
-    }, $fallidos),
-    "sin_telefono" => count($sinTelefono),
-    "clientes"  => $clientesWA,
+    "ok"         => true,
+    "en_proceso" => true,
+    "job_id"     => $resultadoWA["job_id"] ?? "",
+    "total"      => count($mensajesWA),
 ]);
