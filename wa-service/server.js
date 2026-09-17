@@ -14,7 +14,11 @@ try {
     sharedSecret = fs.readFileSync(SECRET_PATH, 'utf8').trim();
 } catch (e) {
     sharedSecret = crypto.randomBytes(24).toString('hex');
-    fs.writeFileSync(SECRET_PATH, sharedSecret, { mode: 0o600 });
+    // 0o644 (no 0o600): este proceso corre como root vía pm2, pero PHP
+    // corre como www-data y necesita poder leer el archivo para mandar
+    // el token en cada llamada — con 0o600 www-data se queda sin acceso
+    // y todas las peticiones de PHP terminan rechazadas en silencio.
+    fs.writeFileSync(SECRET_PATH, sharedSecret, { mode: 0o644 });
 }
 
 function autenticado(req) {
