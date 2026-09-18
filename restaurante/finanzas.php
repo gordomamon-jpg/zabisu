@@ -58,7 +58,7 @@ function fmtFecha(string $fecha): string {
 
 // ── Datos base ────────────────────────────────────────────
 $hoy        = date('Y-m-d');
-$categorias = ['Ingredientes', 'Empaque y desechables', 'Gas / Transporte', 'Servicios', 'Varios'];
+$categorias = ['Ingredientes', 'Empaque y desechables', 'Gas / Transporte', 'Servicios', 'Nómina', 'Varios'];
 $dowHoy     = (int)date('N');
 $lunesActual = getLunes($hoy);
 
@@ -123,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['guardar_gasto'])) {
             ':monto' => (float)$monto_raw,
             ':notas' => $notas !== '' ? $notas : null,
         ]);
-        header('Location: finanzas.php?ok=gasto#gastos');
+        header('Location: finanzas.php?tab=gastos&ok=gasto');
         exit;
     }
 }
@@ -573,6 +573,7 @@ $mostrarExito = isset($_GET['ok']);
 .cat-Empaque      { background: rgba(78,205,196,0.15); color: #4ecdc4; }
 .cat-Gas          { background: rgba(255,230,109,0.15); color: #ffe66d; }
 .cat-Servicios    { background: rgba(162,155,254,0.15); color: #a29bfe; }
+.cat-Nómina       { background: rgba(74,144,226,0.15); color: #6ab0ff; }
 .cat-Varios       { background: rgba(167,167,173,0.12); color: #a7a7ad; }
 .gastos-filtro {
     display: flex; align-items: center; gap: 10px;
