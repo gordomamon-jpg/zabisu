@@ -104,7 +104,7 @@ if ($accion === "broadcast") {
 
     // Obtener todos los teléfonos activos
     $stmt = $conexion->query(
-        "SELECT telefono FROM difusion_contactos WHERE activo = 1"
+        "SELECT telefono FROM difusion_contactos WHERE activo = 1 ORDER BY nombre ASC, telefono ASC"
     );
     $telefonos = $stmt->fetchAll(PDO::FETCH_COLUMN);
 
