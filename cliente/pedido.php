@@ -1,6 +1,7 @@
 <?php
 require_once "../config/db.php";
 require_once "../includes/seguridad.php";
+require_once "../includes/limite_platos.php";
 iniciarSesionSegura();
 
 /*
@@ -402,8 +403,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
         }
         if ($plato_fuerte === "") {
             $erroresMenus[$numeroMenu][] = "Falta seleccionar el plato fuerte.";
-        } elseif (isset($productosIndexados[$plato_fuerte]) && !empty($productosIndexados[$plato_fuerte]["agotado"])) {
-            $erroresMenus[$numeroMenu][] = "El plato fuerte seleccionado ya está agotado. Por favor elige otro.";
         }
         if (empty($complementos)) $erroresMenus[$numeroMenu][] = "Falta seleccionar al menos un complemento.";
         $maxComp = ($plato_fuerte !== "" && isset($productosIndexados[$plato_fuerte]) && !empty($productosIndexados[$plato_fuerte]["complementos_max"]))
@@ -427,6 +426,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
             }
             if ($productosIndexados[$idProducto]["tipo_menu"] !== $tipo_menu) {
                 $erroresMenus[$numeroMenu][] = "Hay un producto que no corresponde al tipo de menú seleccionado.";
+            }
+        }
+    }
+
+    // Cupo: sumar cuántos menús de este pedido llevan el mismo plato
+    $platosPedido = [];
+    foreach ($menusRecibidos as $menu) {
+        $idPlato = (int)($menu["plato_fuerte"] ?? 0);
+        if ($idPlato) $platosPedido[$idPlato] = ($platosPedido[$idPlato] ?? 0) + 1;
+    }
+    foreach (validarCupoPlatos($conexion, $platosPedido) as $idPlato => $info) {
+        foreach ($menusRecibidos as $numeroMenu => $menu) {
+            if ((int)($menu["plato_fuerte"] ?? 0) === $idPlato) {
+                $erroresMenus[$numeroMenu][] = mensajeCupoPlato($info);
             }
         }
     }

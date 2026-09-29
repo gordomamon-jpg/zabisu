@@ -1,5 +1,6 @@
 <?php
 require_once "../config/db.php";
+require_once "../includes/limite_platos.php";
 date_default_timezone_set("America/Mexico_City");
 
 /* ── Modo prueba ── */
@@ -137,7 +138,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["ordenar"])) {
             } else {
                 $prod = $productosIndexados[$platoFuerte];
                 if ($prod["tipo_menu"] !== $tipoMenu) $erroresPersonas[$nPersona][] = "El guisado no corresponde al tipo de menú elegido.";
-                if ($prod["agotado"])                 $erroresPersonas[$nPersona][] = "El guisado seleccionado está agotado.";
             }
         }
 
@@ -155,109 +155,138 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["ordenar"])) {
         }
     }
 
+    // Cupo: sumar cuántas personas de este pedido llevan el mismo guisado
+    $platosPedido = [];
+    for ($i = 0; $i < $cantidadPersonas; $i++) {
+        $idPlato = (int)($personas[$i]["plato_fuerte"] ?? 0);
+        if ($idPlato) $platosPedido[$idPlato] = ($platosPedido[$idPlato] ?? 0) + 1;
+    }
+    foreach (validarCupoPlatos($conexion, $platosPedido) as $idPlato => $info) {
+        for ($i = 0; $i < $cantidadPersonas; $i++) {
+            if ((int)($personas[$i]["plato_fuerte"] ?? 0) === $idPlato) {
+                $erroresPersonas[$i + 1][] = mensajeCupoPlato($info);
+            }
+        }
+    }
+
     foreach ($erroresPersonas as $n => $errs) {
         foreach ($errs as $e) $errores[] = "Persona {$n}: {$e}";
     }
 
     if (empty($errores) && $horarioBigoton && $menuActivo) {
+        try {
+            $conexion->beginTransaction();
 
-        /* Total */
-        $total = 0.0;
-        for ($i = 0; $i < $cantidadPersonas; $i++) {
-            $total += $preciosMenus[trim($personas[$i]["tipo_menu"] ?? "")] ?? 0;
-        }
+            // Re-validar el cupo con las filas bloqueadas (evita que dos
+            // pedidos simultáneos por los últimos lugares pasen los dos)
+            $sinCupo = validarCupoPlatos($conexion, $platosPedido, true);
+            if (!empty($sinCupo)) {
+                throw new RuntimeException(mensajeCupoPlato(reset($sinCupo)));
+            }
 
-        /* Observaciones: lista de nombres */
-        $nombresObs = [];
-        for ($i = 0; $i < $cantidadPersonas; $i++) {
-            $nombresObs[] = "Menú " . ($i + 1) . " – " . trim($personas[$i]["nombre"]);
-        }
-        $observaciones = implode(" / ", $nombresObs);
+            /* Total */
+            $total = 0.0;
+            for ($i = 0; $i < $cantidadPersonas; $i++) {
+                $total += $preciosMenus[trim($personas[$i]["tipo_menu"] ?? "")] ?? 0;
+            }
 
-        /* Folio */
-        $folio = "BIG-" . strtoupper(substr(uniqid(), -6));
+            /* Observaciones: lista de nombres */
+            $nombresObs = [];
+            for ($i = 0; $i < $cantidadPersonas; $i++) {
+                $nombresObs[] = "Menú " . ($i + 1) . " – " . trim($personas[$i]["nombre"]);
+            }
+            $observaciones = implode(" / ", $nombresObs);
 
-        /* Insertar pedido */
-        $stmtIns = $conexion->prepare(
-            "INSERT INTO pedidos
-                 (folio, nombre_cliente, telefono, correo_cliente, id_horario,
-                  metodo_pago, estado_pago, total, observaciones, es_prueba, fecha_pedido)
-             VALUES
-                 (:folio, 'El Bigoton', '0000000000', :correo, :id_horario,
-                  'Efectivo', 'Pago en efectivo', :total, :obs, :es_prueba, NOW())"
-        );
-        $stmtIns->execute([
-            ":folio"      => $folio,
-            ":correo"     => $correo,
-            ":id_horario" => $horarioBigoton["id_horario"],
-            ":total"      => $total,
-            ":obs"        => $observaciones,
-            ":es_prueba"  => $esPrueba,
-        ]);
-        $id_pedido = (int)$conexion->lastInsertId();
+            /* Folio */
+            $folio = "BIG-" . strtoupper(substr(uniqid(), -6));
 
-        /* Insertar menús y detalle */
-        $stmtPM = $conexion->prepare(
-            "INSERT INTO pedido_menus (id_pedido, numero_menu, tipo_menu, nombre_persona)
-             VALUES (:id_pedido, :num, :tipo, :nombre_persona)"
-        );
-        $stmtDP = $conexion->prepare(
-            "INSERT INTO detalle_pedido (id_pedido_menu, id_producto, categoria, nombre_producto)
-             VALUES (:id_pm, :id_prod, :categoria, :nombre)"
-        );
-
-        for ($i = 0; $i < $cantidadPersonas; $i++) {
-            $tipoMenu    = trim($personas[$i]["tipo_menu"]);
-            $platoFuerte = (int)$personas[$i]["plato_fuerte"];
-            $compIds     = array_map('intval', array_filter($personas[$i]["complementos"] ?? [], fn($v) => (int)$v > 0));
-
-            $nombrePersona = trim($personas[$i]["nombre"]);
-            $stmtPM->execute([":id_pedido" => $id_pedido, ":num" => $i + 1, ":tipo" => $tipoMenu, ":nombre_persona" => $nombrePersona]);
-            $id_pedido_menu = (int)$conexion->lastInsertId();
-
-            // Plato fuerte
-            $prod = $productosIndexados[$platoFuerte];
-            $stmtDP->execute([
-                ":id_pm"     => $id_pedido_menu,
-                ":id_prod"   => $platoFuerte,
-                ":categoria" => "Plato fuerte",
-                ":nombre"    => $prod["nombre"],
+            /* Insertar pedido */
+            $stmtIns = $conexion->prepare(
+                "INSERT INTO pedidos
+                     (folio, nombre_cliente, telefono, correo_cliente, id_horario,
+                      metodo_pago, estado_pago, total, observaciones, es_prueba, fecha_pedido)
+                 VALUES
+                     (:folio, 'El Bigoton', '0000000000', :correo, :id_horario,
+                      'Efectivo', 'Pago en efectivo', :total, :obs, :es_prueba, NOW())"
+            );
+            $stmtIns->execute([
+                ":folio"      => $folio,
+                ":correo"     => $correo,
+                ":id_horario" => $horarioBigoton["id_horario"],
+                ":total"      => $total,
+                ":obs"        => $observaciones,
+                ":es_prueba"  => $esPrueba,
             ]);
+            $id_pedido = (int)$conexion->lastInsertId();
 
-            // Complementos opcionales
-            $nombresComp = [];
-            foreach ($compIds as $cid) {
-                if (!isset($productosIndexados[$cid])) continue;
+            /* Insertar menús y detalle */
+            $stmtPM = $conexion->prepare(
+                "INSERT INTO pedido_menus (id_pedido, numero_menu, tipo_menu, nombre_persona)
+                 VALUES (:id_pedido, :num, :tipo, :nombre_persona)"
+            );
+            $stmtDP = $conexion->prepare(
+                "INSERT INTO detalle_pedido (id_pedido_menu, id_producto, categoria, nombre_producto)
+                 VALUES (:id_pm, :id_prod, :categoria, :nombre)"
+            );
+
+            for ($i = 0; $i < $cantidadPersonas; $i++) {
+                $tipoMenu    = trim($personas[$i]["tipo_menu"]);
+                $platoFuerte = (int)$personas[$i]["plato_fuerte"];
+                $compIds     = array_map('intval', array_filter($personas[$i]["complementos"] ?? [], fn($v) => (int)$v > 0));
+
+                $nombrePersona = trim($personas[$i]["nombre"]);
+                $stmtPM->execute([":id_pedido" => $id_pedido, ":num" => $i + 1, ":tipo" => $tipoMenu, ":nombre_persona" => $nombrePersona]);
+                $id_pedido_menu = (int)$conexion->lastInsertId();
+
+                // Plato fuerte
+                $prod = $productosIndexados[$platoFuerte];
                 $stmtDP->execute([
                     ":id_pm"     => $id_pedido_menu,
-                    ":id_prod"   => $cid,
-                    ":categoria" => "Complemento",
-                    ":nombre"    => $productosIndexados[$cid]["nombre"],
+                    ":id_prod"   => $platoFuerte,
+                    ":categoria" => "Plato fuerte",
+                    ":nombre"    => $prod["nombre"],
                 ]);
-                $nombresComp[] = $productosIndexados[$cid]["nombre"];
+
+                // Complementos opcionales
+                $nombresComp = [];
+                foreach ($compIds as $cid) {
+                    if (!isset($productosIndexados[$cid])) continue;
+                    $stmtDP->execute([
+                        ":id_pm"     => $id_pedido_menu,
+                        ":id_prod"   => $cid,
+                        ":categoria" => "Complemento",
+                        ":nombre"    => $productosIndexados[$cid]["nombre"],
+                    ]);
+                    $nombresComp[] = $productosIndexados[$cid]["nombre"];
+                }
+
+                // Sopa, Agua y Cortesia (auto-incluir según tipo de menú)
+                foreach (["Sopa", "Agua", "Cortesia"] as $catAuto) {
+                    $prodAuto = $autoIncluirPorTipo[$tipoMenu][$catAuto] ?? null;
+                    if (!$prodAuto) continue;
+                    $stmtDP->execute([
+                        ":id_pm"     => $id_pedido_menu,
+                        ":id_prod"   => (int)$prodAuto["id_producto"],
+                        ":categoria" => $catAuto,
+                        ":nombre"    => $prodAuto["nombre"],
+                    ]);
+                }
+
+                $lineaConf = trim($personas[$i]["nombre"]) . " — " . $prod["nombre"];
+                if (!empty($nombresComp)) {
+                    $lineaConf .= " (+ " . implode(", ", $nombresComp) . ")";
+                }
+                $nombresConfirmacion[] = $lineaConf;
             }
 
-            // Sopa, Agua y Cortesia (auto-incluir según tipo de menú)
-            foreach (["Sopa", "Agua", "Cortesia"] as $catAuto) {
-                $prodAuto = $autoIncluirPorTipo[$tipoMenu][$catAuto] ?? null;
-                if (!$prodAuto) continue;
-                $stmtDP->execute([
-                    ":id_pm"     => $id_pedido_menu,
-                    ":id_prod"   => (int)$prodAuto["id_producto"],
-                    ":categoria" => $catAuto,
-                    ":nombre"    => $prodAuto["nombre"],
-                ]);
-            }
-
-            $lineaConf = trim($personas[$i]["nombre"]) . " — " . $prod["nombre"];
-            if (!empty($nombresComp)) {
-                $lineaConf .= " (+ " . implode(", ", $nombresComp) . ")";
-            }
-            $nombresConfirmacion[] = $lineaConf;
+            $conexion->commit();
+            $exito         = true;
+            $folioGenerado = $folio;
+        } catch (Exception $e) {
+            if ($conexion->inTransaction()) $conexion->rollBack();
+            $nombresConfirmacion = [];
+            $errores[] = $e instanceof PDOException ? "No se pudo guardar el pedido. Intenta de nuevo." : $e->getMessage();
         }
-
-        $exito         = true;
-        $folioGenerado = $folio;
     }
 }
 ?>

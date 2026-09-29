@@ -1,6 +1,7 @@
 <?php
 require_once "../config/db.php";
 require_once "auth_check.php";
+require_once "../includes/limite_platos.php";
 
 /* ── Modo prueba ── */
 $stmtMP = $conexion->prepare("SELECT valor FROM configuracion WHERE clave = 'modo_prueba' LIMIT 1");
@@ -149,8 +150,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
             $erroresMenus[$nMenu][] = "Selecciona un tipo de menú válido.";
         if ($plato_fuerte === "") {
             $erroresMenus[$nMenu][] = "Falta el plato fuerte.";
-        } elseif (isset($productosIndexados[$plato_fuerte]) && !empty($productosIndexados[$plato_fuerte]["agotado"])) {
-            $erroresMenus[$nMenu][] = "El plato fuerte seleccionado está agotado.";
         }
         if (empty($complementos)) $erroresMenus[$nMenu][] = "Falta al menos un complemento.";
         if (count($complementos) > 2) $erroresMenus[$nMenu][] = "Máximo 2 complementos.";
@@ -158,6 +157,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
         foreach (array_filter(array_merge([$plato_fuerte], $complementos)) as $idP) {
             if (!isset($productosIndexados[$idP])) { $erroresMenus[$nMenu][] = "Producto no válido."; break; }
             if ($productosIndexados[$idP]["tipo_menu"] !== $tipo_menu) { $erroresMenus[$nMenu][] = "Hay un producto que no corresponde al tipo de menú."; break; }
+        }
+    }
+
+    // Cupo: sumar cuántos menús de este pedido llevan el mismo plato
+    $platosPedido = [];
+    foreach ($menusRecibidos as $menu) {
+        $idPlato = (int)($menu["plato_fuerte"] ?? 0);
+        if ($idPlato) $platosPedido[$idPlato] = ($platosPedido[$idPlato] ?? 0) + 1;
+    }
+    foreach (validarCupoPlatos($conexion, $platosPedido) as $idPlato => $info) {
+        foreach ($menusRecibidos as $nMenu => $menu) {
+            if ((int)($menu["plato_fuerte"] ?? 0) === $idPlato) {
+                $erroresMenus[$nMenu][] = mensajeCupoPlato($info);
+            }
         }
     }
 
@@ -178,6 +191,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
         unset($menuData);
         try {
             $conexion->beginTransaction();
+
+            // Re-validar el cupo con las filas bloqueadas (evita que dos
+            // pedidos simultáneos por los últimos lugares pasen los dos)
+            $sinCupo = validarCupoPlatos($conexion, $platosPedido, true);
+            if (!empty($sinCupo)) {
+                throw new RuntimeException(mensajeCupoPlato(reset($sinCupo)));
+            }
 
             $PRECIOS_EXTRA_SERVER = ["Sopa" => 25.00, "Complemento" => 25.00, "Agua" => 20.00];
             $extrasGuardar = [];
