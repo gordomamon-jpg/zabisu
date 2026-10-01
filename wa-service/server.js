@@ -34,7 +34,19 @@ let readyPoller = null;
 // masa es lo que hizo que WhatsApp restringiera la cuenta (2026-10-01).
 // Clave = últimos 10 dígitos (en México WhatsApp alterna 52 / 521).
 // ─────────────────────────────────────────────────────────────
-const CONTACTADOS_PATH = path.join(__dirname, 'contactados.json');
+// WA_CUENTA permite conectar temporalmente otro número sin tocar la sesión
+// ni el registro de chats del número principal: cada cuenta tiene su propia
+// carpeta de sesión y su propio contactados.json. Sin WA_CUENTA = principal.
+const CUENTA = (process.env.WA_CUENTA || '').replace(/[^a-z0-9_-]/gi, '');
+const sufijoCuenta = CUENTA ? '_' + CUENTA : '';
+if (CUENTA) console.log('🔀 Cuenta de WhatsApp:', CUENTA);
+
+// En el número temporal se avisa al cliente para que no lo tome como spam.
+function textoCuenta(mensaje) {
+    return CUENTA ? mensaje + '\n\n_Te escribimos desde un número temporal de Zabisu._' : mensaje;
+}
+
+const CONTACTADOS_PATH = path.join(__dirname, 'contactados' + sufijoCuenta + '.json');
 const contactados = new Set();
 try {
     for (const n of JSON.parse(fs.readFileSync(CONTACTADOS_PATH, 'utf8'))) contactados.add(String(n));
@@ -95,7 +107,7 @@ async function procesarBulkEnSegundoPlano(jobId, messages) {
         try {
             const numberId = await withTimeout(client.getNumberId(msg.phone), BULK_PER_MESSAGE_TIMEOUT_MS);
             if (numberId) {
-                await withTimeout(client.sendMessage(numberId._serialized, msg.message), BULK_PER_MESSAGE_TIMEOUT_MS);
+                await withTimeout(client.sendMessage(numberId._serialized, textoCuenta(msg.message)), BULK_PER_MESSAGE_TIMEOUT_MS);
                 marcarContactado(msg.phone);
                 console.log('📤 Enviado a', msg.phone);
                 resultados.push({ phone: msg.phone, ok: true });
@@ -136,7 +148,7 @@ function startReadyPoller() {
 }
 
 const client = new Client({
-    authStrategy: new LocalAuth({ dataPath: path.join(__dirname, 'wa_session') }),
+    authStrategy: new LocalAuth({ dataPath: path.join(__dirname, 'wa_session' + sufijoCuenta) }),
     puppeteer: {
         protocolTimeout: 300000, // 5 min — el default (180s) se quedaba corto y tronaba con "Runtime.callFunctionOn timed out"
         args: [
@@ -240,7 +252,7 @@ const server = http.createServer((req, res) => {
                     res.end(JSON.stringify({ ok: false, error: 'Número no registrado en WhatsApp: ' + data.phone }));
                     return;
                 }
-                await client.sendMessage(numberId._serialized, data.message);
+                await client.sendMessage(numberId._serialized, textoCuenta(data.message));
                 marcarContactado(data.phone);
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ ok: true }));
@@ -284,6 +296,11 @@ const server = http.createServer((req, res) => {
                 if (!clientReady) {
                     res.writeHead(503, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({ ok: false, error: 'WhatsApp no está conectado' }));
+                    return;
+                }
+                if (CUENTA) {
+                    res.writeHead(403, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ ok: false, error: 'La difusión está desactivada en el número temporal.' }));
                     return;
                 }
                 if (broadcastEnCurso) {

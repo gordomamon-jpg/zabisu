@@ -18,6 +18,8 @@ Thumbs.db
 
 # WhatsApp service — archivos locales del VPS
 /wa-service/wa_session/
+/wa-service/wa_session_*/
+/wa-service/contactados_*.json
 /wa-service/waweb.html
 /wa-service/node_modules/
 /wa-service/.secret
