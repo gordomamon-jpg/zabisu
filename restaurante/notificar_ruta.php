@@ -211,7 +211,8 @@ foreach ($pedidos as $pedido) {
 $horaBonita = date("g:i A", strtotime($hora_entrega));
 $mensajesWA = [];
 foreach ($pedidos as $p) {
-    if (empty($p["telefono"])) continue;
+    // "0000000000" = pedido sin teléfono real (p. ej. El Bigoton)
+    if (empty($p["telefono"]) || preg_match('/^0+$/', $p["telefono"])) continue;
     $mensajesWA[] = [
         "phone"   => $p["telefono"],
         "message" => "*Tu pedido llegó* · Zabisu\n\n"

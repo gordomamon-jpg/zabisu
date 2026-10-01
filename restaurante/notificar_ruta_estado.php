@@ -109,7 +109,7 @@ $sinTelefono = [];
 
 foreach ($pedidos as $p) {
     $telNorm = nre_normalizarTel($p["telefono"] ?? "");
-    if ($telNorm === "") {
+    if ($telNorm === "" || preg_match('/^0+$/', $p["telefono"] ?? "")) {
         $sinTelefono[] = $p;
         continue;
     }
