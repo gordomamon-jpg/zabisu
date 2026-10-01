@@ -3,6 +3,7 @@ require_once "../config/db.php";
 require_once "auth_check.php";
 require_once "../includes/enviar_correo.php";
 require_once "../includes/enviar_whatsapp.php";
+require_once "../includes/confirmacion_wa.php";
 
 $id_pedido = isset($_GET["id"]) ? (int)$_GET["id"] : 0;
 
@@ -141,46 +142,6 @@ function construirResumenCorreoNotificacion($menusPedido, $detallePorMenu, $prec
     }
 
     return $html;
-}
-
-function construirResumenWA($menusPedido, $detallePorMenu, $preciosMenus)
-{
-    $texto = "";
-    $orden = ["Plato fuerte","Sopa","Complemento","Agua","Cortesia"];
-
-    foreach ($menusPedido as $menu) {
-        $idPedidoMenu = $menu["id_pedido_menu"];
-        $agrupado     = [];
-        foreach (($detallePorMenu[$idPedidoMenu] ?? []) as $d) {
-            $agrupado[$d["categoria"]][] = $d["nombre_producto"];
-        }
-        $precio = $preciosMenus[$menu["tipo_menu"]] ?? null;
-
-        $texto .= "\n*Menú " . $menu["numero_menu"] . "* — " . $menu["tipo_menu"] . "\n";
-        foreach ($orden as $cat) {
-            if (empty($agrupado[$cat])) continue;
-            $texto .= "  " . $cat . ": " . implode(", ", $agrupado[$cat]) . "\n";
-        }
-        if ($precio !== null) {
-            $texto .= "  $" . number_format((float)$precio, 2) . "\n";
-        }
-    }
-    return $texto;
-}
-
-function construirExtrasWA($extras)
-{
-    if (empty($extras)) return "";
-
-    $texto       = "\n*Extras*\n";
-    $totalExtras = 0;
-    foreach ($extras as $extra) {
-        $sub          = $extra["cantidad"] * $extra["precio_unitario"];
-        $totalExtras += $sub;
-        $texto .= "  " . $extra["nombre"] . " ×" . (int)$extra["cantidad"] . "\n";
-    }
-    $texto .= "  $" . number_format($totalExtras, 2) . "\n";
-    return $texto;
 }
 
 function construirExtrasCorreo($extras)
@@ -503,34 +464,11 @@ try {
 
     /* ── WhatsApp — confirmación de pedido (una sola vez) ── */
     if ((int)$pedido["correo_enviado"] === 0) {
-        $horaWA    = !empty($pedido["hora_entrega"]) ? date("g:i A", strtotime($pedido["hora_entrega"])) : "";
-        $ubicWA    = $pedido["nombre_ubicacion"] ?? "";
-        $resumenWA = construirResumenWA($menusPedido, $detallePorMenu, $preciosMenus);
-
         $stmtExtrasWA = $conexion->prepare(
             "SELECT nombre, categoria, cantidad, precio_unitario FROM pedido_extras WHERE id_pedido = :id ORDER BY id_extra ASC"
         );
         $stmtExtrasWA->execute([":id" => $id_pedido]);
-        $extrasWA = $stmtExtrasWA->fetchAll(PDO::FETCH_ASSOC);
-        $extrasTextoWA = construirExtrasWA($extrasWA);
-
-        $waMsg = "*Pedido confirmado* · Zabisu\n\n"
-               . "Hola, " . ($pedido["nombre_cliente"] ?? "") . ". Tu orden ya está en preparación.\n\n"
-               . "Folio: *" . strtoupper($pedido["folio"] ?? "") . "*\n\n"
-               . "─────────────────\n"
-               . "*Entrega*\n"
-               . "{$ubicWA}\n"
-               . "{$horaWA}\n\n"
-               . "*Pago*\n"
-               . ($pedido["metodo_pago"] ?? "") . " · " . ($pedido["estado_pago"] ?? "") . "\n"
-               . "─────────────────\n"
-               . "*Tu pedido*"
-               . $resumenWA
-               . $extrasTextoWA
-               . "\n*Total  $" . number_format((float)($pedido["total"] ?? 0), 2) . "*\n\n"
-               . "─────────────────\n"
-               . "Te avisaremos cuando tu pedido llegue al punto de entrega.\n"
-               . "_Zabisu — Sabor y Servicio_";
+        $waMsg = mensajeConfirmacionWA($pedido, $menusPedido, $detallePorMenu, $preciosMenus, $stmtExtrasWA->fetchAll(PDO::FETCH_ASSOC));
 
         // Solo se marca como enviado si el WhatsApp realmente salió (o si no
         // había teléfono al que mandarlo, para no reintentar por siempre algo
