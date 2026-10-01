@@ -28,6 +28,49 @@ function autenticado(req) {
 let clientReady = false;
 let readyPoller = null;
 
+// ─────────────────────────────────────────────────────────────
+// Números con los que ya hay chat (les escribimos con éxito o ellos nos
+// escribieron). La difusión SOLO se manda a estos: iniciar chats nuevos en
+// masa es lo que hizo que WhatsApp restringiera la cuenta (2026-10-01).
+// Clave = últimos 10 dígitos (en México WhatsApp alterna 52 / 521).
+// ─────────────────────────────────────────────────────────────
+const CONTACTADOS_PATH = path.join(__dirname, 'contactados.json');
+const contactados = new Set();
+try {
+    for (const n of JSON.parse(fs.readFileSync(CONTACTADOS_PATH, 'utf8'))) contactados.add(String(n));
+    console.log('📇 Contactos con chat previo:', contactados.size);
+} catch (e) {
+    console.warn('⚠️ Sin contactados.json — la difusión no enviará a nadie hasta que haya chats registrados');
+}
+
+function claveTel(phone) {
+    return String(phone || '').replace(/\D/g, '').slice(-10);
+}
+
+let guardarContactadosTimer = null;
+function marcarContactado(phone) {
+    const clave = claveTel(phone);
+    if (clave.length !== 10 || contactados.has(clave)) return;
+    contactados.add(clave);
+    if (guardarContactadosTimer) return;
+    guardarContactadosTimer = setTimeout(() => {
+        guardarContactadosTimer = null;
+        try {
+            const tmp = CONTACTADOS_PATH + '.tmp';
+            fs.writeFileSync(tmp, JSON.stringify([...contactados]));
+            fs.renameSync(tmp, CONTACTADOS_PATH);
+        } catch (e) {
+            console.error('❌ No se pudo guardar contactados.json:', e.message);
+        }
+    }, 5000);
+}
+
+// Pausa entre mensajes de la difusión: al azar entre 10 y 20 s, para que no
+// salgan a ritmo de máquina.
+const BROADCAST_PAUSA_MIN_MS = 10000;
+const BROADCAST_PAUSA_MAX_MS = 20000;
+let broadcastEnCurso = false;
+
 // Tope por mensaje individual dentro de /send-bulk, para que un envío
 // colgado (sesión degradada) no deje esperando al panel varios minutos —
 // se reporta como fallido y se sigue con el resto del lote.
@@ -53,6 +96,7 @@ async function procesarBulkEnSegundoPlano(jobId, messages) {
             const numberId = await withTimeout(client.getNumberId(msg.phone), BULK_PER_MESSAGE_TIMEOUT_MS);
             if (numberId) {
                 await withTimeout(client.sendMessage(numberId._serialized, msg.message), BULK_PER_MESSAGE_TIMEOUT_MS);
+                marcarContactado(msg.phone);
                 console.log('📤 Enviado a', msg.phone);
                 resultados.push({ phone: msg.phone, ok: true });
             } else {
@@ -143,6 +187,14 @@ client.on('disconnected', reason => {
     console.log('🔴 WhatsApp desconectado:', reason);
 });
 
+// Si un cliente nos escribe, ya hay chat con él
+client.on('message', async msg => {
+    try {
+        const contacto = await msg.getContact();
+        if (contacto && contacto.number) marcarContactado(contacto.number);
+    } catch (e) { /* no es crítico */ }
+});
+
 client.initialize();
 
 // ─────────────────────────────────────────────────────────────
@@ -189,6 +241,7 @@ const server = http.createServer((req, res) => {
                     return;
                 }
                 await client.sendMessage(numberId._serialized, data.message);
+                marcarContactado(data.phone);
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ ok: true }));
 
@@ -224,38 +277,62 @@ const server = http.createServer((req, res) => {
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ ok: true, status: job.status, total: job.total, resultados: job.resultados }));
 
-            // POST /send-broadcast — imagen + caption a lista de teléfonos
+            // POST /send-broadcast — imagen + texto personalizado por contacto.
+            // Recibe recipients: [{ phone, caption }]. Solo envía a números con
+            // chat previo, uno cada 10–20 s al azar, y una difusión a la vez.
             } else if (req.url === '/send-broadcast') {
                 if (!clientReady) {
                     res.writeHead(503, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({ ok: false, error: 'WhatsApp no está conectado' }));
                     return;
                 }
-                const phones  = data.phones  || [];
-                const caption = data.caption || '';
-                const img     = data.image;   // { data: base64, mimetype, filename }
+                if (broadcastEnCurso) {
+                    res.writeHead(409, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ ok: false, error: 'Ya hay una difusión enviándose. Espera a que termine.' }));
+                    return;
+                }
+                const recipients = data.recipients || [];
+                const img        = data.image;   // { data: base64, mimetype, filename }
+
+                const aEnviar  = recipients.filter(r => contactados.has(claveTel(r.phone)));
+                const omitidos = recipients.length - aEnviar.length;
+                const pausaPromedio = (BROADCAST_PAUSA_MIN_MS + BROADCAST_PAUSA_MAX_MS) / 2;
 
                 res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ ok: true, queued: phones.length }));
+                res.end(JSON.stringify({
+                    ok: true,
+                    queued: aEnviar.length,
+                    omitidos,
+                    minutos_estimados: Math.ceil(aEnviar.length * pausaPromedio / 60000),
+                }));
 
+                if (omitidos > 0) console.log('⏭️ Difusión: se omiten', omitidos, 'números sin chat previo');
+
+                broadcastEnCurso = true;
                 const media = img ? new MessageMedia(img.mimetype, img.data, img.filename) : null;
-
-                for (const phone of phones) {
-                    try {
-                        const numberId = await client.getNumberId(phone);
-                        if (!numberId) { console.warn('⚠️ Sin WA:', phone); continue; }
-                        if (media) {
-                            await client.sendMessage(numberId._serialized, media, { caption });
-                        } else if (caption) {
-                            await client.sendMessage(numberId._serialized, caption);
+                let enviados = 0;
+                try {
+                    for (const r of aEnviar) {
+                        try {
+                            const numberId = await client.getNumberId(r.phone);
+                            if (!numberId) { console.warn('⚠️ Sin WA:', r.phone); continue; }
+                            if (media) {
+                                await client.sendMessage(numberId._serialized, media, { caption: r.caption });
+                            } else if (r.caption) {
+                                await client.sendMessage(numberId._serialized, r.caption);
+                            }
+                            enviados++;
+                            console.log('📤 Broadcast a', r.phone);
+                        } catch (e) {
+                            console.error('❌ Broadcast error', r.phone + ':', e.message);
                         }
-                        console.log('📤 Broadcast a', phone);
-                    } catch (e) {
-                        console.error('❌ Broadcast error', phone + ':', e.message);
+                        const pausa = BROADCAST_PAUSA_MIN_MS + Math.random() * (BROADCAST_PAUSA_MAX_MS - BROADCAST_PAUSA_MIN_MS);
+                        await new Promise(res => setTimeout(res, pausa));
                     }
-                    await new Promise(r => setTimeout(r, 2500));
+                } finally {
+                    broadcastEnCurso = false;
                 }
-                console.log('✅ Broadcast completado:', phones.length, 'contactos');
+                console.log('✅ Broadcast completado:', enviados, 'de', aEnviar.length, 'contactos');
 
             } else {
                 res.writeHead(404);

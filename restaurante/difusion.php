@@ -412,7 +412,7 @@ $totalContactos = count($contactos);
                     <button type="submit" class="btn-broadcast" id="btn-broadcast">
                         <span>📣</span> <span id="btn-broadcast-texto">Enviar a <strong id="total-en-boton"><?php echo $totalContactos; ?></strong> contactos</span>
                     </button>
-                    <p class="dif-aviso-total">El envío se hace en segundo plano con pequeños intervalos para no saturar WhatsApp</p>
+                    <p class="dif-aviso-total">Se envía solo a quienes ya tienen chat con el negocio, con un saludo con su nombre y uno cada 10–20 segundos (tarda aprox. 1 hora para 250 contactos). No cierres nada: sigue en segundo plano.</p>
 
                 </form>
             </div>
@@ -634,7 +634,11 @@ $totalContactos = count($contactos);
                 if (!data.ok) {
                     mostrarStatus("❌ " + (data.error || "Error al enviar."), "err");
                 } else {
-                    mostrarStatus("✅ " + (data.queued || 0) + " mensajes en cola. El envío continúa en segundo plano.", "ok");
+                    var msg = "✅ " + (data.queued || 0) + " mensajes en cola";
+                    if (data.minutos_estimados) msg += " (aprox. " + data.minutos_estimados + " min)";
+                    msg += ". El envío continúa en segundo plano.";
+                    if (data.omitidos) msg += " Se omitieron " + data.omitidos + " números sin chat previo con el negocio.";
+                    mostrarStatus(msg, "ok");
                     // Limpiar form
                     document.getElementById("input-caption").value = "";
                     document.getElementById("input-imagen").value  = "";

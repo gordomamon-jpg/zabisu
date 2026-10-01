@@ -102,13 +102,22 @@ if ($accion === "broadcast") {
         exit;
     }
 
-    // Obtener todos los teléfonos activos
+    // Contactos activos; si no tienen nombre en la lista, se toma el de su
+    // último pedido para personalizar el saludo.
     $stmt = $conexion->query(
-        "SELECT telefono FROM difusion_contactos WHERE activo = 1 ORDER BY nombre ASC, telefono ASC"
+        "SELECT c.telefono,
+                COALESCE(NULLIF(c.nombre, ''), (
+                    SELECT p.nombre_cliente FROM pedidos p
+                    WHERE p.telefono = c.telefono AND p.es_prueba = 0
+                    ORDER BY p.id_pedido DESC LIMIT 1
+                ), '') AS nombre
+         FROM difusion_contactos c
+         WHERE c.activo = 1
+         ORDER BY c.nombre ASC, c.telefono ASC"
     );
-    $telefonos = $stmt->fetchAll(PDO::FETCH_COLUMN);
+    $contactos = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    if (empty($telefonos)) {
+    if (empty($contactos)) {
         echo json_encode(["ok" => false, "error" => "No hay contactos en la lista."]);
         exit;
     }
@@ -139,7 +148,7 @@ if ($accion === "broadcast") {
         ];
     }
 
-    $resultado = enviarBroadcastWA($telefonos, $caption, $imagen);
+    $resultado = enviarBroadcastWA($contactos, $caption, $imagen);
     echo json_encode($resultado);
     exit;
 }

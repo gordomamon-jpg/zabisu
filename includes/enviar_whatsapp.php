@@ -91,17 +91,43 @@ function consultarEstadoWhatsAppBulk(string $jobId): array
     return json_decode($response, true) ?? ['ok' => false, 'error' => 'Respuesta inválida del servicio WA'];
 }
 
-function enviarBroadcastWA(array $telefonos, string $caption, ?array $imagen = null): array
+// Primer nombre en formato "Ivonne" a partir de "IVONNE JUÁREZ"; "" si no hay.
+function primerNombreWA(string $nombre): string
 {
-    $phones = [];
-    foreach ($telefonos as $t) {
-        $d = preg_replace('/\D/', '', $t);
-        if (strlen($d) === 10) $d = '52' . $d;
-        if (strlen($d) >= 12) $phones[] = $d;
-    }
-    if (empty($phones)) return ['ok' => false, 'queued' => 0, 'error' => 'Sin teléfonos válidos'];
+    $nombre = trim(preg_replace('/[^\p{L}\s]/u', '', $nombre));
+    if ($nombre === '') return '';
+    $primero = preg_split('/\s+/', $nombre)[0];
+    return mb_convert_case(mb_strtolower($primero, 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
+}
 
-    $payload = ['phones' => $phones, 'caption' => $caption];
+// Saludo distinto al azar por contacto, para que la difusión no sea el
+// mismo texto idéntico para todos.
+function saludoDifusionWA(string $nombre): string
+{
+    $n = primerNombreWA($nombre);
+    $saludos = $n !== ''
+        ? ["Hola {$n} 👋", "¡Buen día, {$n}!", "Qué tal, {$n} 😊", "Hola {$n}, ¿cómo estás?"]
+        : ["Hola 👋", "¡Buen día!", "Qué tal 😊", "Hola, ¿cómo estás?"];
+    return $saludos[array_rand($saludos)];
+}
+
+// $contactos = [["telefono" => ..., "nombre" => ...], ...]
+function enviarBroadcastWA(array $contactos, string $caption, ?array $imagen = null): array
+{
+    $recipients = [];
+    foreach ($contactos as $c) {
+        $d = preg_replace('/\D/', '', $c['telefono'] ?? '');
+        if (strlen($d) === 10) $d = '52' . $d;
+        if (strlen($d) < 12) continue;
+        $saludo = saludoDifusionWA($c['nombre'] ?? '');
+        $recipients[] = [
+            'phone'   => $d,
+            'caption' => $caption !== '' ? $saludo . "\n\n" . $caption : $saludo,
+        ];
+    }
+    if (empty($recipients)) return ['ok' => false, 'queued' => 0, 'error' => 'Sin teléfonos válidos'];
+
+    $payload = ['recipients' => $recipients];
     if ($imagen) $payload['image'] = $imagen;
 
     $json = json_encode($payload);
