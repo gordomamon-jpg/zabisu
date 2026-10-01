@@ -91,17 +91,8 @@ function startReadyPoller() {
     setTimeout(() => { if (readyPoller) { clearInterval(readyPoller); readyPoller = null; } }, 300000);
 }
 
-// Si se define WA_PAIR_PHONE (ej. 525560908778), cuando WhatsApp pide volver
-// a vincular se genera un código de 8 caracteres en vez de un QR: llega una
-// notificación al teléfono y basta con teclear el código — sirve para
-// re-vincular a distancia, dictándole el código a quien tenga el teléfono.
-// Solo aplica cuando no hay sesión; con sesión guardada no hace nada.
-const PAIR_PHONE = (process.env.WA_PAIR_PHONE || '').replace(/\D/g, '');
-const CODE_PATH  = path.join(__dirname, '.pair_code');
-
 const client = new Client({
     authStrategy: new LocalAuth({ dataPath: path.join(__dirname, 'wa_session') }),
-    ...(PAIR_PHONE ? { pairWithPhoneNumber: { phoneNumber: PAIR_PHONE, showNotification: true } } : {}),
     puppeteer: {
         protocolTimeout: 300000, // 5 min — el default (180s) se quedaba corto y tronaba con "Runtime.callFunctionOn timed out"
         args: [
@@ -120,13 +111,6 @@ client.on('qr', qr => {
     console.log('\n=== ESCANEA ESTE QR CON WHATSAPP BUSINESS ===\n');
     qrcode.generate(qr, { small: true });
     console.log('\n');
-});
-
-client.on('code', code => {
-    const legible = code.slice(0, 4) + '-' + code.slice(4);
-    console.log('\n=== CÓDIGO DE VINCULACIÓN: ' + legible + ' (cambia cada 3 min) ===');
-    console.log('En el teléfono: Dispositivos vinculados → Vincular con número de teléfono\n');
-    try { fs.writeFileSync(CODE_PATH, legible + ' ' + new Date().toISOString() + '\n'); } catch (e) {}
 });
 
 client.on('loading_screen', (percent, message) => {
@@ -150,7 +134,6 @@ client.on('change_state', state => {
 
 client.on('ready', () => {
     if (readyPoller) { clearInterval(readyPoller); readyPoller = null; }
-    try { fs.unlinkSync(CODE_PATH); } catch (e) {}
     clientReady = true;
     console.log('🟢 WhatsApp listo para enviar mensajes\n');
 });
