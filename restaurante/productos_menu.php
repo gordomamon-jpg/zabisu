@@ -268,19 +268,29 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 }
 
 /*
-    Opciones recordadas: las de la última vez que se usó cada nombre de
-    plato fuerte, para no tener que escribirlas cada día (p. ej. los
-    aderezos de la Ensalada Ejecutiva). Se llenan solas al escribir el nombre.
+    Valores recordados por nombre de plato fuerte: las opciones (p. ej.
+    aderezos) y el máx. de complementos de la última vez que se usó ese
+    nombre. Se llenan solos al escribir o pegar el nombre, para no tener que
+    capturarlos cada día (p. ej. la Ensalada Ejecutiva: aderezos y 1 complemento).
 */
-$opcionesRecordadas = [];
-$stmtRec = $conexion->query(
-    "SELECT nombre, opciones FROM productos
-     WHERE categoria = 'Plato fuerte' AND opciones IS NOT NULL AND opciones <> ''
-     ORDER BY id_producto DESC LIMIT 500"
+// Solo cuenta la ÚLTIMA vez que se usó cada nombre (aunque ese día haya
+// quedado vacío), para no revivir valores viejos que ya se dejaron de usar.
+$platosRecordados = [];
+$vistos = [];
+$stmtRec = $conexion->prepare(
+    "SELECT nombre, opciones, complementos_max FROM productos
+     WHERE categoria = 'Plato fuerte' AND id_menu <> :id_menu
+     ORDER BY id_producto DESC LIMIT 3000"
 );
+$stmtRec->execute([":id_menu" => $id_menu]);
 foreach ($stmtRec->fetchAll(PDO::FETCH_ASSOC) as $r) {
     $clave = mb_strtolower(trim($r["nombre"]), "UTF-8");
-    if (!isset($opcionesRecordadas[$clave])) $opcionesRecordadas[$clave] = $r["opciones"];
+    if (isset($vistos[$clave])) continue;
+    $vistos[$clave] = true;
+    $rec = [];
+    if ((string)$r["opciones"] !== "")   $rec["opciones"] = $r["opciones"];
+    if ($r["complementos_max"] !== null) $rec["complementos_max"] = (int)$r["complementos_max"];
+    if ($rec) $platosRecordados[$clave] = $rec;
 }
 
 /*
@@ -706,12 +716,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 var descs   = Array.from(document.querySelectorAll("textarea[name*='" + key + "'][name$='[descripcion]']"));
                 nombres.forEach(function (inp, idx) {
                     inp.value = items[idx] ? items[idx].nombre : "";
-                    // Las opciones siguen al nombre del plato: se vacían y se
-                    // vuelven a llenar con las recordadas para ese nombre
-                    var opc = inp.closest(".pm-producto-card__campos");
-                    opc = opc ? opc.querySelector(".pm-input-opciones") : null;
-                    if (opc) {
-                        opc.value = "";
+                    // Opciones y máx. de complementos siguen al nombre del plato:
+                    // se vacían y se vuelven a llenar con los recordados
+                    var campos = inp.closest(".pm-producto-card__campos");
+                    var opc    = campos ? campos.querySelector(".pm-input-opciones") : null;
+                    var cmax   = campos ? campos.querySelector("input[name$='[complementos_max]']") : null;
+                    if (opc || cmax) {
+                        if (opc)  opc.value  = "";
+                        if (cmax) cmax.value = "";
                         inp.dispatchEvent(new Event("input"));
                     }
                 });
@@ -795,15 +807,19 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 
 <script>
-// Llena solas las opciones de un plato fuerte si ese nombre ya las tuvo antes
+// Llena solos las opciones y el máx. de complementos de un plato fuerte
+// con lo que tuvo la última vez ese mismo nombre (solo si están vacíos)
 (function () {
-    var recordadas = <?php echo json_encode($opcionesRecordadas, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP); ?>;
+    var recordados = <?php echo json_encode((object)$platosRecordados, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP); ?>;
     function llenar(inputNombre) {
         var campos = inputNombre.closest(".pm-producto-card__campos");
-        var area   = campos ? campos.querySelector(".pm-input-opciones") : null;
-        if (!area || area.value.trim() !== "") return;
-        var clave = inputNombre.value.trim().toLowerCase();
-        if (recordadas[clave]) area.value = recordadas[clave];
+        if (!campos) return;
+        var rec = recordados[inputNombre.value.trim().toLowerCase()];
+        if (!rec) return;
+        var area = campos.querySelector(".pm-input-opciones");
+        var cmax = campos.querySelector("input[name$='[complementos_max]']");
+        if (area && area.value.trim() === "" && rec.opciones) area.value = rec.opciones;
+        if (cmax && cmax.value.trim() === "" && rec.complementos_max) cmax.value = rec.complementos_max;
     }
     document.querySelectorAll(".pm-input-nombre").forEach(function (inp) {
         inp.addEventListener("input",  function () { llenar(inp); });
