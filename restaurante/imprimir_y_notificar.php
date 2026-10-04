@@ -103,7 +103,7 @@ function construirResumenCorreoNotificacion($menusPedido, $detallePorMenu, $prec
 
         $agrupado = [];
         foreach (($detallePorMenu[$idPedidoMenu] ?? []) as $d) {
-            $agrupado[$d["categoria"]][] = $d["nombre_producto"];
+            $agrupado[$d["categoria"]][] = nombreConOpcion($d);
         }
 
         $html .= "

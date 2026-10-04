@@ -1,5 +1,6 @@
 <?php
 require_once "../config/db.php";
+require_once "../includes/opciones_plato.php";
 require_once "auth_check.php";
 
 $id_pedido = isset($_GET["id"]) ? (int)$_GET["id"] : 0;
@@ -263,7 +264,7 @@ function obtenerClaseEstadoPago($estadoPago)
                         <?php foreach ($detallePorMenu[$menu["id_pedido_menu"]] as $detalle): ?>
                             <div class="ticket-linea">
                                 <span><?php echo htmlspecialchars($detalle["categoria"]); ?></span>
-                                <span><?php echo htmlspecialchars($detalle["nombre_producto"]); ?></span>
+                                <span><?php echo htmlspecialchars(nombreConOpcion($detalle)); ?></span>
                             </div>
                         <?php endforeach; ?>
                     <?php else: ?>

@@ -2,6 +2,7 @@
 require_once "../config/db.php";
 require_once "../includes/seguridad.php";
 require_once "../includes/limite_platos.php";
+require_once "../includes/opciones_plato.php";
 iniciarSesionSegura();
 
 /*
@@ -403,6 +404,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
         }
         if ($plato_fuerte === "") {
             $erroresMenus[$numeroMenu][] = "Falta seleccionar el plato fuerte.";
+        }
+
+        // Opción sin costo del plato (p. ej. aderezo de la ensalada)
+        $menusRecibidos[$numeroMenu]["opcion"] = null;
+        if ($plato_fuerte !== "" && isset($productosIndexados[$plato_fuerte])) {
+            $resOpcion = validarOpcionPlato($productosIndexados[$plato_fuerte], $menu["opcion"] ?? "");
+            if ($resOpcion["error"]) $erroresMenus[$numeroMenu][] = $resOpcion["error"];
+            $menusRecibidos[$numeroMenu]["opcion"] = $resOpcion["opcion"];
         }
         if (empty($complementos)) $erroresMenus[$numeroMenu][] = "Falta seleccionar al menos un complemento.";
         $maxComp = ($plato_fuerte !== "" && isset($productosIndexados[$plato_fuerte]) && !empty($productosIndexados[$plato_fuerte]["complementos_max"]))
@@ -874,6 +883,7 @@ if ($scrollDestino === "bloque-entrega") {
                                                 <span class="badge-agotado">Agotado</span>
                                             <?php endif; ?>
                                         </label>
+                                        <?php echo htmlOpcionesPlato($item, "menus[{$i}]", $_POST["menus"][$i]["opcion"] ?? null); ?>
                                     <?php endforeach; ?>
                                 </div>
                             <?php endif; ?>
@@ -1266,6 +1276,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 var maxComp   = grupoComp ? (parseInt(grupoComp.dataset.max) || 2) : 2;
 
                 if (!plato) errores.push("Menú " + i + ": falta el plato fuerte.");
+                var tipoVisible = bloque.querySelector(".opciones-menu-tipo[style*='block']");
+                if (plato && window.opcionesPlatoPendientes && opcionesPlatoPendientes(tipoVisible || bloque).length) {
+                    errores.push("Menú " + i + ": elige una opción para tu plato fuerte.");
+                }
                 if (complementos.length === 0) errores.push("Menú " + i + ": falta al menos un complemento.");
                 if (complementos.length > maxComp) errores.push("Menú " + i + ": máximo " + maxComp + " complemento" + (maxComp === 1 ? "" : "s") + ".");
             }
@@ -1501,6 +1515,10 @@ document.addEventListener("DOMContentLoaded", function () {
         return texto || "Sin seleccionar";
     }
 
+    document.addEventListener("change", function (e) {
+        if (e.target && /\[opcion\]$/.test(e.target.name || "")) actualizarResumenTotal();
+    });
+
     function actualizarResumenTotal() {
         let total = 0;
         let htmlResumen = "";
@@ -1520,6 +1538,10 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             const platoSel = document.querySelector("input[name='menus[" + numeroMenu + "][plato_fuerte]']:checked");
+            const opcionSel = document.querySelector("input[name='menus[" + numeroMenu + "][opcion]']:checked:not([disabled])");
+            const opcionTexto = opcionSel
+                ? " (" + opcionSel.value.replace(/[&<>"]/g, function (c) { return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }) + ")"
+                : "";
             const compSel  = document.querySelectorAll("input[name='menus[" + numeroMenu + "][complementos][]']:checked");
             const bloqueActivo = document.querySelector(".opciones-menu-tipo[data-menu='" + numeroMenu + "'][data-tipo='" + tipo + "']");
 
@@ -1545,7 +1567,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     <div class="ticket-linea">
                         <span>Plato fuerte</span>
-                        <span>${obtenerTextoSeleccionado(platoSel)}</span>
+                        <span>${obtenerTextoSeleccionado(platoSel)}${opcionTexto}</span>
                     </div>
 
                     <div class="ticket-linea">
@@ -1860,5 +1882,6 @@ function actualizarOpcionesMenu(numeroMenu) {
     <span class="cliente-footer__slogan">© 2026 Zabisu - Sabor y Servicio. Todos los derechos reservados.</span>
 </footer>
 
+<?php echo scriptOpcionesPlato(); ?>
 </body>
 </html>

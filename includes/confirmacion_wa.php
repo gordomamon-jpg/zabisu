@@ -5,6 +5,8 @@
     que no salieron), para que el texto sea siempre el mismo.
 */
 
+require_once __DIR__ . "/opciones_plato.php";
+
 function construirResumenWA($menusPedido, $detallePorMenu, $preciosMenus)
 {
     $texto = "";
@@ -14,7 +16,7 @@ function construirResumenWA($menusPedido, $detallePorMenu, $preciosMenus)
         $idPedidoMenu = $menu["id_pedido_menu"];
         $agrupado     = [];
         foreach (($detallePorMenu[$idPedidoMenu] ?? []) as $d) {
-            $agrupado[$d["categoria"]][] = $d["nombre_producto"];
+            $agrupado[$d["categoria"]][] = nombreConOpcion($d);
         }
         $precio = $preciosMenus[$menu["tipo_menu"]] ?? null;
 

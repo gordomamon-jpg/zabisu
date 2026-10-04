@@ -125,6 +125,30 @@ $resumenPlatosDB = $stmtResumenPlatos->fetchAll(PDO::FETCH_ASSOC);
 
 $resumenPlatosPorFecha = [];
 
+/*
+    Desglose de opciones por plato (p. ej. aderezos de la Ensalada
+    Ejecutiva), mismos filtros que el resumen de arriba.
+*/
+$stmtResumenOpciones = $conexion->prepare(
+    "SELECT COALESCE(md.fecha, DATE(p.fecha_pedido)) AS fecha_grupo,
+            dp.nombre_producto, dp.opcion, COUNT(*) AS total
+     FROM detalle_pedido dp
+     INNER JOIN pedido_menus pm ON dp.id_pedido_menu = pm.id_pedido_menu
+     INNER JOIN pedidos p ON pm.id_pedido = p.id_pedido
+     INNER JOIN productos pr ON pr.id_producto = dp.id_producto
+     LEFT JOIN menu_dia md ON md.id_menu = pr.id_menu
+     WHERE dp.categoria = 'Plato fuerte' AND p.es_prueba = 0
+       AND dp.opcion IS NOT NULL AND dp.opcion <> ''
+       AND (COALESCE(md.fecha, DATE(p.fecha_pedido)) >= :fecha_min OR p.visto = 0)
+     GROUP BY COALESCE(md.fecha, DATE(p.fecha_pedido)), dp.nombre_producto, dp.opcion
+     ORDER BY total DESC, dp.opcion ASC"
+);
+$stmtResumenOpciones->execute([":fecha_min" => $fechaMinPedidos]);
+$resumenOpciones = [];
+foreach ($stmtResumenOpciones->fetchAll(PDO::FETCH_ASSOC) as $fila) {
+    $resumenOpciones[$fila["fecha_grupo"]][$fila["nombre_producto"]][] = $fila["opcion"] . " " . (int)$fila["total"];
+}
+
 foreach ($resumenPlatosDB as $fila) {
     $fechaGrupo = $fila["fecha_grupo"];
     $resumenPlatosPorFecha[$fechaGrupo][] = [
@@ -707,6 +731,11 @@ function formatearFechaBonita($fecha)
                                          <?php endif; ?>>
                                         <span class="tarjeta-produccion__nombre">
                                             <?php echo htmlspecialchars($plato["nombre_producto"]); ?>
+                                            <?php if (!empty($resumenOpciones[$fecha][$plato["nombre_producto"]])): ?>
+                                                <small class="tarjeta-produccion__opciones" style="display:block;margin-top:4px;font-size:12px;opacity:.8;">
+                                                    <?php echo htmlspecialchars(implode(" · ", $resumenOpciones[$fecha][$plato["nombre_producto"]])); ?>
+                                                </small>
+                                            <?php endif; ?>
                                         </span>
                                         <strong class="tarjeta-produccion__total">
                                             <?php echo (int)$plato["total"]; ?>

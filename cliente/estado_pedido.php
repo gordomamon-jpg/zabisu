@@ -1,5 +1,6 @@
 <?php
 require_once "../config/db.php";
+require_once "../includes/opciones_plato.php";
 
 $pedido         = null;
 $menusPedido    = [];
@@ -305,7 +306,7 @@ function textoEstado($estado) {
                         <?php foreach ($detallePorMenu[$menu["id_pedido_menu"]] ?? [] as $d): ?>
                         <div class="ticket-linea">
                             <span><?php echo htmlspecialchars($d["categoria"]); ?></span>
-                            <span><?php echo htmlspecialchars($d["nombre_producto"]); ?></span>
+                            <span><?php echo htmlspecialchars(nombreConOpcion($d)); ?></span>
                         </div>
                         <?php endforeach; ?>
                     </div>

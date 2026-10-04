@@ -1,5 +1,6 @@
 <?php
 require_once "../config/db.php";
+require_once "../includes/opciones_plato.php";
 
 $folio = trim($_GET["folio"] ?? "");
 
@@ -82,7 +83,7 @@ function agruparDetallePorCategoria($detalles)
     $agrupado = [];
 
     foreach ($detalles as $detalle) {
-        $agrupado[$detalle["categoria"]][] = $detalle["nombre_producto"];
+        $agrupado[$detalle["categoria"]][] = nombreConOpcion($detalle);
     }
 
     return $agrupado;

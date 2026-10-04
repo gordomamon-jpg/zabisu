@@ -1,5 +1,6 @@
 <?php
 require_once "../config/db.php";
+require_once "../includes/opciones_plato.php";
 require_once "auth_check.php";
 
 $id_pedido = isset($_GET["id"]) ? (int)$_GET["id"] : 0;
@@ -84,7 +85,7 @@ function agruparDetallePorCategoria($detalles)
 {
     $agrupado = [];
     foreach ($detalles as $detalle) {
-        $agrupado[$detalle["categoria"]][] = $detalle["nombre_producto"];
+        $agrupado[$detalle["categoria"]][] = nombreConOpcion($detalle);
     }
     return $agrupado;
 }

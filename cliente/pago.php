@@ -198,9 +198,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
             $stmtPedidoMenu = $conexion->prepare($sqlPedidoMenu);
 
             $sqlDetalle = "INSERT INTO detalle_pedido
-                           (id_pedido_menu, id_producto, categoria, nombre_producto)
+                           (id_pedido_menu, id_producto, categoria, nombre_producto, opcion)
                            VALUES
-                           (:id_pedido_menu, :id_producto, :categoria, :nombre_producto)";
+                           (:id_pedido_menu, :id_producto, :categoria, :nombre_producto, :opcion)";
             $stmtDetalle = $conexion->prepare($sqlDetalle);
 
             foreach ($menusRecibidos as $numeroMenu => $menu) {
@@ -239,6 +239,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
                     $stmtDetalle->bindParam(":id_producto", $idProducto, PDO::PARAM_INT);
                     $stmtDetalle->bindParam(":categoria", $categoria);
                     $stmtDetalle->bindParam(":nombre_producto", $nombre_producto);
+                    // La opción (p. ej. aderezo) va solo en el renglón del plato fuerte
+                    $opcionDetalle = ($categoria === "Plato fuerte" && (string)$idProducto === (string)$plato_fuerte)
+                        ? ($menu["opcion"] ?? null)
+                        : null;
+                    $stmtDetalle->bindValue(":opcion", $opcionDetalle);
                     $stmtDetalle->execute();
                 }
             }

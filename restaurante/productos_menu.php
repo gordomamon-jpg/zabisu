@@ -1,6 +1,7 @@
 <?php
 require_once "../config/db.php";
 require_once "auth_check.php";
+require_once "../includes/opciones_plato.php";
 
 $id_menu = isset($_GET["id_menu"]) ? (int)$_GET["id_menu"] : 0;
 
@@ -79,7 +80,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             // Cargar productos existentes ordenados por posición de inserción
             $stmtEx = $conexion->prepare(
-                "SELECT id_producto, tipo_menu, categoria, nombre, descripcion, limite_pedidos
+                "SELECT id_producto, tipo_menu, categoria, nombre, descripcion, limite_pedidos, complementos_max, opciones
                  FROM productos WHERE id_menu = :id_menu
                  ORDER BY tipo_menu, categoria, id_producto"
             );
@@ -106,12 +107,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $stmtUpdate = $conexion->prepare(
                 "UPDATE productos SET nombre=:nombre, descripcion=:descripcion,
                  disponible=:disponible, limite_pedidos=:limite_pedidos,
-                 complementos_max=:complementos_max
+                 complementos_max=:complementos_max, opciones=:opciones
                  WHERE id_producto=:id"
             );
             $stmtInsert = $conexion->prepare(
-                "INSERT INTO productos (id_menu, tipo_menu, categoria, nombre, descripcion, disponible, limite_pedidos, complementos_max)
-                 VALUES (:id_menu, :tipo_menu, :categoria, :nombre, :descripcion, 1, :limite_pedidos, :complementos_max)"
+                "INSERT INTO productos (id_menu, tipo_menu, categoria, nombre, descripcion, disponible, limite_pedidos, complementos_max, opciones)
+                 VALUES (:id_menu, :tipo_menu, :categoria, :nombre, :descripcion, 1, :limite_pedidos, :complementos_max, :opciones)"
             );
 
             foreach ($productos as $tipo_menu => $categorias) {
@@ -122,9 +123,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         $limite      = trim($item["limite_pedidos"] ?? "");
                         $compMax     = trim($item["complementos_max"] ?? "");
 
-                        $limiteFinal  = null;
-                        $compMaxFinal = null;
+                        $limiteFinal   = null;
+                        $compMaxFinal  = null;
+                        $opcionesFinal = null;
                         if ($categoria === "Plato fuerte") {
+                            $opcionesFinal = normalizarOpcionesPlato((string)($item["opciones"] ?? ""));
                             if ($limite !== "" && is_numeric($limite)) {
                                 $limiteFinal = (int)$limite;
                             }
@@ -146,6 +149,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                     ":disponible"      => 1,
                                     ":limite_pedidos"  => $limiteFinal,
                                     ":complementos_max"=> $compMaxFinal,
+                                    ":opciones"        => $opcionesFinal,
                                     ":id"              => $idEx,
                                 ]);
                             } elseif (isset($idsRef[$idEx])) {
@@ -157,6 +161,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                     ":disponible"      => 0,
                                     ":limite_pedidos"  => $exDato["limite_pedidos"],
                                     ":complementos_max"=> $exDato["complementos_max"] ?? null,
+                                    ":opciones"        => $exDato["opciones"] ?? null,
                                     ":id"              => $idEx,
                                 ]);
                             }
@@ -171,6 +176,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                 ":descripcion"     => $descripcion,
                                 ":limite_pedidos"  => $limiteFinal,
                                 ":complementos_max"=> $compMaxFinal,
+                                ":opciones"        => $opcionesFinal,
                             ]);
                         }
                     }
@@ -259,6 +265,22 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $errores[] = "Error al guardar los productos: " . $e->getMessage();
         }
     }
+}
+
+/*
+    Opciones recordadas: las de la última vez que se usó cada nombre de
+    plato fuerte, para no tener que escribirlas cada día (p. ej. los
+    aderezos de la Ensalada Ejecutiva). Se llenan solas al escribir el nombre.
+*/
+$opcionesRecordadas = [];
+$stmtRec = $conexion->query(
+    "SELECT nombre, opciones FROM productos
+     WHERE categoria = 'Plato fuerte' AND opciones IS NOT NULL AND opciones <> ''
+     ORDER BY id_producto DESC LIMIT 500"
+);
+foreach ($stmtRec->fetchAll(PDO::FETCH_ASSOC) as $r) {
+    $clave = mb_strtolower(trim($r["nombre"]), "UTF-8");
+    if (!isset($opcionesRecordadas[$clave])) $opcionesRecordadas[$clave] = $r["opciones"];
 }
 
 /*
@@ -516,6 +538,7 @@ POSTRE: Nombre del postre (descripción)</pre>
                         $descVal     = $guardado["descripcion"] ?? "";
                         $limiteVal   = $guardado["limite_pedidos"] ?? "";
                         $compMaxVal  = $guardado["complementos_max"] ?? "";
+                        $opcionesVal = $guardado["opciones"] ?? "";
                         $inputBase = "productos[" . htmlspecialchars($tipoMenu) . "][" . htmlspecialchars($categoria) . "][" . $i . "]";
                     ?>
                     <div class="pm-producto-card">
@@ -548,6 +571,14 @@ POSTRE: Nombre del postre (descripción)</pre>
                                        placeholder="Sin límite (usa el máx. del menú)"
                                        value="<?php echo htmlspecialchars($compMaxVal); ?>">
                                 <span class="nm-campo__ayuda">Deja vacío para permitir hasta 2. Pon 1 si este plato solo incluye un complemento.</span>
+                            </div>
+                            <div class="pm-limite">
+                                <label>Opciones sin costo</label>
+                                <textarea name="<?php echo $inputBase; ?>[opciones]"
+                                          class="pm-input-opciones"
+                                          rows="3"
+                                          placeholder="Una por línea, p. ej. aderezos"><?php echo htmlspecialchars($opcionesVal); ?></textarea>
+                                <span class="nm-campo__ayuda">Si escribes opciones, el cliente tendrá que elegir una (sin costo). Se recuerdan solas para este plato.</span>
                             </div>
                             <?php endif; ?>
                         </div>
@@ -755,5 +786,23 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
+<script>
+// Llena solas las opciones de un plato fuerte si ese nombre ya las tuvo antes
+(function () {
+    var recordadas = <?php echo json_encode($opcionesRecordadas, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP); ?>;
+    function llenar(inputNombre) {
+        var campos = inputNombre.closest(".pm-producto-card__campos");
+        var area   = campos ? campos.querySelector(".pm-input-opciones") : null;
+        if (!area || area.value.trim() !== "") return;
+        var clave = inputNombre.value.trim().toLowerCase();
+        if (recordadas[clave]) area.value = recordadas[clave];
+    }
+    document.querySelectorAll(".pm-input-nombre").forEach(function (inp) {
+        inp.addEventListener("input",  function () { llenar(inp); });
+        inp.addEventListener("change", function () { llenar(inp); });
+        llenar(inp);
+    });
+})();
+</script>
 </body>
 </html>

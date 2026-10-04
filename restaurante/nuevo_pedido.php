@@ -2,6 +2,7 @@
 require_once "../config/db.php";
 require_once "auth_check.php";
 require_once "../includes/limite_platos.php";
+require_once "../includes/opciones_plato.php";
 
 /* ── Modo prueba ── */
 $stmtMP = $conexion->prepare("SELECT valor FROM configuracion WHERE clave = 'modo_prueba' LIMIT 1");
@@ -151,6 +152,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
         if ($plato_fuerte === "") {
             $erroresMenus[$nMenu][] = "Falta el plato fuerte.";
         }
+
+        // Opción sin costo del plato (p. ej. aderezo de la ensalada)
+        $menusRecibidos[$nMenu]["opcion"] = null;
+        if ($plato_fuerte !== "" && isset($productosIndexados[$plato_fuerte])) {
+            $resOpcion = validarOpcionPlato($productosIndexados[$plato_fuerte], $menu["opcion"] ?? "");
+            if ($resOpcion["error"]) $erroresMenus[$nMenu][] = $resOpcion["error"];
+            $menusRecibidos[$nMenu]["opcion"] = $resOpcion["opcion"];
+        }
         if (empty($complementos)) $erroresMenus[$nMenu][] = "Falta al menos un complemento.";
         if (count($complementos) > 2) $erroresMenus[$nMenu][] = "Máximo 2 complementos.";
 
@@ -246,7 +255,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
             $id_pedido = (int)$conexion->lastInsertId();
 
             $stmtPM  = $conexion->prepare("INSERT INTO pedido_menus (id_pedido,tipo_menu,numero_menu) VALUES (:id_pedido,:tipo_menu,:numero_menu)");
-            $stmtDet = $conexion->prepare("INSERT INTO detalle_pedido (id_pedido_menu,id_producto,categoria,nombre_producto) VALUES (:id_pedido_menu,:id_producto,:categoria,:nombre_producto)");
+            $stmtDet = $conexion->prepare("INSERT INTO detalle_pedido (id_pedido_menu,id_producto,categoria,nombre_producto,opcion) VALUES (:id_pedido_menu,:id_producto,:categoria,:nombre_producto,:opcion)");
 
             $nMenu = 1;
             foreach ($menusRecibidos as $m) {
@@ -258,7 +267,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
                 ));
                 foreach ($ids as $idP) {
                     if (!$idP || !isset($productosIndexados[$idP])) continue;
-                    $stmtDet->execute([":id_pedido_menu"=>$id_pedido_menu,":id_producto"=>$idP,":categoria"=>$productosIndexados[$idP]["categoria"],":nombre_producto"=>$productosIndexados[$idP]["nombre"]]);
+                    $opcionDet = ($idP === (int)($m["plato_fuerte"] ?? 0)) ? ($m["opcion"] ?? null) : null;
+                    $stmtDet->execute([":id_pedido_menu"=>$id_pedido_menu,":id_producto"=>$idP,":categoria"=>$productosIndexados[$idP]["categoria"],":nombre_producto"=>$productosIndexados[$idP]["nombre"],":opcion"=>$opcionDet]);
                 }
                 $nMenu++;
             }
@@ -437,6 +447,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
                                         <strong><?php echo htmlspecialchars($item["nombre"]); ?></strong>
                                         <?php if (!empty($item["agotado"])): ?><span class="badge-agotado">Agotado</span><?php endif; ?>
                                     </label>
+                                    <?php echo htmlOpcionesPlato($item, "menus[{$i}]", $_POST["menus"][$i]["opcion"] ?? null); ?>
                                 <?php endforeach; ?>
                             </div>
                         <?php endif; ?>
@@ -778,5 +789,6 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
+<?php echo scriptOpcionesPlato(); ?>
 </body>
 </html>

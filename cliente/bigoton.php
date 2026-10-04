@@ -1,6 +1,7 @@
 <?php
 require_once "../config/db.php";
 require_once "../includes/limite_platos.php";
+require_once "../includes/opciones_plato.php";
 date_default_timezone_set("America/Mexico_City");
 
 /* ── Modo prueba ── */
@@ -119,6 +120,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["ordenar"])) {
 
     $personas       = $_POST["personas"] ?? [];
     $erroresPersonas = [];
+    $opcionesPersonas = []; // opción validada del guisado por persona (p. ej. aderezo)
 
     for ($i = 0; $i < $cantidadPersonas; $i++) {
         $persona      = $personas[$i] ?? [];
@@ -138,6 +140,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["ordenar"])) {
             } else {
                 $prod = $productosIndexados[$platoFuerte];
                 if ($prod["tipo_menu"] !== $tipoMenu) $erroresPersonas[$nPersona][] = "El guisado no corresponde al tipo de menú elegido.";
+                $resOpcion = validarOpcionPlato($prod, $persona["opcion"] ?? "");
+                if ($resOpcion["error"]) $erroresPersonas[$nPersona][] = $resOpcion["error"];
+                $opcionesPersonas[$i] = $resOpcion["opcion"];
             }
         }
 
@@ -225,8 +230,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["ordenar"])) {
                  VALUES (:id_pedido, :num, :tipo, :nombre_persona)"
             );
             $stmtDP = $conexion->prepare(
-                "INSERT INTO detalle_pedido (id_pedido_menu, id_producto, categoria, nombre_producto)
-                 VALUES (:id_pm, :id_prod, :categoria, :nombre)"
+                "INSERT INTO detalle_pedido (id_pedido_menu, id_producto, categoria, nombre_producto, opcion)
+                 VALUES (:id_pm, :id_prod, :categoria, :nombre, :opcion)"
             );
 
             for ($i = 0; $i < $cantidadPersonas; $i++) {
@@ -245,6 +250,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["ordenar"])) {
                     ":id_prod"   => $platoFuerte,
                     ":categoria" => "Plato fuerte",
                     ":nombre"    => $prod["nombre"],
+                    ":opcion"    => $opcionesPersonas[$i] ?? null,
                 ]);
 
                 // Complementos opcionales
@@ -256,6 +262,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["ordenar"])) {
                         ":id_prod"   => $cid,
                         ":categoria" => "Complemento",
                         ":nombre"    => $productosIndexados[$cid]["nombre"],
+                        ":opcion"    => null,
                     ]);
                     $nombresComp[] = $productosIndexados[$cid]["nombre"];
                 }
@@ -269,10 +276,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["ordenar"])) {
                         ":id_prod"   => (int)$prodAuto["id_producto"],
                         ":categoria" => $catAuto,
                         ":nombre"    => $prodAuto["nombre"],
+                        ":opcion"    => null,
                     ]);
                 }
 
-                $lineaConf = trim($personas[$i]["nombre"]) . " — " . $prod["nombre"];
+                $lineaConf = trim($personas[$i]["nombre"]) . " — " . $prod["nombre"]
+                           . (!empty($opcionesPersonas[$i]) ? " (" . $opcionesPersonas[$i] . ")" : "");
                 if (!empty($nombresComp)) {
                     $lineaConf .= " (+ " . implode(", ", $nombresComp) . ")";
                 }
@@ -473,6 +482,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["ordenar"])) {
                                 <small class="badge-agotado">Agotado</small>
                             <?php endif; ?>
                         </label>
+                        <?php echo htmlOpcionesPlato($prod, "personas[{$i}]", $_POST["personas"][$i]["opcion"] ?? null); ?>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <p class="nota-formulario">Sin opciones para este tipo de menú.</p>
@@ -652,5 +662,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["ordenar"])) {
 })();
 </script>
 
+<?php echo scriptOpcionesPlato(); ?>
 </body>
 </html>
