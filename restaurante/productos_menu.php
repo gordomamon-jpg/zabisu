@@ -703,9 +703,17 @@ document.addEventListener("DOMContentLoaded", function () {
             function fillCat(tipoMenu, categoria, items) {
                 var key     = "[" + tipoMenu + "][" + categoria + "]";
                 var nombres = Array.from(document.querySelectorAll("input[name*='" + key + "'][name$='[nombre]']"));
-                var descs   = Array.from(document.querySelectorAll("textarea[name*='" + key + "']"));
+                var descs   = Array.from(document.querySelectorAll("textarea[name*='" + key + "'][name$='[descripcion]']"));
                 nombres.forEach(function (inp, idx) {
                     inp.value = items[idx] ? items[idx].nombre : "";
+                    // Las opciones siguen al nombre del plato: se vacían y se
+                    // vuelven a llenar con las recordadas para ese nombre
+                    var opc = inp.closest(".pm-producto-card__campos");
+                    opc = opc ? opc.querySelector(".pm-input-opciones") : null;
+                    if (opc) {
+                        opc.value = "";
+                        inp.dispatchEvent(new Event("input"));
+                    }
                 });
                 descs.forEach(function (ta, idx) {
                     ta.value = items[idx] ? items[idx].descripcion : "";
@@ -758,9 +766,9 @@ document.addEventListener("DOMContentLoaded", function () {
             var tabEjecutivo = document.getElementById("tab-Ejecutivo");
 
             var inputsZabisu    = Array.from(tabZabisu.querySelectorAll("input[type='text']"));
-            var textareasZabisu = Array.from(tabZabisu.querySelectorAll("textarea"));
+            var textareasZabisu = Array.from(tabZabisu.querySelectorAll("textarea[name$='[descripcion]']"));
             var inputsEjec      = Array.from(tabEjecutivo.querySelectorAll("input[type='text']"));
-            var textareasEjec   = Array.from(tabEjecutivo.querySelectorAll("textarea"));
+            var textareasEjec   = Array.from(tabEjecutivo.querySelectorAll("textarea[name$='[descripcion]']"));
 
             categoriasCopiar.forEach(function (cat) {
                 var marcador = "[" + cat + "]";
