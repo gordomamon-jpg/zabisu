@@ -566,10 +566,11 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
             </span>
         </div>
 
+        <?php $sinTelefono = trim((string)$pedido["telefono"]) === ""; ?>
         <div class="bloque-prioridad__fila">
-            <span class="bloque-prioridad__label">TEL.</span>
-            <span class="bloque-prioridad__valor">
-                <?php echo htmlspecialchars($pedido["telefono"]); ?>
+            <span class="bloque-prioridad__label"><?php echo $sinTelefono ? "CORREO" : "TEL."; ?></span>
+            <span class="bloque-prioridad__valor" style="word-break:break-all;">
+                <?php echo htmlspecialchars($sinTelefono ? (string)$pedido["correo_cliente"] : $pedido["telefono"]); ?>
             </span>
         </div>
 

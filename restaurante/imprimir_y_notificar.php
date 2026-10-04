@@ -4,6 +4,7 @@ require_once "auth_check.php";
 require_once "../includes/enviar_correo.php";
 require_once "../includes/enviar_whatsapp.php";
 require_once "../includes/confirmacion_wa.php";
+require_once "../includes/modo_notificacion.php";
 
 $id_pedido = isset($_GET["id"]) ? (int)$_GET["id"] : 0;
 
@@ -183,7 +184,7 @@ try {
     /*
         5. Enviar correo solo si no se ha enviado antes
     */
-    if (false) { /* correo desactivado — reemplazado por WhatsApp; restaurar: (int)$pedido["correo_enviado"] === 0 */
+    if (MODO_NOTIFICACION === 'correo' && (int)$pedido["correo_enviado"] === 0) {
         $correo_cliente = trim($pedido["correo_cliente"] ?? "");
         $nombre_cliente = trim($pedido["nombre_cliente"] ?? "Cliente");
         $folio          = trim($pedido["folio"] ?? "");
@@ -451,19 +452,27 @@ try {
 </body></html>
             ";
 
-            enviarCorreo($correo_cliente, $nombre_cliente, $asunto, $mensaje);
+            $correoConfirmado = enviarCorreo($correo_cliente, $nombre_cliente, $asunto, $mensaje);
+        } else {
+            // Sin correo válido no hay a quién mandarlo: no reintentar por siempre
+            $correoConfirmado = true;
         }
 
-        $sqlCorreoEnviado = "UPDATE pedidos
-                             SET correo_enviado = 1
-                             WHERE id_pedido = :id_pedido";
-        $stmtCorreoEnviado = $conexion->prepare($sqlCorreoEnviado);
-        $stmtCorreoEnviado->bindParam(":id_pedido", $id_pedido, PDO::PARAM_INT);
-        $stmtCorreoEnviado->execute();
+        // Solo se marca como enviado si el correo salió (si falló, se
+        // reintenta la próxima vez que se imprima el ticket)
+        if ($correoConfirmado) {
+            $sqlCorreoEnviado = "UPDATE pedidos
+                                 SET correo_enviado = 1
+                                 WHERE id_pedido = :id_pedido";
+            $stmtCorreoEnviado = $conexion->prepare($sqlCorreoEnviado);
+            $stmtCorreoEnviado->bindParam(":id_pedido", $id_pedido, PDO::PARAM_INT);
+            $stmtCorreoEnviado->execute();
+            $pedido["correo_enviado"] = 1;
+        }
     }
 
     /* ── WhatsApp — confirmación de pedido (una sola vez) ── */
-    if ((int)$pedido["correo_enviado"] === 0) {
+    if (MODO_NOTIFICACION === 'whatsapp' && (int)$pedido["correo_enviado"] === 0) {
         $stmtExtrasWA = $conexion->prepare(
             "SELECT nombre, categoria, cantidad, precio_unitario FROM pedido_extras WHERE id_pedido = :id ORDER BY id_extra ASC"
         );

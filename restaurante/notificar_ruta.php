@@ -3,6 +3,7 @@ require_once "../config/db.php";
 require_once "auth_check.php";
 require_once "../includes/enviar_correo.php";
 require_once "../includes/enviar_whatsapp.php";
+require_once "../includes/modo_notificacion.php";
 
 header("Content-Type: application/json; charset=UTF-8");
 
@@ -139,8 +140,11 @@ $enviados  = 0;
 $sinCorreo = 0;
 $errores   = 0;
 
-/* correo desactivado — reemplazado por WhatsApp */
-if (false) {
+/* ── Correo — aviso de llegada (modo temporal, ver modo_notificacion.php) ── */
+if (MODO_NOTIFICACION === 'correo') {
+
+set_time_limit(180); // un correo por cliente vía SMTP, puede tardar unos segundos cada uno
+$fallidos = [];
 
 $ubicacionBonita = htmlspecialchars($nombre_ubicacion);
 $horaBonita      = date("g:i A", strtotime($hora_entrega));
@@ -203,9 +207,40 @@ foreach ($pedidos as $pedido) {
         $enviados++;
     } else {
         $errores++;
+        $fallidos[] = ["nombre" => $nombre, "telefono" => "", "folio" => $folio, "error" => "No se pudo enviar el correo"];
     }
 }
-} /* fin correo desactivado */
+
+// Si no salió ninguno, no dejar el horario como "ya avisado": se puede reintentar
+if ($enviados === 0) {
+    nrz_liberarCandado($conexion, $fecha, $id_horario);
+    echo json_encode([
+        "ok"      => false,
+        "mensaje" => $errores > 0
+            ? "No se pudo enviar ningún correo. Nada quedó registrado como enviado — puedes reintentar."
+            : "Ningún cliente de este horario dejó correo, no hay a quién avisar.",
+    ]);
+    exit;
+}
+
+$conexion->prepare("
+    UPDATE notificaciones_ruta
+    SET enviado_en = NOW(), tipo = 'manual', total_enviados = :total
+    WHERE fecha_menu = :fecha AND id_horario = :id_horario
+")->execute([":total" => $enviados, ":fecha" => $fecha, ":id_horario" => $id_horario]);
+
+echo json_encode([
+    "ok"           => true,
+    "en_proceso"   => false,
+    "canal"        => "correo",
+    "total"        => count($pedidos),
+    "enviados"     => $enviados,
+    "fallidos"     => $fallidos,
+    "sin_contacto" => $sinCorreo,
+    "clientes"     => [],
+]);
+exit;
+} /* fin correo */
 
 /* ── WhatsApp — notificación masiva de llegada ── */
 $horaBonita = date("g:i A", strtotime($hora_entrega));

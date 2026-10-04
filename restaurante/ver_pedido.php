@@ -198,10 +198,12 @@ function obtenerClaseEstadoPago($estadoPago)
                     <span><?php echo htmlspecialchars($pedido["nombre_cliente"]); ?></span>
                 </div>
 
+                <?php if (trim((string)$pedido["telefono"]) !== ""): ?>
                 <div class="ticket-linea">
                     <span>Teléfono</span>
                     <span><?php echo htmlspecialchars($pedido["telefono"]); ?></span>
                 </div>
+                <?php endif; ?>
 
                 <?php if (!empty($pedido["correo_cliente"])): ?>
                     <div class="ticket-linea">

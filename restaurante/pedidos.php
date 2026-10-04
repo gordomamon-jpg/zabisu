@@ -1166,6 +1166,12 @@ document.addEventListener("DOMContentLoaded", function () {
                         return;
                     }
 
+                    // Por correo el envío termina en la misma petición
+                    if (data.en_proceso === false) {
+                        mostrarResultadoFinalNotif(data, ubicacion, hora);
+                        return;
+                    }
+
                     // El envío real ya no bloquea esta petición — se hace en
                     // segundo plano en wa-service. Se avisa de inmediato y se
                     // consulta el resultado real cada pocos segundos, sin
@@ -1219,47 +1225,55 @@ document.addEventListener("DOMContentLoaded", function () {
                     return;
                 }
 
-                var enviados  = data.enviados || 0;
-                var fallidos  = data.fallidos || [];
-                var total     = data.total || 0;
-                var tipo      = fallidos.length > 0 ? "advertencia" : "exito";
-                var msg       = "✅ " + enviados + " de " + total + " mensaje" + (total !== 1 ? "s" : "") + " confirmado" + (enviados !== 1 ? "s" : "") + " por WhatsApp.";
-
-                if (fallidos.length > 0) {
-                    msg += "<div style='margin-top:8px;color:#c0392b;font-size:13px;'>⚠️ " + fallidos.length + " no se pudo" + (fallidos.length !== 1 ? "ieron" : "") + " confirmar:</div>";
-                    msg += "<ul style='margin:6px 0 0;padding-left:18px;font-size:13px;'>";
-                    fallidos.forEach(function (f) {
-                        msg += "<li>" + f.nombre + " (" + f.folio + ") — " + f.error + "</li>";
-                    });
-                    msg += "</ul>";
-                }
-
-                // Links manuales plegables como respaldo — sobre todo útiles para los que fallaron
-                var conTel = (data.clientes || []).filter(function (c) { return c.telefono; });
-                if (conTel.length > 0) {
-                    var horaBonita = formatHoraWA(hora);
-                    msg += "<details style='margin-top:12px;'><summary style='cursor:pointer;font-size:13px;opacity:.55;'>Ver links manuales (respaldo)</summary><div style='margin-top:8px;'>";
-                    conTel.forEach(function (cliente) {
-                        var tel   = normalizarTelefono(cliente.telefono || "");
-                        var texto = encodeURIComponent(
-                            "Hola *" + cliente.nombre + "* 📍 Tu pedido Zabisu *" + cliente.folio +
-                            "* ya llegó a *" + ubicacion + "*. ¡Pasa a recogerlo antes de las " + horaBonita + "! 🍱"
-                        );
-                        if (tel) {
-                            msg += "<a href='https://wa.me/" + tel + "?text=" + texto + "' target='_blank' style='display:block;margin:4px 0;padding:8px 12px;background:#25D366;color:#fff;border-radius:8px;text-decoration:none;font-size:13px;'>📱 " + cliente.nombre + " · " + cliente.folio + "</a>";
-                        }
-                    });
-                    msg += "</div></details>";
-                }
-
-                mostrarResultadoNotif(tipo, msg);
-                restablecerBotonNotif();
+                mostrarResultadoFinalNotif(data, ubicacion, hora);
             })
             .catch(function () {
                 setTimeout(function () {
                     consultarEstadoNotificacion(jobId, fecha, ubicacion, hora, intento + 1);
                 }, 5000);
             });
+    }
+
+    function mostrarResultadoFinalNotif(data, ubicacion, hora) {
+        var enviados  = data.enviados || 0;
+        var fallidos  = data.fallidos || [];
+        var total     = data.total || 0;
+        var tipo      = fallidos.length > 0 ? "advertencia" : "exito";
+        var canal     = data.canal === "correo" ? "por correo" : "por WhatsApp";
+        var msg       = "✅ " + enviados + " de " + total + " aviso" + (total !== 1 ? "s" : "") + " enviado" + (enviados !== 1 ? "s" : "") + " " + canal + ".";
+        if (data.sin_contacto) {
+            msg += "<div style='margin-top:6px;font-size:13px;opacity:.75;'>" + data.sin_contacto + " cliente" + (data.sin_contacto !== 1 ? "s" : "") + " sin correo registrado.</div>";
+        }
+
+        if (fallidos.length > 0) {
+            msg += "<div style='margin-top:8px;color:#c0392b;font-size:13px;'>⚠️ " + fallidos.length + " no se pudo" + (fallidos.length !== 1 ? "ieron" : "") + " confirmar:</div>";
+            msg += "<ul style='margin:6px 0 0;padding-left:18px;font-size:13px;'>";
+            fallidos.forEach(function (f) {
+                msg += "<li>" + f.nombre + " (" + f.folio + ") — " + f.error + "</li>";
+            });
+            msg += "</ul>";
+        }
+
+        // Links manuales plegables como respaldo — sobre todo útiles para los que fallaron
+        var conTel = (data.clientes || []).filter(function (c) { return c.telefono; });
+        if (conTel.length > 0) {
+            var horaBonita = formatHoraWA(hora);
+            msg += "<details style='margin-top:12px;'><summary style='cursor:pointer;font-size:13px;opacity:.55;'>Ver links manuales (respaldo)</summary><div style='margin-top:8px;'>";
+            conTel.forEach(function (cliente) {
+                var tel   = normalizarTelefono(cliente.telefono || "");
+                var texto = encodeURIComponent(
+                    "Hola *" + cliente.nombre + "* 📍 Tu pedido Zabisu *" + cliente.folio +
+                    "* ya llegó a *" + ubicacion + "*. ¡Pasa a recogerlo antes de las " + horaBonita + "! 🍱"
+                );
+                if (tel) {
+                    msg += "<a href='https://wa.me/" + tel + "?text=" + texto + "' target='_blank' style='display:block;margin:4px 0;padding:8px 12px;background:#25D366;color:#fff;border-radius:8px;text-decoration:none;font-size:13px;'>📱 " + cliente.nombre + " · " + cliente.folio + "</a>";
+                }
+            });
+            msg += "</div></details>";
+        }
+
+        mostrarResultadoNotif(tipo, msg);
+        restablecerBotonNotif();
     }
 
     function mostrarResultadoNotif(tipo, html) {

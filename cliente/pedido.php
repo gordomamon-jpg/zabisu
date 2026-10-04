@@ -365,8 +365,10 @@ $scrollDestino = "";
 */
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
     $nombre_cliente  = trim($_POST["nombre_cliente"] ?? "");
-    $telefono        = trim($_POST["telefono"] ?? "");
-    $correo_cliente  = "";
+    // Temporal (oct-2026): se pide correo en lugar de teléfono mientras se
+    // implementa la API oficial de WhatsApp (ver includes/modo_notificacion.php)
+    $telefono        = "";
+    $correo_cliente  = mb_strtolower(trim($_POST["correo_cliente"] ?? ""), "UTF-8");
     $observaciones   = trim($_POST["observaciones"] ?? "");
     $id_horario      = $_POST["id_horario"] ?? "";
     $menusRecibidos  = $_POST["menus"] ?? [];
@@ -377,10 +379,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
         $errores[] = "El nombre solo puede contener letras y espacios.";
     }
 
-    if ($telefono === "") {
-        $errores[] = "El teléfono es obligatorio.";
-    } elseif (!preg_match('/^\d{10}$/', $telefono)) {
-        $errores[] = "El teléfono debe contener exactamente 10 dígitos.";
+    if ($correo_cliente === "") {
+        $errores[] = "El correo electrónico es obligatorio.";
+    } elseif (mb_strlen($correo_cliente) > 150 || !filter_var($correo_cliente, FILTER_VALIDATE_EMAIL)) {
+        $errores[] = "El correo electrónico no es válido.";
     }
 
 
@@ -770,10 +772,13 @@ if ($scrollDestino === "bloque-entrega") {
             <section class="bloque-formulario" id="bloque-datos-cliente">
                 <h2>Tus datos</h2>
 
-                <label for="telefono">Teléfono</label>
-                <input type="text" name="telefono" id="telefono"
-                       maxlength="10" inputmode="numeric" autocomplete="tel"
-                       value="<?php echo htmlspecialchars($_POST["telefono"] ?? ""); ?>">
+                <label for="correo_cliente">Correo electrónico</label>
+                <input type="email" name="correo_cliente" id="correo_cliente"
+                       maxlength="150" inputmode="email" autocomplete="email"
+                       autocapitalize="off" spellcheck="false"
+                       placeholder="tucorreo@ejemplo.com"
+                       value="<?php echo htmlspecialchars($_POST["correo_cliente"] ?? ""); ?>">
+                <p class="nota-formulario" style="margin:6px 0 0;">Ahí te enviaremos la confirmación de tu pedido y el aviso cuando llegue a tu punto de entrega.</p>
 
                 <label for="nombre_cliente">Nombre completo</label>
                 <input type="text" name="nombre_cliente" id="nombre_cliente"
@@ -1247,7 +1252,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (n === 1) {
             const nombre = (document.getElementById("nombre_cliente").value || "").trim();
-            const telefono = (document.getElementById("telefono").value || "").trim();
+            const correo = (document.getElementById("correo_cliente").value || "").trim();
 
             if (!nombre) {
                 errores.push("El nombre es obligatorio.");
@@ -1255,10 +1260,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 errores.push("El nombre solo puede contener letras y espacios.");
             }
 
-            if (!telefono) {
-                errores.push("El teléfono es obligatorio.");
-            } else if (!/^\d{10}$/.test(telefono)) {
-                errores.push("El teléfono debe tener exactamente 10 dígitos.");
+            if (!correo) {
+                errores.push("El correo electrónico es obligatorio.");
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correo)) {
+                errores.push("Revisa tu correo electrónico, parece que está incompleto.");
             }
         }
 
@@ -1361,25 +1366,20 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    const telefonoInput = document.getElementById("telefono");
-    if (telefonoInput) {
-        telefonoInput.addEventListener("input", function () {
-            this.value = this.value.replace(/\D/g, "").slice(0, 10);
-        });
-    }
+    const correoInput = document.getElementById("correo_cliente");
 
     // ── Autocompletar desde último pedido ────────────────────────
     var autocompleteTimer = null;
     var avisoAutocomp = document.getElementById("autocomplete-aviso");
 
-    if (telefonoInput) {
-        telefonoInput.addEventListener("input", function () {
+    if (correoInput) {
+        correoInput.addEventListener("input", function () {
             clearTimeout(autocompleteTimer);
-            var tel = this.value;
-            if (tel.length !== 10) return;
+            var correo = this.value.trim().toLowerCase();
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correo)) return;
 
             autocompleteTimer = setTimeout(function () {
-                fetch("ultimo_pedido.php?telefono=" + encodeURIComponent(tel))
+                fetch("ultimo_pedido.php?correo=" + encodeURIComponent(correo))
                     .then(function (r) { return r.json(); })
                     .then(function (data) {
                         if (!data.encontrado) return;
