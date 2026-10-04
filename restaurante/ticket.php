@@ -95,18 +95,6 @@ function agruparDetallePorCategoria($detalles)
     Recuadro grueso, cantidad en negro invertido y nombre grande; el precio
     va chico porque a cocina no le sirve. Solo blanco y negro (térmica).
 */
-function totalPiezasExtras(array $extras): int
-{
-    return array_sum(array_map(fn($e) => (int)$e["cantidad"], $extras));
-}
-
-function htmlAvisoExtras(array $extras): string
-{
-    if (!$extras) return "";
-    $n = totalPiezasExtras($extras);
-    return '<div class="aviso-extras">*** LLEVA ' . $n . ' EXTRA' . ($n === 1 ? '' : 'S') . ' · VER ABAJO ***</div>';
-}
-
 function htmlExtrasTicket(array $extras): string
 {
     if (!$extras) return "";
@@ -354,18 +342,8 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
             print-color-adjust: exact;
         }
 
-        .aviso-extras {
-            border: 2px dashed #000;
-            text-align: center;
-            font-size: 13px;
-            font-weight: 900;
-            letter-spacing: .5px;
-            padding: 5px 4px;
-            margin: 8px 0;
-        }
-
         .extras-box {
-            border: 3px solid #000;
+            border: 2px solid #000;
             margin: 8px 0;
         }
 
@@ -373,10 +351,10 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
             background: #000;
             color: #fff;
             text-align: center;
-            font-size: 16px;
+            font-size: 13px;
             font-weight: 900;
-            letter-spacing: 3px;
-            padding: 4px;
+            letter-spacing: 2px;
+            padding: 3px;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
@@ -384,8 +362,8 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
         .extra-linea {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 6px;
+            gap: 6px;
+            padding: 4px 5px;
             border-top: 1px dashed #000;
         }
 
@@ -396,11 +374,11 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
         .extra-cant {
             background: #000;
             color: #fff;
-            font-size: 18px;
+            font-size: 15px;
             font-weight: 900;
-            min-width: 38px;
+            min-width: 32px;
             text-align: center;
-            padding: 3px 4px;
+            padding: 2px 4px;
             flex-shrink: 0;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
@@ -408,7 +386,7 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
 
         .extra-nombre {
             flex: 1;
-            font-size: 15px;
+            font-size: 13px;
             font-weight: 900;
             text-transform: uppercase;
             line-height: 1.2;
@@ -511,8 +489,6 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
             </div>
         </div>
 
-        <?php if ($idx === array_key_last($menusPedido)) echo htmlAvisoExtras($extrasTicket); ?>
-
         <div class="line"></div>
 
         <?php foreach ($agrupado as $categoria => $items): ?>
@@ -611,8 +587,6 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
             </span>
         </div>
     </div>
-
-    <?php echo htmlAvisoExtras($extrasTicket); ?>
 
     <div class="line"></div>
 
