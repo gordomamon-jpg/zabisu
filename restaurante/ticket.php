@@ -90,6 +90,38 @@ function agruparDetallePorCategoria($detalles)
     return $agrupado;
 }
 
+/*
+    Extras resaltados: en cocina los subrayaban a mano con marcatextos.
+    Recuadro grueso, cantidad en negro invertido y nombre grande; el precio
+    va chico porque a cocina no le sirve. Solo blanco y negro (térmica).
+*/
+function totalPiezasExtras(array $extras): int
+{
+    return array_sum(array_map(fn($e) => (int)$e["cantidad"], $extras));
+}
+
+function htmlAvisoExtras(array $extras): string
+{
+    if (!$extras) return "";
+    $n = totalPiezasExtras($extras);
+    return '<div class="aviso-extras">*** LLEVA ' . $n . ' EXTRA' . ($n === 1 ? '' : 'S') . ' · VER ABAJO ***</div>';
+}
+
+function htmlExtrasTicket(array $extras): string
+{
+    if (!$extras) return "";
+    $html = '<div class="extras-box"><div class="extras-box__titulo">EXTRAS</div>';
+    foreach ($extras as $extra) {
+        $html .= '<div class="extra-linea">'
+               . '<span class="extra-cant">' . (int)$extra["cantidad"] . '×</span>'
+               . '<span class="extra-nombre">' . htmlspecialchars($extra["nombre"])
+               . '<span class="extra-cat">' . htmlspecialchars($extra["categoria"])
+               . ' · $' . number_format($extra["cantidad"] * $extra["precio_unitario"], 2) . '</span></span>'
+               . '</div>';
+    }
+    return $html . '</div>';
+}
+
 function obtenerTextoMetodoPagoTicket($metodoPago)
 {
     return $metodoPago === "Transferencia" ? "Transferencia" : "Efectivo";
@@ -212,15 +244,6 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
             text-transform: uppercase;
             margin-bottom: 6px;
         }
-        .menu-title--extras {
-            background: #000;
-            color: #fff;
-            padding: 3px 6px;
-            display: inline-block;
-            width: 100%;
-            box-sizing: border-box;
-            margin-bottom: 8px;
-        }
 
         .item-group {
             margin-bottom: 5px;
@@ -331,6 +354,74 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
             print-color-adjust: exact;
         }
 
+        .aviso-extras {
+            border: 2px dashed #000;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 900;
+            letter-spacing: .5px;
+            padding: 5px 4px;
+            margin: 8px 0;
+        }
+
+        .extras-box {
+            border: 3px solid #000;
+            margin: 8px 0;
+        }
+
+        .extras-box__titulo {
+            background: #000;
+            color: #fff;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 900;
+            letter-spacing: 3px;
+            padding: 4px;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .extra-linea {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px;
+            border-top: 1px dashed #000;
+        }
+
+        .extras-box__titulo + .extra-linea {
+            border-top: none;
+        }
+
+        .extra-cant {
+            background: #000;
+            color: #fff;
+            font-size: 18px;
+            font-weight: 900;
+            min-width: 38px;
+            text-align: center;
+            padding: 3px 4px;
+            flex-shrink: 0;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .extra-nombre {
+            flex: 1;
+            font-size: 15px;
+            font-weight: 900;
+            text-transform: uppercase;
+            line-height: 1.2;
+        }
+
+        .extra-cat {
+            display: block;
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: none;
+            margin-top: 1px;
+        }
+
         @media print {
             @page {
                 size: 80mm auto;
@@ -420,6 +511,8 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
             </div>
         </div>
 
+        <?php if ($idx === array_key_last($menusPedido)) echo htmlAvisoExtras($extrasTicket); ?>
+
         <div class="line"></div>
 
         <?php foreach ($agrupado as $categoria => $items): ?>
@@ -439,18 +532,7 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
         <div class="line"></div>
 
         <?php if ($idx === array_key_last($menusPedido) && !empty($extrasTicket)): ?>
-        <div class="menu-block">
-            <div class="menu-title menu-title--extras">EXTRAS</div>
-            <?php foreach ($extrasTicket as $extra): ?>
-            <div class="item-group">
-                <div class="item-label"><?php echo htmlspecialchars($extra["categoria"]); ?></div>
-                <div class="item-value">
-                    <?php echo htmlspecialchars($extra["nombre"]); ?> ×<?php echo (int)$extra["cantidad"]; ?>
-                    — $<?php echo number_format($extra["cantidad"] * $extra["precio_unitario"], 2); ?>
-                </div>
-            </div>
-            <?php endforeach; ?>
-        </div>
+        <?php echo htmlExtrasTicket($extrasTicket); ?>
         <div class="line"></div>
         <?php endif; ?>
 
@@ -530,6 +612,8 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
         </div>
     </div>
 
+    <?php echo htmlAvisoExtras($extrasTicket); ?>
+
     <div class="line"></div>
 
     <?php foreach ($menusPedido as $menu): ?>
@@ -560,18 +644,7 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
     <?php endforeach; ?>
 
     <?php if (!empty($extrasTicket)): ?>
-    <div class="menu-block">
-        <div class="menu-title">EXTRAS</div>
-        <?php foreach ($extrasTicket as $extra): ?>
-        <div class="item-group">
-            <div class="item-label"><?php echo htmlspecialchars($extra["categoria"]); ?></div>
-            <div class="item-value">
-                <?php echo htmlspecialchars($extra["nombre"]); ?> ×<?php echo (int)$extra["cantidad"]; ?>
-                — $<?php echo number_format($extra["cantidad"] * $extra["precio_unitario"], 2); ?>
-            </div>
-        </div>
-        <?php endforeach; ?>
-    </div>
+    <?php echo htmlExtrasTicket($extrasTicket); ?>
     <div class="line"></div>
     <?php endif; ?>
 
