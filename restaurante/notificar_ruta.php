@@ -160,7 +160,14 @@ foreach ($pedidos as $pedido) {
     $nombre = $pedido["nombre_cliente"];
     $folio  = $pedido["folio"];
 
-    $asunto = "¡Tu pedido ya llegó! · Zabisu";
+    $asunto = "Tu pedido " . strtoupper($folio) . " ya está en " . $nombre_ubicacion . " - Zabisu";
+
+    $textoCorreo = "Hola, {$nombre}.\n\n"
+        . "Tu pedido de Zabisu ya está en el punto de entrega. Pasa a recogerlo cuando puedas.\n\n"
+        . "Folio: " . strtoupper($folio) . "\n"
+        . "Punto de entrega: {$nombre_ubicacion}\n"
+        . "Horario: {$horaBonita}\n\n"
+        . "Zabisu - Sabor y Servicio";
 
     $mensaje = "
         <div style='font-family:Arial,Helvetica,sans-serif;max-width:520px;margin:0 auto;color:#222;line-height:1.6;'>
@@ -202,7 +209,7 @@ foreach ($pedidos as $pedido) {
         </div>
     ";
 
-    $resultado = enviarCorreo($correo, $nombre, $asunto, $mensaje);
+    $resultado = enviarCorreo($correo, $nombre, $asunto, $mensaje, $textoCorreo);
     if ($resultado) {
         $enviados++;
     } else {

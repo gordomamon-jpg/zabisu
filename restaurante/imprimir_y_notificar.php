@@ -206,7 +206,21 @@ try {
             $resumenMenusCorreo = construirResumenCorreoNotificacion($menusPedido, $detallePorMenu, $preciosMenus);
             $resumenExtrasCorreo = construirExtrasCorreo($extrasCorreo);
 
-            $asunto = "✓ Tu pedido está confirmado · Zabisu";
+            // Asunto sin símbolos y con el folio (único por pedido): los
+            // asuntos idénticos y con símbolos se ven como envío masivo
+            $asunto = "Confirmación de tu pedido " . strtoupper($folio) . " - Zabisu";
+
+            $textoCorreo = "Hola, {$nombre_cliente}.\n\n"
+                . "Tu pedido en Zabisu está confirmado y ya está en preparación.\n\n"
+                . "Folio: " . strtoupper($folio) . "\n"
+                . "Entrega: {$ubicacionCorreo}, {$horaCorreo}\n"
+                . "Pago: " . ($pedido["metodo_pago"] ?? "") . " (" . ($pedido["estado_pago"] ?? "") . ")\n\n"
+                . "Tu pedido:"
+                . str_replace("*", "", construirResumenWA($menusPedido, $detallePorMenu, $preciosMenus))
+                . str_replace("*", "", construirExtrasWA($extrasCorreo))
+                . "\nTotal: $" . number_format($totalPedido, 2) . "\n\n"
+                . "Te avisaremos por correo cuando tu pedido llegue al punto de entrega.\n\n"
+                . "Zabisu - Sabor y Servicio";
 
             $mensaje = "
 <!DOCTYPE html>
@@ -452,7 +466,7 @@ try {
 </body></html>
             ";
 
-            $correoConfirmado = enviarCorreo($correo_cliente, $nombre_cliente, $asunto, $mensaje);
+            $correoConfirmado = enviarCorreo($correo_cliente, $nombre_cliente, $asunto, $mensaje, $textoCorreo);
         } else {
             // Sin correo válido no hay a quién mandarlo: no reintentar por siempre
             $correoConfirmado = true;
