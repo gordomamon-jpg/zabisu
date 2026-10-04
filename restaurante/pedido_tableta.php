@@ -594,15 +594,15 @@ body {
     .t-hero__title   { font-size: 28px; }
 }
 
-/* ADEREZOS (opciones del plato) — colores Zabisu: recuadro en crema y el
-   elegido en naranja SÓLIDO, para que en cocina no se confunda con el
-   naranja translúcido del plato y los complementos elegidos */
+/* ADEREZOS (opciones del plato) — colores Zabisu: recuadro con borde
+   naranja y el elegido en naranja SÓLIDO, para que en cocina no se confunda
+   con el naranja translúcido del plato y los complementos elegidos */
 .t-opciones .opciones-plato {
     margin: 12px 0 6px; padding: 16px;
-    background: rgba(247,236,220,.05); border: 2px solid #f7ecdc; border-radius: 14px;
+    background: rgba(255,122,0,.06); border: 2px solid #ff7a00; border-radius: 14px;
 }
 .t-opciones .opciones-plato .opciones-plato__titulo {
-    font-size: 14px; letter-spacing: 1.5px; color: #f7ecdc; margin-bottom: 12px;
+    font-size: 14px; letter-spacing: 1.5px; color: #ff7a00; margin-bottom: 12px;
 }
 .t-opciones .opciones-plato .opciones-plato__titulo span { color: #ac9f90; opacity: 1; }
 .t-opciones .opciones-plato .opciones-plato__lista { gap: 10px; }
