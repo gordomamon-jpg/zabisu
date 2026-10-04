@@ -4,7 +4,9 @@ require_once "auth_check.php";
 require_once "../includes/opciones_plato.php";
 date_default_timezone_set("America/Mexico_City");
 
-$stmtMenu = $conexion->prepare("SELECT * FROM menu_dia ORDER BY fecha DESC LIMIT 1");
+// Menú más reciente CON productos (si se duplicó un menú y uno quedó vacío,
+// no debe ganar el vacío); en empate, el activo y el más nuevo.
+$stmtMenu = $conexion->prepare("SELECT * FROM menu_dia m WHERE EXISTS (SELECT 1 FROM productos p WHERE p.id_menu = m.id_menu) ORDER BY m.fecha DESC, m.activo DESC, m.id_menu DESC LIMIT 1");
 $stmtMenu->execute();
 $menuActivo = $stmtMenu->fetch(PDO::FETCH_ASSOC);
 
