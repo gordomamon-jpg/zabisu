@@ -594,26 +594,27 @@ body {
     .t-hero__title   { font-size: 28px; }
 }
 
-/* ADEREZOS (opciones del plato) — color propio, verde agua, para que en
-   cocina no se confunda con el naranja del plato elegido */
+/* ADEREZOS (opciones del plato) — colores Zabisu: recuadro en crema y el
+   elegido en naranja SÓLIDO, para que en cocina no se confunda con el
+   naranja translúcido del plato y los complementos elegidos */
 .t-opciones .opciones-plato {
     margin: 12px 0 6px; padding: 16px;
-    background: rgba(20,212,180,.08); border: 2px solid #14d4b4; border-radius: 14px;
+    background: rgba(247,236,220,.05); border: 2px solid #f7ecdc; border-radius: 14px;
 }
 .t-opciones .opciones-plato .opciones-plato__titulo {
-    font-size: 14px; letter-spacing: 1.5px; color: #14d4b4; margin-bottom: 12px;
+    font-size: 14px; letter-spacing: 1.5px; color: #f7ecdc; margin-bottom: 12px;
 }
-.t-opciones .opciones-plato .opciones-plato__titulo span { color: #7fe9d8; opacity: 1; }
+.t-opciones .opciones-plato .opciones-plato__titulo span { color: #ac9f90; opacity: 1; }
 .t-opciones .opciones-plato .opciones-plato__lista { gap: 10px; }
 .t-opciones .opciones-plato .opciones-plato__lista label.opciones-plato__item.opciones-plato__item {
-    min-height: 64px; background: #111120; border: 2px solid #2b3a48;
-    color: #e6e6e6; font-size: 17px; font-weight: 800;
+    min-height: 64px; background: #0a0908; border: 2px solid rgba(247,236,220,.18);
+    color: #f7ecdc; font-size: 17px; font-weight: 800;
 }
 .t-opciones .opciones-plato .opciones-plato__lista label.opciones-plato__item.opciones-plato__item.is-sel {
-    background: #14d4b4; border-color: #14d4b4; color: #06201b;
-    box-shadow: 0 0 0 3px rgba(20,212,180,.25);
+    background: #ff7a00; border-color: #ff7a00; color: #0a0908;
+    box-shadow: 0 0 0 3px rgba(255,122,0,.3);
 }
-.t-opciones .opciones-plato.opciones-plato--error { border-color: #ff6b6b; background: rgba(255,107,107,.08); }
+.t-opciones .opciones-plato.opciones-plato--error { border-color: #f2604a; background: rgba(242,96,74,.08); }
 </style>
 </head>
 <body>
