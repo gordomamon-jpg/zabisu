@@ -137,6 +137,14 @@ function agruparDetallePorCategoria($detalles)
         backdrop-filter: blur(18px) saturate(160%);
         -webkit-backdrop-filter: blur(18px) saturate(160%);
     }
+    .conf-aviso-correo {
+        border-color: rgba(var(--zb-naranja-rgb), .55) !important;
+        background: rgba(var(--zb-naranja-rgb), .08) !important;
+    }
+    .conf-aviso-correo__titulo { margin: 0 0 8px; font-weight: 800; font-size: 16px; color: var(--zb-crema); }
+    .conf-aviso-correo__texto  { margin: 0 0 8px; font-size: 14px; line-height: 1.5; color: rgba(247,236,220,.85); word-break: break-word; }
+    .conf-aviso-correo__texto:last-child { margin-bottom: 0; }
+    .conf-aviso-correo strong { color: var(--zb-crema); }
     .conf-card {
         backdrop-filter: blur(16px) saturate(150%);
         -webkit-backdrop-filter: blur(16px) saturate(150%);
@@ -393,6 +401,21 @@ $waPath            = "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.
 
 <!-- ══ CUERPO ════════════════════════════════════════════════ -->
 <div class="conf-body">
+
+    <?php if (!empty($pedido["correo_cliente"])): ?>
+    <!-- Aviso de correo: los primeros correos de Zabisu pueden caer en spam -->
+    <div class="conf-card conf-aviso-correo">
+        <p class="conf-aviso-correo__titulo">📧 Revisa tu correo</p>
+        <p class="conf-aviso-correo__texto">
+            Te enviamos la confirmación a <strong><?php echo htmlspecialchars($pedido["correo_cliente"]); ?></strong>
+            y ahí mismo te avisaremos cuando tu pedido llegue a tu punto de entrega.
+        </p>
+        <p class="conf-aviso-correo__texto">
+            Si no lo ves en tu bandeja, búscalo en <strong>Spam</strong> o <strong>Promociones</strong> y márcalo como
+            <strong>"No es spam"</strong> para que el aviso de llegada sí te aparezca.
+        </p>
+    </div>
+    <?php endif; ?>
 
     <!-- Datos del pedido -->
     <div class="conf-card">

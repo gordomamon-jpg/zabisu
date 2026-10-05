@@ -778,7 +778,7 @@ if ($scrollDestino === "bloque-entrega") {
                        autocapitalize="off" spellcheck="false"
                        placeholder="tucorreo@ejemplo.com"
                        value="<?php echo htmlspecialchars($_POST["correo_cliente"] ?? ""); ?>">
-                <p class="nota-formulario" style="margin:6px 0 0;">Ahí te enviaremos la confirmación de tu pedido y el aviso cuando llegue a tu punto de entrega.</p>
+                <p class="nota-formulario" style="margin:6px 0 0;">Ahí te enviaremos la confirmación de tu pedido y el aviso cuando llegue a tu punto de entrega. Si no lo ves, revisa tu carpeta de <strong>Spam</strong> y márcanos como <strong>"No es spam"</strong>.</p>
 
                 <label for="nombre_cliente">Nombre completo</label>
                 <input type="text" name="nombre_cliente" id="nombre_cliente"
