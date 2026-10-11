@@ -583,18 +583,45 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
         border-radius: 14px;
         font-size: 13px; color: rgba(255,255,255,.7); line-height: 1.55;
     }
-    .pago-recordatorio {
-        margin: 16px 0; padding: 16px 18px; border-radius: 18px;
-        background: rgba(var(--zb-naranja-rgb), .12); border: 2px solid rgba(var(--zb-naranja-rgb), .7);
-        color: var(--zb-crema);
+    /* Pasos del pago por transferencia */
+    .pago-pasos {
+        display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+        list-style: none; margin: 16px 0; padding: 0;
     }
-    .pago-recordatorio__titulo { margin: 0 0 8px; font-size: 16px; font-weight: 800; }
-    .pago-recordatorio__pasos { margin: 0 0 8px; padding-left: 20px; font-size: 14px; line-height: 1.6; }
-    .pago-recordatorio__nota { margin: 0; font-size: 12.5px; color: rgba(247,236,220,.7); }
-    .pago-recordatorio-final {
-        margin: 18px 0 10px; padding: 12px 14px; border-radius: 14px; text-align: center;
-        background: rgba(var(--zb-naranja-rgb), .1); color: var(--zb-crema); font-size: 14px; line-height: 1.45;
+    .pago-pasos li {
+        display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center;
+        font-size: 12.5px; line-height: 1.3; color: rgba(247,236,220,.75);
     }
+    .pago-pasos__num {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 26px; height: 26px; border-radius: 50%;
+        border: 1.5px solid rgba(255,122,0,.8); color: #ff7a00; font-weight: 800; font-size: 13px;
+    }
+    /* Campo para copiar (CLABE / concepto), a todo lo ancho para que no se parta */
+    .copiar-campo { margin-top: 14px; }
+    .copiar-campo__label {
+        display: block; margin-bottom: 6px; font-size: 12px; letter-spacing: .5px;
+        color: rgba(247,236,220,.55);
+    }
+    .copiar-campo__btn {
+        display: flex; align-items: center; justify-content: space-between; gap: 10px;
+        width: 100%; padding: 12px 14px; border-radius: 12px; cursor: pointer;
+        background: rgba(255,255,255,.04); border: 1px solid rgba(247,236,220,.14);
+        font: inherit; color: #f7ecdc; text-align: left;
+    }
+    .copiar-campo__valor {
+        font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 15px; font-weight: 700;
+        letter-spacing: .5px; word-break: break-all;
+    }
+    .copiar-campo__accion { flex-shrink: 0; font-size: 13px; font-weight: 700; color: #ff7a00; }
+    .copiar-campo__btn.copiado { border-color: rgba(74,200,110,.6); }
+    .copiar-campo__btn.copiado .copiar-campo__accion { color: #4ac86e; }
+    .copiar-campo__nota { margin: 6px 0 0; font-size: 12px; line-height: 1.45; color: rgba(247,236,220,.55); }
+    .pago-nota-final {
+        margin: 18px 4px 10px; text-align: center; font-size: 13px; line-height: 1.5;
+        color: rgba(247,236,220,.65);
+    }
+    .pago-nota-final strong { color: #f7ecdc; }
     .pago-error ul { margin: 0; padding: 0 0 0 16px; }
     .pago-error li { margin-bottom: 4px; }
     .pago-error li:last-child { margin-bottom: 0; }
@@ -676,32 +703,23 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
 
     </div>
 
-    <!-- ── Recordatorio: el pedido aún no existe ── -->
-    <div class="pago-recordatorio bloque-transferencia">
-        <p class="pago-recordatorio__titulo">⚠️ Tu pedido todavía NO está registrado</p>
-        <ol class="pago-recordatorio__pasos">
-            <li>Copia la CLABE y el concepto, y haz tu transferencia.</li>
-            <li><strong>Regresa a esta pantalla</strong> y sube tu comprobante.</li>
-            <li>Toca <strong>"Confirmar pedido"</strong> hasta abajo.</li>
+    <!-- ── Pasos: el pedido se registra hasta confirmar ── -->
+    <div class="bloque-transferencia">
+        <ol class="pago-pasos">
+            <li><span class="pago-pasos__num">1</span>Transfiere</li>
+            <li><span class="pago-pasos__num">2</span>Sube tu comprobante</li>
+            <li><span class="pago-pasos__num">3</span>Confirma tu pedido</li>
         </ol>
-        <p class="pago-recordatorio__nota">Tienes hasta 3 horas para regresar; esta pantalla te estará esperando.</p>
     </div>
 
-    <!-- ── Datos bancarios ── -->
+    <!-- ── Datos para transferir ── -->
+    <?php $conceptoEjemplo = strtoupper($nombre_cliente) . " " . date("d-m-Y"); ?>
     <div class="conf-card bloque-transferencia" id="bloque-transferencia-datos">
-        <p class="conf-card__titulo">Datos bancarios</p>
+        <p class="conf-card__titulo">Datos para transferir</p>
         <div class="pago-lineas">
             <div class="pago-linea">
                 <span class="pago-linea__label">Banco</span>
                 <span class="pago-linea__val">Mercado Pago</span>
-            </div>
-            <div class="pago-linea">
-                <span class="pago-linea__label">CLABE</span>
-                <button type="button" class="clabe-copiar" id="btn-copiar-clabe" title="Toca para copiar">
-                    <span id="texto-clabe">722969014258283039</span>
-                    <span class="clabe-copiar__icono">⎘</span>
-                    <span class="clabe-copiar__copiado" id="msg-copiado-clabe">¡Copiado!</span>
-                </button>
             </div>
             <div class="pago-linea">
                 <span class="pago-linea__label">Titular</span>
@@ -713,30 +731,21 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
             </div>
         </div>
 
-        <?php $conceptoEjemplo = strtoupper($nombre_cliente) . " " . date("d-m-Y"); ?>
-        <div class="aviso-concepto" style="margin-top:16px;">
-            <div class="aviso-concepto__header">
-                <span class="aviso-concepto__icono"><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 22 20.5H2Z"/><path d="M12 9.5v5M12 17.5h.01"/></svg></span>
-                <strong class="aviso-concepto__titulo">Concepto de la transferencia</strong>
-            </div>
-            <p class="aviso-concepto__texto">
-                Escribe lo siguiente en el campo de <strong>concepto</strong> o <strong>referencia</strong> de tu transferencia:
-            </p>
-            <div class="aviso-concepto__ejemplo-wrapper">
-                <span class="aviso-concepto__ejemplo-label">Tu concepto debe ser:</span>
-                <button type="button" class="aviso-concepto__ejemplo" id="btn-copiar-concepto" title="Toca para copiar">
-                    <span id="texto-concepto"><?php echo htmlspecialchars($conceptoEjemplo); ?></span>
-                    <span class="aviso-concepto__copiar-icono">⎘</span>
-                </button>
-                <span class="aviso-concepto__copiado" id="msg-copiado">¡Copiado!</span>
-            </div>
-            <div class="aviso-concepto__toque-hint">
-                <span><svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7.5" stroke-dasharray="2 3.2"/></svg></span>
-                <span>Toca el concepto para copiarlo automáticamente</span>
-            </div>
-            <p class="aviso-concepto__formato">
-                Sin este concepto tu pago <strong>no podrá ser validado</strong>.
-            </p>
+        <div class="copiar-campo">
+            <span class="copiar-campo__label">CLABE</span>
+            <button type="button" class="copiar-campo__btn" data-copiar="texto-clabe">
+                <span class="copiar-campo__valor" id="texto-clabe">722969014258283039</span>
+                <span class="copiar-campo__accion">Copiar</span>
+            </button>
+        </div>
+
+        <div class="copiar-campo">
+            <span class="copiar-campo__label">Concepto</span>
+            <button type="button" class="copiar-campo__btn" data-copiar="texto-concepto">
+                <span class="copiar-campo__valor" id="texto-concepto"><?php echo htmlspecialchars($conceptoEjemplo); ?></span>
+                <span class="copiar-campo__accion">Copiar</span>
+            </button>
+            <p class="copiar-campo__nota">Escríbelo en el concepto o referencia de tu transferencia; sin él no podemos validar tu pago.</p>
         </div>
     </div>
 
@@ -756,8 +765,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
     </div>
 
     <!-- ── Finalizar ── -->
-    <p class="pago-recordatorio-final bloque-transferencia">
-        👇 Sin este último paso tu pedido <strong>no se registra</strong>, aunque ya hayas transferido.
+    <p class="pago-nota-final bloque-transferencia">
+        Tu pedido se registra al tocar <strong>Confirmar pedido</strong>. Si sales a tu banco, regresa aquí; te guardamos esta pantalla por 3 horas.
     </p>
     <button type="submit" name="finalizar_pedido" value="1" class="pago-btn-final">
         Confirmar pedido
@@ -808,43 +817,23 @@ document.addEventListener("DOMContentLoaded", function () {
     });
     actualizarVista();
 
-    // Copiar CLABE
-    var btnClabe    = document.getElementById("btn-copiar-clabe");
-    var msgClabe    = document.getElementById("msg-copiado-clabe");
-    if (btnClabe) {
-        btnClabe.addEventListener("click", function () {
-            var texto = document.getElementById("texto-clabe").textContent.trim();
+    // Copiar CLABE / concepto
+    document.querySelectorAll(".copiar-campo__btn").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            var texto  = document.getElementById(btn.dataset.copiar).textContent.trim();
+            var accion = btn.querySelector(".copiar-campo__accion");
             function ok() {
-                msgClabe.classList.add("clabe-copiar__copiado--visible");
-                setTimeout(function () { msgClabe.classList.remove("clabe-copiar__copiado--visible"); }, 2000);
+                btn.classList.add("copiado"); accion.textContent = "¡Copiado!";
+                setTimeout(function () { btn.classList.remove("copiado"); accion.textContent = "Copiar"; }, 2000);
             }
-            navigator.clipboard.writeText(texto).then(ok).catch(function () {
+            (navigator.clipboard ? navigator.clipboard.writeText(texto) : Promise.reject()).then(ok).catch(function () {
                 var ta = document.createElement("textarea");
                 ta.value = texto; ta.style.cssText = "position:fixed;opacity:0";
                 document.body.appendChild(ta); ta.select(); document.execCommand("copy");
                 document.body.removeChild(ta); ok();
             });
         });
-    }
-
-    // Copiar concepto
-    var btnConcepto = document.getElementById("btn-copiar-concepto");
-    var msgConcepto = document.getElementById("msg-copiado");
-    if (btnConcepto) {
-        btnConcepto.addEventListener("click", function () {
-            var texto = document.getElementById("texto-concepto").textContent.trim();
-            function ok() {
-                msgConcepto.classList.add("aviso-concepto__copiado--visible");
-                setTimeout(function () { msgConcepto.classList.remove("aviso-concepto__copiado--visible"); }, 2000);
-            }
-            navigator.clipboard.writeText(texto).then(ok).catch(function () {
-                var ta = document.createElement("textarea");
-                ta.value = texto; ta.style.cssText = "position:fixed;opacity:0";
-                document.body.appendChild(ta); ta.select(); document.execCommand("copy");
-                document.body.removeChild(ta); ok();
-            });
-        });
-    }
+    });
 
     // Nombre del archivo seleccionado
     var inputArchivo  = document.getElementById("comprobante_pago");
