@@ -211,11 +211,15 @@ h1 {
     .md-hero__marca { animation: none; }
 }
 
+.md-hero__fecha::first-letter {
+    text-transform: uppercase;
+}
+
 .md-hero__fecha {
     margin: 0 0 22px;
     font-size: 15px;
     color: var(--zabisu-gray);
-    text-transform: capitalize;
+    text-transform: none;
 }
 
 .md-hero__precios {

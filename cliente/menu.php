@@ -158,6 +158,7 @@ if (!$menuActivo) {
 <!DOCTYPE html>
 <html lang="es">
 <head>
+<script>document.documentElement.classList.add("md-js");</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zabisu</title>
@@ -965,10 +966,12 @@ foreach ($stmtRatingsDist->fetchAll(PDO::FETCH_ASSOC) as $row) {
     .md-cta               { animation: md-entrada .5s  cubic-bezier(.25,0,.1,1) .70s both; }
     .cliente-footer       { animation: md-entrada .5s  cubic-bezier(.25,0,.1,1) .75s both; }
 
-    /* Items del panel: ocultos hasta que JS los anime en sincronía con el hero */
-    .md-tab-panel .md-seccion__cabecera,
-    .md-tab-panel .md-plato,
-    .md-tab-panel .md-chip {
+    /* Items del panel: ocultos hasta que JS los anime en sincronía con el
+       hero. Solo si el script está corriendo (clase md-js en <html>): sin
+       script, o si falla, el menú se ve normal en lugar de quedar vacío. */
+    .md-js .md-tab-panel .md-seccion__cabecera,
+    .md-js .md-tab-panel .md-plato,
+    .md-js .md-tab-panel .md-chip {
         opacity: 0;
         transform: translateY(16px);
     }
@@ -979,9 +982,9 @@ foreach ($stmtRatingsDist->fetchAll(PDO::FETCH_ASSOC) as $row) {
         #md-countdown, .md-hero__rating, .md-tabs, .md-cta, .cliente-footer {
             animation: none;
         }
-        .md-tab-panel .md-seccion__cabecera,
-        .md-tab-panel .md-plato,
-        .md-tab-panel .md-chip {
+        .md-js .md-tab-panel .md-seccion__cabecera,
+        .md-js .md-tab-panel .md-plato,
+        .md-js .md-tab-panel .md-chip {
             opacity: 1;
             transform: none;
         }
@@ -1090,6 +1093,16 @@ foreach ($stmtRatingsDist->fetchAll(PDO::FETCH_ASSOC) as $row) {
     .md-plato:hover, .md-chip:hover {
         background: rgba(255,255,255,.1) !important;
         border-color: rgba(var(--zb-naranja-rgb),.4) !important;
+    }
+    /* Agua y Cortesía ya van dentro de su recuadro: la ficha no lleva fondo
+       propio (el fondo sin relleno dejaba el texto saliéndose) */
+    .md-fila-simple__col .md-chip,
+    .md-fila-simple__col .md-chip:hover {
+        background: transparent !important;
+        border-color: transparent !important;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        box-shadow: none;
     }
     .md-tabs { position: relative; }
     .md-tabs__pill {
@@ -1424,6 +1437,15 @@ function animarPanel(panel) {
         el.style.opacity    = "0";
         el.style.transform  = "translateY(16px)";
     });
+
+    // Red de seguridad: requestAnimationFrame se pausa si la pestaña carga en
+    // segundo plano (p. ej. al abrir el enlace desde WhatsApp); pase lo que
+    // pase, al poco tiempo todo queda visible.
+    setTimeout(function () {
+        items.forEach(function (el) {
+            if (el.style.opacity === "0") { el.style.opacity = "1"; el.style.transform = "none"; }
+        });
+    }, items.length * GAP + 900);
 
     requestAnimationFrame(function () {
         requestAnimationFrame(function () {
