@@ -5,7 +5,33 @@ require_once "../includes/limite_platos.php";
 iniciarSesionSegura();
 
 if (empty($_SESSION["pedido_temporal"])) {
-    die("No hay un pedido temporal disponible.");
+    // Sesión vencida o pedido ya confirmado: explicarlo en lugar de un texto seco
+    http_response_code(200);
+    ?><!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tu pedido no está activo | Zabisu</title>
+<link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
+<link rel="stylesheet" href="../assets/css/styles.css?v=5">
+<link rel="stylesheet" href="../assets/css/cliente-rediseno.css?v=4">
+<style>
+    body { background: #0a0908 !important; font-family: 'Instrument Sans', Arial, sans-serif; margin: 0; padding: 16px; }
+    .exp { max-width: 440px; margin: 12vh auto 0; padding: 28px 22px; text-align: center;
+           background: rgba(255,255,255,.05); border: 1px solid rgba(247,236,220,.14); border-radius: 22px; color: #f7ecdc; }
+    .exp h1 { font-size: 22px; margin: 0 0 10px; color: #f7ecdc; }
+    .exp p { font-size: 15px; line-height: 1.55; color: rgba(247,236,220,.8); margin: 0 0 12px; }
+    .exp strong { color: #f7ecdc; }
+    .exp a { display: inline-block; margin-top: 8px; padding: 14px 22px; border-radius: 16px; background: #ff7a00;
+             color: #0a0908; font-weight: 800; text-decoration: none; }
+</style></head><body>
+<div class="exp">
+    <h1>⏳ Tu pedido ya no está activo</h1>
+    <p>Pasó demasiado tiempo sin confirmarlo, o ya lo habías confirmado.</p>
+    <p><strong>Si ya transferiste pero no tocaste "Confirmar pedido", tu pedido no quedó registrado.</strong>
+       Vuelve a hacerlo y sube tu comprobante; si tienes dudas, escríbenos por WhatsApp.</p>
+    <a href="pedido.php">Volver a hacer mi pedido</a>
+</div>
+</body></html><?php
+    exit;
 }
 
 $pedidoTemporal = $_SESSION["pedido_temporal"];
@@ -77,6 +103,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
 
     if ($metodo_pago === "") {
         $errores[] = "Debes seleccionar un método de pago.";
+    }
+
+    // La sesión ahora dura horas: si el cliente regresa después del cierre
+    // de pedidos, no se debe registrar (salvo en modo prueba)
+    if (!$esPrueba && !empty($pedidoTemporal["fecha_menu"])) {
+        $stmtCierre = $conexion->prepare("SELECT MAX(pedido_hasta) FROM menu_dia WHERE fecha = :fecha AND activo = 1");
+        $stmtCierre->execute([":fecha" => $pedidoTemporal["fecha_menu"]]);
+        $cierre = $stmtCierre->fetchColumn();
+        if ($cierre && time() > strtotime($cierre)) {
+            $errores[] = "El horario para hacer pedidos ya cerró (" . date("g:i A", strtotime($cierre)) . "). Tu pedido no se registró.";
+        }
     }
 
     if (!in_array($metodo_pago, ["Transferencia", "Efectivo"])) {
@@ -546,6 +583,18 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
         border-radius: 14px;
         font-size: 13px; color: rgba(255,255,255,.7); line-height: 1.55;
     }
+    .pago-recordatorio {
+        margin: 16px 0; padding: 16px 18px; border-radius: 18px;
+        background: rgba(var(--zb-naranja-rgb), .12); border: 2px solid rgba(var(--zb-naranja-rgb), .7);
+        color: var(--zb-crema);
+    }
+    .pago-recordatorio__titulo { margin: 0 0 8px; font-size: 16px; font-weight: 800; }
+    .pago-recordatorio__pasos { margin: 0 0 8px; padding-left: 20px; font-size: 14px; line-height: 1.6; }
+    .pago-recordatorio__nota { margin: 0; font-size: 12.5px; color: rgba(247,236,220,.7); }
+    .pago-recordatorio-final {
+        margin: 18px 0 10px; padding: 12px 14px; border-radius: 14px; text-align: center;
+        background: rgba(var(--zb-naranja-rgb), .1); color: var(--zb-crema); font-size: 14px; line-height: 1.45;
+    }
     .pago-error ul { margin: 0; padding: 0 0 0 16px; }
     .pago-error li { margin-bottom: 4px; }
     .pago-error li:last-child { margin-bottom: 0; }
@@ -627,6 +676,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
 
     </div>
 
+    <!-- ── Recordatorio: el pedido aún no existe ── -->
+    <div class="pago-recordatorio bloque-transferencia">
+        <p class="pago-recordatorio__titulo">⚠️ Tu pedido todavía NO está registrado</p>
+        <ol class="pago-recordatorio__pasos">
+            <li>Copia la CLABE y el concepto, y haz tu transferencia.</li>
+            <li><strong>Regresa a esta pantalla</strong> y sube tu comprobante.</li>
+            <li>Toca <strong>"Confirmar pedido"</strong> hasta abajo.</li>
+        </ol>
+        <p class="pago-recordatorio__nota">Tienes hasta 3 horas para regresar; esta pantalla te estará esperando.</p>
+    </div>
+
     <!-- ── Datos bancarios ── -->
     <div class="conf-card bloque-transferencia" id="bloque-transferencia-datos">
         <p class="conf-card__titulo">Datos bancarios</p>
@@ -696,6 +756,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
     </div>
 
     <!-- ── Finalizar ── -->
+    <p class="pago-recordatorio-final bloque-transferencia">
+        👇 Sin este último paso tu pedido <strong>no se registra</strong>, aunque ya hayas transferido.
+    </p>
     <button type="submit" name="finalizar_pedido" value="1" class="pago-btn-final">
         Confirmar pedido
         <span class="pago-btn-final__flecha">→</span>
@@ -728,7 +791,21 @@ document.addEventListener("DOMContentLoaded", function () {
         avisoEfectivo.classList.toggle("visible", val === "Efectivo");
     }
 
-    radios.forEach(function (r) { r.addEventListener("change", actualizarVista); });
+    // Si el celular recarga la página al volver de la app del banco, que
+    // siga seleccionado el método (si no, los datos y el comprobante se esconden)
+    try {
+        var guardado = sessionStorage.getItem("zabisu_metodo_pago");
+        if (guardado && !document.querySelector('input[name="metodo_pago"]:checked')) {
+            var r = document.querySelector('input[name="metodo_pago"][value="' + guardado + '"]');
+            if (r) r.checked = true;
+        }
+    } catch (e) {}
+    radios.forEach(function (r) {
+        r.addEventListener("change", function () {
+            try { sessionStorage.setItem("zabisu_metodo_pago", r.value); } catch (e) {}
+            actualizarVista();
+        });
+    });
     actualizarVista();
 
     // Copiar CLABE

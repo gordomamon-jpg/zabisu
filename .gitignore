@@ -28,3 +28,6 @@ Thumbs.db
 
 # Estado de login (intentos fallidos) — no es código, se regenera solo
 /config/login_intentos.json
+
+# Sesiones de PHP (se crean solas en el servidor)
+/storage/sesiones/

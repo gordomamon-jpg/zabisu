@@ -7,9 +7,26 @@
     puede falsificar ese valor.
 */
 
+// Cuánto dura una sesión sin actividad. El servidor borra las sesiones a
+// los 24 min (php.ini), y un cliente que se va a su banco a transferir
+// puede tardar más: al regresar ya no estaba su pedido.
+const DURACION_SESION_SEG = 3 * 60 * 60;
+
 function iniciarSesionSegura(): void
 {
     if (session_status() === PHP_SESSION_NONE) {
+        // Carpeta propia para las sesiones: la limpieza automática del
+        // servidor (sessionclean) solo revisa la carpeta por defecto y usa
+        // los 24 min de php.ini. Aquí la limpieza la hace el propio PHP.
+        $dirSesiones = __DIR__ . "/../storage/sesiones";
+        if (!is_dir($dirSesiones)) @mkdir($dirSesiones, 0700, true);
+        if (is_dir($dirSesiones) && is_writable($dirSesiones)) {
+            ini_set("session.save_path", $dirSesiones);
+            ini_set("session.gc_maxlifetime", (string)DURACION_SESION_SEG);
+            ini_set("session.gc_probability", "1");
+            ini_set("session.gc_divisor", "100");
+        }
+
         $esHttps = (!empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] !== "off")
             || (($_SERVER["HTTP_X_FORWARDED_PROTO"] ?? "") === "https");
 
