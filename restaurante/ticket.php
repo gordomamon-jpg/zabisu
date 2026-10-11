@@ -1,6 +1,7 @@
 <?php
 require_once "../config/db.php";
 require_once "../includes/opciones_plato.php";
+require_once "../includes/decoracion_ticket.php";
 require_once "auth_check.php";
 
 $id_pedido = isset($_GET["id"]) ? (int)$_GET["id"] : 0;
@@ -80,6 +81,9 @@ $stmtExtras = $conexion->prepare($sqlExtras);
 $stmtExtras->bindParam(":id_pedido", $id_pedido, PDO::PARAM_INT);
 $stmtExtras->execute();
 $extrasTicket = $stmtExtras->fetchAll(PDO::FETCH_ASSOC);
+
+/* Decoración de temporada (0 = ticket normal) */
+$tema = temaTicket((string)$pedido["folio"]);
 
 function agruparDetallePorCategoria($detalles)
 {
@@ -421,6 +425,7 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
                 padding: 0;
             }
         }
+        <?php echo cssDecoracionTicket(); ?>
     </style>
 </head>
 <body>
@@ -435,6 +440,7 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
         $totalMenus    = count($menusPedido);
     ?>
     <div class="ticket ticket-separado">
+        <?php echo decoracionArriba($tema); ?>
 
         <div class="ticket-header">
             <img class="ticket-logo" src="../assets/img/dd.png" alt="Zabisu">
@@ -445,7 +451,7 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
             </div>
         </div>
 
-        <div class="line"></div>
+        <?php echo separadorTicket($tema); ?>
 
         <div class="bloque-prioridad">
             <div class="bloque-prioridad__titulo">
@@ -489,7 +495,7 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
             </div>
         </div>
 
-        <div class="line"></div>
+        <?php echo separadorTicket($tema); ?>
 
         <?php foreach ($agrupado as $categoria => $items): ?>
             <?php $esResaltado = in_array($categoria, ["Plato fuerte", "Complemento"]); ?>
@@ -505,11 +511,11 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
             </div>
         <?php endforeach; ?>
 
-        <div class="line"></div>
+        <?php echo separadorTicket($tema); ?>
 
         <?php if ($idx === array_key_last($menusPedido) && !empty($extrasTicket)): ?>
         <?php echo htmlExtrasTicket($extrasTicket); ?>
-        <div class="line"></div>
+        <?php echo separadorTicket($tema); ?>
         <?php endif; ?>
 
         <div class="row total">
@@ -518,12 +524,14 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
         </div>
 
         <div class="footer">Preparar pedido</div>
+        <?php echo decoracionAbajo($tema, $nombrePersona !== "" ? $nombrePersona : (string)$pedido["nombre_cliente"], $pedido["folio"] . "-" . $idx); ?>
     </div>
     <?php endforeach; ?>
 
 <?php else: ?>
 
 <div class="ticket">
+    <?php echo decoracionArriba($tema); ?>
     <div class="ticket-header">
         <img class="ticket-logo" src="../assets/img/dd.png" alt="Zabisu">
         <div class="ticket-header__info">
@@ -533,7 +541,7 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
         </div>
     </div>
 
-    <div class="line"></div>
+    <?php echo separadorTicket($tema); ?>
 
     <div class="bloque-prioridad">
         <div class="bloque-prioridad__titulo">DATOS CLAVE</div>
@@ -589,7 +597,7 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
         </div>
     </div>
 
-    <div class="line"></div>
+    <?php echo separadorTicket($tema); ?>
 
     <?php foreach ($menusPedido as $menu): ?>
         <?php $agrupado = agruparDetallePorCategoria($detallePorMenu[$menu["id_pedido_menu"]] ?? []); ?>
@@ -615,12 +623,12 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
                 </div>
             <?php endforeach; ?>
         </div>
-        <div class="line"></div>
+        <?php echo separadorTicket($tema); ?>
     <?php endforeach; ?>
 
     <?php if (!empty($extrasTicket)): ?>
     <?php echo htmlExtrasTicket($extrasTicket); ?>
-    <div class="line"></div>
+    <?php echo separadorTicket($tema); ?>
     <?php endif; ?>
 
     <div class="section-title">Observaciones</div>
@@ -630,7 +638,7 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
         <div class="obs">Sin observaciones</div>
     <?php endif; ?>
 
-    <div class="line"></div>
+    <?php echo separadorTicket($tema); ?>
 
     <div class="row total">
         <div>Total</div>
@@ -640,6 +648,7 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
     <div class="footer">
         Preparar pedido
     </div>
+    <?php echo decoracionAbajo($tema, (string)$pedido["nombre_cliente"], (string)$pedido["folio"]); ?>
 </div>
 
 <?php endif; ?>
