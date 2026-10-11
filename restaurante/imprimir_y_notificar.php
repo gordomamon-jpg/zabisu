@@ -5,6 +5,7 @@ require_once "../includes/enviar_correo.php";
 require_once "../includes/enviar_whatsapp.php";
 require_once "../includes/confirmacion_wa.php";
 require_once "../includes/modo_notificacion.php";
+require_once "../includes/canal_whatsapp.php";
 
 $id_pedido = isset($_GET["id"]) ? (int)$_GET["id"] : 0;
 
@@ -220,6 +221,7 @@ try {
                 . str_replace("*", "", construirExtrasWA($extrasCorreo))
                 . "\nTotal: $" . number_format($totalPedido, 2) . "\n\n"
                 . "Te avisaremos por correo cuando tu pedido llegue al punto de entrega.\n\n"
+                . "Menú del día (lunes a jueves) en nuestro canal de WhatsApp: " . CANAL_WHATSAPP_URL . "\n\n"
                 . "Zabisu - Sabor y Servicio";
 
             $mensaje = "
@@ -435,6 +437,13 @@ try {
         </td></tr>
 
       </table>
+    </td></tr>
+
+    <!-- ══ CANAL DE WHATSAPP ══ -->
+    <tr><td bgcolor='#111114' style='background:#111114;padding:22px 24px;text-align:center;border-left:1px solid #1a1a1c;border-right:1px solid #1a1a1c;'>
+      <p style='margin:0 0 6px;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:15px;font-weight:800;color:#f7ecdc;'>¿Quieres ver el menú todos los días?</p>
+      <p style='margin:0 0 14px;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:13px;color:rgba(255,255,255,.55);'>Lo publicamos de lunes a jueves en nuestro canal de WhatsApp.</p>
+      <a href='" . htmlspecialchars(CANAL_WHATSAPP_URL) . "' style='display:inline-block;padding:12px 26px;border-radius:12px;background:#ff7a00;color:#0a0908;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;font-size:14px;font-weight:800;text-decoration:none;'>Seguir el canal de Zabisu</a>
     </td></tr>
 
     <!-- ══ FOOTER ══ -->

@@ -1,6 +1,7 @@
 <?php
 require_once "../config/db.php";
 require_once "../includes/opciones_plato.php";
+require_once "../includes/canal_whatsapp.php";
 
 $folio = trim($_GET["folio"] ?? "");
 
@@ -137,6 +138,16 @@ function agruparDetallePorCategoria($detalles)
         backdrop-filter: blur(18px) saturate(160%);
         -webkit-backdrop-filter: blur(18px) saturate(160%);
     }
+    .conf-canal { text-align: center; }
+    .conf-canal__titulo { margin: 0 0 6px; font-weight: 800; font-size: 16px; color: var(--zb-crema); }
+    .conf-canal__texto  { margin: 0 0 14px; font-size: 14px; line-height: 1.5; color: rgba(247,236,220,.8); }
+    .conf-canal__btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+        width: 100%; padding: 14px 18px; border-radius: 16px;
+        background: var(--zb-naranja); color: #0a0908; font-weight: 800; font-size: 15px;
+        text-decoration: none; box-shadow: 0 8px 22px rgba(var(--zb-naranja-rgb), .3);
+    }
+    .conf-canal__btn:active { transform: scale(.98); }
     .conf-aviso-correo {
         border-color: rgba(var(--zb-naranja-rgb), .55) !important;
         background: rgba(var(--zb-naranja-rgb), .08) !important;
@@ -416,6 +427,15 @@ $waPath            = "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.
         </p>
     </div>
     <?php endif; ?>
+
+    <!-- Canal de WhatsApp con el menú diario -->
+    <div class="conf-card conf-canal">
+        <p class="conf-canal__titulo">🍽️ ¿Quieres ver el menú todos los días?</p>
+        <p class="conf-canal__texto">Síguenos en nuestro canal de WhatsApp: ahí publicamos el menú de lunes a jueves. Activa la 🔔 para que te llegue en cuanto salga.</p>
+        <a class="conf-canal__btn" href="<?php echo htmlspecialchars(CANAL_WHATSAPP_URL); ?>" target="_blank" rel="noopener">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.4.1-.6.3-.2.2-.8.8-.8 2s.8 2.3 1 2.5c.1.2 1.6 2.5 4 3.5 1.5.6 2 .7 2.8.6.4-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2l-.1-.2Z"/></svg> Seguir el canal de Zabisu
+        </a>
+    </div>
 
     <!-- Datos del pedido -->
     <div class="conf-card">

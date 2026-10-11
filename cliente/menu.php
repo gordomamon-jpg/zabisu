@@ -1,5 +1,6 @@
 <?php
 require_once "../config/db.php";
+require_once "../includes/canal_whatsapp.php";
 date_default_timezone_set("America/Mexico_City");
 
 /* ── Aviso día mundialista (activar: cambiar false por in_array(date('Y-m-d'), ['YYYY-MM-DD', ...])) ── */
@@ -1050,6 +1051,13 @@ foreach ($stmtRatingsDist->fetchAll(PDO::FETCH_ASSOC) as $row) {
         -webkit-backdrop-filter: blur(24px) saturate(170%);
         box-shadow: inset 0 1px 0 rgba(247,236,220,.14) !important;
     }
+    .md-canal {
+        display: inline-flex; align-items: center; gap: 8px; margin-top: 14px;
+        padding: 9px 16px; border-radius: 999px;
+        border: 1px solid rgba(var(--zb-naranja-rgb), .45); background: rgba(var(--zb-naranja-rgb), .1);
+        color: var(--zb-crema); font-size: 13px; font-weight: 700; text-decoration: none;
+    }
+    .md-canal svg { color: var(--zb-naranja); flex-shrink: 0; }
     .md-hero {
         background: rgba(30,24,20,.16) !important;
         backdrop-filter: blur(18px) saturate(160%);
@@ -1181,6 +1189,11 @@ foreach ($stmtRatingsDist->fetchAll(PDO::FETCH_ASSOC) as $row) {
             Pedidos hasta las <strong><?php echo date("g:i A", strtotime($menuActivo["pedido_hasta"])); ?></strong>
         </div>
         <div class="md-hero__countdown md-hero__countdown--ok" id="md-countdown"></div>
+
+        <a class="md-canal" href="<?php echo htmlspecialchars(CANAL_WHATSAPP_URL); ?>" target="_blank" rel="noopener">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.4.1-.6.3-.2.2-.8.8-.8 2s.8 2.3 1 2.5c.1.2 1.6 2.5 4 3.5 1.5.6 2 .7 2.8.6.4-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2l-.1-.2Z"/></svg>
+            Recibe el menú diario en nuestro canal de WhatsApp
+        </a>
 
         <?php if ($ratingsTotal >= 3):
             $promR    = (float)$ratingsProm;
