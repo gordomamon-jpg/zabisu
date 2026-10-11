@@ -6,21 +6,22 @@
 */
 
 // Temporada activa (inclusive). Fuera de estas fechas el ticket es el normal.
-const TICKET_MUERTOS_DESDE = '2026-10-11';
+const TICKET_MUERTOS_DESDE = '2026-10-26';
 const TICKET_MUERTOS_HASTA = '2026-11-02';
 
 /*
     Qué decoración lleva el ticket: 0 = ninguna, 1 = papel picado,
     2 = altar, 3 = calaveritas. Se sortea con el folio, así cada pedido
     sale con una al azar pero al reimprimirlo sale la misma.
-    ?tema=1|2|3 fuerza una (para mostrarlas).
+    ?tema=1|2|3 fuerza una en cualquier fecha (para mostrarlas antes de
+    que empiece la temporada).
 */
 function temaTicket(string $folio): int
 {
-    $hoy = date('Y-m-d');
-    if ($hoy < TICKET_MUERTOS_DESDE || $hoy > TICKET_MUERTOS_HASTA) return 0;
     $forzado = (int)($_GET["tema"] ?? 0);
     if ($forzado >= 1 && $forzado <= 3) return $forzado;
+    $hoy = date('Y-m-d');
+    if ($hoy < TICKET_MUERTOS_DESDE || $hoy > TICKET_MUERTOS_HASTA) return 0;
     return abs(crc32("tema-" . $folio)) % 3 + 1;
 }
 
