@@ -2,6 +2,9 @@
 require_once "../config/db.php";
 require_once "../includes/seguridad.php";
 require_once "../includes/limite_platos.php";
+// Sin esto PHP usa UTC (6 h adelante): la hora de cierre "11:50" se
+// interpretaba como 5:50 AM de México y se rechazaban todos los pedidos.
+date_default_timezone_set("America/Mexico_City");
 iniciarSesionSegura();
 
 if (empty($_SESSION["pedido_temporal"])) {
@@ -766,7 +769,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
 
     <!-- ── Finalizar ── -->
     <p class="pago-nota-final bloque-transferencia">
-        Tu pedido se registra al tocar <strong>Confirmar pedido</strong>. Si sales a tu banco, regresa aquí; te guardamos esta pantalla por 3 horas.
+        Tu pedido se registra al tocar <strong>Confirmar pedido</strong>. Si sales a tu banco, regresa aquí; Tus datos se guardan temporalmente por 1 hora.
     </p>
     <button type="submit" name="finalizar_pedido" value="1" class="pago-btn-final">
         Confirmar pedido
