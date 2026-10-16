@@ -24,7 +24,7 @@
   --pz-linea:#2F2C29;     /* separadores */
   --pz-gis:#ECEBE7;       /* texto principal, 15.4:1 */
   --pz-gris:#A5A29B;      /* texto secundario, 7.2:1 */
-  --pz-naranja:#FF7A00;   /* marca: pincel, sello, botón */
+  --pz-naranja:#FF7A00;   /* marca: pincel, botón */
   --pz-estraza:#C49A6C;   /* cintas, tiras, pestaña activa */
   --pz-estraza-cl:#D9B88F;/* boleto, eslogan */
   --pz-tinta:#22180F;     /* texto sobre estraza, 6.8:1 */
@@ -54,8 +54,6 @@ body.pz{
 .pz-marca__nombre{display:block;font:400 24px/1.1 var(--pz-rotulo);margin:0}
 .pz-marca__lema{display:block;font:400 21px/1 var(--pz-pincel);color:var(--pz-estraza-cl);
   margin-top:4px;transform:rotate(-2deg);transform-origin:left}
-
-.pz-sello{width:108px;height:108px;flex-shrink:0;margin-right:-4px;transform:rotate(-8deg);filter:url(#pz-tinta)}
 
 .pz-estrellas{display:flex;align-items:center;gap:8px;padding:12px 20px 0;font:400 14px var(--pz-sys);color:var(--pz-gris)}
 .pz-estrellas b{font:600 15px var(--pz-sys);color:var(--pz-gis)}
@@ -164,7 +162,6 @@ body.pz{
   .pz-seg button,.pz-btn{transition:none}
 }
 @media (max-width:360px){
-  .pz-sello{width:92px;height:92px}
   .pz-pincel span{font-size:34px}
   .pz-nota{left:auto;right:14px}
 }

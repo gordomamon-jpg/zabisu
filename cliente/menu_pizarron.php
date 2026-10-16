@@ -37,11 +37,11 @@ $pzSecciones = ["Plato fuerte" => "Plato fuerte", "Sopa" => "Sopa", "Complemento
     <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
     <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=1">
+    <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
 </head>
 <body class="pz">
 
-<!-- Filtros de las orillas irregulares (tinta del sello y papel roto) -->
+<!-- Filtros de las orillas irregulares (tinta y papel roto) -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
     <filter id="pz-tinta"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="4" result="r"/><feDisplacementMap in="SourceGraphic" in2="r" scale="2.4"/><feComponentTransfer><feFuncA type="discrete" tableValues="0 1 1 1 1 .85 1"/></feComponentTransfer></filter>
     <filter id="pz-borde"><feTurbulence type="fractalNoise" baseFrequency=".05" numOctaves="3" seed="2" result="r"/><feDisplacementMap in="SourceGraphic" in2="r" scale="3"/></filter>
@@ -61,14 +61,6 @@ $pzSecciones = ["Plato fuerte" => "Plato fuerte", "Sopa" => "Sopa", "Complemento
                 <span class="pz-marca__lema">Sabor y Servicio</span>
             </div>
         </div>
-        <svg class="pz-sello" viewBox="0 0 120 120" role="img"
-             aria-label="<?php echo htmlspecialchars(ucfirst($pzDia) . " " . $pzFecha . ", pedidos hasta las " . $pzCierreAm); ?>">
-            <circle cx="60" cy="60" r="55" fill="none" stroke="#FF7A00" stroke-width="3.2"/>
-            <circle cx="60" cy="60" r="49" fill="none" stroke="#FF7A00" stroke-width="1.2"/>
-            <text x="60" y="44" fill="#FF7A00" font-family="system-ui,-apple-system,sans-serif" font-weight="700" font-size="14" text-anchor="middle"><?php echo htmlspecialchars(ucfirst($pzDia)); ?></text>
-            <text x="60" y="70" fill="#FF7A00" font-family="'Alfa Slab One',Georgia,serif" font-size="26" text-anchor="middle"><?php echo htmlspecialchars($pzFecha); ?></text>
-            <text x="60" y="88" fill="#FF7A00" font-family="system-ui,-apple-system,sans-serif" font-weight="700" font-size="12.5" text-anchor="middle">cierra <?php echo $pzCierre; ?></text>
-        </svg>
     </header>
 
     <?php if ($ratingsTotal >= 3): ?>

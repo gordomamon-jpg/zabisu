@@ -21,7 +21,7 @@ van derechos y limpios, para que se lea fácil en el celular.
 | `--pz-linea` | `#2F2C29` | Separadores | — |
 | `--pz-gis` | `#ECEBE7` | Texto principal | 15.4:1 sobre pizarra |
 | `--pz-gris` | `#A5A29B` | Texto secundario y descripciones | 7.2:1 sobre pizarra |
-| `--pz-naranja` | `#FF7A00` | Marca: pincel, sello, botón principal, avisos de tiempo | 7.0:1 sobre pizarra |
+| `--pz-naranja` | `#FF7A00` | Marca: pincel, botón principal, avisos de tiempo | 7.0:1 sobre pizarra |
 | `--pz-estraza` | `#C49A6C` | Cintas, tiras y pestaña activa | 7.2:1 sobre pizarra |
 | `--pz-estraza-cl` | `#D9B88F` | Boleto y eslogan | — |
 | `--pz-tinta` | `#22180F` | Texto sobre estraza | 6.8:1 sobre estraza |
@@ -37,14 +37,14 @@ Reglas:
 |---|---|---|
 | Texto, precios y botones | Letra del sistema (`system-ui`) | Todo lo que se lee |
 | Pincel | Kaushan Script | Título del día, eslogan y notas a mano. Una o dos veces por pantalla |
-| Rótulo | Alfa Slab One | Nombre "Zabisu", cintas, hora de cierre, sello y boleto |
+| Rótulo | Alfa Slab One | Nombre "Zabisu", cintas, hora de cierre, agotado y boleto |
 
 Las dos fuentes de marca se alojan en `assets/fonts/`, sin depender de Google. Sin mayúsculas
 sostenidas, sin letras espaciadas y sin "·" para unir datos.
 
 ## Piezas
 
-- **Sello**: círculo naranja con el día, la fecha y la hora de cierre, girado −8° con tinta dispareja (`filter:url(#pz-tinta)`).
+- **Encabezado sin sello**: solo logo, "Zabisu" y el lema. Cada dato va una vez: el día en el título ("Menú del martes") y la hora de cierre abajo, con la cuenta regresiva. La tinta dispareja (`filter:url(#pz-tinta)`) queda para el sello de "Agotado".
 - **Pincel**: trazo naranja con la letra negra encima, para el título de la pantalla.
 - **Cinta de estraza**: rótulo de cada sección, con las orillas rotas (`clip-path`) y girada entre −1.8° y 1.1°.
 - **Lista agrupada**: filas tipo Configuración. Cada platillo lleva su **tira de estraza** a la izquierda (sin ícono), su nombre y su descripción.
@@ -67,7 +67,7 @@ piezas decorativas visibles a la vez.
 - Contraste AA o mejor en todo el texto (ver la tabla de colores).
 - Áreas táctiles de 44 px o más.
 - Foco visible con contorno naranja (`:focus-visible`).
-- El sello lleva `aria-label` con la fecha y el cierre completos. Las tiras, estrellas y flechas son decorativas (`aria-hidden`).
+- Las tiras, estrellas y flechas son decorativas (`aria-hidden`).
 - Sin animaciones de entrada. Las transiciones respetan `prefers-reduced-motion`.
 
 ## Vista previa
