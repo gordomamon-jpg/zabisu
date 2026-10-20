@@ -97,6 +97,7 @@ function waApiPeticion(string $ruta, array $payload, string $metodo = 'POST'): a
 */
 function waApiPlantilla(string $telefono, string $plantilla, array $cuerpo, array $botones = []): array
 {
+    if (!waApiDisponible()) return ['ok' => false, 'error' => 'Falta config/whatsapp.php'];
     $tel = waApiTelefono($telefono);
     if ($tel === '') return ['ok' => false, 'error' => 'Teléfono no válido'];
 
@@ -128,6 +129,7 @@ function waApiPlantilla(string $telefono, string $plantilla, array $cuerpo, arra
 // Texto libre: solo funciona dentro de las 24 h después de que el cliente escribió
 function waApiTexto(string $telefono, string $texto): array
 {
+    if (!waApiDisponible()) return ['ok' => false, 'error' => 'Falta config/whatsapp.php'];
     $tel = waApiTelefono($telefono);
     if ($tel === '') return ['ok' => false, 'error' => 'Teléfono no válido'];
 
