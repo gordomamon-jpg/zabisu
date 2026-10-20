@@ -156,6 +156,35 @@ if (!$menuActivo) {
         $tsSirve   = strtotime('+1 day', $tsPublica);
         $proximoTexto = $formatoDia($tsPublica) . '|' . $formatoDia($tsSirve);
     }
+
+    if ($disenoNuevo) {
+        require_once "../includes/pz_aviso.php";
+        $boleto = null;
+        if ($proximoTexto) {
+            [$proximoPublica, $proximoSirve] = explode('|', $proximoTexto);
+            $boleto = [
+                "titulo" => "Próximo menú",
+                "lineas" => [
+                    "Para el <b>" . htmlspecialchars($proximoSirve) . "</b>",
+                    "Lo publicamos la noche del <b>" . htmlspecialchars($proximoPublica) . "</b>",
+                ],
+            ];
+        }
+        pzPantallaAviso([
+            "titulo"   => "Hoy no hay menú",
+            "letrero"  => "Cerrado",
+            "letrero2" => "Ya casi",
+            "texto"    => "Todavía no publicamos el siguiente menú. Esta página se actualiza sola en cuanto salga.",
+            "boleto"   => $boleto,
+            "botones"  => [
+                ["texto" => "Consultar un pedido que ya hice", "url" => "estado_pedido.php", "tipo" => "contorno"],
+            ],
+            "canal"    => true,
+            "revisar"  => true,
+        ]);
+        require "../includes/aviso_sin_servicio.php";
+        exit;
+    }
 ?>
 <!DOCTYPE html>
 <html lang="es">

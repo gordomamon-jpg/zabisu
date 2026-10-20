@@ -54,6 +54,38 @@ if (!$menuActivo) {
 
     $diasES = ["Sunday"=>"domingo","Monday"=>"lunes","Tuesday"=>"martes","Wednesday"=>"miércoles","Thursday"=>"jueves","Friday"=>"viernes","Saturday"=>"sábado"];
     $mesesES = ["01"=>"enero","02"=>"febrero","03"=>"marzo","04"=>"abril","05"=>"mayo","06"=>"junio","07"=>"julio","08"=>"agosto","09"=>"septiembre","10"=>"octubre","11"=>"noviembre","12"=>"diciembre"];
+
+    if ($disenoNuevo) {
+        require_once "../includes/pz_aviso.php";
+        $horaBonita = fn($ts) => date("g:i", $ts) . " " . (date("A", $ts) === "AM" ? "am" : "pm");
+        $boleto = null;
+        if ($proximoMenu) {
+            $ts = strtotime($proximoMenu["publicado_desde"]);
+            $tsCierre = strtotime($proximoMenu["pedido_hasta"]);
+            $boleto = [
+                "titulo" => "Próximos pedidos",
+                "lineas" => [
+                    "<b>" . ucfirst($diasES[date("l", $ts)] ?? "") . " " . date("j", $ts) . " de " . ($mesesES[date("m", $ts)] ?? "") . "</b>",
+                    "Abrimos a las <b>" . $horaBonita($ts) . "</b> y cerramos a las <b>" . $horaBonita($tsCierre) . "</b>",
+                ],
+            ];
+        }
+        pzPantallaAviso([
+            "titulo"   => "¡Ya cerramos por hoy!",
+            "letrero"  => "Cerrado",
+            "letrero2" => "Volvemos pronto",
+            "texto"    => $proximoMenu
+                ? "Por hoy ya no tomamos pedidos. ¡Gracias por tu antojo! Aquí abajo te decimos cuándo vuelve a abrir."
+                : "Por hoy ya no tomamos pedidos. El menú del día se publica a las <b>6:00 pm</b>: regresa a esa hora para pedir.",
+            "boleto"   => $boleto,
+            "botones"  => [
+                ["texto" => "Ver el menú", "url" => "menu.php", "tipo" => "principal"],
+                ["texto" => "Consultar un pedido que ya hice", "url" => "estado_pedido.php", "tipo" => "liga"],
+            ],
+            "canal"    => true,
+        ]);
+        exit;
+    }
     ?>
     <!DOCTYPE html>
     <html lang="es">
@@ -146,6 +178,22 @@ $stmtConfig->execute();
 $recibiendoPedidos = (int)($stmtConfig->fetchColumn() ?? 1);
 
 if (!$recibiendoPedidos) {
+    if ($disenoNuevo) {
+        require_once "../includes/pz_aviso.php";
+        require_once "../includes/canal_whatsapp.php";
+        pzPantallaAviso([
+            "titulo"   => "Pausamos los pedidos",
+            "letrero"  => "En pausa",
+            "letrero2" => "Volvemos pronto",
+            "texto"    => "Ahorita no estamos tomando pedidos nuevos. Intenta de nuevo en un rato o escríbenos y te ayudamos.",
+            "botones"  => [
+                ["texto" => "Escríbenos por WhatsApp", "url" => "https://wa.me/" . WHATSAPP_DUDAS . "?text=" . rawurlencode("Hola, quiero hacer un pedido"), "tipo" => "principal", "nueva" => true],
+                ["texto" => "Ver el menú", "url" => "menu.php", "tipo" => "contorno"],
+            ],
+            "canal"    => false,
+        ]);
+        exit;
+    }
     ?>
     <!DOCTYPE html>
     <html lang="es">

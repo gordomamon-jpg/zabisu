@@ -287,3 +287,42 @@
 @media (prefers-reduced-motion:reduce){ .pc-sello svg path{animation:none;stroke-dashoffset:0} }
 .pc-sello{width:78px;height:78px;right:-10px;bottom:-34px;background:rgba(21,20,19,.0)}
 .pc-sello svg circle:first-child{fill:rgba(217,184,143,.92)}
+
+/* ══ Pantallas de aviso (sin menú, cerrado, pausado, vencido) ══ */
+.pa-pagina{max-width:480px;margin:0 auto;padding:0 0 30px}
+.pz-aviso .pz-titulo{text-align:left;margin-top:6px}
+.pa-texto{margin:12px 20px 0;font:400 17px/1.5 var(--pz-sys);color:var(--pz-gris)}
+.pa-texto b{color:var(--pz-gis);font-weight:600}
+
+/* Letrero de cartón colgado de un clavo, como el de la puerta de la fonda */
+.pa-letrero{position:relative;width:210px;margin:18px auto 4px;transform-origin:50% 0;animation:pa-meneo 2.6s ease-in-out .2s 1 both}
+.pa-letrero__clavo{position:absolute;left:50%;top:0;width:10px;height:10px;margin-left:-5px;border-radius:50%;background:#8d8a84;z-index:2}
+.pa-letrero__hilo{display:block;width:100%;height:46px}
+.pa-letrero__carton{position:relative;margin-top:-6px;padding:16px 12px 14px;text-align:center;border-radius:6px;transform:rotate(-2deg);
+  color:var(--pz-tinta);background:var(--pz-estraza) repeating-linear-gradient(92deg,rgba(0,0,0,.06) 0 1px,transparent 1px 5px);
+  filter:url(#pz-borde);box-shadow:0 10px 24px rgba(0,0,0,.35)}
+.pa-letrero__carton::before,.pa-letrero__carton::after{content:"";position:absolute;top:8px;width:8px;height:8px;border-radius:50%;background:var(--pz-pizarra)}
+.pa-letrero__carton::before{left:18px}
+.pa-letrero__carton::after{right:18px}
+.pa-letrero__rotulo{display:block;font:400 30px/1.1 var(--pz-rotulo);letter-spacing:.5px}
+.pa-letrero__mano{display:block;margin-top:4px;font:400 20px/1.1 var(--pz-pincel);color:#7A3B12}
+@keyframes pa-meneo{0%{transform:rotate(7deg)}25%{transform:rotate(-5deg)}50%{transform:rotate(3deg)}75%{transform:rotate(-1.5deg)}100%{transform:rotate(0)}}
+
+.pa-alerta{margin:16px 20px 0;padding:14px 16px;border-radius:12px;background:#2B1714;border:1px solid #6B2C22;
+  font:400 15.5px/1.5 var(--pz-sys);color:#FFD9D1}
+.pa-alerta b{color:#fff}
+
+.pa-boleto{margin:22px 20px 0}
+.pa-boleto .pz-boleto__titulo{font-size:17px}
+.pa-boleto p b{white-space:nowrap}
+
+.pa-botones{display:flex;flex-direction:column;gap:10px;margin:24px 20px 0}
+.pa-btn{display:flex;align-items:center;justify-content:center;min-height:52px;padding:0 18px;border-radius:14px;
+  text-decoration:none;font:600 16px var(--pz-sys);text-align:center}
+.pa-btn--principal{background:var(--pz-naranja);color:#111!important}
+.pa-btn--contorno{border:1.5px solid var(--pz-estraza);color:var(--pz-estraza-cl)!important}
+.pa-btn--liga{min-height:44px;color:var(--pz-gris)!important;text-decoration:underline;text-underline-offset:3px}
+.pa-btn:active{transform:scale(.985)}
+.pa-canal{margin:22px 20px 0}
+
+@media (prefers-reduced-motion:reduce){ .pa-letrero{animation:none} }

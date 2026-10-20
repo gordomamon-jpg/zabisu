@@ -85,7 +85,7 @@ function textoEstado($estado) {
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
     <link rel="stylesheet" href="../assets/css/pedido-pizarron.css?v=2">
-    <link rel="stylesheet" href="../assets/css/cliente-pizarron.css?v=3">
+    <link rel="stylesheet" href="../assets/css/cliente-pizarron.css?v=4">
     <?php endif; ?>
 </head>
 <style>

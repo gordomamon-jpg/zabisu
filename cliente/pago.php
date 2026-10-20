@@ -11,6 +11,24 @@ iniciarSesionSegura();
 if (empty($_SESSION["pedido_temporal"])) {
     // Sesión vencida o pedido ya confirmado: explicarlo en lugar de un texto seco
     http_response_code(200);
+    if ($disenoNuevo) {
+        require_once "../includes/pz_aviso.php";
+        require_once "../includes/canal_whatsapp.php";
+        pzPantallaAviso([
+            "titulo"   => "Tu pedido no está activo",
+            "letrero"  => "Expiró",
+            "letrero2" => "No pasa nada",
+            "texto"    => "Pasó mucho tiempo sin confirmarlo, o ya lo habías confirmado antes.",
+            "alerta"   => "<b>¿Ya transferiste?</b> Si no tocaste <b>Confirmar pedido</b>, tu pedido <b>no quedó registrado</b>. Vuelve a hacerlo y sube tu comprobante, o escríbenos y lo revisamos.",
+            "botones"  => [
+                ["texto" => "Volver a hacer mi pedido", "url" => "pedido.php", "tipo" => "principal"],
+                ["texto" => "Escríbenos por WhatsApp", "url" => "https://wa.me/" . WHATSAPP_DUDAS . "?text=" . rawurlencode("Hola, hice una transferencia pero mi pedido ya no está activo"), "tipo" => "contorno", "nueva" => true],
+                ["texto" => "Consultar un pedido que ya hice", "url" => "estado_pedido.php", "tipo" => "liga"],
+            ],
+            "canal"    => false,
+        ]);
+        exit;
+    }
     ?><!DOCTYPE html>
 <html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tu pedido no está activo | Zabisu</title>
@@ -634,7 +652,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
     <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
-    <link rel="stylesheet" href="../assets/css/cliente-pizarron.css?v=3">
+    <link rel="stylesheet" href="../assets/css/cliente-pizarron.css?v=4">
     <?php endif; ?>
 </head>
 <body<?php echo $disenoNuevo ? ' class="pz pz-cliente"' : ''; ?>>
