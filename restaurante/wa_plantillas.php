@@ -35,11 +35,15 @@ $plantillas = [
         "language"   => WA_IDIOMA_PLANTILLAS,
         "category"   => "UTILITY",
         "components" => [
-            ["type" => "HEADER", "format" => "TEXT", "text" => "Pedido confirmado"],
+            // Meta no acepta emojis en el título (HEADER), solo en el cuerpo
+            ["type" => "HEADER", "format" => "TEXT", "text" => "¡Pedido confirmado!"],
             [
                 "type"    => "BODY",
-                "text"    => "Hola {{1}}, tu pedido {{2}} de Zabisu está confirmado.\n\n"
-                           . "Lo entregamos en {{3}} a las {{4}}. Te avisaremos por aquí cuando lleguemos a tu punto de entrega.",
+                "text"    => "Hola {{1}}, gracias por tu pedido en Zabisu 🍽️\n\n"
+                           . "📦 Folio: *{{2}}*\n"
+                           . "📍 Entrega: *{{3}}*\n"
+                           . "🕑 Hora: *{{4}}*\n\n"
+                           . "Te avisaremos por aquí en cuanto lleguemos a tu punto de entrega.",
                 "example" => ["body_text" => [["Ana", $folioEjemplo, "City Market", "2:00 pm"]]],
             ],
             ["type" => "FOOTER", "text" => $pie],
@@ -54,10 +58,11 @@ $plantillas = [
         "language"   => WA_IDIOMA_PLANTILLAS,
         "category"   => "UTILITY",
         "components" => [
-            ["type" => "HEADER", "format" => "TEXT", "text" => "Tu pedido llegó"],
+            ["type" => "HEADER", "format" => "TEXT", "text" => "¡Tu pedido llegó!"],
             [
                 "type"    => "BODY",
-                "text"    => "Hola {{1}}, ya estamos en {{2}} con tu pedido {{3}} de Zabisu. Pasa a recogerlo cuando puedas.",
+                "text"    => "Hola {{1}}, ya estamos en 📍 *{{2}}* con tu pedido *{{3}}* de Zabisu.\n\n"
+                           . "Pasa a recogerlo cuando puedas. ¡Buen provecho! 🍽️",
                 "example" => ["body_text" => [["Ana", "City Market", $folioEjemplo]]],
             ],
             ["type" => "FOOTER", "text" => $pie],
