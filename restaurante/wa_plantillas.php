@@ -8,6 +8,7 @@
  *   php restaurante/wa_plantillas.php estado
  *   php restaurante/wa_plantillas.php registrar 123456
  *   php restaurante/wa_plantillas.php probar 5512345678
+ *   php restaurante/wa_plantillas.php ultimos
  *   php restaurante/wa_plantillas.php suscribir
  *   php restaurante/wa_plantillas.php demo 5512345678 "Ana"
  *
@@ -95,8 +96,24 @@ if ($accion === "registrar") {
     últimas 24 h, así que primero manda un "hola" desde ese celular.
 */
 if ($accion === "probar") {
-    $r = waApiTexto($argv[2] ?? "", "Prueba de Zabisu: los avisos por WhatsApp ya funcionan.");
-    exit(($r["ok"] ? "Enviado (id " . $r["id"] . ")." : "ERROR — " . $r["error"]) . "\n");
+    $tel = waApiTelefono($argv[2] ?? "");
+    if ($tel === "") exit("Número no válido: escribe los 10 dígitos, p. ej. probar 5512345678\n");
+    $r = waApiTexto($tel, "Prueba de Zabisu: los avisos por WhatsApp ya funcionan.");
+    // Se registra para que el webhook guarde si se entregó o por qué falló
+    require_once __DIR__ . "/../config/db.php";
+    waApiRegistrar($conexion, $r, $tel, 'respuesta', null);
+    exit(($r["ok"] ? "Aceptado por Meta (id " . $r["id"] . "). Revisa en unos segundos: php restaurante/wa_plantillas.php ultimos" : "ERROR — " . $r["error"]) . "\n");
+}
+
+// ultimos: los 10 mensajes más recientes y si se entregaron, leyeron o fallaron
+if ($accion === "ultimos") {
+    require_once __DIR__ . "/../config/db.php";
+    $filas = $conexion->query("SELECT telefono, tipo, estado, error, creado_en FROM wa_mensajes ORDER BY id DESC LIMIT 10")->fetchAll(PDO::FETCH_ASSOC);
+    if (!$filas) exit("Sin mensajes registrados.\n");
+    foreach ($filas as $f) {
+        echo $f["creado_en"] . "  " . str_pad($f["telefono"], 14) . str_pad($f["tipo"], 14) . str_pad($f["estado"], 11) . ($f["error"] ?? "") . "\n";
+    }
+    exit;
 }
 
 /*
