@@ -257,3 +257,20 @@
 .pg-texto .bloque-transferencia{display:inline!important}
 .pg-texto .bloque-transferencia[style*="none"]{display:none!important}
 .pg-sello{filter:none;opacity:.75}
+
+/* ── Confirmación: el boleto cae y se estampa el sello "¡Confirmado!" ──
+   Única animación de entrada del diseño (pedida para que el cliente note
+   que su pedido ya quedó). Sin movimiento si el celular lo pide. */
+.pc-boleto{animation:pc-cae .55s cubic-bezier(.2,.9,.3,1.2) both}
+.pc-sello{position:absolute;z-index:2;right:12px;bottom:-16px;padding:6px 12px;border:3px solid #C2410C;border-radius:8px;
+  background:rgba(217,184,143,.6);font:400 20px/1 var(--pz-rotulo);color:#C2410C;letter-spacing:.3px;
+  transform:rotate(-9deg);filter:url(#pz-tinta);pointer-events:none;
+  animation:pc-sella .45s cubic-bezier(.3,1.6,.5,1) .5s both}
+.pc-titulo-anim .pz-pincel{animation:pc-trazo .5s ease-out both}
+@keyframes pc-cae{from{opacity:0;transform:translateY(-28px) rotate(-4deg)}to{opacity:1;transform:rotate(-1deg)}}
+@keyframes pc-sella{0%{opacity:0;transform:scale(2.4) rotate(-20deg)}70%{opacity:1;transform:scale(.92) rotate(-8deg)}100%{opacity:1;transform:scale(1) rotate(-9deg)}}
+@keyframes pc-trazo{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@media (prefers-reduced-motion:reduce){
+  .pc-boleto,.pc-sello,.pc-titulo-anim .pz-pincel{animation:none}
+}
+.pc-boleto{margin-bottom:26px!important}

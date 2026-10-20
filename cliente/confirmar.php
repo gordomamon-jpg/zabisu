@@ -399,9 +399,10 @@ $waPath            = "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.
         </div>
     </a>
 </header>
-<h1 class="pz-titulo"><span class="pz-pincel"><span>¡Pedido confirmado!</span></span></h1>
+<h1 class="pz-titulo pc-titulo-anim"><span class="pz-pincel"><span>¡Pedido confirmado!</span></span></h1>
 <p class="pc-sub"><?php echo $esPagoEfectivo ? "Pagarás al recibir tu pedido." : "Tu pago está en revisión; te avisamos al validarlo."; ?></p>
 <div class="pz-boleto pc-boleto">
+    <span class="pc-sello" aria-hidden="true">¡Confirmado!</span>
     <div class="pz-boleto__papel">
         <span class="pz-boleto__ojo" aria-hidden="true"></span>
         <p class="pz-boleto__titulo">Folio <?php echo htmlspecialchars($pedido["folio"]); ?></p>

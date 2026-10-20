@@ -68,7 +68,7 @@ piezas decorativas visibles a la vez.
 - Áreas táctiles de 44 px o más.
 - Foco visible con contorno naranja (`:focus-visible`).
 - Las tiras, estrellas y flechas son decorativas (`aria-hidden`).
-- Sin animaciones de entrada. Las transiciones respetan `prefers-reduced-motion`.
+- Sin animaciones de entrada, con una excepción: en la confirmación el boleto cae y se estampa el sello "¡Confirmado!" (menos de 1 s), para que el cliente note que su pedido quedó. Todo respeta `prefers-reduced-motion`.
 
 ## Vista previa
 
