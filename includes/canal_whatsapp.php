@@ -5,3 +5,10 @@
     el correo de confirmación.
 */
 const CANAL_WHATSAPP_URL = 'https://whatsapp.com/channel/0029Vb88kuNJJhzcXo9Dfs32';
+
+/*
+    WhatsApp de Zabisu atendido por una persona (dudas, cambios, casos
+    especiales). Los avisos automáticos salen de otro número por la API
+    oficial; su botón "Tengo una duda" manda aquí (ver cliente/duda.php).
+*/
+const WHATSAPP_DUDAS = '525560908778';

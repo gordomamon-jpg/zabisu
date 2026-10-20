@@ -9,9 +9,10 @@ $extrasVer      = [];
 $buscado        = false;
 $folio          = "";
 
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
+// POST: búsqueda desde el formulario. GET: botón "Ver mi pedido" del aviso de WhatsApp
+if ($_SERVER["REQUEST_METHOD"] === "POST" || isset($_GET["folio"])) {
     $buscado = true;
-    $folio   = strtoupper(trim($_POST["folio"] ?? ""));
+    $folio   = strtoupper(trim($_POST["folio"] ?? $_GET["folio"] ?? ""));
 
     if ($folio !== "") {
         $stmtP = $conexion->prepare(
@@ -220,7 +221,7 @@ function textoEstado($estado) {
                    maxlength="30" autocomplete="off" autocapitalize="characters"
                    placeholder="Ej. ZAB-A1B2C3"
                    value="<?php echo htmlspecialchars($folio); ?>">
-            <p class="nota-formulario">Lo encuentras en el correo de confirmación que recibiste.</p>
+            <p class="nota-formulario">Lo encuentras en tu confirmación del pedido.</p>
             <button type="submit" class="btn-principal" style="margin-top:16px;width:100%;">
                 Buscar
             </button>

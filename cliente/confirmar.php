@@ -2,6 +2,7 @@
 require_once "../config/db.php";
 require_once "../includes/opciones_plato.php";
 require_once "../includes/canal_whatsapp.php";
+require_once "../includes/modo_notificacion.php";
 
 $folio = trim($_GET["folio"] ?? "");
 
@@ -424,6 +425,17 @@ $waPath            = "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.
         <p class="conf-aviso-correo__texto">
             Si no lo ves en tu bandeja, búscalo en <strong>Spam</strong> o <strong>Promociones</strong> y márcalo como
             <strong>"No es spam"</strong> para que el aviso de llegada sí te aparezca.
+        </p>
+    </div>
+    <?php endif; ?>
+
+    <?php if (MODO_NOTIFICACION === 'api' && empty($pedido["correo_cliente"]) && preg_match('/^\d{10}$/', $pedido["telefono"] ?? "") && !preg_match('/^0+$/', $pedido["telefono"])): ?>
+    <!-- Avisos por la API oficial de WhatsApp -->
+    <div class="conf-card conf-aviso-correo">
+        <p class="conf-aviso-correo__titulo">Te avisamos por WhatsApp</p>
+        <p class="conf-aviso-correo__texto">
+            Te llegará la confirmación de tu pedido al <strong><?php echo htmlspecialchars($pedido["telefono"]); ?></strong>
+            desde el WhatsApp de avisos de Zabisu, y ahí mismo te avisaremos cuando llegue a tu punto de entrega.
         </p>
     </div>
     <?php endif; ?>

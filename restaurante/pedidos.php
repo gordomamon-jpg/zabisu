@@ -1242,7 +1242,7 @@ document.addEventListener("DOMContentLoaded", function () {
         var canal     = data.canal === "correo" ? "por correo" : "por WhatsApp";
         var msg       = "✅ " + enviados + " de " + total + " aviso" + (total !== 1 ? "s" : "") + " enviado" + (enviados !== 1 ? "s" : "") + " " + canal + ".";
         if (data.sin_contacto) {
-            msg += "<div style='margin-top:6px;font-size:13px;opacity:.75;'>" + data.sin_contacto + " cliente" + (data.sin_contacto !== 1 ? "s" : "") + " sin correo registrado.</div>";
+            msg += "<div style='margin-top:6px;font-size:13px;opacity:.75;'>" + data.sin_contacto + " cliente" + (data.sin_contacto !== 1 ? "s" : "") + " sin " + (data.canal === "correo" ? "correo" : "WhatsApp") + " registrado.</div>";
         }
 
         if (fallidos.length > 0) {

@@ -3,6 +3,10 @@ require_once "../config/db.php";
 require_once "../includes/seguridad.php";
 require_once "../includes/limite_platos.php";
 require_once "../includes/opciones_plato.php";
+require_once "../includes/modo_notificacion.php";
+
+// Con la API oficial de WhatsApp se pide el WhatsApp; en modo correo, el correo
+$contactoWA = MODO_NOTIFICACION === 'api';
 iniciarSesionSegura();
 
 /*
@@ -365,10 +369,8 @@ $scrollDestino = "";
 */
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
     $nombre_cliente  = trim($_POST["nombre_cliente"] ?? "");
-    // Temporal (oct-2026): se pide correo en lugar de teléfono mientras se
-    // implementa la API oficial de WhatsApp (ver includes/modo_notificacion.php)
-    $telefono        = "";
-    $correo_cliente  = mb_strtolower(trim($_POST["correo_cliente"] ?? ""), "UTF-8");
+    $telefono        = $contactoWA ? preg_replace('/\D/', '', $_POST["telefono"] ?? "") : "";
+    $correo_cliente  = $contactoWA ? "" : mb_strtolower(trim($_POST["correo_cliente"] ?? ""), "UTF-8");
     $observaciones   = trim($_POST["observaciones"] ?? "");
     $id_horario      = $_POST["id_horario"] ?? "";
     $menusRecibidos  = $_POST["menus"] ?? [];
@@ -379,7 +381,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
         $errores[] = "El nombre solo puede contener letras y espacios.";
     }
 
-    if ($correo_cliente === "") {
+    if ($contactoWA) {
+        if ($telefono === "") {
+            $errores[] = "Tu WhatsApp es obligatorio.";
+        } elseif (!preg_match('/^\d{10}$/', $telefono)) {
+            $errores[] = "Tu WhatsApp debe tener exactamente 10 dígitos.";
+        }
+    } elseif ($correo_cliente === "") {
         $errores[] = "El correo electrónico es obligatorio.";
     } elseif (mb_strlen($correo_cliente) > 150 || !filter_var($correo_cliente, FILTER_VALIDATE_EMAIL)) {
         $errores[] = "El correo electrónico no es válido.";
@@ -772,6 +780,14 @@ if ($scrollDestino === "bloque-entrega") {
             <section class="bloque-formulario" id="bloque-datos-cliente">
                 <h2>Tus datos</h2>
 
+                <?php if ($contactoWA): ?>
+                <label for="telefono">Tu WhatsApp</label>
+                <input type="tel" name="telefono" id="telefono"
+                       maxlength="10" inputmode="numeric" autocomplete="tel-national"
+                       placeholder="10 dígitos"
+                       value="<?php echo htmlspecialchars($_POST["telefono"] ?? ""); ?>">
+                <p class="nota-formulario" style="margin:6px 0 0;">Zabisu te enviará por WhatsApp la confirmación de tu pedido y el aviso cuando llegue a tu punto de entrega.</p>
+                <?php else: ?>
                 <label for="correo_cliente">Correo electrónico</label>
                 <input type="email" name="correo_cliente" id="correo_cliente"
                        maxlength="150" inputmode="email" autocomplete="email"
@@ -779,6 +795,7 @@ if ($scrollDestino === "bloque-entrega") {
                        placeholder="tucorreo@ejemplo.com"
                        value="<?php echo htmlspecialchars($_POST["correo_cliente"] ?? ""); ?>">
                 <p class="nota-formulario" style="margin:6px 0 0;">Ahí te enviaremos la confirmación de tu pedido y el aviso cuando llegue a tu punto de entrega. Si no lo ves, revisa tu carpeta de <strong>Spam</strong> y márcanos como <strong>"No es spam"</strong>.</p>
+                <?php endif; ?>
 
                 <label for="nombre_cliente">Nombre completo</label>
                 <input type="text" name="nombre_cliente" id="nombre_cliente"
@@ -1170,6 +1187,7 @@ if ($scrollDestino === "bloque-entrega") {
 </div>
 
 <script>
+const CONTACTO_WA = <?php echo $contactoWA ? "true" : "false"; ?>;
 document.addEventListener("DOMContentLoaded", function () {
 
     // ============================================================
@@ -1252,7 +1270,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (n === 1) {
             const nombre = (document.getElementById("nombre_cliente").value || "").trim();
-            const correo = (document.getElementById("correo_cliente").value || "").trim();
+            const contactoInput = document.getElementById(CONTACTO_WA ? "telefono" : "correo_cliente");
+            const contacto = (contactoInput.value || "").trim();
 
             if (!nombre) {
                 errores.push("El nombre es obligatorio.");
@@ -1260,9 +1279,15 @@ document.addEventListener("DOMContentLoaded", function () {
                 errores.push("El nombre solo puede contener letras y espacios.");
             }
 
-            if (!correo) {
+            if (CONTACTO_WA) {
+                if (!contacto) {
+                    errores.push("Tu WhatsApp es obligatorio.");
+                } else if (!/^\d{10}$/.test(contacto)) {
+                    errores.push("Tu WhatsApp debe tener exactamente 10 dígitos.");
+                }
+            } else if (!contacto) {
                 errores.push("El correo electrónico es obligatorio.");
-            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correo)) {
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(contacto)) {
                 errores.push("Revisa tu correo electrónico, parece que está incompleto.");
             }
         }
@@ -1366,20 +1391,25 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    const correoInput = document.getElementById("correo_cliente");
+    const contactoInput = document.getElementById(CONTACTO_WA ? "telefono" : "correo_cliente");
+    if (CONTACTO_WA && contactoInput) {
+        contactoInput.addEventListener("input", function () {
+            this.value = this.value.replace(/\D/g, "").slice(0, 10);
+        });
+    }
 
     // ── Autocompletar desde último pedido ────────────────────────
     var autocompleteTimer = null;
     var avisoAutocomp = document.getElementById("autocomplete-aviso");
 
-    if (correoInput) {
-        correoInput.addEventListener("input", function () {
+    if (contactoInput) {
+        contactoInput.addEventListener("input", function () {
             clearTimeout(autocompleteTimer);
-            var correo = this.value.trim().toLowerCase();
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correo)) return;
+            var valor = this.value.trim().toLowerCase();
+            if (CONTACTO_WA ? !/^\d{10}$/.test(valor) : !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(valor)) return;
 
             autocompleteTimer = setTimeout(function () {
-                fetch("ultimo_pedido.php?correo=" + encodeURIComponent(correo))
+                fetch("ultimo_pedido.php?" + (CONTACTO_WA ? "telefono=" : "correo=") + encodeURIComponent(valor))
                     .then(function (r) { return r.json(); })
                     .then(function (data) {
                         if (!data.encontrado) return;

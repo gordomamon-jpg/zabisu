@@ -5,6 +5,7 @@ require_once "../includes/enviar_correo.php";
 require_once "../includes/enviar_whatsapp.php";
 require_once "../includes/confirmacion_wa.php";
 require_once "../includes/modo_notificacion.php";
+require_once "../includes/whatsapp_api.php";
 require_once "../includes/canal_whatsapp.php";
 
 $id_pedido = isset($_GET["id"]) ? (int)$_GET["id"] : 0;
@@ -183,9 +184,12 @@ function construirExtrasCorreo($extras)
 
 try {
     /*
-        5. Enviar correo solo si no se ha enviado antes
+        5. Enviar correo solo si no se ha enviado antes. En modo 'api' el
+           correo queda para pedidos sin WhatsApp (los hechos en modo correo).
     */
-    if (MODO_NOTIFICACION === 'correo' && (int)$pedido["correo_enviado"] === 0) {
+    $usarCorreo = MODO_NOTIFICACION === 'correo'
+        || (MODO_NOTIFICACION === 'api' && waApiTelefono($pedido["telefono"] ?? "") === "");
+    if ($usarCorreo && (int)$pedido["correo_enviado"] === 0) {
         $correo_cliente = trim($pedido["correo_cliente"] ?? "");
         $nombre_cliente = trim($pedido["nombre_cliente"] ?? "Cliente");
         $folio          = trim($pedido["folio"] ?? "");
@@ -513,6 +517,17 @@ try {
         if ($waConfirmado) {
             $conexion->prepare("UPDATE pedidos SET correo_enviado = 1 WHERE id_pedido = :id")
                      ->execute([":id" => $id_pedido]);
+        }
+    }
+
+    /* ── API oficial de WhatsApp — confirmación de pedido (una sola vez) ── */
+    if (MODO_NOTIFICACION === 'api' && !$usarCorreo && (int)$pedido["correo_enviado"] === 0) {
+        // Si Meta no la acepta, queda sin marcar y se reintenta al volver a imprimir
+        $resultadoApi = waEnviarConfirmacion($conexion, $pedido);
+        if ($resultadoApi["ok"]) {
+            $conexion->prepare("UPDATE pedidos SET correo_enviado = 1 WHERE id_pedido = :id")
+                     ->execute([":id" => $id_pedido]);
+            $pedido["correo_enviado"] = 1;
         }
     }
 

@@ -4,6 +4,7 @@ require_once "auth_check.php";
 require_once "../includes/enviar_correo.php";
 require_once "../includes/enviar_whatsapp.php";
 require_once "../includes/modo_notificacion.php";
+require_once "../includes/whatsapp_api.php";
 
 header("Content-Type: application/json; charset=UTF-8");
 
@@ -90,6 +91,44 @@ function nrz_liberarCandado(PDO $conexion, string $fecha, $id_horario): void
         DELETE FROM notificaciones_ruta
         WHERE fecha_menu = :fecha AND id_horario = :id_horario AND total_enviados = -1
     ")->execute([":fecha" => $fecha, ":id_horario" => $id_horario]);
+}
+
+/*
+    Cierre común de los envíos con resultado inmediato (correo y API):
+    si no salió ninguno, el horario no queda como "ya avisado" y se puede
+    reintentar; si salió alguno, se confirma el candado con el conteo real.
+*/
+function nrz_responder(PDO $conexion, string $fecha, $id_horario, string $canal, int $total, int $enviados, array $fallidos, int $sinContacto): void
+{
+    if ($enviados === 0) {
+        nrz_liberarCandado($conexion, $fecha, $id_horario);
+        $contacto = $canal === "correo" ? "correo" : "WhatsApp";
+        echo json_encode([
+            "ok"      => false,
+            "mensaje" => count($fallidos) > 0
+                ? "No se pudo enviar ningún aviso por {$contacto}. Nada quedó registrado como enviado — puedes reintentar."
+                : "Ningún cliente de este horario dejó {$contacto}, no hay a quién avisar.",
+        ]);
+        exit;
+    }
+
+    $conexion->prepare("
+        UPDATE notificaciones_ruta
+        SET enviado_en = NOW(), tipo = 'manual', total_enviados = :total
+        WHERE fecha_menu = :fecha AND id_horario = :id_horario
+    ")->execute([":total" => $enviados, ":fecha" => $fecha, ":id_horario" => $id_horario]);
+
+    echo json_encode([
+        "ok"           => true,
+        "en_proceso"   => false,
+        "canal"        => $canal,
+        "total"        => $total,
+        "enviados"     => $enviados,
+        "fallidos"     => $fallidos,
+        "sin_contacto" => $sinContacto,
+        "clientes"     => [],
+    ]);
+    exit;
 }
 
 /* ── Obtener pedidos del grupo ── */
@@ -218,36 +257,30 @@ foreach ($pedidos as $pedido) {
     }
 }
 
-// Si no salió ninguno, no dejar el horario como "ya avisado": se puede reintentar
-if ($enviados === 0) {
-    nrz_liberarCandado($conexion, $fecha, $id_horario);
-    echo json_encode([
-        "ok"      => false,
-        "mensaje" => $errores > 0
-            ? "No se pudo enviar ningún correo. Nada quedó registrado como enviado — puedes reintentar."
-            : "Ningún cliente de este horario dejó correo, no hay a quién avisar.",
-    ]);
-    exit;
-}
-
-$conexion->prepare("
-    UPDATE notificaciones_ruta
-    SET enviado_en = NOW(), tipo = 'manual', total_enviados = :total
-    WHERE fecha_menu = :fecha AND id_horario = :id_horario
-")->execute([":total" => $enviados, ":fecha" => $fecha, ":id_horario" => $id_horario]);
-
-echo json_encode([
-    "ok"           => true,
-    "en_proceso"   => false,
-    "canal"        => "correo",
-    "total"        => count($pedidos),
-    "enviados"     => $enviados,
-    "fallidos"     => $fallidos,
-    "sin_contacto" => $sinCorreo,
-    "clientes"     => [],
-]);
-exit;
+nrz_responder($conexion, $fecha, $id_horario, "correo", count($pedidos), $enviados, $fallidos, $sinCorreo);
 } /* fin correo */
+
+/* ── API oficial de WhatsApp — aviso de llegada con resultado inmediato ── */
+if (MODO_NOTIFICACION === 'api') {
+    set_time_limit(180); // una petición a Meta por cliente, menos de 1 s cada una
+    $fallidos  = [];
+    $sinTel    = 0;
+
+    foreach ($pedidos as $p) {
+        if (waApiTelefono($p["telefono"] ?? "") === "") {
+            $sinTel++;
+            continue;
+        }
+        $r = waEnviarLlegada($conexion, $p);
+        if ($r["ok"]) {
+            $enviados++;
+        } else {
+            $fallidos[] = ["nombre" => $p["nombre_cliente"], "telefono" => $p["telefono"], "folio" => $p["folio"], "error" => $r["error"]];
+        }
+    }
+
+    nrz_responder($conexion, $fecha, $id_horario, "whatsapp", count($pedidos), $enviados, $fallidos, $sinTel);
+}
 
 /* ── WhatsApp — notificación masiva de llegada ── */
 $horaBonita = date("g:i A", strtotime($hora_entrega));
