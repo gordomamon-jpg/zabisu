@@ -50,6 +50,7 @@ $pzSecciones = ["Plato fuerte" => "Plato fuerte", "Sopa" => "Sopa", "Complemento
 <?php require_once "../includes/aviso_birria.php"; ?>
 <?php require_once "../includes/aviso_incremento.php"; ?>
 <?php require_once "../includes/aviso_sin_servicio.php"; ?>
+<?php require_once "../includes/aviso_whatsapp.php"; ?>
 
 <main class="pz-pagina">
 

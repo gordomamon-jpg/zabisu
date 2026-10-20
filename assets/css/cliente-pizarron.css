@@ -1,0 +1,259 @@
+/* ══════════════════════════════════════════════════════════════
+   Pago, confirmación y "Mi pedido" en diseño "Pizarrón de fonda"
+   (vista previa ?diseno=nuevo). Se carga después de los estilos de
+   siempre y solo pinta; el HTML y el JavaScript no cambian.
+   Reglas del sistema en DESIGN.md.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Página ── */
+.pz-cliente{background:var(--pz-pizarra)!important}
+.pz-cliente::before,.pz-cliente::after{content:none!important}
+.pz-cliente .zb-marca-watermark{display:none!important}
+.pz-cliente .contenedor{max-width:480px;margin:0 auto;padding:0 0 40px;
+  background:none!important;border:0!important;border-radius:0;box-shadow:none!important;
+  -webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.pz-cliente .contenedor::before,.pz-cliente .contenedor::after{content:none!important;display:none!important}
+.pz-cliente .pz-cab{padding-top:18px}
+.pz-cliente .pz-marca{text-decoration:none}
+.pz-cliente .pz-titulo{text-align:left}
+.pc-sub{margin:10px 20px 0;font:400 16px/1.45 var(--pz-sys);color:var(--pz-gris)}
+.pz-cliente .hamburguer-btn,.pz-cliente .nav-overlay,.pz-cliente .nav-drawer{display:none!important}
+
+/* ── Tarjetas: lista agrupada con su cinta de estraza ── */
+.pz-cliente .pago-body,.pz-cliente .conf-body{max-width:480px;padding:22px 20px 40px;gap:14px}
+.pz-cliente .conf-card{position:relative;padding:16px!important;border-radius:16px!important;
+  background:var(--pz-grupo)!important;border:0!important;box-shadow:none!important;
+  -webkit-backdrop-filter:none!important;backdrop-filter:none!important;color:var(--pz-gis)}
+.pz-cliente .conf-card__titulo{display:inline-block;margin:-2px 0 14px!important;
+  background-color:var(--pz-estraza);color:var(--pz-tinta)!important;
+  font:400 15px/1.2 var(--pz-rotulo)!important;letter-spacing:0!important;text-transform:none!important;
+  padding:5px 14px 5px 12px;filter:url(#pz-borde);transform:rotate(-1.4deg);
+  clip-path:polygon(0 8%,4% 0,30% 6%,62% 0,97% 4%,100% 22%,97% 48%,100% 80%,96% 100%,58% 94%,25% 100%,3% 95%,0 70%,2% 40%)}
+.pz-cliente .conf-card:nth-of-type(2n) .conf-card__titulo{transform:rotate(1deg)}
+
+/* ── Pago: métodos ── */
+.pz-cliente .pago-card{border-radius:14px;background:#2A2724!important;border:1.5px solid #2A2724!important;box-shadow:none!important;
+  -webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.pz-cliente .pago-card--activo{border-color:var(--pz-naranja)!important;background:#33271B!important}
+.pz-cliente .pago-card__icono{color:var(--pz-estraza)}
+.pz-cliente .pago-card__nombre{font:600 17px var(--pz-sys)!important;color:var(--pz-gis)!important}
+.pz-cliente .pago-card__desc{font:400 14px/1.4 var(--pz-sys)!important;color:var(--pz-gris)!important}
+.pz-cliente .pago-card__badge{background:var(--pz-estraza)!important;border:0!important;color:var(--pz-tinta)!important;
+  font:600 12px var(--pz-sys)!important;letter-spacing:0!important;text-transform:none!important;padding:3px 9px!important;
+  border-radius:6px!important;transform:rotate(-2deg)}
+.pz-cliente .pago-card__dot{border:2px solid #5b5752!important}
+.pz-cliente .pago-card--activo .pago-card__dot{border-color:var(--pz-naranja)!important}
+.pz-cliente .pago-card--activo .pago-card__dot::after{background:var(--pz-naranja)!important}
+
+.pz-cliente .pago-aviso{font:400 15px/1.5 var(--pz-sys)!important;color:var(--pz-gis)!important;border-radius:12px}
+.pz-cliente .pago-aviso--efectivo{background:#2A2416!important;border:1px solid #5A4A1E!important}
+.pz-cliente .pago-aviso--efectivo strong{color:#F3C96B!important}
+
+.pz-cliente .pago-pasos li{font:500 14px/1.3 var(--pz-sys)!important;color:var(--pz-gis)!important}
+.pz-cliente .pago-pasos__num{background:var(--pz-estraza);border:0!important;color:var(--pz-tinta)!important;width:28px!important;height:28px!important}
+
+.pz-cliente .pago-linea{border-bottom:1px solid var(--pz-linea)!important}
+.pz-cliente .pago-linea__label{font:400 15px var(--pz-sys)!important;color:var(--pz-gris)!important}
+.pz-cliente .pago-linea__val{font:600 16px var(--pz-sys)!important;color:var(--pz-gis)!important}
+.pz-cliente .pago-linea__val--monto{font:400 22px var(--pz-rotulo)!important;color:var(--pz-gis)!important}
+
+.pz-cliente .copiar-campo__label{font:600 14px var(--pz-sys)!important;color:var(--pz-gis)!important;letter-spacing:0!important}
+.pz-cliente .copiar-campo__btn{min-height:52px;background:#2A2724!important;border:1px solid #3a3632!important;color:var(--pz-gis)!important}
+.pz-cliente .copiar-campo__valor{font-size:16px!important}
+.pz-cliente .copiar-campo__accion{font:600 15px var(--pz-sys)!important;color:var(--pz-naranja)!important}
+.pz-cliente .copiar-campo__btn.copiado{border-color:#2F5A3A!important}
+.pz-cliente .copiar-campo__btn.copiado .copiar-campo__accion{color:#6FD08C!important}
+.pz-cliente .copiar-campo__nota{font:400 14px/1.45 var(--pz-sys)!important;color:var(--pz-gris)!important}
+
+.pz-cliente .pago-upload__desc{font:400 15px/1.5 var(--pz-sys)!important;color:var(--pz-gris)!important}
+.pz-cliente .pago-upload__btn{min-height:52px;background:#2A2724!important;border:1.5px dashed #5b5752!important;
+  font:600 16px var(--pz-sys)!important;color:var(--pz-gis)!important}
+.pz-cliente .pago-upload__nombre{font:400 14px var(--pz-sys)!important;color:var(--pz-gris)!important}
+.pz-cliente .pago-upload__nombre.tiene-archivo{color:#6FD08C!important;font-weight:600!important}
+
+.pz-cliente .pago-nota-final{font:400 15px/1.5 var(--pz-sys)!important;color:var(--pz-gris)!important}
+.pz-cliente .pago-nota-final strong{color:var(--pz-gis)!important}
+.pz-cliente .pago-btn-final{min-height:56px;background:var(--pz-naranja)!important;color:#111!important;
+  font:600 17px var(--pz-sys)!important;letter-spacing:0!important;border-radius:14px!important}
+.pz-cliente .pago-btn-final__flecha{display:none}
+
+.pz-cliente .pago-error{background:#2B1714!important;border:1px solid #6B2C22!important;color:#FFC2B8!important;
+  font:400 15px/1.45 var(--pz-sys)!important;border-radius:12px!important}
+
+/* ── Confirmación ── */
+.pz-cliente .pc-boleto{margin:22px 20px 4px}
+.pz-cliente .pc-boleto .pz-boleto__titulo{font-size:17px;word-break:break-all}
+
+.pz-cliente .conf-aviso-correo{background:#241D16!important;border:1px solid #5A4630!important}
+.pz-cliente .conf-aviso-correo__titulo{font:600 17px var(--pz-sys)!important;color:var(--pz-gis)!important}
+.pz-cliente .conf-aviso-correo__texto{font:400 15px/1.5 var(--pz-sys)!important;color:var(--pz-gris)!important}
+.pz-cliente .conf-aviso-correo strong{color:var(--pz-gis)!important}
+
+.pz-cliente .conf-canal__titulo{font:600 17px var(--pz-sys)!important;color:var(--pz-gis)!important}
+.pz-cliente .conf-canal__texto{font:400 15px/1.5 var(--pz-sys)!important;color:var(--pz-gris)!important}
+.pz-cliente .conf-canal__btn{background:var(--pz-naranja)!important;color:#111!important;box-shadow:none!important;
+  font:600 16px var(--pz-sys)!important;border-radius:14px!important;min-height:52px}
+
+.pz-cliente .conf-dato__label{font:400 14px var(--pz-sys)!important;color:var(--pz-gris)!important;letter-spacing:0!important;text-transform:none!important}
+.pz-cliente .conf-dato__val{font:600 16px var(--pz-sys)!important;color:var(--pz-gis)!important}
+.pz-cliente .conf-dato__val--pagado{color:#6FD08C!important}
+.pz-cliente .conf-dato__val--pendiente{color:#F3C96B!important}
+.pz-cliente .conf-obs{background:#2A2724!important;border:0!important;color:var(--pz-gis)!important;font:400 15px/1.45 var(--pz-sys)!important}
+
+.pz-cliente .conf-menu-header__nombre{font:600 16px var(--pz-sys)!important;color:var(--pz-gis)!important}
+.pz-cliente .conf-menu-header__precio{font:600 16px var(--pz-sys)!important;color:var(--pz-gis)!important}
+.pz-cliente .conf-menu-sep{background:var(--pz-linea)!important;border-color:var(--pz-linea)!important}
+.pz-cliente .conf-linea{border-color:var(--pz-linea)!important}
+.pz-cliente .conf-linea__cat{font:400 14px var(--pz-sys)!important;color:var(--pz-gris)!important;letter-spacing:0!important;text-transform:none!important}
+.pz-cliente .conf-linea__val{font:500 15px/1.4 var(--pz-sys)!important;color:var(--pz-gis)!important}
+
+.pz-cliente .conf-card--total{display:flex;justify-content:space-between;align-items:baseline}
+.pz-cliente .conf-total-label{font:600 16px var(--pz-sys)!important;color:var(--pz-gis)!important;letter-spacing:0!important;text-transform:none!important}
+.pz-cliente .conf-total-val{font:400 26px var(--pz-rotulo)!important;color:var(--pz-gis)!important}
+
+.pz-cliente .zb-estrella{color:#5b5752}
+.pz-cliente .zb-modal__textarea{background:#2A2724!important;border:1px solid #3a3632!important;color:var(--pz-gis)!important;
+  font:400 16px var(--pz-sys)!important;border-radius:12px!important}
+.pz-cliente .btn-principal{background:var(--pz-naranja)!important;color:#111!important;box-shadow:none!important;
+  font:600 17px var(--pz-sys)!important;border-radius:14px!important;min-height:52px}
+.pz-cliente .btn-principal:disabled{opacity:.45}
+
+.pz-cliente .conf-wa{background:var(--pz-grupo)!important;border:1px solid #2F5A3A!important;color:#CDE8D3!important;
+  box-shadow:none!important;font:600 16px var(--pz-sys)!important;border-radius:14px!important;min-height:52px}
+.pz-cliente .conf-wa svg{color:#25D366}
+.pz-cliente .conf-btn-nuevo{background:none!important;border:1px solid #3a3632!important;color:var(--pz-gis)!important;
+  font:600 16px var(--pz-sys)!important;border-radius:14px!important;min-height:52px}
+.pz-cliente .conf-correo{font:400 14px/1.5 var(--pz-sys)!important;color:var(--pz-gris)!important}
+
+/* ── "Mi pedido": bloques fuera del boleto van como lista agrupada ── */
+.pz-pedido .bloque-formulario:not(.resumen-total) .ticket-resumen{background:var(--pz-grupo)!important;border-radius:14px!important;padding:6px 14px!important}
+.pz-pedido .bloque-formulario:not(.resumen-total) .ticket-menu{border-bottom:0!important;margin:0!important;padding:0!important}
+.pz-pedido .bloque-formulario:not(.resumen-total) .ticket-linea{padding:9px 0!important;border-bottom:1px solid var(--pz-linea)!important}
+.pz-pedido .bloque-formulario:not(.resumen-total) .ticket-linea:last-child{border-bottom:0!important}
+.pz-pedido .bloque-formulario:not(.resumen-total) .ticket-linea span:first-child{color:var(--pz-gris)!important;font-weight:400!important}
+.pz-pedido .bloque-formulario:not(.resumen-total) .ticket-linea span:last-child{color:var(--pz-gis)!important;font-weight:500!important}
+.pz-pedido .resumen-total .ticket-linea strong{color:var(--pz-tinta)!important}
+
+/* ── Pie ── */
+.pz-cliente .cliente-footer{background:none!important;border:0!important;padding:10px 20px 30px;text-align:center}
+.pz-cliente .cliente-footer__slogan{font:400 13px/1.5 var(--pz-sys);color:#7d7a74!important}
+
+/* ── Ajustes tras revisar las capturas ── */
+.pz-cliente .pago-card{padding:16px 48px 16px 16px!important;min-height:0!important}
+.pz-cliente .pago-card__dot{position:absolute!important;top:16px!important;right:16px!important;bottom:auto!important;margin:0!important}
+.pz-cliente .pago-card--transfer .pago-card__icono{display:none}
+.pz-cliente .pz-pincel span{font-size:34px}
+.pz-pedido .resumen-total [class^="estado-"]{background:none!important;border:0!important;padding:0!important;
+  font-weight:600!important;color:var(--pz-tinta)!important}
+.pz-cliente .pago-card__icono{display:none!important}
+.pz-cliente .pago-btn-final{margin-top:16px}
+
+/* ── Confirmación: nota pegada con los avisos ── */
+.pc-nota{position:relative;margin:14px 4px 6px;padding:18px 18px 16px;color:var(--pz-tinta);transform:rotate(1.2deg);
+  background:var(--pz-estraza-cl) repeating-linear-gradient(92deg,rgba(0,0,0,.05) 0 1px,transparent 1px 5px);border-radius:3px}
+.pc-nota::before{content:"";position:absolute;top:-11px;left:50%;width:92px;height:24px;margin-left:-46px;transform:rotate(-3deg);
+  background:rgba(236,235,231,.55)}
+.pc-nota__titulo{margin:0 0 6px;font:400 22px/1.2 var(--pz-pincel);color:var(--pz-tinta)}
+.pc-nota p{margin:0;font:400 15px/1.45 var(--pz-sys);color:var(--pz-tinta2)}
+.pc-nota b{color:var(--pz-tinta);font-weight:600}
+.pc-nowrap{white-space:nowrap}
+
+/* ── Confirmación: invitación al Canal ── */
+.pc-canal{display:flex;align-items:center;gap:12px;padding:14px;min-height:64px;border-radius:14px;
+  background:var(--pz-grupo);color:var(--pz-gis);text-decoration:none}
+.pc-canal__ico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  background:var(--pz-estraza);color:var(--pz-tinta)}
+.pc-canal__txt{flex:1;min-width:0}
+.pc-canal__txt b{display:block;font:600 16px/1.3 var(--pz-sys);color:var(--pz-gis)}
+.pc-canal__txt span{display:block;margin-top:3px;font:400 14px/1.42 var(--pz-sys);color:var(--pz-gris)}
+.pc-canal__btn{flex-shrink:0;padding:8px 14px;border-radius:99px;border:1.5px solid var(--pz-estraza);
+  font:600 14px var(--pz-sys);color:var(--pz-estraza-cl)}
+.pc-canal:active{transform:scale(.99)}
+.pc-canal{flex-wrap:wrap;align-items:flex-start}
+.pc-canal__btn{flex-basis:100%;text-align:center;padding:12px 14px;min-height:46px;margin-top:4px;font-size:15px}
+
+/* ── Confirmación: avisos impresos en el boleto ── */
+.pc-avisos{display:flex;gap:10px;align-items:flex-start;color:var(--pz-tinta)}
+.pc-avisos svg{flex-shrink:0;margin-top:3px}
+.pc-avisos p{margin:0!important;font:400 14.5px/1.45 var(--pz-sys)!important;color:var(--pz-tinta2)!important}
+.pc-avisos b{color:var(--pz-tinta)!important;font-weight:600;word-break:break-word}
+.pz-cliente .conf-body > .pc-canal:first-child{margin-top:4px}
+
+/* ══ Pago en pasos con "La cuenta" (opción 1) ══ */
+.pg-form{max-width:480px;margin:0 auto;padding:22px 20px 130px}
+.pg-form .pago-error{margin-bottom:16px}
+.pg-pasos{list-style:none;margin:0;padding:0;counter-reset:paso}
+.pg-paso{counter-increment:paso}
+.pg-fila{position:relative;display:flex;gap:14px;padding-bottom:24px}
+.pg-paso:not(:last-child) .pg-fila::before{content:"";position:absolute;left:16px;top:38px;bottom:2px;width:2px;background:var(--pz-linea)}
+.pg-num{width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  background:var(--pz-estraza);color:var(--pz-tinta);font:400 21px/1 var(--pz-pincel);transform:rotate(-6deg)}
+.pg-num::before{content:counter(paso)}
+.pg-paso:nth-child(2n) .pg-num{transform:rotate(5deg)}
+/* Pasos ya hechos: se ponen naranjas */
+.pg-paso--metodo:has(input:checked) .pg-num,
+.pg-paso:has(.tiene-archivo) .pg-num{background:var(--pz-naranja);color:#111}
+.pg-cuerpo{flex:1;min-width:0}
+.pg-titulo{margin:5px 0 10px;font:600 18px var(--pz-sys);color:var(--pz-gis)}
+.pg-texto{margin:0;font:400 15px/1.5 var(--pz-sys);color:var(--pz-gris)}
+.pg-texto b{color:var(--pz-gis)}
+
+/* Método: dos opciones como botones */
+.pg-chips{display:flex;gap:8px;flex-wrap:wrap}
+.pg-chip{position:relative;display:inline-flex;align-items:center;min-height:46px;padding:0 18px;border-radius:12px;cursor:pointer;
+  background:var(--pz-grupo);border:1.5px solid var(--pz-grupo);font:600 16px var(--pz-sys);color:var(--pz-gis)}
+.pg-chip input{position:absolute;opacity:0;width:1px;height:1px;margin:0}
+.pg-chip.pago-card--activo,.pg-chip:has(input:checked){background:var(--pz-naranja);border-color:var(--pz-naranja);color:#111}
+.pg-chip:has(input:focus-visible){outline:2px solid var(--pz-naranja);outline-offset:3px}
+.pz-cliente .pg-paso .pago-aviso{margin-top:12px}
+
+/* "La cuenta": papel de estraza cortado de la libreta y engrapado */
+.pg-cuenta{position:relative;padding:20px 16px 16px;transform:rotate(-1deg);color:var(--pz-tinta);
+  background:var(--pz-estraza-cl) repeating-linear-gradient(92deg,rgba(0,0,0,.05) 0 1px,transparent 1px 5px);
+  -webkit-mask:radial-gradient(circle at 8px 0,transparent 6px,#000 6.5px) -8px 0/16px 100% repeat-x;
+          mask:radial-gradient(circle at 8px 0,transparent 6px,#000 6.5px) -8px 0/16px 100% repeat-x}
+.pg-cuenta__grapa{position:absolute;top:6px;left:28px;width:40px;height:10px;border:2.5px solid #8d8a84;border-bottom:0;border-radius:4px 4px 0 0}
+.pg-cuenta__titulo{margin:6px 0 4px;font:400 24px var(--pz-pincel);color:var(--pz-tinta)}
+.pg-cuenta__total{display:flex;justify-content:space-between;align-items:baseline;padding-bottom:8px;margin-bottom:6px;
+  border-bottom:1.5px dashed rgba(34,24,15,.35);font:400 15px var(--pz-sys);color:var(--pz-tinta2)}
+.pg-cuenta__total b{font:400 26px var(--pz-rotulo);color:var(--pz-tinta)}
+.pg-cuenta__linea{display:flex;justify-content:space-between;gap:10px;font:400 15px/1.8 var(--pz-sys);color:var(--pz-tinta2)}
+.pg-cuenta__linea b{color:var(--pz-tinta);font-weight:600}
+.pz-cliente .pg-cuenta .copiar-campo{margin-top:10px}
+.pz-cliente .pg-cuenta .copiar-campo__label{font:600 13px var(--pz-sys)!important;color:var(--pz-tinta2)!important;margin-bottom:4px}
+.pz-cliente .pg-cuenta .copiar-campo__btn{background:rgba(255,255,255,.18)!important;border:1.5px solid rgba(34,24,15,.35)!important;color:var(--pz-tinta)!important;min-height:48px}
+.pz-cliente .pg-cuenta .copiar-campo__accion{color:var(--pz-tinta)!important;text-decoration:underline}
+.pz-cliente .pg-cuenta .copiar-campo__btn.copiado{border-color:#2F6B3E!important}
+.pz-cliente .pg-cuenta .copiar-campo__btn.copiado .copiar-campo__accion{color:#2F6B3E!important}
+.pg-cuenta__nota{margin:10px 0 0;font:400 13.5px/1.45 var(--pz-sys);color:var(--pz-tinta2)}
+
+/* Comprobante */
+.pg-subir{display:flex;align-items:center;gap:12px;padding:14px 12px;border-radius:12px;cursor:pointer;
+  border:1.5px dashed #5b5752;background:#1A1816;color:var(--pz-gis)}
+.pg-subir b{display:block;font:600 16px var(--pz-sys)}
+.pg-subir small{display:block;margin-top:2px;font:400 13px/1.4 var(--pz-sys);color:var(--pz-gris)}
+.pg-subir__clip{width:36px;height:36px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  background:var(--pz-estraza);color:var(--pz-tinta)}
+.pg-paso:has(.tiene-archivo) .pg-subir{border-style:solid;border-color:#2F5A3A}
+.pz-cliente .pg-paso .pago-upload__nombre{margin:8px 0 0;text-align:left}
+
+/* Botón fijo con el total */
+.pg-btn{width:100%;border:0;cursor:pointer;font:600 17px var(--pz-sys)}
+.pz-cliente .pg-chip.pago-card--activo{background:var(--pz-naranja)!important;border-color:var(--pz-naranja)!important;color:#111!important}
+.pz-cliente .pg-cuenta .copiar-campo__valor{word-break:normal!important;overflow-wrap:break-word}
+.pg-cuenta__grapa{top:16px}
+.pg-cuenta__titulo{margin-top:14px}
+.pg-form{padding-bottom:20px}
+.pz-cliente:has(.pg-form) .cliente-footer{padding-bottom:120px}
+.pz-cliente .pg-cuenta .copiar-campo__valor{font-size:14.5px!important;letter-spacing:0!important}
+
+/* Efectivo: "La cuenta" con sello de pago al recibir */
+.pg-efectivo{display:none}
+.pg-efectivo.visible{display:list-item}
+.pg-sello{position:absolute;right:14px;top:26px;padding:4px 8px;border:2px solid #7A3B12;border-radius:6px;
+  font:400 13px var(--pz-rotulo);color:#7A3B12;opacity:.85;transform:rotate(8deg);filter:url(#pz-tinta)}
+.pg-mano{display:flex;gap:6px;margin:12px 0 0 4px;font:400 19px/1.3 var(--pz-pincel);color:var(--pz-naranja);transform:rotate(-1.5deg)}
+.pg-cuenta__linea b{text-align:right}
+.pg-texto .bloque-transferencia{display:inline!important}
+.pg-texto .bloque-transferencia[style*="none"]{display:none!important}
+.pg-sello{filter:none;opacity:.75}

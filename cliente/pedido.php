@@ -4,6 +4,7 @@ require_once "../includes/seguridad.php";
 require_once "../includes/limite_platos.php";
 require_once "../includes/opciones_plato.php";
 require_once "../includes/modo_notificacion.php";
+require_once "../includes/diseno.php";
 
 // Con la API oficial de WhatsApp se pide el WhatsApp; en modo correo, el correo
 $contactoWA = MODO_NOTIFICACION === 'api';
@@ -579,6 +580,12 @@ if ($scrollDestino === "bloque-entrega") {
     <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
     <link rel="stylesheet" href="../assets/css/styles.css?v=5">
     <link rel="stylesheet" href="../assets/css/cliente-rediseno.css?v=4">
+    <?php if ($disenoNuevo): ?>
+    <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
+    <link rel="stylesheet" href="../assets/css/pedido-pizarron.css?v=1">
+    <?php else: ?>
     <style>
         /* ── Rediseño: tipografía, marca sólida, vidrio y atmósfera ── */
         body, button, input, textarea, select {
@@ -683,8 +690,10 @@ if ($scrollDestino === "bloque-entrega") {
         }
         .autocomplete-aviso__icono { color: #4ac86e; font-weight: 800; flex-shrink: 0; font-size: 14px; margin-top: 1px; }
     </style>
+    <?php endif; ?>
 </head>
-<body>
+<body<?php echo $disenoNuevo ? ' class="pz pz-pedido"' : ''; ?>>
+<?php if ($disenoNuevo) require "../includes/pz_filtros.php"; ?>
 
 <!-- ── Marca de agua fija (se queda fija al hacer scroll, le da vida al vidrio) ── -->
 <img class="zb-marca-watermark" src="../assets/img/LOGO_BLANCO.png" alt="">
@@ -723,6 +732,20 @@ if ($scrollDestino === "bloque-entrega") {
 
 <div class="contenedor">
 
+    <?php if ($disenoNuevo): ?>
+    <header class="pz-cab">
+        <a class="pz-marca" href="menu.php" aria-label="Zabisu, ver el menú del día">
+            <img src="../assets/img/LOGO_N_128.png" alt="">
+            <div>
+                <span class="pz-marca__nombre">Zabisu</span>
+                <span class="pz-marca__lema">Sabor y Servicio</span>
+            </div>
+        </a>
+    </header>
+    <h1 class="pz-titulo"><span class="pz-pincel"><span>Tu pedido</span></span></h1>
+    <p class="pp-fecha"><?php echo htmlspecialchars($fechaMenuFormateada); ?></p>
+    <a href="menu.php" class="pp-volver">Ver el menú del día</a>
+    <?php else: ?>
     <div class="md-hero">
         <div class="md-hero__glow-top"></div>
         <div class="md-hero__glow-bottom"></div>
@@ -735,6 +758,7 @@ if ($scrollDestino === "bloque-entrega") {
         <p class="md-hero__fecha"><?php echo htmlspecialchars($fechaMenuFormateada); ?></p>
         <a href="menu.php" class="btn-volver-panel">← Ver menú del día</a>
     </div>
+    <?php endif; ?>
 
     <?php if (!empty($errores)): ?>
         <div class="mensaje-error">
@@ -811,7 +835,7 @@ if ($scrollDestino === "bloque-entrega") {
             <div class="stepper-nav">
                 <div></div>
                 <button type="button" class="btn-stepper btn-stepper--siguiente" data-siguiente="2">
-                    Siguiente →
+                    <?php echo $disenoNuevo ? "Siguiente" : "Siguiente →"; ?>
                 </button>
             </div>
         </div>
@@ -890,7 +914,7 @@ if ($scrollDestino === "bloque-entrega") {
 
                             <?php if (!empty($menusPorTipo[$tipoMenu]["Plato fuerte"])): ?>
                                 <div class="grupo-categoria">
-                                    <h3><?php echo $icoPlato; ?> Plato fuerte <span class="cat-hint">· elige 1</span></h3>
+                                    <h3><?php echo $icoPlato; ?> Plato fuerte <span class="cat-hint"><?php echo $disenoNuevo ? "elige 1" : "· elige 1"; ?></span></h3>
                                     <?php foreach ($menusPorTipo[$tipoMenu]["Plato fuerte"] as $item): ?>
                                         <label class="opcion-producto <?php echo !empty($item["agotado"]) ? 'producto-agotado' : ''; ?>">
                                             <input type="radio"
@@ -900,7 +924,7 @@ if ($scrollDestino === "bloque-entrega") {
                                                    <?php echo (($_POST["menus"][$i]["plato_fuerte"] ?? "") == $item["id_producto"]) ? "checked" : ""; ?>
                                                    <?php echo !empty($item["agotado"]) ? 'disabled' : ''; ?>>
                                             <strong><?php echo htmlspecialchars($item["nombre"]); ?></strong>
-                                            — <?php echo htmlspecialchars($item["descripcion"]); ?>
+                                            <?php if ($disenoNuevo): ?><span class="pp-desc"><?php echo htmlspecialchars($item["descripcion"]); ?></span><?php else: ?>— <?php echo htmlspecialchars($item["descripcion"]); ?><?php endif; ?>
                                             <?php if (!empty($item["agotado"])): ?>
                                                 <span class="badge-agotado">Agotado</span>
                                             <?php endif; ?>
@@ -912,7 +936,7 @@ if ($scrollDestino === "bloque-entrega") {
 
                             <?php if (!empty($menusPorTipo[$tipoMenu]["Complemento"])): ?>
                                 <div class="grupo-categoria grupo-complementos" data-max="2">
-                                    <h3><?php echo $icoComplemento; ?> Complementos <span class="cat-hint complementos-hint">· elige hasta 2</span></h3>
+                                    <h3><?php echo $icoComplemento; ?> Complementos <span class="cat-hint complementos-hint"><?php echo $disenoNuevo ? "elige hasta 2" : "· elige hasta 2"; ?></span></h3>
                                     <?php foreach ($menusPorTipo[$tipoMenu]["Complemento"] as $item): ?>
                                         <label class="opcion-producto <?php echo !empty($item['agotado']) ? 'producto-agotado' : ''; ?>">
                                             <input type="checkbox"
@@ -920,8 +944,8 @@ if ($scrollDestino === "bloque-entrega") {
                                                    value="<?php echo $item["id_producto"]; ?>"
                                                    <?php echo (in_array($item["id_producto"], $_POST["menus"][$i]["complementos"] ?? [])) ? "checked" : ""; ?>
                                                    <?php echo !empty($item["agotado"]) ? 'disabled' : ''; ?>>
-                                            <strong><?php echo htmlspecialchars($item["nombre"]); ?></strong> —
-                                            <?php echo htmlspecialchars($item["descripcion"]); ?>
+                                            <strong><?php echo htmlspecialchars($item["nombre"]); ?></strong>
+                                            <?php if ($disenoNuevo): ?><span class="pp-desc"><?php echo htmlspecialchars($item["descripcion"]); ?></span><?php else: ?>— <?php echo htmlspecialchars($item["descripcion"]); ?><?php endif; ?>
                                             <?php if (!empty($item["agotado"])): ?>
                                                 <span class="badge-agotado">Agotado</span>
                                             <?php endif; ?>
@@ -1061,8 +1085,8 @@ if ($scrollDestino === "bloque-entrega") {
             </section>
 
             <div class="stepper-nav">
-                <button type="button" class="btn-stepper btn-stepper--anterior" data-anterior="1">← Anterior</button>
-                <button type="button" class="btn-stepper btn-stepper--siguiente" data-siguiente="3">Siguiente →</button>
+                <button type="button" class="btn-stepper btn-stepper--anterior" data-anterior="1"><?php echo $disenoNuevo ? "Anterior" : "← Anterior"; ?></button>
+                <button type="button" class="btn-stepper btn-stepper--siguiente" data-siguiente="3"><?php echo $disenoNuevo ? "Siguiente" : "Siguiente →"; ?></button>
             </div>
         </div>
 
@@ -1140,8 +1164,8 @@ if ($scrollDestino === "bloque-entrega") {
             </section>
 
             <div class="stepper-nav">
-                <button type="button" class="btn-stepper btn-stepper--anterior" data-anterior="2">← Anterior</button>
-                <button type="button" class="btn-stepper btn-stepper--siguiente" data-siguiente="4">Siguiente →</button>
+                <button type="button" class="btn-stepper btn-stepper--anterior" data-anterior="2"><?php echo $disenoNuevo ? "Anterior" : "← Anterior"; ?></button>
+                <button type="button" class="btn-stepper btn-stepper--siguiente" data-siguiente="4"><?php echo $disenoNuevo ? "Siguiente" : "Siguiente →"; ?></button>
             </div>
         </div>
 
@@ -1178,7 +1202,7 @@ if ($scrollDestino === "bloque-entrega") {
             </section>
 
             <div class="stepper-nav">
-                <button type="button" class="btn-stepper btn-stepper--anterior" data-anterior="3">← Anterior</button>
+                <button type="button" class="btn-stepper btn-stepper--anterior" data-anterior="3"><?php echo $disenoNuevo ? "Anterior" : "← Anterior"; ?></button>
                 <div></div>
             </div>
         </div>
@@ -1713,7 +1737,8 @@ document.addEventListener("DOMContentLoaded", function () {
         var hint       = bloqueOpciones.querySelector(".complementos-hint");
 
         if (grupo) grupo.dataset.max = maxComp;
-        if (hint)  hint.textContent  = maxComp === 1 ? "· elige 1" : "· elige hasta " + maxComp;
+        var sep = document.body.classList.contains("pz") ? "" : "· ";
+        if (hint)  hint.textContent  = sep + (maxComp === 1 ? "elige 1" : "elige hasta " + maxComp);
 
         // Si ya hay más marcados de los permitidos, desmarcar el exceso
         var checks = Array.from(bloqueOpciones.querySelectorAll("input[name*='[complementos][]']:checked"));

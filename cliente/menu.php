@@ -3,18 +3,7 @@ require_once "../config/db.php";
 require_once "../includes/canal_whatsapp.php";
 date_default_timezone_set("America/Mexico_City");
 
-/* ── Diseño "Pizarrón de fonda" en vista previa (ver DESIGN.md):
-      ?diseno=nuevo lo activa y se recuerda 30 días; ?diseno=actual lo quita ── */
-if (isset($_GET["diseno"])) {
-    $disenoNuevo = $_GET["diseno"] === "nuevo";
-    setcookie("zb_diseno", $disenoNuevo ? "nuevo" : "", [
-        "expires"  => $disenoNuevo ? time() + 30 * 86400 : time() - 3600,
-        "path"     => "/",
-        "samesite" => "Lax",
-    ]);
-} else {
-    $disenoNuevo = ($_COOKIE["zb_diseno"] ?? "") === "nuevo";
-}
+require_once "../includes/diseno.php";
 
 /* ── Aviso día mundialista (activar: cambiar false por in_array(date('Y-m-d'), ['YYYY-MM-DD', ...])) ── */
 if (false): ?>
@@ -1153,6 +1142,7 @@ if ($disenoNuevo) { require __DIR__ . "/menu_pizarron.php"; exit; }
 <?php require_once "../includes/aviso_birria.php"; ?>
 <?php require_once "../includes/aviso_incremento.php"; ?>
 <?php require_once "../includes/aviso_sin_servicio.php"; ?>
+<?php require_once "../includes/aviso_whatsapp.php"; ?>
 
 <!-- ── Hamburger ── -->
 <button class="hamburguer-btn" id="hamburguer-btn" aria-label="Menú">

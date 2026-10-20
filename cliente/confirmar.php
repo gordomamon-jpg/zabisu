@@ -3,6 +3,7 @@ require_once "../config/db.php";
 require_once "../includes/opciones_plato.php";
 require_once "../includes/canal_whatsapp.php";
 require_once "../includes/modo_notificacion.php";
+require_once "../includes/diseno.php";
 
 $folio = trim($_GET["folio"] ?? "");
 
@@ -366,8 +367,15 @@ function agruparDetallePorCategoria($detalles)
     }
     .conf-correo strong { color: rgba(255,255,255,.4); }
     </style>
+    <?php if ($disenoNuevo): ?>
+    <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
+    <link rel="stylesheet" href="../assets/css/cliente-pizarron.css?v=1">
+    <?php endif; ?>
 </head>
-<body>
+<body<?php echo $disenoNuevo ? ' class="pz pz-cliente"' : ''; ?>>
+<?php if ($disenoNuevo) require "../includes/pz_filtros.php"; ?>
 
 <!-- ── Marca de agua fija ── -->
 <img class="zb-marca-watermark" src="../assets/img/LOGO_BLANCO.png" alt="">
@@ -381,6 +389,46 @@ $waPath            = "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.
 <div class="contenedor">
 
 <!-- ══ HERO ══════════════════════════════════════════════════ -->
+<?php if ($disenoNuevo): ?>
+<header class="pz-cab">
+    <a class="pz-marca" href="menu.php" aria-label="Zabisu, ver el menú del día">
+        <img src="../assets/img/LOGO_N_128.png" alt="">
+        <div>
+            <span class="pz-marca__nombre">Zabisu</span>
+            <span class="pz-marca__lema">Sabor y Servicio</span>
+        </div>
+    </a>
+</header>
+<h1 class="pz-titulo"><span class="pz-pincel"><span>¡Pedido confirmado!</span></span></h1>
+<p class="pc-sub"><?php echo $esPagoEfectivo ? "Pagarás al recibir tu pedido." : "Tu pago está en revisión; te avisamos al validarlo."; ?></p>
+<div class="pz-boleto pc-boleto">
+    <div class="pz-boleto__papel">
+        <span class="pz-boleto__ojo" aria-hidden="true"></span>
+        <p class="pz-boleto__titulo">Folio <?php echo htmlspecialchars($pedido["folio"]); ?></p>
+        <hr class="pz-boleto__corte">
+        <p><b><?php echo htmlspecialchars($pedido["nombre_ubicacion"]); ?></b></p>
+        <p>Entrega a las <b><?php echo date("g:i", strtotime($pedido["hora_entrega"])) . " " . (date("A", strtotime($pedido["hora_entrega"])) === "AM" ? "am" : "pm"); ?></b></p>
+        <?php
+        $pcTel       = preg_replace('/\D/', '', $pedido["telefono"] ?? "");
+        $pcTelBonito = strlen($pcTel) === 10 ? substr($pcTel, 0, 2) . " " . substr($pcTel, 2, 4) . " " . substr($pcTel, 6) : $pcTel;
+        $pcAvisoWA   = MODO_NOTIFICACION === 'api' && empty($pedido["correo_cliente"]) && strlen($pcTel) === 10 && !preg_match('/^0+$/', $pcTel);
+        ?>
+        <?php if ($pcAvisoWA): ?>
+        <hr class="pz-boleto__corte">
+        <div class="pc-avisos">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.8-.9-2-1s-.5-.1-.7.1-.8 1-1 1.2-.4.2-.7.1a8.2 8.2 0 0 1-4-3.5c-.3-.5.3-.5.9-1.6.1-.2 0-.4 0-.5l-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4s-1 1-1 2.5 1 2.9 1.2 3.1 2 3.1 5 4.4c1.9.8 2.6.9 3.5.7.6-.1 1.8-.7 2-1.4s.3-1.3.2-1.4l-.4-.4ZM12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Z"/></svg>
+            <p>Te avisamos por WhatsApp al <b class="pc-nowrap"><?php echo htmlspecialchars($pcTelBonito); ?></b>: la confirmación y cuando lleguemos. Te escribimos como <b>Zabisu</b> desde el <span class="pc-nowrap">220 680 9490</span>.</p>
+        </div>
+        <?php elseif (!empty($pedido["correo_cliente"])): ?>
+        <hr class="pz-boleto__corte">
+        <div class="pc-avisos">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 6 8.5 7 8.5-7"/></svg>
+            <p>Te avisamos por correo a <b><?php echo htmlspecialchars($pedido["correo_cliente"]); ?></b>. Si no lo ves, búscalo en <b>Spam</b> o <b>Promociones</b>.</p>
+        </div>
+        <?php endif; ?>
+    </div>
+</div>
+<?php else: ?>
 <div class="conf-hero">
     <div class="md-hero__glow-top"></div>
     <div class="md-hero__glow-bottom"></div>
@@ -411,9 +459,22 @@ $waPath            = "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.
     </div>
 </div>
 
+<?php endif; ?>
+
 <!-- ══ CUERPO ════════════════════════════════════════════════ -->
 <div class="conf-body">
 
+    <?php if ($disenoNuevo): ?>
+    <!-- Invitación al Canal con el menú diario -->
+    <a class="pc-canal" href="<?php echo htmlspecialchars(CANAL_WHATSAPP_URL); ?>" target="_blank" rel="noopener">
+        <span class="pc-canal__ico" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg></span>
+        <span class="pc-canal__txt">
+            <b>¿Quieres el menú todos los días?</b>
+            <span>Únete a nuestro Canal de WhatsApp: ahí lo publicamos de lunes a jueves.</span>
+        </span>
+        <span class="pc-canal__btn">Unirme al Canal</span>
+    </a>
+    <?php else: ?>
     <?php if (!empty($pedido["correo_cliente"])): ?>
     <!-- Aviso de correo: los primeros correos de Zabisu pueden caer en spam -->
     <div class="conf-card conf-aviso-correo">
@@ -435,7 +496,7 @@ $waPath            = "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.
         <p class="conf-aviso-correo__titulo">Te avisamos por WhatsApp</p>
         <p class="conf-aviso-correo__texto">
             Te llegará la confirmación de tu pedido al <strong><?php echo htmlspecialchars($pedido["telefono"]); ?></strong>
-            desde el WhatsApp de avisos de Zabisu, y ahí mismo te avisaremos cuando llegue a tu punto de entrega.
+            desde el WhatsApp de avisos de Zabisu (<strong style="white-space:nowrap">220 680 9490</strong>), y ahí mismo te avisaremos cuando llegue a tu punto de entrega.
         </p>
     </div>
     <?php endif; ?>
@@ -448,6 +509,8 @@ $waPath            = "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.4.1-.6.3-.2.2-.8.8-.8 2s.8 2.3 1 2.5c.1.2 1.6 2.5 4 3.5 1.5.6 2 .7 2.8.6.4-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2l-.1-.2Z"/></svg> Seguir el canal de Zabisu
         </a>
     </div>
+
+    <?php endif; ?>
 
     <!-- Datos del pedido -->
     <div class="conf-card">

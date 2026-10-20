@@ -72,5 +72,14 @@ piezas decorativas visibles a la vez.
 
 ## Vista previa
 
-`menu.php?diseno=nuevo` activa el diseño en ese navegador por 30 días (cookie `zb_diseno`), y
-`menu.php?diseno=actual` lo quita. Los clientes que no usan el enlace ven el diseño de siempre.
+`?diseno=nuevo` en cualquier pantalla del cliente activa el diseño en ese navegador por 30 días
+(cookie `zb_diseno`, en `includes/diseno.php`), y `?diseno=actual` lo quita. Los clientes que no
+usan el enlace ven el diseño de siempre.
+
+| Pantalla | Cómo se pinta |
+|---|---|
+| Menú | Vista propia: `cliente/menu_pizarron.php` + `menu-pizarron.css` |
+| Pedido y "Mi pedido" | Mismo HTML y JavaScript de siempre + `pedido-pizarron.css` (clase `pz-pedido` en el body) |
+| Pago y confirmación | Mismo HTML y JavaScript de siempre + `cliente-pizarron.css` (clase `pz-cliente`) |
+
+Los filtros de orillas irregulares (`#pz-borde`, `#pz-tinta`) viven en `includes/pz_filtros.php`.

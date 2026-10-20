@@ -2,6 +2,7 @@
 require_once "../config/db.php";
 require_once "../includes/seguridad.php";
 require_once "../includes/limite_platos.php";
+require_once "../includes/diseno.php";
 // Sin esto PHP usa UTC (6 h adelante): la hora de cierre "11:50" se
 // interpretaba como 5:50 AM de México y se rechazaban todos los pedidos.
 date_default_timezone_set("America/Mexico_City");
@@ -629,8 +630,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
     .pago-error li { margin-bottom: 4px; }
     .pago-error li:last-child { margin-bottom: 0; }
     </style>
+    <?php if ($disenoNuevo): ?>
+    <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
+    <link rel="stylesheet" href="../assets/css/cliente-pizarron.css?v=1">
+    <?php endif; ?>
 </head>
-<body>
+<body<?php echo $disenoNuevo ? ' class="pz pz-cliente"' : ''; ?>>
+<?php if ($disenoNuevo) require "../includes/pz_filtros.php"; ?>
 
 <!-- ── Marca de agua fija ── -->
 <img class="zb-marca-watermark" src="../assets/img/LOGO_BLANCO.png" alt="">
@@ -638,6 +646,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
 <div class="contenedor">
 
 <!-- ══ HERO ══════════════════════════════════════════════════ -->
+<?php if ($disenoNuevo): ?>
+<header class="pz-cab">
+    <div class="pz-marca">
+        <img src="../assets/img/LOGO_N_128.png" alt="">
+        <div>
+            <span class="pz-marca__nombre">Zabisu</span>
+            <span class="pz-marca__lema">Sabor y Servicio</span>
+        </div>
+    </div>
+</header>
+<h1 class="pz-titulo"><span class="pz-pincel"><span>Tu pago</span></span></h1>
+<p class="pc-sub">Último paso: elige cómo pagarás tu pedido.</p>
+<?php else: ?>
 <div class="md-hero">
     <div class="md-hero__glow-top"></div>
     <div class="md-hero__glow-bottom"></div>
@@ -649,7 +670,138 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
     <p class="md-hero__tagline">Sabor y Servicio</p>
     <p class="md-hero__fecha">Elige cómo pagarás tu pedido</p>
 </div>
+<?php endif; ?>
 
+<?php if ($disenoNuevo):
+    $metodoPost      = $_POST["metodo_pago"] ?? "";
+    $conceptoEjemplo = strtoupper($nombre_cliente) . " " . date("d-m-Y");
+?>
+<!-- ══ PASOS DEL PAGO (diseño Pizarrón) ══════════════════════ -->
+<form action="" method="POST" enctype="multipart/form-data" class="pg-form">
+
+    <?php if (!empty($errores)): ?>
+    <div class="pago-error">
+        <ul>
+            <?php foreach ($errores as $error): ?>
+                <li><?php echo htmlspecialchars($error); ?></li>
+            <?php endforeach; ?>
+        </ul>
+    </div>
+    <?php endif; ?>
+
+    <ol class="pg-pasos">
+        <li class="pg-paso pg-paso--metodo">
+            <div class="pg-fila">
+                <span class="pg-num" aria-hidden="true"></span>
+                <div class="pg-cuerpo">
+                    <h2 class="pg-titulo">¿Cómo pagas?</h2>
+                    <div class="pg-chips" role="radiogroup" aria-label="Método de pago">
+                        <label class="pg-chip <?php echo $metodoPost === "Transferencia" ? "pago-card--activo" : ""; ?>" id="card-transfer">
+                            <input type="radio" name="metodo_pago" value="Transferencia" <?php echo $metodoPost === "Transferencia" ? "checked" : ""; ?>>
+                            Transferencia
+                        </label>
+                        <label class="pg-chip <?php echo $metodoPost === "Efectivo" ? "pago-card--activo" : ""; ?>" id="card-cash">
+                            <input type="radio" name="metodo_pago" value="Efectivo" <?php echo $metodoPost === "Efectivo" ? "checked" : ""; ?>>
+                            Efectivo
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </li>
+
+        <?php
+        $pgHora = !empty($datosHorario["hora_entrega"])
+            ? date("g:i", strtotime($datosHorario["hora_entrega"])) . " " . (date("A", strtotime($datosHorario["hora_entrega"])) === "AM" ? "am" : "pm")
+            : "";
+        ?>
+        <!-- Efectivo: el JavaScript lo muestra con la clase "visible" -->
+        <li class="pg-paso pg-efectivo <?php echo $metodoPost === "Efectivo" ? "visible" : ""; ?>" id="aviso-efectivo">
+            <div class="pg-fila">
+                <span class="pg-num" aria-hidden="true"></span>
+                <div class="pg-cuerpo">
+                    <h2 class="pg-titulo">Ten listo tu pago</h2>
+                    <div class="pg-cuenta">
+                        <span class="pg-cuenta__grapa" aria-hidden="true"></span>
+                        <span class="pg-sello">Pago al recibir</span>
+                        <p class="pg-cuenta__titulo">La cuenta</p>
+                        <div class="pg-cuenta__total"><span>Total</span><b>$<?php echo number_format($totalPedido, 2); ?></b></div>
+                        <?php if (!empty($datosHorario["nombre_ubicacion"])): ?>
+                        <div class="pg-cuenta__linea"><span>Entrega</span><b><?php echo htmlspecialchars($datosHorario["nombre_ubicacion"]); ?></b></div>
+                        <?php endif; ?>
+                        <?php if ($pgHora !== ""): ?>
+                        <div class="pg-cuenta__linea"><span>Hora</span><b><?php echo $pgHora; ?></b></div>
+                        <?php endif; ?>
+                        <div class="pg-cuenta__linea"><span>Pagas</span><b>En efectivo</b></div>
+                    </div>
+                    <p class="pg-mano"><span aria-hidden="true">↑</span> Monto exacto, porfa: no siempre llevamos cambio</p>
+                </div>
+            </div>
+        </li>
+
+        <li class="pg-paso bloque-transferencia">
+            <div class="pg-fila">
+                <span class="pg-num" aria-hidden="true"></span>
+                <div class="pg-cuerpo">
+                    <h2 class="pg-titulo">Transfiere</h2>
+                    <div class="pg-cuenta">
+                        <span class="pg-cuenta__grapa" aria-hidden="true"></span>
+                        <p class="pg-cuenta__titulo">La cuenta</p>
+                        <div class="pg-cuenta__total"><span>Total</span><b>$<?php echo number_format($totalPedido, 2); ?></b></div>
+                        <div class="pg-cuenta__linea"><span>Mercado Pago</span><b>Diana Piña</b></div>
+
+                        <div class="copiar-campo">
+                            <span class="copiar-campo__label">CLABE</span>
+                            <button type="button" class="copiar-campo__btn" data-copiar="texto-clabe">
+                                <span class="copiar-campo__valor" id="texto-clabe">722969014258283039</span>
+                                <span class="copiar-campo__accion">Copiar</span>
+                            </button>
+                        </div>
+                        <div class="copiar-campo">
+                            <span class="copiar-campo__label">Concepto</span>
+                            <button type="button" class="copiar-campo__btn" data-copiar="texto-concepto">
+                                <span class="copiar-campo__valor" id="texto-concepto"><?php echo htmlspecialchars($conceptoEjemplo); ?></span>
+                                <span class="copiar-campo__accion">Copiar</span>
+                            </button>
+                        </div>
+                        <p class="pg-cuenta__nota">Escribe el concepto en tu transferencia; sin él no podemos validar tu pago.</p>
+                    </div>
+                </div>
+            </div>
+        </li>
+
+        <li class="pg-paso bloque-transferencia">
+            <div class="pg-fila">
+                <span class="pg-num" aria-hidden="true"></span>
+                <div class="pg-cuerpo">
+                    <h2 class="pg-titulo">Sube tu comprobante</h2>
+                    <label for="comprobante_pago" class="pg-subir">
+                        <span class="pg-subir__clip" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 12.5 15 4.5a3.5 3.5 0 0 1 5 5L10.5 19a5.5 5.5 0 0 1-8-8L11 2.5"/></svg></span>
+                        <span><b>Toca para subirlo</b><small>Foto o PDF donde se vean el monto y el concepto</small></span>
+                    </label>
+                    <input type="file" name="comprobante_pago" id="comprobante_pago" accept=".jpg,.jpeg,.png,.pdf" hidden>
+                    <p class="pago-upload__nombre" id="nombre-archivo">Ningún archivo seleccionado</p>
+                </div>
+            </div>
+        </li>
+
+        <li class="pg-paso">
+            <div class="pg-fila">
+                <span class="pg-num" aria-hidden="true"></span>
+                <div class="pg-cuerpo">
+                    <h2 class="pg-titulo">Confirma tu pedido</h2>
+                    <p class="pg-texto">Tu pedido queda registrado hasta que tocas <b>Confirmar pedido</b>.<span class="bloque-transferencia"> Si sales a tu banco, regresa aquí: guardamos tus datos por un rato.</span></p>
+                </div>
+            </div>
+        </li>
+    </ol>
+
+    <div class="pz-barra">
+        <button type="submit" name="finalizar_pedido" value="1" class="pz-btn pg-btn">
+            <span>Confirmar pedido</span><span>$<?php echo number_format($totalPedido, 2); ?></span>
+        </button>
+    </div>
+</form>
+<?php else: ?>
 <!-- ══ CUERPO ════════════════════════════════════════════════ -->
 <div class="pago-body">
 <form action="" method="POST" enctype="multipart/form-data">
@@ -778,6 +930,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
 
 </form>
 </div>
+
+<?php endif; ?>
 
 </div><!-- /.contenedor -->
 

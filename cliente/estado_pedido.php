@@ -1,6 +1,7 @@
 <?php
 require_once "../config/db.php";
 require_once "../includes/opciones_plato.php";
+require_once "../includes/diseno.php";
 
 $pedido         = null;
 $menusPedido    = [];
@@ -79,6 +80,13 @@ function textoEstado($estado) {
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
     <link rel="stylesheet" href="../assets/css/styles.css?v=5">
+    <?php if ($disenoNuevo): ?>
+    <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
+    <link rel="stylesheet" href="../assets/css/pedido-pizarron.css?v=1">
+    <link rel="stylesheet" href="../assets/css/cliente-pizarron.css?v=1">
+    <?php endif; ?>
 </head>
 <style>
     .hamburguer-btn {
@@ -172,7 +180,8 @@ function textoEstado($estado) {
     }
 </style>
 
-<body>
+<body<?php echo $disenoNuevo ? ' class="pz pz-pedido pz-cliente"' : ''; ?>>
+<?php if ($disenoNuevo) require "../includes/pz_filtros.php"; ?>
 
 <!-- ── Hamburger ── -->
 <button class="hamburguer-btn" id="hamburguer-btn" aria-label="Menú">
@@ -201,6 +210,19 @@ function textoEstado($estado) {
 
 <div class="contenedor">
 
+    <?php if ($disenoNuevo): ?>
+    <header class="pz-cab">
+        <a class="pz-marca" href="menu.php" aria-label="Zabisu, ver el menú del día">
+            <img src="../assets/img/LOGO_N_128.png" alt="">
+            <div>
+                <span class="pz-marca__nombre">Zabisu</span>
+                <span class="pz-marca__lema">Sabor y Servicio</span>
+            </div>
+        </a>
+    </header>
+    <h1 class="pz-titulo"><span class="pz-pincel"><span>Mi pedido</span></span></h1>
+    <p class="pc-sub">Consulta tu pedido y el estado de tu pago.</p>
+    <?php else: ?>
     <div class="md-hero">
         <div class="md-hero__glow-top"></div>
         <div class="md-hero__glow-bottom"></div>
@@ -211,6 +233,7 @@ function textoEstado($estado) {
         </div>
         <p class="md-hero__fecha">Consulta el estado de tu orden</p>
     </div>
+    <?php endif; ?>
 
     <!-- ── Formulario de búsqueda ── -->
     <div class="bloque-formulario">
