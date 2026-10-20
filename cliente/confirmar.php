@@ -7,8 +7,26 @@ require_once "../includes/diseno.php";
 
 $folio = trim($_GET["folio"] ?? "");
 
+// Folio vacío o que no existe: en el diseño nuevo, pantalla de aviso en vez de texto suelto
+function confPedidoNoEncontrado(bool $disenoNuevo, string $textoViejo): void
+{
+    if (!$disenoNuevo) die($textoViejo);
+    require_once "../includes/pz_aviso.php";
+    pzPantallaAviso([
+        "titulo"   => "No encontramos tu pedido",
+        "letrero"  => "¿Folio?",
+        "letrero2" => "Revisa el enlace",
+        "texto"    => "El enlace no trae un folio válido. Busca tu pedido con el folio que te dimos al confirmarlo.",
+        "botones"  => [
+            ["texto" => "Buscar mi pedido", "url" => "estado_pedido.php", "tipo" => "principal"],
+            ["texto" => "Ver el menú", "url" => "menu.php", "tipo" => "contorno"],
+        ],
+    ]);
+    exit;
+}
+
 if ($folio === "") {
-    die("No se recibió un pedido válido.");
+    confPedidoNoEncontrado($disenoNuevo, "No se recibió un pedido válido.");
 }
 
 /*
@@ -30,7 +48,7 @@ $stmtPedido->execute();
 $pedido = $stmtPedido->fetch(PDO::FETCH_ASSOC);
 
 if (!$pedido) {
-    die("No se encontró el pedido.");
+    confPedidoNoEncontrado($disenoNuevo, "No se encontró el pedido.");
 }
 
 $id_pedido = (int)$pedido["id_pedido"];
@@ -371,7 +389,7 @@ function agruparDetallePorCategoria($detalles)
     <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
-    <link rel="stylesheet" href="../assets/css/cliente-pizarron.css?v=4">
+    <link rel="stylesheet" href="../assets/css/cliente-pizarron.css?v=5">
     <?php endif; ?>
 </head>
 <body<?php echo $disenoNuevo ? ' class="pz pz-cliente"' : ''; ?>>

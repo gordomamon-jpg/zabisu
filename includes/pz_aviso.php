@@ -37,7 +37,7 @@ function pzPantallaAviso(array $a): void
     <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
-    <link rel="stylesheet" href="../assets/css/cliente-pizarron.css?v=4">
+    <link rel="stylesheet" href="../assets/css/cliente-pizarron.css?v=5">
 </head>
 <body class="pz pz-cliente pz-aviso">
 <?php require __DIR__ . "/pz_filtros.php"; ?>

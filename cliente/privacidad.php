@@ -4,6 +4,7 @@
     "Zabisu Avisos" de la API oficial de WhatsApp.
 */
 require_once "../includes/canal_whatsapp.php";
+require_once "../includes/diseno.php";
 
 $correoContacto = "zabisusaboryservicio@gmail.com";
 $waContacto     = "https://wa.me/" . WHATSAPP_DUDAS;
@@ -17,6 +18,11 @@ $waContacto     = "https://wa.me/" . WHATSAPP_DUDAS;
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
     <meta name="theme-color" content="#FF7A00">
     <link rel="stylesheet" href="../assets/css/styles.css?v=5">
+    <?php if ($disenoNuevo): ?>
+    <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
+    <link rel="stylesheet" href="../assets/css/pedido-pizarron.css?v=2">
+    <link rel="stylesheet" href="../assets/css/cliente-pizarron.css?v=5">
+    <?php endif; ?>
     <style>
         .privacidad .md-hero__marca { font-size: 38px; letter-spacing: -1px; }
         .privacidad h2 { margin-top: 0; }
@@ -25,9 +31,23 @@ $waContacto     = "https://wa.me/" . WHATSAPP_DUDAS;
         .privacidad a { color: #FF7A00; }
     </style>
 </head>
-<body>
+<body<?php echo $disenoNuevo ? ' class="pz pz-pedido pz-cliente"' : ''; ?>>
+<?php if ($disenoNuevo) require "../includes/pz_filtros.php"; ?>
 <div class="contenedor privacidad">
 
+    <?php if ($disenoNuevo): ?>
+    <header class="pz-cab">
+        <a class="pz-marca" href="menu.php" aria-label="Zabisu, ver el menú del día">
+            <img src="../assets/img/LOGO_N_128.png" alt="">
+            <div>
+                <span class="pz-marca__nombre">Zabisu</span>
+                <span class="pz-marca__lema">Sabor y Servicio</span>
+            </div>
+        </a>
+    </header>
+    <h1 class="pz-titulo"><span class="pz-pincel"><span>Aviso de privacidad</span></span></h1>
+    <p class="pc-sub">Última actualización: 20 de octubre de 2026</p>
+    <?php else: ?>
     <div class="md-hero">
         <div class="md-hero__glow-top"></div>
         <div class="md-hero__glow-bottom"></div>
@@ -38,6 +58,7 @@ $waContacto     = "https://wa.me/" . WHATSAPP_DUDAS;
         </div>
         <p class="md-hero__fecha">Última actualización: 20 de octubre de 2026</p>
     </div>
+    <?php endif; ?>
 
     <section class="bloque-formulario">
         <h2>Quiénes somos</h2>

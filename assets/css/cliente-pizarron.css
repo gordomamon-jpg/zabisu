@@ -326,3 +326,9 @@
 .pa-canal{margin:22px 20px 0}
 
 @media (prefers-reduced-motion:reduce){ .pa-letrero{animation:none} }
+.pz-cliente .zb-estrella--hover,.pz-cliente .zb-estrella--activa{color:var(--pz-naranja)}
+.pz-cliente .zb-estrella{min-width:44px;min-height:44px}
+.pz-cliente .privacidad a{color:var(--pz-estraza-cl);text-decoration:underline;text-underline-offset:3px}
+.pz-cliente .privacidad ul{padding-left:20px;margin:6px 0 0;font:400 15.5px/1.6 var(--pz-sys);color:var(--pz-gris)}
+.pz-cliente .privacidad li{padding:3px 0}
+.pz-cliente .privacidad .bloque-formulario p{font:400 15.5px/1.6 var(--pz-sys);color:var(--pz-gris);margin:0 0 6px}

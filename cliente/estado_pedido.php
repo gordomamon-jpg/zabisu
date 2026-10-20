@@ -85,7 +85,7 @@ function textoEstado($estado) {
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
     <link rel="stylesheet" href="../assets/css/pedido-pizarron.css?v=2">
-    <link rel="stylesheet" href="../assets/css/cliente-pizarron.css?v=4">
+    <link rel="stylesheet" href="../assets/css/cliente-pizarron.css?v=5">
     <?php endif; ?>
 </head>
 <style>
@@ -368,6 +368,13 @@ function textoEstado($estado) {
             <div style="height:24px;"></div>
 
         <?php endif; ?>
+    <?php endif; ?>
+
+    <?php if ($disenoNuevo): ?>
+    <nav class="pa-botones" aria-label="Más opciones">
+        <a class="pa-btn pa-btn--principal" href="pedido.php">Hacer un pedido</a>
+        <a class="pa-btn pa-btn--contorno" href="menu.php">Ver el menú del día</a>
+    </nav>
     <?php endif; ?>
 
 </div>

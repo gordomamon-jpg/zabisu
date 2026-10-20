@@ -44,7 +44,7 @@ if (MODO_NOTIFICACION === 'api' && date("Y-m-d") <= $aw_vigenciaHasta):
     position: absolute; top: 12px; right: 14px;
     background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
     color: rgba(255,255,255,.6);
-    width: 28px; height: 28px; border-radius: 50%;
+    width: 40px; height: 40px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
     font-size: 14px; cursor: pointer; line-height: 1;
 }

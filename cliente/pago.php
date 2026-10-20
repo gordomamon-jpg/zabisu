@@ -652,7 +652,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
     <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
-    <link rel="stylesheet" href="../assets/css/cliente-pizarron.css?v=4">
+    <link rel="stylesheet" href="../assets/css/cliente-pizarron.css?v=5">
     <?php endif; ?>
 </head>
 <body<?php echo $disenoNuevo ? ' class="pz pz-cliente"' : ''; ?>>
