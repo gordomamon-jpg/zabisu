@@ -175,26 +175,14 @@ if (empty($pedidos)) {
     exit;
 }
 
-$enviados  = 0;
-$sinCorreo = 0;
-$errores   = 0;
-
-/* ── Correo — aviso de llegada (modo temporal, ver modo_notificacion.php) ── */
-if (MODO_NOTIFICACION === 'correo') {
-
-set_time_limit(180); // un correo por cliente vía SMTP, puede tardar unos segundos cada uno
-$fallidos = [];
-
-$ubicacionBonita = htmlspecialchars($nombre_ubicacion);
-$horaBonita      = date("g:i A", strtotime($hora_entrega));
-
-foreach ($pedidos as $pedido) {
-    $correo = trim($pedido["correo_cliente"] ?? "");
-
-    if ($correo === "" || !filter_var($correo, FILTER_VALIDATE_EMAIL)) {
-        $sinCorreo++;
-        continue;
-    }
+/*
+    Aviso de llegada por correo a un pedido. Se usa en modo 'correo' y, en
+    modo 'api', para los pedidos que dejaron correo en vez de WhatsApp.
+*/
+function nrz_correoLlegada(array $pedido, string $correo, string $nombre_ubicacion, string $hora_entrega): bool
+{
+    $ubicacionBonita = htmlspecialchars($nombre_ubicacion);
+    $horaBonita      = date("g:i A", strtotime($hora_entrega));
 
     $nombre = $pedido["nombre_cliente"];
     $folio  = $pedido["folio"];
@@ -248,12 +236,33 @@ foreach ($pedidos as $pedido) {
         </div>
     ";
 
-    $resultado = enviarCorreo($correo, $nombre, $asunto, $mensaje, $textoCorreo);
+    return enviarCorreo($correo, $nombre, $asunto, $mensaje, $textoCorreo);
+}
+
+$enviados  = 0;
+$sinCorreo = 0;
+$errores   = 0;
+
+/* ── Correo — aviso de llegada (modo temporal, ver modo_notificacion.php) ── */
+if (MODO_NOTIFICACION === 'correo') {
+
+set_time_limit(180); // un correo por cliente vía SMTP, puede tardar unos segundos cada uno
+$fallidos = [];
+
+foreach ($pedidos as $pedido) {
+    $correo = trim($pedido["correo_cliente"] ?? "");
+
+    if ($correo === "" || !filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+        $sinCorreo++;
+        continue;
+    }
+
+    $resultado = nrz_correoLlegada($pedido, $correo, $nombre_ubicacion, $hora_entrega);
     if ($resultado) {
         $enviados++;
     } else {
         $errores++;
-        $fallidos[] = ["nombre" => $nombre, "telefono" => "", "folio" => $folio, "error" => "No se pudo enviar el correo"];
+        $fallidos[] = ["nombre" => $pedido["nombre_cliente"], "telefono" => "", "folio" => $pedido["folio"], "error" => "No se pudo enviar el correo"];
     }
 }
 
@@ -268,6 +277,16 @@ if (MODO_NOTIFICACION === 'api') {
 
     foreach ($pedidos as $p) {
         if (waApiTelefono($p["telefono"] ?? "") === "") {
+            // Pedidos hechos en modo correo (p. ej. el día del cambio): aviso por correo
+            $correo = trim($p["correo_cliente"] ?? "");
+            if ($correo !== "" && filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+                if (nrz_correoLlegada($p, $correo, $nombre_ubicacion, $hora_entrega)) {
+                    $enviados++;
+                } else {
+                    $fallidos[] = ["nombre" => $p["nombre_cliente"], "telefono" => "", "folio" => $p["folio"], "error" => "No se pudo enviar el correo"];
+                }
+                continue;
+            }
             $sinTel++;
             continue;
         }
