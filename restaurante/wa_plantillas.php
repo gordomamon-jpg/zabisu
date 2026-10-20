@@ -6,6 +6,8 @@
  *
  *   php restaurante/wa_plantillas.php crear
  *   php restaurante/wa_plantillas.php estado
+ *   php restaurante/wa_plantillas.php registrar 123456
+ *   php restaurante/wa_plantillas.php probar 5512345678
  *
  * Reglas de Meta para que sigan como "utilidad" (y no se cobren como
  * marketing): solo datos del pedido, sin promociones ni botones de sí/no.
@@ -67,6 +69,29 @@ $plantillas = [
 ];
 
 $accion = $argv[1] ?? "estado";
+
+/*
+    registrar PIN: último paso para activar el número en la Cloud API, ya
+    verificado con el código. El PIN de 6 dígitos queda como verificación
+    en dos pasos del número; guárdalo, Meta lo pide si se vuelve a registrar.
+*/
+if ($accion === "registrar") {
+    $pin = $argv[2] ?? "";
+    if (!preg_match('/^\d{6}$/', $pin)) exit("Uso: php restaurante/wa_plantillas.php registrar 123456\n");
+    $r = waApiPeticion($config['phone_number_id'] . "/register", ["messaging_product" => "whatsapp", "pin" => $pin]);
+    exit(($r["ok"] ? "Número registrado." : "ERROR — " . $r["error"]) . "\n");
+}
+
+// probar TELÉFONO: manda la plantilla hello_world que Meta crea en cada cuenta nueva
+if ($accion === "probar") {
+    $r = waApiPeticion($config['phone_number_id'] . "/messages", [
+        "messaging_product" => "whatsapp",
+        "to"                => waApiTelefono($argv[2] ?? ""),
+        "type"              => "template",
+        "template"          => ["name" => "hello_world", "language" => ["code" => "en_US"]],
+    ]);
+    exit(($r["ok"] ? "Enviado (id " . $r["id"] . ")." : "ERROR — " . $r["error"]) . "\n");
+}
 
 if ($accion === "crear") {
     foreach ($plantillas as $p) {
