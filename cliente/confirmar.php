@@ -371,7 +371,7 @@ function agruparDetallePorCategoria($detalles)
     <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
-    <link rel="stylesheet" href="../assets/css/cliente-pizarron.css?v=1">
+    <link rel="stylesheet" href="../assets/css/cliente-pizarron.css?v=3">
     <?php endif; ?>
 </head>
 <body<?php echo $disenoNuevo ? ' class="pz pz-cliente"' : ''; ?>>
@@ -402,10 +402,16 @@ $waPath            = "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.
 <h1 class="pz-titulo pc-titulo-anim"><span class="pz-pincel"><span>¡Pedido confirmado!</span></span></h1>
 <p class="pc-sub"><?php echo $esPagoEfectivo ? "Pagarás al recibir tu pedido." : "Tu pago está en revisión; te avisamos al validarlo."; ?></p>
 <div class="pz-boleto pc-boleto">
-    <span class="pc-sello" aria-hidden="true">¡Confirmado!</span>
+    <span class="pc-sello" aria-hidden="true">
+        <svg viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="4"/>
+            <circle cx="50" cy="50" r="39" fill="none" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M28 52 L44 67 L73 34" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </span>
     <div class="pz-boleto__papel">
         <span class="pz-boleto__ojo" aria-hidden="true"></span>
-        <p class="pz-boleto__titulo">Folio <?php echo htmlspecialchars($pedido["folio"]); ?></p>
+        <p class="pz-boleto__titulo">Folio <b class="pc-folio"><?php echo htmlspecialchars($pedido["folio"]); ?></b></p>
         <hr class="pz-boleto__corte">
         <p><b><?php echo htmlspecialchars($pedido["nombre_ubicacion"]); ?></b></p>
         <p>Entrega a las <b><?php echo date("g:i", strtotime($pedido["hora_entrega"])) . " " . (date("A", strtotime($pedido["hora_entrega"])) === "AM" ? "am" : "pm"); ?></b></p>

@@ -274,3 +274,16 @@
   .pc-boleto,.pc-sello,.pc-titulo-anim .pz-pincel{animation:none}
 }
 .pc-boleto{margin-bottom:26px!important}
+
+/* Sello redondo con palomita (reemplaza al rectangular) */
+.pc-folio{font-weight:800;letter-spacing:.2px}
+.pc-sello{right:6px;bottom:-26px;top:auto;width:96px;height:96px;padding:0;border:0;border-radius:50%;
+  background:rgba(217,184,143,.55);color:#C2410C;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.pc-sello svg{position:absolute;inset:0;width:100%;height:100%}
+.pc-sello span{position:absolute;bottom:13px;left:0;right:0;text-align:center;font:400 10px var(--pz-rotulo);letter-spacing:.5px}
+.pc-sello svg path{stroke-dasharray:90;stroke-dashoffset:90;animation:pc-palomita .35s ease-out .85s forwards}
+@keyframes pc-palomita{to{stroke-dashoffset:0}}
+.pc-boleto{margin-bottom:34px!important}
+@media (prefers-reduced-motion:reduce){ .pc-sello svg path{animation:none;stroke-dashoffset:0} }
+.pc-sello{width:78px;height:78px;right:-10px;bottom:-34px;background:rgba(21,20,19,.0)}
+.pc-sello svg circle:first-child{fill:rgba(217,184,143,.92)}
