@@ -9,6 +9,7 @@
  *   php restaurante/wa_plantillas.php registrar 123456
  *   php restaurante/wa_plantillas.php probar 5512345678
  *   php restaurante/wa_plantillas.php suscribir
+ *   php restaurante/wa_plantillas.php demo 5512345678 "Ana"
  *
  * Reglas de Meta para que sigan como "utilidad" (y no se cobren como
  * marketing): solo datos del pedido, sin promociones ni botones de sí/no.
@@ -96,6 +97,28 @@ if ($accion === "registrar") {
 if ($accion === "probar") {
     $r = waApiTexto($argv[2] ?? "", "Prueba de Zabisu: los avisos por WhatsApp ya funcionan.");
     exit(($r["ok"] ? "Enviado (id " . $r["id"] . ")." : "ERROR — " . $r["error"]) . "\n");
+}
+
+/*
+    demo TELÉFONO: manda las 2 plantillas con datos de ejemplo, igual que a
+    un cliente real (no hace falta que ese número escriba primero). Solo
+    funciona con las plantillas ya aprobadas; Meta cobra los 2 mensajes.
+*/
+if ($accion === "demo") {
+    $ejemplo = [
+        "id_pedido"        => 0,
+        "telefono"         => $argv[2] ?? "",
+        "nombre_cliente"   => $argv[3] ?? "Cliente de prueba",
+        "folio"            => $folioEjemplo,
+        "nombre_ubicacion" => "City Market",
+        "hora_entrega"     => "14:00:00",
+    ];
+    require_once __DIR__ . "/../config/db.php";
+    foreach (["confirmación" => "waEnviarConfirmacion", "llegada" => "waEnviarLlegada"] as $tipo => $funcion) {
+        $r = $funcion($conexion, $ejemplo);
+        echo str_pad($tipo, 14) . ($r["ok"] ? "enviada (id " . $r["id"] . ")" : "ERROR — " . $r["error"]) . "\n";
+    }
+    exit;
 }
 
 // suscribir: conecta la app a la cuenta de WhatsApp para que lleguen sus webhooks
