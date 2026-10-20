@@ -82,14 +82,13 @@ if ($accion === "registrar") {
     exit(($r["ok"] ? "Número registrado." : "ERROR — " . $r["error"]) . "\n");
 }
 
-// probar TELÉFONO: manda la plantilla hello_world que Meta crea en cada cuenta nueva
+/*
+    probar TELÉFONO: manda un texto de prueba. Fuera de plantillas, Meta
+    solo lo entrega si ese teléfono le escribió al número de avisos en las
+    últimas 24 h, así que primero manda un "hola" desde ese celular.
+*/
 if ($accion === "probar") {
-    $r = waApiPeticion($config['phone_number_id'] . "/messages", [
-        "messaging_product" => "whatsapp",
-        "to"                => waApiTelefono($argv[2] ?? ""),
-        "type"              => "template",
-        "template"          => ["name" => "hello_world", "language" => ["code" => "en_US"]],
-    ]);
+    $r = waApiTexto($argv[2] ?? "", "Prueba de Zabisu: los avisos por WhatsApp ya funcionan.");
     exit(($r["ok"] ? "Enviado (id " . $r["id"] . ")." : "ERROR — " . $r["error"]) . "\n");
 }
 
@@ -105,6 +104,7 @@ if ($accion === "crear") {
 
 $r = waApiPeticion($config['waba_id'] . "/message_templates?fields=name,status,category,language,rejected_reason&limit=50", [], "GET");
 if (!$r["ok"]) exit("ERROR — " . $r["error"] . "\n");
+if (empty($r["data"]["data"])) exit("La cuenta aún no tiene plantillas.\n");
 foreach ($r["data"]["data"] ?? [] as $t) {
     echo str_pad($t["name"], 24) . str_pad($t["language"], 8) . str_pad($t["status"], 12) . $t["category"]
        . (!empty($t["rejected_reason"]) && $t["rejected_reason"] !== "NONE" ? "  motivo: " . $t["rejected_reason"] : "") . "\n";
