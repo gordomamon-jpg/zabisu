@@ -8,6 +8,7 @@
  *   php restaurante/wa_plantillas.php estado
  *   php restaurante/wa_plantillas.php registrar 123456
  *   php restaurante/wa_plantillas.php probar 5512345678
+ *   php restaurante/wa_plantillas.php suscribir
  *
  * Reglas de Meta para que sigan como "utilidad" (y no se cobren como
  * marketing): solo datos del pedido, sin promociones ni botones de sí/no.
@@ -95,6 +96,12 @@ if ($accion === "registrar") {
 if ($accion === "probar") {
     $r = waApiTexto($argv[2] ?? "", "Prueba de Zabisu: los avisos por WhatsApp ya funcionan.");
     exit(($r["ok"] ? "Enviado (id " . $r["id"] . ")." : "ERROR — " . $r["error"]) . "\n");
+}
+
+// suscribir: conecta la app a la cuenta de WhatsApp para que lleguen sus webhooks
+if ($accion === "suscribir") {
+    $r = waApiPeticion($config['waba_id'] . "/subscribed_apps", []);
+    exit(($r["ok"] ? "App suscrita a la cuenta de WhatsApp." : "ERROR — " . $r["error"]) . "\n");
 }
 
 if ($accion === "crear") {
