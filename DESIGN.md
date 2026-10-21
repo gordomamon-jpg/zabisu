@@ -70,11 +70,11 @@ piezas decorativas visibles a la vez.
 - Las tiras, estrellas y flechas son decorativas (`aria-hidden`).
 - Sin animaciones de entrada, con una excepción: en la confirmación el boleto cae y se estampa el sello "¡Confirmado!" (menos de 1 s), para que el cliente note que su pedido quedó. Todo respeta `prefers-reduced-motion`.
 
-## Vista previa
+## Activación
 
-`?diseno=nuevo` en cualquier pantalla del cliente activa el diseño en ese navegador por 30 días
-(cookie `zb_diseno`, en `includes/diseno.php`), y `?diseno=actual` lo quita. Los clientes que no
-usan el enlace ven el diseño de siempre.
+El diseño está activo para todos los clientes. `?diseno=actual` en cualquier pantalla del cliente
+regresa al diseño anterior en ese navegador por 30 días (cookie `zb_diseno`, en
+`includes/diseno.php`), por si algo falla; `?diseno=nuevo` lo vuelve a quitar.
 
 | Pantalla | Cómo se pinta |
 |---|---|

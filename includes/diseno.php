@@ -1,16 +1,16 @@
 <?php
 /*
-    Diseño "Pizarrón de fonda" en vista previa (ver DESIGN.md).
-    ?diseno=nuevo lo activa y se recuerda 30 días (cookie zb_diseno);
-    ?diseno=actual lo quita. Deja $disenoNuevo en true o false.
+    Diseño "Pizarrón de fonda" (ver DESIGN.md), activo para todos.
+    ?diseno=actual vuelve al diseño anterior y se recuerda 30 días
+    (cookie zb_diseno); ?diseno=nuevo lo quita. Deja $disenoNuevo en true o false.
 */
 if (isset($_GET["diseno"])) {
-    $disenoNuevo = $_GET["diseno"] === "nuevo";
-    setcookie("zb_diseno", $disenoNuevo ? "nuevo" : "", [
-        "expires"  => $disenoNuevo ? time() + 30 * 86400 : time() - 3600,
+    $disenoNuevo = $_GET["diseno"] !== "actual";
+    setcookie("zb_diseno", $disenoNuevo ? "" : "actual", [
+        "expires"  => $disenoNuevo ? time() - 3600 : time() + 30 * 86400,
         "path"     => "/",
         "samesite" => "Lax",
     ]);
 } else {
-    $disenoNuevo = ($_COOKIE["zb_diseno"] ?? "") === "nuevo";
+    $disenoNuevo = ($_COOKIE["zb_diseno"] ?? "") !== "actual";
 }
