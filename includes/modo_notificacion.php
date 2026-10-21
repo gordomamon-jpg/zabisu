@@ -11,4 +11,4 @@
     'whatsapp' → wa-service no oficial (whatsapp-web.js). Ya no se usa:
                  WhatsApp restringió los números que lo usaron.
 */
-const MODO_NOTIFICACION = 'correo';
+const MODO_NOTIFICACION = 'api';
