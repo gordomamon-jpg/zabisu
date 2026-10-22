@@ -167,6 +167,14 @@ $modoPrueba = (int)($stmtModoPrueba->fetchColumn() ?? 0);
             <?php endif; ?>
         </a>
 
+        <a href="resumen_dia.php" class="panel-acceso panel-acceso--pedidos">
+            <div class="panel-acceso__icono">📊</div>
+            <div class="panel-acceso__contenido">
+                <strong class="panel-acceso__titulo">Resumen del día</strong>
+                <span class="panel-acceso__desc">Pedidos, ruta y producción desde el celular, sin imprimir nada</span>
+            </div>
+        </a>
+
         <a href="finanzas.php" class="panel-acceso panel-acceso--estadisticas">
             <div class="panel-acceso__icono">💰</div>
             <div class="panel-acceso__contenido">
