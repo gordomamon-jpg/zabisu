@@ -142,26 +142,27 @@ function horaBonita(string $hora): string
     return date("g:i", $ts) . " " . (date("A", $ts) === "AM" ? "am" : "pm");
 }
 
-function fechaBonita(string $fecha): string
-{
-    $dias  = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
-    $meses = ["", "enero", "febrero", "marzo", "abril", "mayo", "junio", "julio",
-              "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
-    $ts = strtotime($fecha);
-    return ucfirst($dias[(int)date("w", $ts)]) . " " . date("j", $ts) . " de " . $meses[(int)date("n", $ts)];
-}
+$dias  = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+$meses = ["", "enero", "febrero", "marzo", "abril", "mayo", "junio", "julio",
+          "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+$tsFecha   = strtotime($fecha);
+$tituloDia = ucfirst($dias[(int)date("w", $tsFecha)]) . " " . date("j", $tsFecha);
+$subMes    = "de " . $meses[(int)date("n", $tsFecha)] . ($esHoy ? ", hoy" : "");
 
 function etiquetaPago(array $p): string
 {
     $mapa = [
-        "Pendiente de validación" => ["rd-pago--revision", "En revisión"],
-        "Pago en efectivo"        => ["rd-pago--efectivo", "Efectivo"],
-        "Pagado"                  => ["rd-pago--pagado", "Pagado"],
-        "Pago con tarjeta"        => ["rd-pago--pagado", "Tarjeta"],
+        "Pendiente de validación" => ["rp-pago--revision", "Por revisar"],
+        "Pago en efectivo"        => ["", "Efectivo"],
+        "Pagado"                  => ["", "Pagado"],
+        "Pago con tarjeta"        => ["", "Tarjeta"],
     ];
-    [$clase, $texto] = $mapa[$p["estado_pago"]] ?? ["rd-pago--pendiente", "Sin pago"];
-    return '<span class="rd-pago ' . $clase . '">' . $texto . '</span>';
+    [$clase, $texto] = $mapa[$p["estado_pago"]] ?? ["rp-pago--falta", "Sin pago"];
+    return '<span class="rp-pago ' . $clase . '">' . $texto . '</span>';
 }
+
+$maxPlato = $platos ? max(array_column($platos, "total")) : 1;
+$platoTop = $platos ? array_key_first($platos) : null;
 
 $anterior  = date("Y-m-d", strtotime("$fecha -1 day"));
 $siguiente = date("Y-m-d", strtotime("$fecha +1 day"));
@@ -170,151 +171,179 @@ $siguiente = date("Y-m-d", strtotime("$fecha +1 day"));
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resumen del día | Restaurante Zabisu</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Resumen del día | Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
-    <meta name="theme-color" content="#0f0f12">
-    <link rel="stylesheet" href="../assets/css/styles.css?v=8">
+    <meta name="theme-color" content="#151413">
+    <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
+    <link rel="stylesheet" href="../assets/css/resumen-pizarron.css?v=1">
 </head>
-<body class="rd">
+<body class="pz rp">
+<?php require __DIR__ . "/../includes/pz_filtros.php"; ?>
 
-<div class="rd-pagina">
+<main class="pz-pagina rp-pagina">
 
-    <header class="rd-cab">
-        <a class="rd-volver" href="panel_general.php" aria-label="Volver al panel general">←</a>
-        <div class="rd-cab__titulo">
-            <span class="rd-cab__eyebrow">Resumen del día</span>
-            <h1><?php echo htmlspecialchars(fechaBonita($fecha)); ?></h1>
-        </div>
-        <nav class="rd-dias" aria-label="Cambiar de día">
-            <a href="?fecha=<?php echo $anterior; ?>" aria-label="Día anterior">‹</a>
-            <?php if (!$esHoy): ?><a class="rd-dias__hoy" href="resumen_dia.php">Hoy</a><?php endif; ?>
-            <a href="?fecha=<?php echo $siguiente; ?>" aria-label="Día siguiente">›</a>
+    <header class="pz-cab">
+        <a class="pz-marca" href="panel_general.php" aria-label="Zabisu, volver al panel general">
+            <img src="../assets/img/LOGO_N_128.png" alt="">
+            <div>
+                <span class="pz-marca__nombre">Zabisu</span>
+                <span class="pz-marca__lema">Sabor y Servicio</span>
+            </div>
+        </a>
+        <nav class="rp-dias" aria-label="Cambiar de día">
+            <a href="?fecha=<?php echo $anterior; ?>" aria-label="Día anterior">
+                <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
+            <?php if (!$esHoy): ?><a class="rp-dias__hoy" href="resumen_dia.php">Hoy</a><?php endif; ?>
+            <a href="?fecha=<?php echo $siguiente; ?>" aria-label="Día siguiente">
+                <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
         </nav>
     </header>
 
-    <p class="rd-nota">
-        Solo lectura: aquí no se imprime nada.
-        <?php if ($esHoy): ?>Se actualiza solo cada minuto · <?php echo date("g:i"); ?><?php endif; ?>
-    </p>
+    <p class="rp-eyebrow">Resumen del día</p>
+    <h1 class="pz-titulo rp-titulo"><span class="pz-pincel"><span><?php echo htmlspecialchars($tituloDia); ?></span></span></h1>
+    <p class="rp-sub"><?php echo htmlspecialchars($subMes); ?></p>
 
     <?php if (!$pedidos): ?>
-        <div class="rd-vacio">No hay pedidos para este día.</div>
+        <div class="rp-vacio">
+            <p class="rp-vacio__mano">Pizarrón limpio</p>
+            <p>No hay pedidos para este día.</p>
+        </div>
     <?php else: ?>
 
-    <section class="rd-numeros" aria-label="Totales">
-        <div class="rd-num rd-num--principal">
-            <b><?php echo $tot["pedidos"]; ?></b><span>pedidos</span>
-        </div>
-        <div class="rd-num rd-num--principal">
-            <b><?php echo $tot["comidas"]; ?></b><span>comidas</span>
-        </div>
-        <div class="rd-num">
-            <b>$<?php echo number_format($tot["venta"], 0); ?></b><span>venta</span>
-        </div>
-        <div class="rd-num">
-            <b><?php echo $tot["efectivo"]; ?> · <?php echo $tot["transferencia"]; ?></b><span>efectivo · transf.</span>
+    <!-- La comanda del día: los números grandes -->
+    <section class="pz-boleto rp-comanda" aria-label="Totales del día">
+        <div class="pz-boleto__papel">
+            <span class="pz-boleto__ojo" aria-hidden="true"></span>
+            <div class="rp-comanda__grandes">
+                <div><b><?php echo $tot["pedidos"]; ?></b><span>pedidos</span></div>
+                <div><b><?php echo $tot["comidas"]; ?></b><span>comidas</span></div>
+            </div>
+            <hr class="pz-boleto__corte">
+            <dl class="rp-comanda__lineas">
+                <div><dt>Venta</dt><dd>$<?php echo number_format($tot["venta"], 0); ?></dd></div>
+                <div><dt>Efectivo</dt><dd><?php echo $tot["efectivo"]; ?></dd></div>
+                <div><dt>Transferencia</dt><dd><?php echo $tot["transferencia"]; ?></dd></div>
+            </dl>
         </div>
     </section>
 
     <?php if ($tot["en_revision"] || $tot["sin_pago"] || $tot["sin_imprimir"]): ?>
-    <section class="rd-alertas">
+    <div class="rp-pendientes">
         <?php if ($tot["sin_imprimir"]): ?>
-            <span class="rd-alerta rd-alerta--nuevo"><?php echo $tot["sin_imprimir"]; ?> sin imprimir</span>
+            <span class="pz-falta pz-falta--urgente"><?php echo $tot["sin_imprimir"]; ?> sin imprimir</span>
         <?php endif; ?>
         <?php if ($tot["en_revision"]): ?>
-            <span class="rd-alerta rd-alerta--revision"><?php echo $tot["en_revision"]; ?> transferencia<?php echo $tot["en_revision"] > 1 ? "s" : ""; ?> por revisar</span>
+            <span class="pz-falta"><?php echo $tot["en_revision"]; ?> por revisar pago</span>
         <?php endif; ?>
         <?php if ($tot["sin_pago"]): ?>
-            <span class="rd-alerta"><?php echo $tot["sin_pago"]; ?> sin pago</span>
+            <span class="pz-falta pz-falta--cerrado"><?php echo $tot["sin_pago"]; ?> sin pago</span>
         <?php endif; ?>
-    </section>
+    </div>
     <?php endif; ?>
 
-    <h2 class="rd-h2">Ruta por horario</h2>
+    <h2 class="rp-h2">La ruta</h2>
     <?php foreach ($porHora as $hora => $puntos): ?>
         <?php $comidasHora = array_sum(array_column($puntos, "comidas")); ?>
-        <section class="rd-hora">
-            <div class="rd-hora__cab">
-                <span class="rd-hora__hora"><?php echo horaBonita($hora); ?></span>
-                <span class="rd-hora__total"><?php echo $comidasHora; ?> comida<?php echo $comidasHora !== 1 ? "s" : ""; ?></span>
+        <section class="pz-sec rp-hora">
+            <div class="rp-hora__cab">
+                <span class="pz-cinta"><?php echo horaBonita($hora); ?></span>
+                <span class="rp-hora__total"><b><?php echo $comidasHora; ?></b> comida<?php echo $comidasHora !== 1 ? "s" : ""; ?></span>
             </div>
 
-            <?php foreach ($puntos as $punto => $g): ?>
-                <?php $aviso = $avisoPorHorario[$g["id_horario"]] ?? null; ?>
-                <details class="rd-punto">
-                    <summary>
-                        <span class="rd-punto__nombre"><?php echo htmlspecialchars($punto); ?></span>
-                        <span class="rd-punto__datos">
-                            <b><?php echo $g["comidas"]; ?></b>
-                            <?php if ($aviso): ?>
-                                <span class="rd-aviso" title="Aviso de llegada mandado">✓ Aviso <?php echo horaBonita($aviso); ?></span>
-                            <?php endif; ?>
-                        </span>
-                        <?php if (!empty($g["extras"])): ?>
-                            <span class="rd-punto__extras">
-                                <?php foreach ($g["extras"] as $nombre => $cant): ?>
-                                    <span>+<?php echo $cant; ?> <?php echo htmlspecialchars($nombre); ?></span>
-                                <?php endforeach; ?>
+            <div class="pz-grupo">
+                <?php foreach ($puntos as $punto => $g): ?>
+                    <?php $aviso = $avisoPorHorario[$g["id_horario"]] ?? null; ?>
+                    <details class="rp-punto">
+                        <summary>
+                            <span class="pz-tira" aria-hidden="true"></span>
+                            <span class="pz-fila__txt">
+                                <span class="pz-fila__nombre"><?php echo htmlspecialchars($punto); ?></span>
+                                <?php if (!empty($g["extras"])): ?>
+                                    <span class="pz-fila__desc">
+                                        <?php echo htmlspecialchars(implode(", ", array_map(fn($n, $c) => "+$c $n", array_keys($g["extras"]), $g["extras"]))); ?>
+                                    </span>
+                                <?php endif; ?>
                             </span>
-                        <?php endif; ?>
-                    </summary>
+                            <?php if ($aviso): ?>
+                                <span class="rp-avisado" title="Aviso de llegada mandado">Avisado <?php echo date("g:i", strtotime($aviso)); ?></span>
+                            <?php endif; ?>
+                            <b class="rp-punto__num"><?php echo $g["comidas"]; ?></b>
+                            <svg class="rp-punto__flecha" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </summary>
 
-                    <ul class="rd-lista">
-                        <?php foreach ($g["pedidos"] as $p): ?>
-                            <li>
-                                <div class="rd-lista__fila">
-                                    <span class="rd-lista__nombre"><?php echo htmlspecialchars($p["nombre_cliente"]); ?></span>
-                                    <span class="rd-lista__menus"><?php echo (int)$p["num_menus"]; ?></span>
-                                </div>
-                                <div class="rd-lista__fila rd-lista__fila--sec">
-                                    <span><?php echo htmlspecialchars($p["folio"]); ?> · $<?php echo number_format((float)$p["total"], 0); ?></span>
-                                    <?php echo etiquetaPago($p); ?>
-                                </div>
-                                <div class="wa-estados" data-wa-id="<?php echo (int)$p["id_pedido"]; ?>"><?php
-                                    echo etiquetaWA("Confirmación", $p["wa_confirmacion"]) . etiquetaWA("Llegada", $p["wa_llegada"]);
-                                ?></div>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
-                </details>
-            <?php endforeach; ?>
+                        <ul class="rp-clientes">
+                            <?php foreach ($g["pedidos"] as $p): ?>
+                                <li>
+                                    <div class="rp-cliente__fila">
+                                        <span class="rp-cliente__nombre"><?php echo htmlspecialchars(mb_convert_case(mb_strtolower($p["nombre_cliente"]), MB_CASE_TITLE)); ?></span>
+                                        <span class="rp-cliente__menus"><?php echo (int)$p["num_menus"]; ?></span>
+                                    </div>
+                                    <div class="rp-cliente__fila rp-cliente__fila--sec">
+                                        <span><?php echo htmlspecialchars($p["folio"]); ?></span>
+                                        <span>$<?php echo number_format((float)$p["total"], 0); ?> <?php echo etiquetaPago($p); ?></span>
+                                    </div>
+                                    <div class="wa-estados" data-wa-id="<?php echo (int)$p["id_pedido"]; ?>"><?php
+                                        echo etiquetaWA("Confirmación", $p["wa_confirmacion"]) . etiquetaWA("Llegada", $p["wa_llegada"]);
+                                    ?></div>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </details>
+                <?php endforeach; ?>
+            </div>
         </section>
     <?php endforeach; ?>
 
-    <h2 class="rd-h2">Producción</h2>
-    <section class="rd-prod">
-        <?php foreach ($platos as $nombre => $pl): ?>
-            <div class="rd-prod__fila">
-                <span>
-                    <?php echo htmlspecialchars($nombre); ?>
-                    <?php if (!empty($pl["opciones"])): ?>
-                        <small><?php
-                            arsort($pl["opciones"]);
-                            echo htmlspecialchars(implode(" · ", array_map(fn($o, $n) => "$o $n", array_keys($pl["opciones"]), $pl["opciones"])));
-                        ?></small>
+    <h2 class="rp-h2">En la cocina</h2>
+    <section class="pz-sec rp-cocina">
+        <span class="pz-cinta">Platos fuertes</span>
+        <ul class="pz-grupo rp-prod">
+            <?php foreach ($platos as $nombre => $pl): ?>
+                <li class="rp-prod__fila<?php echo $nombre === $platoTop && count($platos) > 1 ? ' rp-prod__fila--top' : ''; ?>">
+                    <?php if ($nombre === $platoTop && count($platos) > 1): ?>
+                        <span class="pz-nota rp-nota" aria-hidden="true">el más pedido
+                            <svg viewBox="0 0 30 22"><path d="M28 4c-6 1-14 4-20 12M8 16l1-7M8 16l7-2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                        </span>
                     <?php endif; ?>
-                </span>
-                <b><?php echo $pl["total"]; ?></b>
-            </div>
-        <?php endforeach; ?>
+                    <div class="rp-prod__txt">
+                        <span class="rp-prod__nombre"><?php echo htmlspecialchars($nombre); ?></span>
+                        <?php if (!empty($pl["opciones"])): ?>
+                            <?php arsort($pl["opciones"]); ?>
+                            <span class="rp-prod__opc"><?php
+                                echo htmlspecialchars(implode(", ", array_map(fn($o, $n) => "$o $n", array_keys($pl["opciones"]), $pl["opciones"])));
+                            ?></span>
+                        <?php endif; ?>
+                        <span class="rp-barra" aria-hidden="true"><i style="width:<?php echo round($pl["total"] / $maxPlato * 100); ?>%"></i></span>
+                    </div>
+                    <b class="rp-prod__num"><?php echo $pl["total"]; ?></b>
+                </li>
+            <?php endforeach; ?>
+        </ul>
     </section>
 
     <?php if ($complementos): ?>
-    <h3 class="rd-h3">Complementos y aguas</h3>
-    <section class="rd-prod rd-prod--sec">
-        <?php foreach ($complementos as $nombre => $cant): ?>
-            <div class="rd-prod__fila">
-                <span><?php echo htmlspecialchars($nombre); ?></span>
-                <b><?php echo $cant; ?></b>
-            </div>
-        <?php endforeach; ?>
+    <section class="pz-sec rp-cocina">
+        <span class="pz-cinta">Complementos y aguas</span>
+        <ul class="pz-grupo rp-comp">
+            <?php foreach ($complementos as $nombre => $cant): ?>
+                <li><span><?php echo htmlspecialchars($nombre); ?></span><b><?php echo $cant; ?></b></li>
+            <?php endforeach; ?>
+        </ul>
     </section>
     <?php endif; ?>
 
     <?php endif; ?>
 
-</div>
+    <p class="pz-pie rp-pie">
+        Solo lectura: desde aquí no se imprime nada.<br>
+        <?php if ($esHoy): ?>Se actualiza solo cada minuto, última vez a las <?php echo date("g:i"); ?>.<?php endif; ?>
+    </p>
+</main>
 
 <?php if ($esHoy): ?>
 <script>
@@ -325,7 +354,7 @@ $siguiente = date("Y-m-d", strtotime("$fecha +1 day"));
         var guardado = JSON.parse(sessionStorage.getItem(CLAVE) || "null");
         if (guardado) {
             sessionStorage.removeItem(CLAVE);
-            document.querySelectorAll("details.rd-punto").forEach(function (d, i) {
+            document.querySelectorAll("details.rp-punto").forEach(function (d, i) {
                 if (guardado.abiertos.indexOf(i) !== -1) d.open = true;
             });
             window.scrollTo(0, guardado.y || 0);
@@ -335,7 +364,7 @@ $siguiente = date("Y-m-d", strtotime("$fecha +1 day"));
     function recargar() {
         try {
             var abiertos = [];
-            document.querySelectorAll("details.rd-punto").forEach(function (d, i) { if (d.open) abiertos.push(i); });
+            document.querySelectorAll("details.rp-punto").forEach(function (d, i) { if (d.open) abiertos.push(i); });
             sessionStorage.setItem(CLAVE, JSON.stringify({ y: window.scrollY, abiertos: abiertos }));
         } catch (e) {}
         location.reload();

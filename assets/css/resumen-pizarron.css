@@ -1,0 +1,127 @@
+/* ══════════════════════════════════════════════════════════════
+   Resumen del día (restaurante/resumen_dia.php), en el sistema
+   "Pizarrón de fonda" de DESIGN.md. Es un tablero: los números se
+   leen primero; la decoración (boleto, cintas, tiras, la nota del
+   más pedido) se queda en las orillas y el texto va derecho.
+   Usa los tokens y piezas de menu-pizarron.css.
+   ══════════════════════════════════════════════════════════════ */
+
+.rp-pagina{padding-bottom:40px}
+.rp .pz-marca{text-decoration:none}
+.rp .pz-marca__lema{font-size:18px;white-space:nowrap}
+
+/* ── Encabezado: cambiar de día ── */
+.rp-dias{display:flex;gap:6px;margin-top:4px}
+.rp-dias a{display:inline-flex;align-items:center;justify-content:center;min-width:44px;height:44px;
+  border-radius:12px;background:var(--pz-grupo);color:var(--pz-gis);text-decoration:none}
+.rp-dias .rp-dias__hoy{padding:0 12px;font:600 15px var(--pz-sys);color:var(--pz-estraza)}
+
+.rp-eyebrow{margin:22px 20px 0;font:500 14px var(--pz-sys);color:var(--pz-gris)}
+.rp-titulo{padding-top:4px}
+.rp-sub{margin:6px 20px 0;font:400 16px var(--pz-sys);color:var(--pz-gris)}
+
+/* ── La comanda: totales en el boleto ── */
+.rp-comanda{margin-top:26px;transform:rotate(-.8deg)}
+.rp-comanda .pz-boleto__papel{padding:18px 22px 16px 56px}
+.rp-comanda__grandes{display:flex;gap:28px}
+.rp-comanda__grandes div{display:flex;flex-direction:column}
+.rp-comanda__grandes b{font:400 46px/1 var(--pz-rotulo);color:var(--pz-tinta);font-variant-numeric:tabular-nums}
+.rp-comanda__grandes span{margin-top:4px;font:500 14px var(--pz-sys);color:var(--pz-tinta2)}
+.rp-comanda__lineas{margin:0}
+.rp-comanda__lineas div{display:flex;justify-content:space-between;gap:12px;padding:2px 0}
+.rp-comanda__lineas dt{font:400 15px var(--pz-sys);color:var(--pz-tinta2)}
+.rp-comanda__lineas dd{margin:0;font:600 15px var(--pz-sys);color:var(--pz-tinta);font-variant-numeric:tabular-nums}
+
+/* ── Pendientes: óvalos a mano ── */
+.rp-pendientes{display:flex;flex-wrap:wrap;gap:12px 14px;padding:22px 22px 0}
+
+/* ── Secciones ── */
+.rp-h2{margin:34px 20px -8px;font:400 30px/1.1 var(--pz-pincel);color:var(--pz-gis);transform:rotate(-1.5deg);transform-origin:left}
+
+.rp-hora{padding-top:24px}
+.rp-hora__cab{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.rp-hora__cab .pz-cinta{margin:0;font-size:17px}
+.rp-hora:nth-of-type(3n+1) .pz-cinta{transform:rotate(-1.8deg)}
+.rp-hora:nth-of-type(3n+2) .pz-cinta{transform:rotate(1.1deg)}
+.rp-hora:nth-of-type(3n)   .pz-cinta{transform:rotate(-.7deg)}
+.rp-hora__total{font:400 15px var(--pz-sys);color:var(--pz-gris)}
+.rp-hora__total b{font:400 22px var(--pz-rotulo);color:var(--pz-naranja);margin-right:2px}
+.rp-hora .pz-grupo{margin-top:12px}
+
+/* Punto de entrega: fila que se abre con sus clientes */
+.rp-punto{position:relative}
+.rp-punto+.rp-punto::before{content:"";position:absolute;top:0;left:42px;right:0;height:1px;background:var(--pz-linea)}
+.rp-punto summary{display:flex;align-items:center;gap:12px;padding:13px 14px 13px 13px;min-height:56px;
+  cursor:pointer;list-style:none}
+.rp-punto summary::-webkit-details-marker{display:none}
+.rp-punto summary .pz-tira{align-self:stretch}
+.rp-punto:nth-child(4n+1) .pz-tira{transform:rotate(-3deg)}
+.rp-punto:nth-child(4n+2) .pz-tira{transform:rotate(2deg)}
+.rp-punto:nth-child(4n+3) .pz-tira{transform:rotate(-1deg)}
+.rp-punto:nth-child(4n)   .pz-tira{transform:rotate(3deg)}
+.rp-punto .pz-fila__nombre,.rp-punto .pz-fila__desc{display:block}
+.rp-punto .pz-fila__nombre{font-size:16px}
+.rp-punto__num{font:400 24px var(--pz-rotulo);color:var(--pz-gis);min-width:28px;text-align:right;font-variant-numeric:tabular-nums}
+.rp-punto__flecha{flex-shrink:0;color:var(--pz-gris);transition:transform .15s ease}
+.rp-punto[open] .rp-punto__flecha{transform:rotate(90deg)}
+.rp-punto[open] summary{background:rgba(255,255,255,.025)}
+
+/* Sello chico de "ya se avisó la llegada" */
+.rp-avisado{flex-shrink:0;font:600 11px/1 var(--pz-sys);color:var(--pz-estraza-cl);white-space:nowrap;
+  padding:5px 7px;transform:rotate(-4deg);position:relative;isolation:isolate}
+.rp-avisado::before{content:"";position:absolute;inset:0;z-index:-1;border:1.5px solid var(--pz-estraza);
+  border-radius:6px 4px 7px 5px;filter:url(#pz-borde)}
+.rp-punto:nth-child(even) .rp-avisado{transform:rotate(3deg)}
+
+.rp-clientes{list-style:none;margin:0;padding:0 14px 8px 42px}
+.rp-clientes li{padding:11px 0;border-top:1px dashed var(--pz-linea)}
+.rp-cliente__fila{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.rp-cliente__nombre{font:500 15px var(--pz-sys);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rp-cliente__menus{flex-shrink:0;min-width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;
+  border-radius:7px;background:var(--pz-linea);font:600 14px var(--pz-sys)}
+.rp-cliente__fila--sec{margin-top:3px;font:400 13px var(--pz-sys);color:var(--pz-gris)}
+.rp-pago{margin-left:6px;font-weight:600;color:var(--pz-gris)}
+.rp-pago--revision{color:var(--pz-estraza)}
+.rp-pago--falta{color:var(--pz-naranja)}
+
+/* Palomitas de WhatsApp (mismas clases que el panel de pedidos) */
+.wa-estados{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.wa-estados:empty{display:none}
+.wa-et{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:999px;font:600 11px/1.5 var(--pz-sys);
+  white-space:nowrap;background:rgba(255,255,255,.07);color:var(--pz-gris)}
+.wa-et b{font-weight:800;letter-spacing:-2px;margin-right:2px}
+.wa-et--leido{background:rgba(83,189,235,.14);color:#6cc4ef}
+.wa-et--fallo{background:rgba(229,57,53,.16);color:#ff8a80}
+
+/* ── En la cocina ── */
+.rp-cocina{padding-top:22px}
+.rp-prod,.rp-comp{list-style:none}
+.rp-prod__fila{position:relative;display:flex;align-items:center;gap:14px;padding:13px 16px}
+.rp-prod__fila+.rp-prod__fila{border-top:1px solid var(--pz-linea)}
+.rp-prod__fila--top{padding-top:32px}
+.rp-nota{left:auto;right:56px;top:4px;font-size:16px}
+.rp-prod__txt{flex:1;min-width:0}
+.rp-prod__nombre{display:block;font:500 15px/1.3 var(--pz-sys)}
+.rp-prod__opc{display:block;margin-top:2px;font:400 13px var(--pz-sys);color:var(--pz-gris)}
+.rp-barra{display:block;height:6px;margin-top:8px;border-radius:3px;background:var(--pz-linea);overflow:hidden}
+.rp-barra i{display:block;height:100%;background:var(--pz-estraza);border-radius:3px}
+.rp-prod__num{font:400 26px var(--pz-rotulo);color:var(--pz-naranja);min-width:34px;text-align:right;font-variant-numeric:tabular-nums}
+
+.rp-comp li{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px;font:400 15px var(--pz-sys)}
+.rp-comp li+li{border-top:1px solid var(--pz-linea)}
+.rp-comp b{font:600 17px var(--pz-sys);font-variant-numeric:tabular-nums}
+
+/* ── Vacío y pie ── */
+.rp-vacio{margin:40px 20px 0;padding:34px 20px;text-align:center;border-radius:14px;background:var(--pz-grupo);
+  font:400 15px var(--pz-sys);color:var(--pz-gris)}
+.rp-vacio p{margin:0}
+.rp-vacio__mano{font:400 28px var(--pz-pincel)!important;color:var(--pz-estraza);transform:rotate(-2deg);margin-bottom:8px!important}
+.rp-pie{padding-top:34px}
+
+@media (prefers-reduced-motion:reduce){
+  .rp-punto__flecha{transition:none}
+}
+@media (max-width:360px){
+  .rp-comanda__grandes b{font-size:40px}
+  .rp-avisado{font-size:10px;padding:3px 5px 2px}
+}
