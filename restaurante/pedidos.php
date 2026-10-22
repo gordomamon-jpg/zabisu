@@ -1048,20 +1048,22 @@ document.addEventListener("DOMContentLoaded", function () {
     // PALOMITAS DE WHATSAPP (se actualizan solas con el webhook)
     // ============================================================
     function refrescarEstadosWA() {
-        var cajas = document.querySelectorAll(".wa-estados[data-wa-id]");
-        if (!cajas.length) return;
-        var ids = Array.prototype.map.call(cajas, function (c) { return c.dataset.waId; });
-        fetch("wa_estados.php?ids=" + ids.join(","), { cache: "no-store" })
-            .then(function (r) { return r.json(); })
+        fetch("wa_estados.php", { cache: "no-store" })
+            .then(function (r) { return r.ok ? r.json() : {}; })
             .then(function (estados) {
-                cajas.forEach(function (c) {
-                    var html = estados[c.dataset.waId];
-                    if (html !== undefined && c.innerHTML.trim() !== html) c.innerHTML = html;
+                Object.keys(estados).forEach(function (id) {
+                    var caja = document.querySelector('.wa-estados[data-wa-id="' + id + '"]');
+                    if (caja && caja.innerHTML !== estados[id]) caja.innerHTML = estados[id];
                 });
             })
             .catch(function () {});
     }
-    setInterval(refrescarEstadosWA, 20000);
+    setInterval(refrescarEstadosWA, 10000);
+    // Recién impreso: el envío y su primera palomita tardan unos segundos
+    function revisarEstadosWAPronto() {
+        setTimeout(refrescarEstadosWA, 2000);
+        setTimeout(refrescarEstadosWA, 6000);
+    }
 
     // Restaurar posición de scroll al volver de confirmar pago
     <?php if (!empty($_GET['scroll'])): ?>
@@ -1096,7 +1098,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             // Llamar imprimir_y_notificar para marcar visto (correo desactivado)
-            fetch("imprimir_y_notificar.php?id=" + id, { cache: "no-store" });
+            fetch("imprimir_y_notificar.php?id=" + id, { cache: "no-store" }).then(revisarEstadosWAPronto);
 
             // Cargar ticket en iframe oculto y disparar print
             iframeTicket.onload = function () {
@@ -1117,7 +1119,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 var badge = fila.querySelector(".badge-nuevo");
                 if (badge) badge.remove();
             }
-            fetch("imprimir_y_notificar.php?id=" + id, { cache: "no-store" });
+            fetch("imprimir_y_notificar.php?id=" + id, { cache: "no-store" }).then(revisarEstadosWAPronto);
             iframeTicket.onload = function () {
                 iframeTicket.contentWindow.focus();
                 iframeTicket.contentWindow.print();
@@ -1348,7 +1350,7 @@ document.addEventListener("DOMContentLoaded", function () {
             if (localStorage.getItem(key)) return;
             localStorage.setItem(key, "1");
             setTimeout(function () {
-                fetch("imprimir_y_notificar.php?id=" + orden.id, { cache: "no-store" });
+                fetch("imprimir_y_notificar.php?id=" + orden.id, { cache: "no-store" }).then(revisarEstadosWAPronto);
                 iframeTicket.onload = function () {
                     iframeTicket.contentWindow.focus();
                     iframeTicket.contentWindow.print();

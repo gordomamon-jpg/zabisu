@@ -4,28 +4,23 @@ require_once "auth_check.php";
 require_once "../includes/wa_etiqueta.php";
 
 /*
-    Estados de WhatsApp de los pedidos visibles en el panel, para refrescar
-    las palomitas sin recargar: ?ids=1,2,3 → {"1": "<span…>", …}
+    Estados de WhatsApp de los avisos de los últimos 3 días, para refrescar
+    las palomitas del panel sin recargar: {"id_pedido": "<span…>", …}
+    (Sin lista de ids en la URL: el panel carga miles de pedidos y Apache
+    rechaza URLs tan largas con 414.)
 */
-$ids = array_slice(array_unique(array_filter(array_map('intval', explode(',', $_GET['ids'] ?? '')))), 0, 500);
-
-header('Content-Type: application/json');
-if (!$ids) {
-    echo '{}';
-    exit;
-}
-
-$marcas = implode(',', array_fill(0, count($ids), '?'));
 $stmt = $conexion->prepare(
     "SELECT w.id_pedido, w.tipo, w.estado
      FROM wa_mensajes w
      INNER JOIN (
          SELECT MAX(id) AS id FROM wa_mensajes
-         WHERE id_pedido IN ($marcas) AND tipo IN ('confirmacion', 'llegada')
+         WHERE id_pedido IS NOT NULL
+           AND tipo IN ('confirmacion', 'llegada')
+           AND creado_en >= NOW() - INTERVAL 3 DAY
          GROUP BY id_pedido, tipo
      ) ult ON ult.id = w.id"
 );
-$stmt->execute($ids);
+$stmt->execute();
 
 $porPedido = [];
 foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $f) {
@@ -37,4 +32,7 @@ foreach ($porPedido as $id => $t) {
     $salida[$id] = etiquetaWA("Confirmación", $t['confirmacion'] ?? null)
                  . etiquetaWA("Llegada", $t['llegada'] ?? null);
 }
-echo json_encode($salida, JSON_UNESCAPED_UNICODE);
+
+header('Content-Type: application/json');
+header('Cache-Control: no-store');
+echo json_encode((object)$salida, JSON_UNESCAPED_UNICODE);
