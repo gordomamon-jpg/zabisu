@@ -33,7 +33,7 @@ if (empty($_SESSION["pedido_temporal"])) {
 <html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tu pedido no está activo | Zabisu</title>
 <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
-<link rel="stylesheet" href="../assets/css/styles.css?v=5">
+<link rel="stylesheet" href="../assets/css/styles.css?v=7">
 <link rel="stylesheet" href="../assets/css/cliente-rediseno.css?v=4">
 <style>
     body { background: #0a0908 !important; font-family: 'Instrument Sans', Arial, sans-serif; margin: 0; padding: 16px; }
@@ -353,7 +353,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Zabisu">
     <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
-    <link rel="stylesheet" href="../assets/css/styles.css?v=5">
+    <link rel="stylesheet" href="../assets/css/styles.css?v=7">
     <link rel="stylesheet" href="../assets/css/cliente-rediseno.css?v=4">
     <style>
     *, *::before, *::after { box-sizing: border-box; }

@@ -51,7 +51,7 @@ $granTotal      = $subtotalCot + $ivaMonto;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($cot["folio"]); ?> | Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
-    <link rel="stylesheet" href="../assets/css/styles.css?v=5">
+    <link rel="stylesheet" href="../assets/css/styles.css?v=7">
     <style>
         /* ── PANTALLA ── */
         .cot-tabla { width:100%; border-collapse:collapse; }

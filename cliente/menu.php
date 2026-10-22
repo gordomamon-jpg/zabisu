@@ -19,7 +19,7 @@ if (false): ?>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Zabisu">
     <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
-    <link rel="stylesheet" href="../assets/css/styles.css?v=5">
+    <link rel="stylesheet" href="../assets/css/styles.css?v=7">
     <style>
     *, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
     body {
@@ -740,7 +740,7 @@ if ($disenoNuevo) { require __DIR__ . "/menu_pizarron.php"; exit; }
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Zabisu">
     <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
-    <link rel="stylesheet" href="../assets/css/styles.css?v=5">
+    <link rel="stylesheet" href="../assets/css/styles.css?v=7">
     <link rel="stylesheet" href="../assets/css/cliente-rediseno.css?v=4">
 </head>
 <style>

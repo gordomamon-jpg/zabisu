@@ -74,7 +74,7 @@ $peDefault        = $_POST["precio_ejecutivo"] ?? "110";
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nuevo menú | Restaurante Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
-    <link rel="stylesheet" href="../assets/css/styles.css?v=5">
+    <link rel="stylesheet" href="../assets/css/styles.css?v=7">
 </head>
 <body>
 <div class="contenedor">

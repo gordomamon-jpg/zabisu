@@ -103,7 +103,7 @@ $fechaSugerida = $ultimaFecha ? date("Y-m-d", strtotime($ultimaFecha . " +1 day"
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Agregar días | <?php echo htmlspecialchars($nota["folio"]); ?></title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
-    <link rel="stylesheet" href="../assets/css/styles.css?v=5">
+    <link rel="stylesheet" href="../assets/css/styles.css?v=7">
     <style>
         .dia-bloque {
             border: 1px solid var(--borde,#292929);

@@ -4422,3 +4422,15 @@ input[type="checkbox"] {
     background: rgba(229, 57, 53, 0.14);
     color: #e53935;
 }
+
+/* Listas desplegables: en Chrome de Windows la lista de opciones sale con
+   fondo blanco del sistema y heredaba el texto blanco del select. */
+select {
+    color-scheme: dark;
+}
+
+select option,
+select optgroup {
+    background-color: #1c1b1a;
+    color: #f5f5f5;
+}
