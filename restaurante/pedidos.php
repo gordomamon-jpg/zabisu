@@ -1,6 +1,7 @@
 <?php
 require_once "../config/db.php";
 require_once "auth_check.php";
+require_once "../includes/wa_etiqueta.php";
 
 /*
     Estado de recepción de pedidos
@@ -39,7 +40,9 @@ $sqlBase = "SELECT
                     u.nombre_ubicacion,
                     u.tipo AS tipo_ubicacion,
                     COALESCE(mi.fecha_menu, DATE(p.fecha_pedido)) AS fecha_grupo_menu,
-                    COALESCE(mc.num_menus, 0) AS num_menus
+                    COALESCE(mc.num_menus, 0) AS num_menus,
+                    (SELECT w.estado FROM wa_mensajes w WHERE w.id_pedido = p.id_pedido AND w.tipo = 'confirmacion' ORDER BY w.id DESC LIMIT 1) AS wa_confirmacion,
+                    (SELECT w.estado FROM wa_mensajes w WHERE w.id_pedido = p.id_pedido AND w.tipo = 'llegada' ORDER BY w.id DESC LIMIT 1) AS wa_llegada
                FROM pedidos p
                INNER JOIN horarios_ubicacion h ON p.id_horario = h.id_horario
                INNER JOIN ubicaciones u ON h.id_ubicacion = u.id_ubicacion
@@ -411,7 +414,7 @@ function formatearFechaBonita($fecha)
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pedidos | Restaurante Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
-    <link rel="stylesheet" href="../assets/css/styles.css?v=5">
+    <link rel="stylesheet" href="../assets/css/styles.css?v=6">
     <style>
         .tarjeta-produccion[data-id-producto] {
             cursor: pointer;
@@ -810,6 +813,9 @@ function formatearFechaBonita($fecha)
                                         <td>
                                             <strong><?php echo htmlspecialchars($pedido["nombre_cliente"]); ?></strong><br>
                                             <span class="texto-secundario"><?php echo htmlspecialchars($pedido["telefono"]); ?></span>
+                                            <div class="wa-estados" data-wa-id="<?php echo (int)$pedido["id_pedido"]; ?>"><?php
+                                                echo etiquetaWA("Confirmación", $pedido["wa_confirmacion"]) . etiquetaWA("Llegada", $pedido["wa_llegada"]);
+                                            ?></div>
                                         </td>
                                         <td>
                                             <?php echo htmlspecialchars($pedido["nombre_ubicacion"]); ?><br>
@@ -1037,6 +1043,25 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     setInterval(revisarNuevosPedidos, 10000);
+
+    // ============================================================
+    // PALOMITAS DE WHATSAPP (se actualizan solas con el webhook)
+    // ============================================================
+    function refrescarEstadosWA() {
+        var cajas = document.querySelectorAll(".wa-estados[data-wa-id]");
+        if (!cajas.length) return;
+        var ids = Array.prototype.map.call(cajas, function (c) { return c.dataset.waId; });
+        fetch("wa_estados.php?ids=" + ids.join(","), { cache: "no-store" })
+            .then(function (r) { return r.json(); })
+            .then(function (estados) {
+                cajas.forEach(function (c) {
+                    var html = estados[c.dataset.waId];
+                    if (html !== undefined && c.innerHTML.trim() !== html) c.innerHTML = html;
+                });
+            })
+            .catch(function () {});
+    }
+    setInterval(refrescarEstadosWA, 20000);
 
     // Restaurar posición de scroll al volver de confirmar pago
     <?php if (!empty($_GET['scroll'])): ?>
