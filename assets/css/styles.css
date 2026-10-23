@@ -4434,3 +4434,133 @@ select optgroup {
     background-color: #1c1b1a;
     color: #f5f5f5;
 }
+
+/* Avisos de llegada de hoy (panel de pedidos): un renglón por punto y horario */
+.avisos-pendientes {
+    margin-left: 6px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #e53935;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.avisos-hoy {
+    list-style: none;
+    margin: 16px 0 0;
+    padding: 0;
+    border: 1px solid var(--zabisu-border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.aviso-hoy {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 14px;
+    padding: 14px 16px;
+    border-left: 4px solid transparent;
+}
+
+.aviso-hoy + .aviso-hoy {
+    border-top: 1px solid var(--zabisu-border);
+}
+
+.aviso-hoy__info {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px 10px;
+}
+
+.aviso-hoy__hora {
+    font-size: 16px;
+    min-width: 72px;
+}
+
+.aviso-hoy__punto {
+    font-weight: 700;
+    color: var(--zabisu-white-soft);
+}
+
+.aviso-hoy__detalle {
+    width: 100%;
+    font-size: 13px;
+    color: var(--zabisu-gray);
+}
+
+.aviso-hoy .btn-avisar {
+    min-height: 44px;
+    padding: 10px 18px;
+    background: var(--zabisu-orange);
+    color: #111;
+    border: 0;
+    font-weight: 800;
+}
+
+.aviso-hoy .btn-avisar:disabled {
+    opacity: 0.6;
+}
+
+.aviso-hoy__estado {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--zabisu-gray);
+}
+
+.aviso-hoy--listo {
+    border-left-color: #2e7d4f;
+}
+
+.aviso-hoy--listo .aviso-hoy__estado {
+    color: #4cd787;
+}
+
+.aviso-hoy--sinwa {
+    opacity: 0.6;
+}
+
+.aviso-hoy--atrasado {
+    border-left-color: #e53935;
+    background: rgba(229, 57, 53, 0.08);
+}
+
+.aviso-hoy--atrasado .aviso-hoy__hora::after {
+    content: "Atrasado";
+    margin-left: 8px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: #e53935;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    vertical-align: 2px;
+}
+
+.aviso-hoy__resultado {
+    width: 100%;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.aviso-hoy__resultado--error {
+    color: #ff8a80;
+}
+
+.aviso-hoy__resultado a {
+    color: #ffb36b;
+}
+
+.aviso-manual {
+    margin-top: 18px;
+}
+
+.aviso-manual summary {
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--zabisu-gray);
+    padding: 6px 0;
+}

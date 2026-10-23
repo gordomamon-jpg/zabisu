@@ -17,7 +17,7 @@ $waContacto     = "https://wa.me/" . WHATSAPP_DUDAS;
     <title>Aviso de privacidad · Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
     <meta name="theme-color" content="#FF7A00">
-    <link rel="stylesheet" href="../assets/css/styles.css?v=7">
+    <link rel="stylesheet" href="../assets/css/styles.css?v=8">
     <?php if ($disenoNuevo): ?>
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
     <link rel="stylesheet" href="../assets/css/pedido-pizarron.css?v=2">

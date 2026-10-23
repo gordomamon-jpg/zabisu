@@ -329,6 +329,41 @@ foreach ($extrasRutaDB as $fila) {
 }
 
 /*
+    Avisos de llegada de hoy: un renglón por punto y horario con pedidos,
+    para ver de un vistazo cuáles faltan (antes se elegían en dos listas y
+    un horario se podía quedar sin avisar sin que nadie lo notara).
+*/
+$hoyAvisos = date("Y-m-d");
+$slotsAviso = [];
+foreach ($pedidos as $p) {
+    if ($p["fecha_grupo_menu"] !== $hoyAvisos) continue;
+    $clave = $p["nombre_ubicacion"] . "||" . $p["hora_entrega"];
+    $slot  = &$slotsAviso[$clave];
+    $slot["ubicacion"] = $p["nombre_ubicacion"];
+    $slot["hora"]      = $p["hora_entrega"];
+    $slot["pedidos"]   = ($slot["pedidos"] ?? 0) + 1;
+    $tel = preg_replace('/\D/', '', $p["telefono"] ?? "");
+    $slot["con_wa"]    = ($slot["con_wa"] ?? 0) + ((strlen($tel) === 10 && !preg_match('/^0+$/', $tel)) ? 1 : 0);
+    unset($slot);
+}
+$stmtAvisados = $conexion->prepare(
+    "SELECT u.nombre_ubicacion, h.hora_entrega, n.enviado_en, n.total_enviados
+     FROM notificaciones_ruta n
+     INNER JOIN horarios_ubicacion h ON h.id_horario = n.id_horario
+     INNER JOIN ubicaciones u ON u.id_ubicacion = h.id_ubicacion
+     WHERE n.fecha_menu = :hoy"
+);
+$stmtAvisados->execute([":hoy" => $hoyAvisos]);
+foreach ($stmtAvisados->fetchAll(PDO::FETCH_ASSOC) as $a) {
+    $clave = $a["nombre_ubicacion"] . "||" . $a["hora_entrega"];
+    if (isset($slotsAviso[$clave])) {
+        $slotsAviso[$clave]["enviado_en"] = $a["enviado_en"];
+        $slotsAviso[$clave]["enviados"]   = (int)$a["total_enviados"];
+    }
+}
+uasort($slotsAviso, fn($a, $b) => [$a["hora"], $a["ubicacion"]] <=> [$b["hora"], $b["ubicacion"]]);
+
+/*
     Opciones para filtros
 */
 $ubicacionesFiltro = array_values(array_unique(array_column($pedidos, "nombre_ubicacion")));
@@ -414,7 +449,7 @@ function formatearFechaBonita($fecha)
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pedidos | Restaurante Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
-    <link rel="stylesheet" href="../assets/css/styles.css?v=7">
+    <link rel="stylesheet" href="../assets/css/styles.css?v=8">
     <style>
         .tarjeta-produccion[data-id-producto] {
             cursor: pointer;
@@ -473,7 +508,7 @@ function formatearFechaBonita($fecha)
                 </button>
             </form>
             <button type="button" id="btn-toggle-notificacion" class="btn-notificar-ruta">
-                📍 Notificar llegada al punto
+                📍 Notificar llegada al punto <span class="avisos-pendientes" id="avisos-pendientes" hidden></span>
             </button>
             <button type="button" id="btn-toggle-resumen-ruta" class="btn-notificar-ruta btn-resumen-ruta">
                 🚚 Ver resumen de ruta
@@ -485,9 +520,46 @@ function formatearFechaBonita($fecha)
     <div class="bloque-formulario bloque-notificacion-ruta" id="bloque-notificacion-ruta" style="display:none;">
         <h2>📍 Notificar llegada al punto</h2>
         <p class="nota-formulario">
-            Envía un WhatsApp automático a todos los clientes de una ubicación y horario para avisarles que su pedido ya llegó.
+            Cada punto y horario de hoy con su botón. Al avisar, se marca con la hora; los que ya pasaron de su hora sin aviso salen en rojo.
         </p>
 
+        <?php if (empty($slotsAviso)): ?>
+            <p class="nota-formulario">Todavía no hay pedidos para hoy.</p>
+        <?php else: ?>
+        <ul class="avisos-hoy" id="avisos-hoy">
+            <?php foreach ($slotsAviso as $slot): ?>
+                <?php
+                    $avisado = !empty($slot["enviado_en"]) && (int)$slot["enviados"] >= 0;
+                    $sinWA   = (int)$slot["con_wa"] === 0;
+                ?>
+                <li class="aviso-hoy<?php echo $avisado ? ' aviso-hoy--listo' : ($sinWA ? ' aviso-hoy--sinwa' : ''); ?>"
+                    data-ubicacion="<?php echo htmlspecialchars($slot["ubicacion"]); ?>"
+                    data-hora="<?php echo htmlspecialchars($slot["hora"]); ?>">
+                    <div class="aviso-hoy__info">
+                        <strong class="aviso-hoy__hora"><?php echo date("g:i A", strtotime($slot["hora"])); ?></strong>
+                        <span class="aviso-hoy__punto"><?php echo htmlspecialchars($slot["ubicacion"]); ?></span>
+                        <span class="aviso-hoy__detalle">
+                            <?php echo (int)$slot["pedidos"]; ?> pedido<?php echo (int)$slot["pedidos"] !== 1 ? "s" : ""; ?>,
+                            <?php echo (int)$slot["con_wa"]; ?> con WhatsApp
+                        </span>
+                    </div>
+                    <div class="aviso-hoy__accion">
+                        <?php if ($avisado): ?>
+                            <span class="aviso-hoy__estado">✓ Avisado <?php echo date("g:i A", strtotime($slot["enviado_en"])); ?>, <?php echo (int)$slot["enviados"]; ?> enviado<?php echo (int)$slot["enviados"] !== 1 ? "s" : ""; ?></span>
+                        <?php elseif ($sinWA): ?>
+                            <span class="aviso-hoy__estado">Sin WhatsApp (tableta)</span>
+                        <?php else: ?>
+                            <button type="button" class="btn-tabla btn-avisar">Avisar llegada</button>
+                        <?php endif; ?>
+                    </div>
+                    <div class="aviso-hoy__resultado" hidden></div>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+        <?php endif; ?>
+
+        <details class="aviso-manual">
+            <summary>Envío manual (otra fecha u horario)</summary>
         <div class="notificacion-ruta__campos">
             <div class="notificacion-ruta__campo">
                 <label for="notif-fecha">Fecha</label>
@@ -517,9 +589,11 @@ function formatearFechaBonita($fecha)
             </div>
         </div>
 
-        <button type="button" id="btn-enviar-notificacion" class="btn-principal" style="margin-top:20px;">
+        <button type="button" id="btn-enviar-notificacion" class="btn-principal" style="margin-top:16px;">
             Notificar llegada por WhatsApp
         </button>
+
+        </details>
 
         <div id="notificacion-resultado" class="notificacion-resultado" style="display:none;"></div>
     </div>
@@ -1147,6 +1221,100 @@ document.addEventListener("DOMContentLoaded", function () {
             if (!visible) {
                 bloqueNotif.scrollIntoView({ behavior: "smooth", block: "start" });
             }
+        });
+    }
+
+    // ── AVISOS DE LLEGADA DE HOY (un botón por punto y horario) ──
+    const listaAvisos     = document.getElementById("avisos-hoy");
+    const badgePendientes = document.getElementById("avisos-pendientes");
+
+    function horaATexto(hora24) {
+        var p = hora24.split(":"), h = parseInt(p[0], 10);
+        return (h % 12 || 12) + ":" + p[1] + " " + (h < 12 ? "AM" : "PM");
+    }
+
+    // Marca en rojo los horarios que ya pasaron de su hora sin aviso y
+    // pone el número de pendientes atrasados en el botón del panel.
+    function revisarAvisosAtrasados() {
+        if (!listaAvisos) return;
+        var ahora = new Date(), atrasados = 0;
+        listaAvisos.querySelectorAll(".aviso-hoy").forEach(function (li) {
+            var pendiente = !li.classList.contains("aviso-hoy--listo") && !li.classList.contains("aviso-hoy--sinwa");
+            var p = li.dataset.hora.split(":");
+            var limite = new Date(); limite.setHours(+p[0], +p[1], 0, 0);
+            var atrasado = pendiente && ahora >= limite;
+            li.classList.toggle("aviso-hoy--atrasado", atrasado);
+            if (atrasado) atrasados++;
+        });
+        if (badgePendientes) {
+            badgePendientes.hidden = atrasados === 0;
+            badgePendientes.textContent = atrasados + " sin avisar";
+        }
+    }
+    revisarAvisosAtrasados();
+    setInterval(revisarAvisosAtrasados, 30000);
+
+    function marcarAvisado(li, enviados) {
+        var ahora = new Date();
+        var hora = horaATexto(ahora.getHours() + ":" + String(ahora.getMinutes()).padStart(2, "0"));
+        li.classList.remove("aviso-hoy--atrasado");
+        li.classList.add("aviso-hoy--listo");
+        li.querySelector(".aviso-hoy__accion").innerHTML =
+            '<span class="aviso-hoy__estado">✓ Avisado ' + hora +
+            (enviados !== null ? ", " + enviados + " enviado" + (enviados !== 1 ? "s" : "") : "") + "</span>";
+        revisarAvisosAtrasados();
+    }
+
+    if (listaAvisos) {
+        listaAvisos.addEventListener("click", function (e) {
+            var btn = e.target.closest(".btn-avisar");
+            if (!btn) return;
+            var li = btn.closest(".aviso-hoy");
+            var ubicacion = li.dataset.ubicacion, hora = li.dataset.hora;
+            if (!confirm("¿Avisar a los clientes de " + ubicacion + ", " + horaATexto(hora) + " que su pedido ya llegó?")) return;
+
+            var res = li.querySelector(".aviso-hoy__resultado");
+            res.hidden = true;
+            btn.disabled = true;
+            btn.textContent = "Enviando…";
+
+            var datos = new FormData();
+            datos.append("fecha", "<?php echo date('Y-m-d'); ?>");
+            datos.append("nombre_ubicacion", ubicacion);
+            datos.append("hora_entrega", hora);
+
+            fetch("notificar_ruta.php", { method: "POST", body: datos })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (!data.ok) {
+                        if (/ya fue enviada/.test(data.mensaje || "")) { marcarAvisado(li, null); return; }
+                        res.className = "aviso-hoy__resultado aviso-hoy__resultado--error";
+                        res.textContent = data.mensaje || "No se pudo enviar.";
+                        res.hidden = false;
+                        btn.disabled = false;
+                        btn.textContent = "Reintentar";
+                        return;
+                    }
+                    marcarAvisado(li, data.enviados || 0);
+                    var fallidos = data.fallidos || [];
+                    if (fallidos.length) {
+                        res.className = "aviso-hoy__resultado aviso-hoy__resultado--error";
+                        res.innerHTML = "No les llegó a: " + fallidos.map(function (f) {
+                            var tel = normalizarTelefono(f.telefono || "");
+                            var nombre = String(f.nombre).replace(/[<>&"]/g, "");
+                            return tel ? '<a href="https://wa.me/' + tel + '" target="_blank" rel="noopener">' + nombre + "</a>" : nombre;
+                        }).join(", ") + ". Escríbeles desde el 55.";
+                        res.hidden = false;
+                    }
+                    if (typeof refrescarEstadosWA === "function") setTimeout(refrescarEstadosWA, 3000);
+                })
+                .catch(function () {
+                    res.className = "aviso-hoy__resultado aviso-hoy__resultado--error";
+                    res.textContent = "No se pudo conectar con el servidor. Revisa el internet y reintenta.";
+                    res.hidden = false;
+                    btn.disabled = false;
+                    btn.textContent = "Reintentar";
+                });
         });
     }
 

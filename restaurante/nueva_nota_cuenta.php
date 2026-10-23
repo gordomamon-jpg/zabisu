@@ -113,7 +113,7 @@ $fechaHoy = date("Y-m-d");
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nueva nota de cuenta | Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
-    <link rel="stylesheet" href="../assets/css/styles.css?v=7">
+    <link rel="stylesheet" href="../assets/css/styles.css?v=8">
     <style>
         .cot-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
         @media(max-width:600px) { .cot-grid { grid-template-columns:1fr; } }
