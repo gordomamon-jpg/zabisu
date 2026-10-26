@@ -6,7 +6,7 @@
 */
 
 // Temporada activa (inclusive). Fuera de estas fechas el ticket es el normal.
-const TICKET_MUERTOS_DESDE = '2026-10-26';
+const TICKET_MUERTOS_DESDE = '2026-10-25';
 const TICKET_MUERTOS_HASTA = '2026-11-02';
 
 /*
