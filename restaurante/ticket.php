@@ -430,25 +430,28 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
         }
         <?php echo cssDecoracionTicket(); ?>
 
-        /* Ticket compacto: lo mismo, con menos aire */
-        .compacto .ticket { padding: 3mm 3mm; }
-        .compacto .ticket-logo { width: 13mm; height: 13mm; }
+        /* Ticket compacto: misma letra que antes (o más grande), con menos aire */
+        .compacto .ticket { padding: 5mm 4mm; }
         .compacto .brand { display: none; }
-        .compacto .folio { font-size: 15px; margin: 0; }
-        .compacto .line { margin: 4px 0; }
-        .compacto .bloque-prioridad { padding: 4px 6px; margin: 4px 0; }
+        .compacto .folio { font-size: 17px; }
+        .compacto .small { font-size: 12px; }
+        .compacto .line { margin: 7px 0; }
+        .compacto .bloque-prioridad { padding: 6px 7px; margin: 6px 0; }
         .compacto .bloque-prioridad__titulo { display: none; }
-        .compacto .bloque-prioridad__fila { margin: 1px 0; line-height: 1.2; }
-        .compacto .menu-block { margin: 4px 0; }
-        .compacto .menu-title { margin-bottom: 3px; }
-        .compacto .item-group { display: flex; align-items: baseline; gap: 6px; margin-bottom: 2px; }
-        .compacto .item-label { flex: 0 0 15mm; font-size: 10px; margin: 0; }
-        .compacto .item-value { flex: 1; line-height: 1.25; padding: 0; }
-        .compacto .resaltado { padding: 1px 4px; }
-        .compacto .section-title { margin: 4px 0 2px; }
+        .compacto .bloque-prioridad__fila { margin: 4px 0; }
+        .compacto .bloque-prioridad__label { font-size: 11px; }
+        .compacto .bloque-prioridad__valor { font-size: 14px; }
+        .compacto .bloque-prioridad__valor--grande { font-size: 18px; }
+        .compacto .menu-block { margin: 6px 0; }
+        .compacto .menu-title { font-size: 14px; margin-bottom: 6px; }
+        .compacto .item-group { display: flex; align-items: baseline; gap: 6px; margin-bottom: 6px; }
+        .compacto .item-label { flex: 0 0 17mm; font-size: 11px; margin: 0; }
+        .compacto .item-value { flex: 1; font-size: 14px; line-height: 1.35; padding: 0; }
+        .compacto .resaltado { padding: 2px 5px; }
+        .compacto .section-title { font-size: 13px; }
+        .compacto .bloque-obs-resaltado { font-size: 14px; }
+        .compacto .total { font-size: 16px; }
         .compacto .footer { display: none; }
-        .compacto .extras-box { margin: 4px 0; }
-        .compacto .extra-linea { padding: 2px 5px; }
     </style>
 </head>
 <body<?php echo $compacto ? ' class="compacto"' : ''; ?>>
