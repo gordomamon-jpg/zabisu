@@ -137,7 +137,7 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
 }
 ?>
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es"<?php echo $compacto ? ' class="compacto"' : ''; ?>>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -452,9 +452,17 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
         .compacto .bloque-obs-resaltado { font-size: 14px; }
         .compacto .total { font-size: 16px; }
         .compacto .footer { display: none; }
+
+        /* Al imprimir: sin margen interno a los lados y del ancho exacto
+           del área imprimible (80 mm de papel − 4 mm por lado), para que
+           Chrome no lo encoja ni deje laterales en blanco */
+        @media print {
+            html.compacto, .compacto body { width: 72mm; }
+            .compacto .ticket { padding: 0; }
+        }
     </style>
 </head>
-<body<?php echo $compacto ? ' class="compacto"' : ''; ?>>
+<body>
 
 <?php if ($separado): ?>
 
