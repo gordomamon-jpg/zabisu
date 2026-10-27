@@ -85,6 +85,9 @@ $extrasTicket = $stmtExtras->fetchAll(PDO::FETCH_ASSOC);
 /* Decoración de temporada (0 = ticket normal) */
 $tema = temaTicket((string)$pedido["folio"]);
 
+/* Ticket compacto (ahorra papel); ?base=normal imprime el formato anterior */
+$compacto = ($_GET["base"] ?? "") !== "normal";
+
 function agruparDetallePorCategoria($detalles)
 {
     $agrupado = [];
@@ -426,9 +429,29 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
             }
         }
         <?php echo cssDecoracionTicket(); ?>
+
+        /* Ticket compacto: lo mismo, con menos aire */
+        .compacto .ticket { padding: 3mm 3mm; }
+        .compacto .ticket-logo { width: 13mm; height: 13mm; }
+        .compacto .brand { display: none; }
+        .compacto .folio { font-size: 15px; margin: 0; }
+        .compacto .line { margin: 4px 0; }
+        .compacto .bloque-prioridad { padding: 4px 6px; margin: 4px 0; }
+        .compacto .bloque-prioridad__titulo { display: none; }
+        .compacto .bloque-prioridad__fila { margin: 1px 0; line-height: 1.2; }
+        .compacto .menu-block { margin: 4px 0; }
+        .compacto .menu-title { margin-bottom: 3px; }
+        .compacto .item-group { display: flex; align-items: baseline; gap: 6px; margin-bottom: 2px; }
+        .compacto .item-label { flex: 0 0 15mm; font-size: 10px; margin: 0; }
+        .compacto .item-value { flex: 1; line-height: 1.25; padding: 0; }
+        .compacto .resaltado { padding: 1px 4px; }
+        .compacto .section-title { margin: 4px 0 2px; }
+        .compacto .footer { display: none; }
+        .compacto .extras-box { margin: 4px 0; }
+        .compacto .extra-linea { padding: 2px 5px; }
     </style>
 </head>
-<body>
+<body<?php echo $compacto ? ' class="compacto"' : ''; ?>>
 
 <?php if ($separado): ?>
 
@@ -449,6 +472,7 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
                 <div class="folio"><?php echo htmlspecialchars($pedido["folio"]); ?></div>
                 <div class="small"><?php echo date("d/m/Y g:i A", strtotime($pedido["fecha_pedido"])); ?></div>
             </div>
+    <?php echo decoracionEncabezado($tema); ?>
         </div>
 
         <?php echo separadorTicket($tema); ?>
@@ -500,7 +524,7 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
         <?php foreach ($agrupado as $categoria => $items): ?>
             <?php $esResaltado = in_array($categoria, ["Plato fuerte", "Complemento"]); ?>
             <div class="item-group">
-                <div class="item-label"><?php echo htmlspecialchars($categoria); ?></div>
+                <div class="item-label"><?php echo htmlspecialchars($compacto ? (["Plato fuerte" => "Fuerte", "Complemento" => "Compl."][$categoria] ?? $categoria) : $categoria); ?></div>
                 <div class="item-value">
                     <?php if ($esResaltado): ?>
                         <span class="resaltado"><?php echo htmlspecialchars(implode(" / ", $items)); ?></span>
@@ -539,6 +563,7 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
             <div class="folio"><?php echo htmlspecialchars($pedido["folio"]); ?></div>
             <div class="small"><?php echo date("d/m/Y g:i A", strtotime($pedido["fecha_pedido"])); ?></div>
         </div>
+    <?php echo decoracionEncabezado($tema); ?>
     </div>
 
     <?php echo separadorTicket($tema); ?>
@@ -556,16 +581,18 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
         <div class="bloque-prioridad__fila">
             <span class="bloque-prioridad__label">UBICACIÓN</span>
             <span class="bloque-prioridad__valor">
-                <?php echo htmlspecialchars($pedido["nombre_ubicacion"]); ?>
+                <?php echo htmlspecialchars($pedido["nombre_ubicacion"]); ?><?php if ($compacto): ?> <small>(<?php echo htmlspecialchars(ucfirst($pedido["tipo_ubicacion"])); ?>)</small><?php endif; ?>
             </span>
         </div>
 
+        <?php if (!$compacto): ?>
         <div class="bloque-prioridad__fila">
             <span class="bloque-prioridad__label">TIPO</span>
             <span class="bloque-prioridad__valor">
                 <?php echo htmlspecialchars(ucfirst($pedido["tipo_ubicacion"])); ?>
             </span>
         </div>
+        <?php endif; ?>
 
         <div class="bloque-prioridad__fila">
             <span class="bloque-prioridad__label">HORA</span>
@@ -612,7 +639,7 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
             <?php foreach ($agrupado as $categoria => $items): ?>
                 <?php $esResaltado = in_array($categoria, ["Plato fuerte", "Complemento"]); ?>
                 <div class="item-group">
-                    <div class="item-label"><?php echo htmlspecialchars($categoria); ?></div>
+                    <div class="item-label"><?php echo htmlspecialchars($compacto ? (["Plato fuerte" => "Fuerte", "Complemento" => "Compl."][$categoria] ?? $categoria) : $categoria); ?></div>
                     <div class="item-value">
                         <?php if ($esResaltado): ?>
                             <span class="resaltado"><?php echo htmlspecialchars(implode(" / ", $items)); ?></span>
@@ -631,6 +658,7 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
     <?php echo separadorTicket($tema); ?>
     <?php endif; ?>
 
+    <?php if (!$compacto || $pedido["observaciones"] !== ""): ?>
     <div class="section-title">Observaciones</div>
     <?php if ($pedido["observaciones"] !== ""): ?>
         <div class="bloque-obs-resaltado"><?php echo htmlspecialchars($pedido["observaciones"]); ?></div>
@@ -639,6 +667,7 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
     <?php endif; ?>
 
     <?php echo separadorTicket($tema); ?>
+    <?php endif; ?>
 
     <div class="row total">
         <div>Total</div>

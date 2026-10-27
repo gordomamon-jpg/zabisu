@@ -10,8 +10,8 @@ const TICKET_MUERTOS_DESDE = '2026-10-25';
 const TICKET_MUERTOS_HASTA = '2026-11-02';
 
 /*
-    Qué decoración lleva el ticket: 0 = ninguna, 1 = papel picado,
-    2 = altar, 3 = calaveritas. Se sortea con el folio, así cada pedido
+    Qué decoración lleva el ticket: 0 = ninguna, 1 = banderitas (A),
+    2 = sello (B), 3 = hilo de calaveritas (C). Se sortea con el folio, así cada pedido
     sale con una al azar pero al reimprimirlo sale la misma.
     ?tema=1|2|3 fuerza una en cualquier fecha (para mostrarlas antes de
     que empiece la temporada).
@@ -183,6 +183,82 @@ function calaveritaLiteraria(string $nombreCliente, string $folio): array
     return $versos[abs(crc32($folio)) % count($versos)];
 }
 
+// ── Versiones compactas (menos papel) ───────────────────────────
+/*
+    Cada tema se imprime en versión chica para ahorrar papel:
+    'a' = banderitas: tira delgada de papel picado arriba y una línea abajo.
+    'b' = sello: la calaverita va dentro del encabezado, junto al folio.
+    'c' = hilo: las líneas punteadas se vuelven hilos de calaveritas.
+    'actual' = las tiras grandes de antes (+ calaverita literaria); solo
+    con ?estilo=actual. ?estilo=a|b|c fuerza una para probarlas.
+*/
+function estiloDeco(int $tema): string
+{
+    $e = $_GET["estilo"] ?? "";
+    if (in_array($e, ["actual", "a", "b", "c"], true)) return $e;
+    return [1 => "a", 2 => "b", 3 => "c"][$tema] ?? "actual";
+}
+
+// Banderita de papel picado chiquita (18×15) con un calado sencillo
+function gBanderita(float $x, float $y, int $motivo): string
+{
+    $d = "M{$x},{$y} h18 v12";
+    for ($i = 0; $i < 3; $i++) $d .= " a3,3 0 0 1 -6,0";
+    $s = "<path d='{$d} Z' fill='#000'/>";
+    $cx = $x + 9; $cy = $y + 7;
+    if ($motivo === 0) {          // calavera
+        $s .= "<circle cx='{$cx}' cy='{$cy}' r='4.2' fill='#fff'/>"
+            . "<circle cx='" . ($cx - 1.7) . "' cy='" . ($cy - .3) . "' r='1.3' fill='#000'/>"
+            . "<circle cx='" . ($cx + 1.7) . "' cy='" . ($cy - .3) . "' r='1.3' fill='#000'/>";
+    } elseif ($motivo === 1) {    // flor
+        foreach ([0, 72, 144, 216, 288] as $a) {
+            $s .= "<circle cx='" . round($cx + 3 * cos(deg2rad($a)), 1) . "' cy='" . round($cy + 3 * sin(deg2rad($a)), 1) . "' r='1.8' fill='#fff'/>";
+        }
+    } else {                      // rombo
+        $s .= "<path d='M{$cx}," . ($cy - 4) . " l4,4 l-4,4 l-4,-4 z' fill='#fff'/>";
+    }
+    return $s;
+}
+
+// Propuesta A: tira delgada de banderitas (≈5 mm de alto)
+function svgBanderitas(int $ancho = 272): string
+{
+    $n = 12; $paso = $ancho / $n;
+    $s = "<path d='M0,1.5 H{$ancho}' stroke='#000' stroke-width='1.2'/>";
+    for ($i = 0; $i < $n; $i++) $s .= gBanderita(round($i * $paso + ($paso - 18) / 2, 1), 1.5, $i % 3);
+    return svgFila($ancho, 18, $s);
+}
+
+// Propuesta C: hilo de calaveritas y flores que hace de separador (≈4 mm)
+function svgHiloCalaveritas(int $ancho = 272): string
+{
+    $s = "<path d='M0,8 H{$ancho}' stroke='#000' stroke-width='1.2' stroke-dasharray='4 3'/>";
+    $n = 5; $paso = $ancho / $n;
+    for ($i = 0; $i < $n; $i++) {
+        $x = $i * $paso + $paso / 2;
+        $s .= "<rect x='" . ($x - 11) . "' y='0' width='22' height='16' fill='#fff'/>";
+        $s .= $i % 2 === 0 ? gCalaverita($x - 8.8, -.5, .4) : gCempasuchil($x - 7.5, .5, .5);
+    }
+    return svgFila($ancho, 17, $s);
+}
+
+// Calaverita sola para el encabezado (propuesta B) y para el pie
+function svgCalaveritaSola(string $alto): string
+{
+    return "<svg xmlns='http://www.w3.org/2000/svg' viewBox='4 -1 36 44' style='height:{$alto};width:auto;display:block'>" . gCalaverita(0, 0) . "</svg>";
+}
+
+function svgFlorSola(string $alto): string
+{
+    return "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30' style='height:{$alto};width:auto;display:block'>" . gCempasuchil(0, 0) . "</svg>";
+}
+
+// Pie de una sola línea: flor, "¡Feliz Día de Muertos!", flor
+function pieMuertosCorto(): string
+{
+    return "<div class='deco-pie'>" . svgCalaveritaSola("4mm") . "<span>¡FELIZ DÍA DE MUERTOS!</span>" . svgCalaveritaSola("4mm") . "</div>";
+}
+
 // ── Lo que usa ticket.php ───────────────────────────────────────
 
 function cssDecoracionTicket(): string
@@ -195,11 +271,19 @@ function cssDecoracionTicket(): string
         .calaverita { border: 2px solid #000; border-radius: 8px; padding: 8px 10px; margin: 8px 0; text-align: center; }
         .calaverita__titulo { font-size: 11px; font-weight: 900; letter-spacing: 1.5px; margin-bottom: 4px; }
         .calaverita__verso { font-size: 12px; font-style: italic; line-height: 1.45; }
+        .deco-chica { margin: 0 0 4px; }
+        .sep-hilo { margin: 4px 0; }
+        .deco-pie { display: flex; align-items: center; justify-content: center; gap: 6px; margin: 4px 0 0; font-size: 11px; font-weight: 900; letter-spacing: 1px; }
+        .deco-sello { flex-shrink: 0; }
     ";
 }
 
 function decoracionArriba(int $tema): string
 {
+    if ($tema === 0) return "";
+    $estilo = estiloDeco($tema);
+    if ($estilo === "a") return "<div class='deco-chica'>" . svgBanderitas() . "</div>";
+    if ($estilo !== "actual") return "";
     $svg = [1 => "svgPapelPicado", 2 => "svgAltar", 3 => "svgCalaveritas"][$tema] ?? null;
     return $svg ? "<div class='deco'>" . $svg() . "</div>" : "";
 }
@@ -207,12 +291,22 @@ function decoracionArriba(int $tema): string
 // Separador entre secciones: guirnalda de cempasúchil en el altar, línea normal en los demás
 function separadorTicket(int $tema): string
 {
+    if ($tema !== 0 && estiloDeco($tema) === "c") return "<div class='sep-hilo'>" . svgHiloCalaveritas() . "</div>";
+    if (estiloDeco($tema) !== "actual") return "<div class='line'></div>";
     return $tema === 2 ? "<div class='sep-flores'>" . svgSeparadorFlores() . "</div>" : "<div class='line'></div>";
+}
+
+// Propuesta B: calaverita dentro del encabezado, a la altura del logo (no gasta papel)
+function decoracionEncabezado(int $tema): string
+{
+    if ($tema === 0 || estiloDeco($tema) !== "b") return "";
+    return "<div class='deco-sello'>" . svgCalaveritaSola("15mm") . "</div>";
 }
 
 function decoracionAbajo(int $tema, string $nombre, string $semilla): string
 {
     if ($tema === 0) return "";
+    if (estiloDeco($tema) !== "actual") return pieMuertosCorto();
     $html = "";
     if ($tema === 3) {
         $versos = array_map('htmlspecialchars', calaveritaLiteraria($nombre, $semilla));
