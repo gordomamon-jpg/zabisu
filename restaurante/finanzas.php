@@ -979,6 +979,15 @@ $mostrarExito = isset($_GET['ok']);
     ══════════════════════════════════════════════════════════ -->
     <div class="fin-panel <?php echo $activeTab === 'gastos' ? 'active' : ''; ?>" id="tab-gastos">
 
+        <!-- Captura rápida: toda la semana en una pantalla -->
+        <a href="gastos_semana.php" class="panel-acceso panel-acceso--estadisticas" style="margin-bottom:20px;">
+            <div class="panel-acceso__icono">⚡</div>
+            <div class="panel-acceso__contenido">
+                <strong class="panel-acceso__titulo">Anotar gastos de la semana</strong>
+                <span class="panel-acceso__desc">Lo de siempre ya está en la lista: solo pon los montos</span>
+            </div>
+        </a>
+
         <!-- Formulario -->
         <div class="bloque-formulario">
             <h2>Registrar gasto</h2>

@@ -1,0 +1,69 @@
+/* ══════════════════════════════════════════════════════════════
+   Gastos de la semana (restaurante/gastos_semana.php), en el
+   sistema "Pizarrón de fonda" de DESIGN.md. Se usa con el pulgar:
+   cada fila es un nombre y un monto; nada más que escribir.
+   Usa los tokens de menu-pizarron.css y piezas de resumen-pizarron.css.
+   ══════════════════════════════════════════════════════════════ */
+
+.gs-pagina{padding-bottom:130px}
+
+/* ── Avisos ── */
+.gs-aviso{margin:18px 20px 0;padding:12px 14px;border-radius:12px;font:500 15px/1.4 var(--pz-sys)}
+.gs-aviso--ok{background:rgba(199,242,164,.1);color:#c7f2a4}
+.gs-aviso--error{background:rgba(255,107,107,.12);color:#ff8f8f}
+
+/* ── Boleto: cómo va la semana ── */
+.gs-cuenta .pz-boleto__papel{padding:16px 22px 14px 56px}
+.gs-quedo{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.gs-quedo span{font:500 15px var(--pz-sys);color:var(--pz-tinta2)}
+.gs-quedo b{font:400 30px/1 var(--pz-rotulo);color:var(--pz-tinta);font-variant-numeric:tabular-nums}
+
+.gs-ayuda{margin:0 2px 12px;font:400 14px/1.45 var(--pz-sys);color:var(--pz-gris)}
+
+/* ── Filas: nombre a la izquierda, monto a la derecha ── */
+.gs-fila{align-items:center;min-height:58px;padding-top:9px;padding-bottom:9px}
+.gs-fila .pz-fila__txt{cursor:pointer}
+.gs-fila .pz-fila__nombre{display:block}
+
+.gs-ultima{display:inline-block;margin:2px 0 0;padding:2px 0;background:none;border:0;cursor:pointer;
+  font:400 13px var(--pz-sys);color:var(--pz-estraza-cl);text-decoration:underline dotted;text-underline-offset:3px}
+
+.gs-monto{position:relative;flex-shrink:0;display:flex;align-items:center}
+.gs-monto > span{position:absolute;left:11px;font:600 16px var(--pz-sys);color:var(--pz-gris);pointer-events:none}
+.gs-monto input{width:112px;height:44px;box-sizing:border-box;padding:0 12px 0 24px;
+  background:var(--pz-pizarra);border:1.5px solid var(--pz-linea);border-radius:10px;
+  color:var(--pz-gis);font:600 17px var(--pz-sys);text-align:right;font-variant-numeric:tabular-nums}
+.gs-monto input::placeholder{color:#5b5752}
+.gs-monto input:focus{outline:none;border-color:var(--pz-naranja)}
+.gs-fila--lleno .gs-monto input{border-color:var(--pz-estraza)}
+.gs-fila--lleno .gs-monto > span{color:var(--pz-estraza-cl)}
+.gs-fila--mal .gs-monto input{border-color:#ff6b6b}
+
+.gs-concepto{flex:1;min-width:0;height:44px;box-sizing:border-box;padding:0 2px;background:none;border:0;
+  border-bottom:1.5px dashed var(--pz-linea);color:var(--pz-gis);font:500 17px var(--pz-sys)}
+.gs-concepto::placeholder{color:#76726b}
+.gs-concepto:focus{outline:none;border-bottom-color:var(--pz-naranja)}
+
+.gs-agregar{display:inline-flex;align-items:center;gap:8px;margin-top:12px;min-height:44px;padding:0 14px;
+  background:none;border:1.5px dashed var(--pz-estraza);border-radius:12px;cursor:pointer;
+  font:600 15px var(--pz-sys);color:var(--pz-estraza-cl)}
+
+/* ── Botón fijo ── */
+.gs-guardar{width:100%;border:0;cursor:pointer}
+.gs-guardar:disabled{background:#3a3633;color:#8d8983;cursor:default}
+.gs-guardar:disabled:hover{background:#3a3633}
+#gs-total{font-variant-numeric:tabular-nums}
+
+/* ── Ya anotado ── */
+.gs-anotados{padding-top:34px}
+.gs-anotados .gs-fila{padding-left:16px}
+.gs-anotados .pz-fila+.pz-fila::before{left:16px}
+.gs-anotados .pz-fila__extra{color:var(--pz-gis)}
+.gs-quitar{flex-shrink:0;width:40px;height:40px;margin-right:-6px;display:inline-flex;align-items:center;justify-content:center;
+  background:none;border:0;border-radius:10px;color:var(--pz-gris);cursor:pointer}
+.gs-quitar:hover{color:#ff8f8f;background:rgba(255,107,107,.08)}
+.gs-anotados .pz-pie a{color:var(--pz-estraza-cl)}
+
+@media (max-width:360px){
+  .gs-monto input{width:96px}
+}

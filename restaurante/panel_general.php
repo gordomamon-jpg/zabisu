@@ -175,6 +175,14 @@ $modoPrueba = (int)($stmtModoPrueba->fetchColumn() ?? 0);
             </div>
         </a>
 
+        <a href="gastos_semana.php" class="panel-acceso panel-acceso--estadisticas">
+            <div class="panel-acceso__icono">🛒</div>
+            <div class="panel-acceso__contenido">
+                <strong class="panel-acceso__titulo">Gastos de la semana</strong>
+                <span class="panel-acceso__desc">Anota lo que se compró y los sueldos en un minuto</span>
+            </div>
+        </a>
+
         <a href="finanzas.php" class="panel-acceso panel-acceso--estadisticas">
             <div class="panel-acceso__icono">💰</div>
             <div class="panel-acceso__contenido">
