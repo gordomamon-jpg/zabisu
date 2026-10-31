@@ -1,6 +1,7 @@
 <?php
 require_once "../config/db.php";
 require_once "auth_check.php";
+require_once "../includes/gastos_frecuentes.php";
 
 /*
     Gastos de la semana: captura rápida desde el celular.
@@ -32,20 +33,6 @@ function formatSemana(string $lunes): string {
 
 function pesos(float $n): string {
     return '$' . number_format($n, $n == floor($n) ? 0 : 2, '.', ',');
-}
-
-/* "3 B", "3b" y "3B" son el mismo concepto */
-function claveConcepto(string $c): string {
-    $c = mb_strtolower(trim($c));
-    $c = strtr($c, ['á'=>'a','é'=>'e','í'=>'i','ó'=>'o','ú'=>'u','ü'=>'u','ñ'=>'n',"'"=>'']);
-    return preg_replace('/[^a-z0-9]/', '', $c);
-}
-
-function nombreBonito(string $c): string {
-    $c = trim($c);
-    if (preg_match('/\d/', $c) && mb_strlen($c) <= 4) return mb_strtoupper(str_replace(' ', '', $c));
-    if ($c === mb_strtolower($c) || $c === mb_strtoupper($c)) return mb_strtoupper(mb_substr($c, 0, 1)) . mb_strtolower(mb_substr($c, 1));
-    return $c;
 }
 
 /* "138+906+54", "$1,400" o "350" → total; null si no es válido */
@@ -90,67 +77,8 @@ $esEstaSemana = $lunes === getLunes($hoy);
 // Fecha de compra: hoy, salvo que la semana ya haya pasado (entonces su viernes)
 $fechaCompra = $hoy > $domingo ? date('Y-m-d', strtotime($lunes . ' +4 days')) : $hoy;
 
-// ── Lo de siempre: lo que más se ha capturado ─────────────
-$historial = $conexion->query(
-    "SELECT concepto, categoria, monto, semana_destino
-     FROM gastos
-     WHERE fecha_compra >= DATE_SUB(CURDATE(), INTERVAL 180 DAY)
-     ORDER BY fecha_compra DESC, id_gasto DESC"
-)->fetchAll(PDO::FETCH_ASSOC);
-
-$conceptos = []; // clave => nombre, categoria (la más reciente), semanas, ultima semana y su suma
-foreach ($historial as $h) {
-    $k = claveConcepto($h['concepto']);
-    if ($k === '') continue;
-    if (!isset($conceptos[$k])) {
-        $conceptos[$k] = [
-            'nombre'    => nombreBonito($h['concepto']),
-            'categoria' => $h['categoria'],
-            'semanas'   => [],
-            'ultSemana' => $h['semana_destino'],
-            'ultMonto'  => 0.0,
-        ];
-    }
-    $conceptos[$k]['semanas'][$h['semana_destino']] = true;
-    if ($h['semana_destino'] === $conceptos[$k]['ultSemana']) {
-        $conceptos[$k]['ultMonto'] += (float)$h['monto'];
-    }
-    // Los sueldos se llegaron a capturar como Ingredientes o Servicios; con una vez en Nómina basta
-    if ($h['categoria'] === 'Nómina') $conceptos[$k]['categoria'] = 'Nómina';
-}
-
-// Fuera los totales sueltos ("Gasto total", "Semana"...): no se repiten igual cada semana
-$noFrecuentes = '/^(gastos?|semana|total|varios|extra|extras|insumos?|materia|comidafaltante|retaso)/';
-uasort($conceptos, fn($a, $b) => count($b['semanas']) <=> count($a['semanas']));
-
-// "Torillas" y "Tortilla" se juntan con "Tortillas": el más capturado se queda con el nombre
-$frecuentes = [];
-foreach ($conceptos as $k => $c) {
-    if (preg_match($noFrecuentes, $k)) continue;
-    foreach ($frecuentes as $k2 => $c2) {
-        if ($k . 's' === $k2 || $k2 . 's' === $k || (strlen($k) >= 5 && levenshtein($k, $k2) <= 1)) {
-            $frecuentes[$k2]['semanas'] += $c['semanas'];
-            if ($c['categoria'] === 'Nómina') $frecuentes[$k2]['categoria'] = 'Nómina';
-            $conceptos[$k]['categoria'] = $frecuentes[$k2]['categoria'];
-            continue 2;
-        }
-    }
-    $frecuentes[$k] = $c;
-}
-$frecuentes = array_filter($frecuentes, fn($c) => count($c['semanas']) >= 2);
-uasort($frecuentes, fn($a, $b) => count($b['semanas']) <=> count($a['semanas']));
-
-$compras = [];
-$sueldos = [];
-foreach ($frecuentes as $k => $c) {
-    if ($c['categoria'] === 'Nómina') { if (count($sueldos) < 6) $sueldos[$k] = $c; }
-    elseif (count($compras) < 12) $compras[$k] = $c;
-}
-if (!$compras) {
-    foreach (['3B', 'Merced', 'Pollo', 'Tortillas', 'Bodega', "Sam's"] as $n) {
-        $compras[claveConcepto($n)] = ['nombre' => $n, 'categoria' => 'Ingredientes', 'ultMonto' => 0.0];
-    }
-}
+// ── Lo de siempre ─────────────────────────────────────────
+[$conceptos, $compras, $sueldos] = gastosFrecuentes($conexion);
 
 // ── POST: guardar todo lo anotado ─────────────────────────
 $error   = '';
@@ -264,7 +192,7 @@ function filaFija(int $i, array $c, array $enviado): void {
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
     <link rel="stylesheet" href="../assets/css/resumen-pizarron.css?v=1">
-    <link rel="stylesheet" href="../assets/css/gastos-pizarron.css?v=1">
+    <link rel="stylesheet" href="../assets/css/gastos-pizarron.css?v=2">
 </head>
 <body class="pz rp gs">
 <?php require __DIR__ . "/../includes/pz_filtros.php"; ?>
@@ -291,6 +219,10 @@ function filaFija(int $i, array $c, array $enviado): void {
 
     <p class="rp-eyebrow">Gastos de la semana<?php echo $esEstaSemana ? ' (esta semana)' : ''; ?></p>
     <h1 class="pz-titulo rp-titulo"><span class="pz-pincel"><span><?php echo htmlspecialchars(formatSemana($lunes)); ?></span></span></h1>
+    <a class="gs-hoja" href="hoja_gastos.php?semana=<?php echo $lunes; ?>">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M7 9V3h10v6M7 17H4v-7h16v7h-3M7 14h10v7H7z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+        Imprimir hoja para llenar a mano
+    </a>
 
     <?php if ($guardados): ?>
         <p class="gs-aviso gs-aviso--ok" role="status">Listo, se anotaron <?php echo $guardados; ?> gasto<?php echo $guardados !== 1 ? 's' : ''; ?>.</p>
