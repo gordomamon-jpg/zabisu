@@ -38,10 +38,11 @@ $lunTs  = strtotime($lunes);
 $titulo = date('j', $lunTs) . (date('n', $lunTs) !== date('n', $sabTs) ? ' ' . $meses[(int)date('n', $lunTs) - 1] : '')
         . ' al ' . date('j', $sabTs) . ' de ' . $meses[(int)date('n', $sabTs) - 1] . ' ' . date('Y', $sabTs);
 
-[, $compras, $sueldos] = gastosFrecuentes($conexion);
+// Los sueldos no van en la hoja: se pagan una vez por semana y se anotan directo en gastos_semana.php
+[, $compras] = gastosFrecuentes($conexion);
 
-// Renglones en blanco para lo que no está en la lista; la hoja cabe en una carta
-$enBlanco = max(4, 17 - count($compras));
+// La lista de siempre más renglones en blanco para lo demás
+$filasBase = array_merge(array_column(array_values($compras), 'nombre'), array_fill(0, 5, ''));
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -81,17 +82,30 @@ thead th:last-child{width:22mm}
 tbody td{height:9.6mm}
 tbody td:first-child{padding:0 2mm;font-weight:600}
 td.hg-total{background:#f6f6f6}
-tr.hg-grupo td{height:6mm;background:#111;color:#fff;font-size:9pt;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding-left:2mm}
-tr.hg-grupo td small{text-transform:none;letter-spacing:0;font-weight:400;margin-left:2mm}
-td.hg-semana{background:#fff}
 tfoot td{height:10mm;font-weight:700;background:#eee}
 tfoot td:first-child{padding-left:2mm}
+
+/* ── Editar renglones antes de imprimir (solo en pantalla) ── */
+td.hg-nombre{position:relative}
+.hg-texto{display:block;min-height:1.3em;outline:none;overflow:hidden;white-space:nowrap;border-radius:3px}
+.hg-texto:focus{background:#fff4e8;box-shadow:0 0 0 2px #FF7A00}
+.hg-texto:empty::before{content:"Escribe o deja en blanco";color:#aaa;font-weight:400;font-size:9pt}
+.hg-quitar{position:absolute;left:-11mm;top:50%;width:8mm;height:8mm;margin-top:-4mm;border:0;border-radius:50%;
+  background:#ffe1e1;color:#b42318;font:700 14px/1 system-ui;cursor:pointer}
+.hg-quitar:hover{background:#ffc9c9}
+.hg-acciones{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:3mm}
+.hg-acciones button{min-height:40px;padding:0 14px;border-radius:10px;font:600 14px system-ui;cursor:pointer}
+.hg-agregar{border:1.5px dashed #FF7A00;background:#fff;color:#B84A00}
+.hg-restablecer{border:0;background:none;color:#555;text-decoration:underline}
+.hg-aviso{font-size:9.5pt;color:#B84A00}
 
 .hg-pie{margin-top:4mm;font-size:9pt;color:#333}
 
 @media print{
   body{background:#fff}
-  .hg-barra{display:none}
+  .hg-barra,.hg-quitar,.hg-acciones{display:none}
+  .hg-texto:empty::before{content:none}
+  .hg-texto:focus{background:none;box-shadow:none;caret-color:transparent}
   .hg-hoja{width:auto;min-height:0;margin:0;padding:0}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
@@ -128,33 +142,14 @@ tfoot td:first-child{padding-left:2mm}
                 <th>Total</th>
             </tr>
         </thead>
-        <tbody>
-            <tr class="hg-grupo"><td colspan="8">Compras <small>por día</small></td></tr>
-            <?php foreach ($compras as $c): ?>
+        <tbody id="hg-filas">
+            <?php foreach ($filasBase as $nombre): ?>
             <tr>
-                <td><?php echo htmlspecialchars($c['nombre']); ?></td>
+                <td class="hg-nombre"><?php echo htmlspecialchars($nombre); ?></td>
                 <?php foreach ($dias as $d): ?><td></td><?php endforeach; ?>
                 <td class="hg-total"></td>
             </tr>
             <?php endforeach; ?>
-            <?php for ($i = 0; $i < $enBlanco; $i++): ?>
-            <tr>
-                <td></td>
-                <?php foreach ($dias as $d): ?><td></td><?php endforeach; ?>
-                <td class="hg-total"></td>
-            </tr>
-            <?php endfor; ?>
-
-            <?php if ($sueldos): ?>
-            <tr class="hg-grupo"><td colspan="8">Sueldos <small>uno por semana</small></td></tr>
-            <?php foreach ($sueldos as $c): ?>
-            <tr>
-                <td><?php echo htmlspecialchars($c['nombre']); ?></td>
-                <td colspan="6" class="hg-semana"></td>
-                <td class="hg-total"></td>
-            </tr>
-            <?php endforeach; ?>
-            <?php endif; ?>
         </tbody>
         <tfoot>
             <tr>
@@ -165,8 +160,102 @@ tfoot td:first-child{padding-left:2mm}
         </tfoot>
     </table>
 
-    <p class="hg-pie">Al terminar la semana, pásalo en el panel: Gastos de la semana. Ahí viene la misma lista en el mismo orden.</p>
+    <div class="hg-acciones">
+        <button type="button" class="hg-agregar" id="hg-agregar">+ Agregar renglón</button>
+        <button type="button" class="hg-restablecer" id="hg-restablecer" hidden>Volver a la lista original</button>
+        <span class="hg-aviso" id="hg-aviso" hidden>Con tantos renglones se imprime en dos hojas.</span>
+    </div>
+
+    <p class="hg-pie">Al terminar la semana, pásalo en el panel: Gastos de la semana.</p>
 </main>
+
+<script>
+/*
+    Antes de imprimir se pueden quitar renglones (la ✕), agregar más y
+    cambiarles el nombre (tocando el nombre). Los cambios se recuerdan en
+    esta computadora para las siguientes semanas.
+*/
+(function () {
+    const CLAVE  = 'zb_hoja_gastos_filas';
+    const BASE   = <?php echo json_encode($filasBase, JSON_UNESCAPED_UNICODE); ?>;
+    const DIAS   = <?php echo count($dias); ?>;
+    const CABEN  = 21; // renglones que caben en una carta
+    const tbody  = document.getElementById('hg-filas');
+
+    let filas = BASE;
+    try {
+        const guardadas = JSON.parse(localStorage.getItem(CLAVE));
+        if (Array.isArray(guardadas)) filas = guardadas.map(String);
+    } catch (e) {}
+
+    function guardar() {
+        filas = [...tbody.querySelectorAll('.hg-texto')].map(s => s.textContent.trim());
+        const igual = JSON.stringify(filas) === JSON.stringify(BASE);
+        try { igual ? localStorage.removeItem(CLAVE) : localStorage.setItem(CLAVE, JSON.stringify(filas)); } catch (e) {}
+        document.getElementById('hg-restablecer').hidden = igual;
+        document.getElementById('hg-aviso').hidden = filas.length <= CABEN;
+    }
+
+    function renglon(nombre) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.className = 'hg-nombre';
+
+        // La ✕ queda en el margen izquierdo de la hoja, fuera del texto editable
+        const quitar = document.createElement('button');
+        quitar.type = 'button';
+        quitar.className = 'hg-quitar';
+        quitar.textContent = '✕';
+        quitar.setAttribute('aria-label', 'Quitar renglón ' + (nombre || 'en blanco'));
+
+        const texto = document.createElement('span');
+        texto.className = 'hg-texto';
+        texto.contentEditable = 'plaintext-only';
+        if (texto.contentEditable !== 'plaintext-only') texto.contentEditable = 'true';
+        texto.setAttribute('role', 'textbox');
+        texto.setAttribute('aria-label', 'Nombre del gasto');
+        texto.textContent = nombre;
+
+        td.append(quitar, texto);
+        tr.append(td);
+        for (let i = 0; i < DIAS; i++) tr.append(document.createElement('td'));
+        const total = document.createElement('td');
+        total.className = 'hg-total';
+        tr.append(total);
+        return tr;
+    }
+
+    function pintar() {
+        tbody.replaceChildren(...filas.map(renglon));
+        guardar();
+    }
+
+    tbody.addEventListener('click', e => {
+        const b = e.target.closest('.hg-quitar');
+        if (!b) return;
+        b.closest('tr').remove();
+        guardar();
+    });
+    tbody.addEventListener('input', guardar);
+    tbody.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); }
+    });
+
+    document.getElementById('hg-agregar').addEventListener('click', () => {
+        const tr = renglon('');
+        tbody.append(tr);
+        guardar();
+        tr.querySelector('.hg-texto').focus();
+    });
+
+    document.getElementById('hg-restablecer').addEventListener('click', () => {
+        filas = BASE.slice();
+        pintar();
+    });
+
+    pintar();
+})();
+</script>
 
 </body>
 </html>
