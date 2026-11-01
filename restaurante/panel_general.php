@@ -215,22 +215,6 @@ $modoPrueba = (int)($stmtModoPrueba->fetchColumn() ?? 0);
             </div>
         </a>
 
-        <a href="nuevo_pedido.php" class="panel-acceso panel-acceso--pedidos">
-            <div class="panel-acceso__icono">➕</div>
-            <div class="panel-acceso__contenido">
-                <strong class="panel-acceso__titulo">Nuevo pedido manual</strong>
-                <span class="panel-acceso__desc">Registra pedidos recibidos por WhatsApp, teléfono u otro medio</span>
-            </div>
-        </a>
-
-        <a href="difusion.php" class="panel-acceso panel-acceso--menus">
-            <div class="panel-acceso__icono">📣</div>
-            <div class="panel-acceso__contenido">
-                <strong class="panel-acceso__titulo">Difusión WhatsApp</strong>
-                <span class="panel-acceso__desc">Envía el menú del día a todos tus clientes</span>
-            </div>
-        </a>
-
         <a href="pedido_tableta.php" class="panel-acceso">
             <div class="panel-acceso__icono">📱</div>
             <div class="panel-acceso__contenido">
@@ -252,14 +236,6 @@ $modoPrueba = (int)($stmtModoPrueba->fetchColumn() ?? 0);
             <div class="panel-acceso__contenido">
                 <strong class="panel-acceso__titulo">Encuestas</strong>
                 <span class="panel-acceso__desc">Sugerencias y feedback de clientes</span>
-            </div>
-        </a>
-
-        <a href="notitas.php" class="panel-acceso">
-            <div class="panel-acceso__icono">🎈</div>
-            <div class="panel-acceso__contenido">
-                <strong class="panel-acceso__titulo">Notitas</strong>
-                <span class="panel-acceso__desc">Imprime tickets personalizados en cantidad</span>
             </div>
         </a>
 

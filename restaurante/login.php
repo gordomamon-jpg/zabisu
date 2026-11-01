@@ -26,7 +26,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $minutos = max(1, (int)ceil($segundosRestantes / 60));
             $error = "Demasiados intentos fallidos. Intenta de nuevo en {$minutos} minuto" . ($minutos === 1 ? "" : "s") . ".";
         } else {
-            $sql  = "SELECT id_usuario, nombre, password_hash
+            $sql  = "SELECT id_usuario, usuario, nombre, password_hash
                      FROM usuarios_restaurante
                      WHERE usuario = :usuario AND activo = 1
                      LIMIT 1";
@@ -54,55 +54,83 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Acceso | Restaurante Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
-    <link rel="stylesheet" href="../assets/css/styles.css?v=8">
+    <meta name="theme-color" content="#151413">
+    <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
+    <link rel="stylesheet" href="../assets/css/restaurante-pizarron.css?v=1">
 </head>
-<body>
+<body class="pz rz">
+<?php require __DIR__ . "/../includes/pz_filtros.php"; ?>
 
-<div class="contenedor" style="max-width:440px;">
+<main class="pz-pagina rz-login">
 
-    <div class="hero-zabisu">
-        <div class="hero-zabisu__glow"></div>
-        <div class="hero-zabisu__contenido">
-            <p class="hero-zabisu__eyebrow">RESTAURANTE</p>
-            <div class="hero-zabisu__marca-grupo">
-                <img class="hero-zabisu__logo" src="../assets/img/LOGO_BLANCO.png" alt="Zabisu">
-                <h1 class="hero-zabisu__titulo">Zabisu</h1>
+    <header class="pz-cab">
+        <div class="pz-marca">
+            <img src="../assets/img/LOGO_N_128.png" alt="">
+            <div>
+                <span class="pz-marca__nombre">Zabisu</span>
+                <span class="pz-marca__lema">Sabor y Servicio</span>
             </div>
-            <p class="hero-zabisu__texto">Panel de administración</p>
         </div>
-    </div>
+    </header>
+
+    <p class="rz-eyebrow">Panel del restaurante</p>
+    <h1 class="pz-titulo"><span class="pz-pincel"><span>Iniciar sesión</span></span></h1>
 
     <?php if ($error !== ""): ?>
-        <div class="mensaje-error">
-            <?php echo htmlspecialchars($error); ?>
-        </div>
+        <p class="rz-aviso rz-aviso--error" role="alert"><?php echo htmlspecialchars($error); ?></p>
     <?php endif; ?>
 
-    <div class="bloque-formulario">
-        <h2>Iniciar sesión</h2>
+    <form method="POST" action="" class="pz-sec rz-form">
+        <h2 class="pz-cinta pz-fibra">Solo personal</h2>
 
-        <form method="POST" action="">
-            <label for="usuario">Usuario</label>
+        <label class="rz-campo" for="usuario">
+            <span>Usuario</span>
             <input type="text" id="usuario" name="usuario"
-                   placeholder="Tu usuario"
                    value="<?php echo htmlspecialchars($_POST["usuario"] ?? ""); ?>"
-                   autocomplete="username" autofocus>
+                   autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false"
+                   required <?php echo ($_POST["usuario"] ?? "") === "" ? "autofocus" : ""; ?>>
+        </label>
 
-            <label for="password">Contraseña</label>
-            <input type="password" id="password" name="password"
-                   placeholder="Tu contraseña"
-                   autocomplete="current-password">
+        <label class="rz-campo" for="password">
+            <span>Contraseña</span>
+            <span class="rz-clave">
+                <input type="password" id="password" name="password"
+                       autocomplete="current-password" required
+                       <?php echo ($_POST["usuario"] ?? "") !== "" ? "autofocus" : ""; ?>>
+                <button type="button" class="rz-ver" id="rz-ver" aria-label="Mostrar contraseña" aria-pressed="false">
+                    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
+                </button>
+            </span>
+        </label>
 
-            <button type="submit" class="btn-principal" style="margin-top:8px;">
-                Entrar
-            </button>
-        </form>
-    </div>
+        <button type="submit" class="pz-btn rz-entrar" id="rz-entrar">Entrar</button>
+    </form>
 
-</div>
+    <p class="pz-pie">© 2026 Zabisu - Sabor y Servicio. Todos los derechos reservados.</p>
+</main>
 
+<script>
+(function () {
+    const clave = document.getElementById('password');
+    const ver   = document.getElementById('rz-ver');
+    ver.addEventListener('click', () => {
+        const mostrar = clave.type === 'password';
+        clave.type = mostrar ? 'text' : 'password';
+        ver.setAttribute('aria-pressed', mostrar);
+        ver.setAttribute('aria-label', mostrar ? 'Ocultar contraseña' : 'Mostrar contraseña');
+        clave.focus();
+    });
+    document.querySelector('.rz-form').addEventListener('submit', () => {
+        const b = document.getElementById('rz-entrar');
+        b.disabled = true;
+        b.textContent = 'Entrando…';
+    });
+})();
+</script>
 </body>
 </html>
