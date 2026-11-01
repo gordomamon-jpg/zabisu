@@ -300,369 +300,412 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["ordenar"])) {
         }
     }
 }
+
+/* ── Sin horario o sin menú: letrero de aviso del diseño Pizarrón ── */
+if (!$horarioBigoton || !$menuActivo || empty($platosPorTipo)) {
+    require_once "../includes/pz_aviso.php";
+    pzPantallaAviso(!$horarioBigoton ? [
+        'titulo'   => 'Falta el horario',
+        'letrero'  => 'Pausa',
+        'letrero2' => 'Avisa a Zabisu',
+        'texto'    => 'No hay horario configurado para El Bigotón. Avisa al administrador.',
+    ] : [
+        'titulo'   => 'Todavía no hay menú',
+        'letrero'  => 'Sin menú',
+        'letrero2' => 'Vuelve en un rato',
+        'texto'    => 'En cuanto se publique el menú del día podrás hacer el pedido aquí.',
+    ]);
+    exit;
+}
+
+$horaEntrega = date("g:i a", strtotime($horarioBigoton["hora_entrega"]));
+[$diaMenu, $restoFecha] = array_pad(explode(" de ", $fechaMenuFormateada, 2), 2, "");
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pedido El Bigoton · Zabisu</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Pedido El Bigotón | Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
-    <meta name="theme-color" content="#FF7A00">
-    <link rel="stylesheet" href="../assets/css/styles.css?v=8">
+    <meta name="theme-color" content="#151413">
+    <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
+    <link rel="stylesheet" href="../assets/css/bigoton-pizarron.css?v=2">
 </head>
-<body>
-<div class="contenedor">
+<body class="pz bg">
+<?php require __DIR__ . "/../includes/pz_filtros.php"; ?>
 
-    <div class="md-hero">
-        <div class="md-hero__glow-top"></div>
-        <div class="md-hero__glow-bottom"></div>
-        <p class="md-hero__eyebrow">ZABISU</p>
-        <div class="md-hero__marca-grupo">
-            <img class="md-hero__logo" src="../assets/img/LOGO_BLANCO.png" alt="Zabisu">
-            <h1 class="md-hero__marca">El Bigoton</h1>
-        </div>
-        <?php if ($fechaMenuFormateada): ?>
-            <p class="md-hero__fecha">Menú del <?php echo $fechaMenuFormateada; ?></p>
-        <?php endif; ?>
-        <?php if ($horarioBigoton): ?>
-            <p class="md-hero__fecha" style="margin-top:4px;opacity:.8;">
-                Entrega: <?php echo date("g:i A", strtotime($horarioBigoton["hora_entrega"])); ?>
-            </p>
+<main class="pz-pagina bg-pagina<?php echo $exito ? " bg-pagina--listo" : ""; ?>">
+
+    <div class="bg-top">
+        <header class="pz-cab">
+            <div class="pz-marca">
+                <img src="../assets/img/LOGO_N_128.png" alt="">
+                <div>
+                    <span class="pz-marca__nombre">Zabisu</span>
+                    <span class="pz-marca__lema">Sabor y Servicio</span>
+                </div>
+            </div>
+        </header>
+
+        <?php if ($exito): ?>
+            <p class="bg-eyebrow">Pedido de El Bigotón</p>
+            <h1 class="pz-titulo"><span class="pz-pincel"><span>¡Pedido recibido!</span></span></h1>
+            <p class="bg-sub">Lo entregamos a las <?php echo $horaEntrega; ?>. Pago en efectivo al recibir.</p>
+        <?php else: ?>
+            <p class="bg-eyebrow">Pedido de El Bigotón</p>
+            <h1 class="pz-titulo"><span class="pz-pincel"><span>Menú del <?php echo htmlspecialchars($diaMenu); ?></span></span></h1>
+            <p class="bg-sub">de <?php echo htmlspecialchars($restoFecha); ?>. Entrega a las <?php echo $horaEntrega; ?>, pago en efectivo.</p>
         <?php endif; ?>
     </div>
 
-    <?php if (!$horarioBigoton): ?>
-        <div class="bloque-formulario">
-            <p class="nota-formulario" style="color:#ff6b6b;">
-                No hay horario configurado para El Bigoton. Avisa al administrador.
-            </p>
-        </div>
-
-    <?php elseif (!$menuActivo || empty($platosPorTipo)): ?>
-        <div class="bloque-formulario">
-            <p class="nota-formulario">No hay menú disponible por el momento.</p>
-        </div>
-
-    <?php elseif ($exito): ?>
-        <!-- ── CONFIRMACIÓN ─────────────────────────── -->
-        <div class="bloque-formulario resumen-total">
-            <h2>¡Pedido recibido!</h2>
-            <p class="nota-formulario">Tu pedido fue enviado correctamente.</p>
-
-            <div class="ticket-resumen">
-                <div class="ticket-menu">
-                    <div class="ticket-linea">
-                        <span>Folio</span>
-                        <strong><?php echo htmlspecialchars($folioGenerado); ?></strong>
-                    </div>
-                    <div class="ticket-linea">
-                        <span>Punto de entrega</span>
-                        <span>El Bigoton</span>
-                    </div>
-                    <div class="ticket-linea">
-                        <span>Horario</span>
-                        <span><?php echo date("g:i A", strtotime($horarioBigoton["hora_entrega"])); ?></span>
-                    </div>
-                </div>
-            </div>
-
-            <h3 style="margin-top:20px;margin-bottom:10px;">Resumen de pedidos</h3>
-            <div class="ticket-resumen">
-                <div class="ticket-menu">
-                    <?php foreach ($nombresConfirmacion as $i => $linea): ?>
-                    <div class="ticket-linea">
-                        <span>Menú <?php echo $i + 1; ?></span>
-                        <span><?php echo htmlspecialchars($linea); ?></span>
-                    </div>
+    <?php if ($exito): ?>
+    <!-- ── CONFIRMACIÓN ─────────────────────────── -->
+    <section class="bg-listo">
+        <div class="pz-boleto bg-boleto">
+            <div class="pz-boleto__papel">
+                <span class="pz-boleto__ojo" aria-hidden="true"></span>
+                <p class="bg-boleto__folio"><span>Folio</span><b><?php echo htmlspecialchars($folioGenerado); ?></b></p>
+                <hr class="pz-boleto__corte">
+                <ol class="bg-resumen">
+                    <?php foreach ($nombresConfirmacion as $linea): ?>
+                        <li><?php echo htmlspecialchars($linea); ?></li>
                     <?php endforeach; ?>
-                </div>
+                </ol>
+                <hr class="pz-boleto__corte">
+                <p class="bg-boleto__entrega">El Bigotón, <?php echo $horaEntrega; ?></p>
             </div>
-
-            <a href="bigoton.php" class="btn-principal" style="display:block;text-align:center;margin-top:24px;text-decoration:none;">
-                Hacer otro pedido
-            </a>
         </div>
+        <a href="bigoton.php" class="pz-btn bg-otro">Hacer otro pedido</a>
+    </section>
 
     <?php else: ?>
-        <!-- ── FORMULARIO ───────────────────────────── -->
+    <!-- ── FORMULARIO ───────────────────────────── -->
+    <form method="POST" action="" id="form-bigoton" class="bg-form" novalidate>
+        <input type="hidden" name="ordenar" value="1">
 
-        <?php if (!empty($errores)): ?>
-        <div class="bloque-formulario" style="border-left:4px solid #ff6b6b;">
-            <ul style="margin:0;padding-left:18px;color:#ff6b6b;">
-                <?php foreach ($errores as $e): ?>
-                    <li><?php echo htmlspecialchars($e); ?></li>
-                <?php endforeach; ?>
-            </ul>
-        </div>
-        <?php endif; ?>
+        <div class="bg-col">
+            <?php if (!empty($errores)): ?>
+                <div class="bg-errores" role="alert">
+                    <p>Revisa esto antes de enviar:</p>
+                    <ul>
+                        <?php foreach ($errores as $e): ?><li><?php echo htmlspecialchars($e); ?></li><?php endforeach; ?>
+                    </ul>
+                </div>
+            <?php endif; ?>
 
-        <form method="POST" action="" id="form-bigoton">
-            <input type="hidden" name="ordenar" value="1">
+            <!-- Cuántos menús -->
+            <section class="bg-cuantos" aria-label="Cuántos menús">
+                <span class="bg-cuantos__txt">¿Cuántos menús?</span>
+                <div class="bg-stepper">
+                    <button type="button" class="bg-stepper__btn" id="bg-menos" aria-label="Un menú menos">
+                        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M5 12h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+                    </button>
+                    <output class="bg-stepper__num" id="bg-num" aria-live="polite"><?php echo $cantidadPersonas; ?></output>
+                    <button type="button" class="bg-stepper__btn" id="bg-mas" aria-label="Un menú más">
+                        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+                    </button>
+                </div>
+                <input type="hidden" name="cantidad_personas" id="cantidad_personas" value="<?php echo $cantidadPersonas; ?>">
+            </section>
 
-            <!-- Correo opcional -->
-            <div class="bloque-formulario">
-                <h2>Contacto <span class="nota-formulario" style="display:inline;font-size:13px;">(opcional)</span></h2>
-                <label for="correo_cliente">Correo electrónico</label>
-                <input type="email" name="correo_cliente" id="correo_cliente"
-                       maxlength="150" autocomplete="off"
-                       placeholder="Para recibir confirmación"
-                       value="<?php echo htmlspecialchars($_POST["correo_cliente"] ?? ""); ?>">
-            </div>
-
-            <!-- Cantidad de personas -->
-            <div class="bloque-formulario">
-                <h2>¿Cuántas personas?</h2>
-                <label for="cantidad_personas">Número de menús</label>
-                <select name="cantidad_personas" id="cantidad_personas">
-                    <?php for ($n = 1; $n <= 15; $n++): ?>
-                        <option value="<?php echo $n; ?>" <?php echo $cantidadPersonas === $n ? "selected" : ""; ?>>
-                            <?php echo $n; ?> persona<?php echo $n > 1 ? "s" : ""; ?>
-                        </option>
-                    <?php endfor; ?>
-                </select>
-            </div>
-
-            <!-- Bloques por persona -->
-            <?php for ($i = 0; $i < 15; $i++): ?>
-            <?php
-                $tipoSel  = $_POST["personas"][$i]["tipo_menu"]    ?? "Zabisu";
+            <!-- Una tarjeta por persona -->
+            <div class="bg-personas">
+            <?php for ($i = 0; $i < 15; $i++):
+                $oculta   = $i >= $cantidadPersonas;
+                $tipoSel  = $_POST["personas"][$i]["tipo_menu"] ?? "Zabisu";
                 $platoSel = (int)($_POST["personas"][$i]["plato_fuerte"] ?? 0);
+                $compSel  = array_map('intval', array_filter($_POST["personas"][$i]["complementos"] ?? [], fn($v) => (int)$v > 0));
+                $dis      = $oculta ? " disabled" : "";
             ?>
-            <div class="bloque-formulario bloque-persona" id="persona-<?php echo $i; ?>"
-                 style="<?php echo $i >= $cantidadPersonas ? 'display:none;' : ''; ?>">
+                <section class="bg-persona" id="persona-<?php echo $i; ?>" data-persona="<?php echo $i; ?>"<?php echo $oculta ? " hidden" : ""; ?>>
+                    <div class="bg-persona__cab">
+                        <h2 class="pz-cinta pz-fibra">Persona <?php echo $i + 1; ?></h2>
+                        <span class="bg-falta" hidden></span>
+                    </div>
 
-                <h2>Persona <?php echo $i + 1; ?></h2>
-
-                <label>Nombre</label>
-                <input type="text" name="personas[<?php echo $i; ?>][nombre]"
-                       maxlength="80" autocomplete="off"
-                       value="<?php echo htmlspecialchars($_POST["personas"][$i]["nombre"] ?? ""); ?>"
-                       <?php echo $i >= $cantidadPersonas ? 'disabled' : ''; ?>>
-
-                <!-- Tipo de menú -->
-                <label style="margin-top:14px;display:block;">Tipo de menú</label>
-                <div class="grupo-tipo-ubicacion" style="margin-top:6px;">
-                    <?php foreach (["Zabisu", "Ejecutivo"] as $tipo): ?>
-                    <?php $precio = $preciosMenus[$tipo] ?? 0; ?>
-                    <label class="opcion-ubicacion entrega tipo-menu-opcion <?php echo $tipoSel === $tipo ? 'ubicacion-activa' : ''; ?>"
-                           data-persona="<?php echo $i; ?>" data-tipo="<?php echo $tipo; ?>">
-                        <input type="radio" name="personas[<?php echo $i; ?>][tipo_menu]"
-                               value="<?php echo $tipo; ?>"
-                               class="radio-tipo-menu" data-persona="<?php echo $i; ?>"
-                               <?php echo $tipoSel === $tipo ? 'checked' : ''; ?>
-                               <?php echo $i >= $cantidadPersonas ? 'disabled' : ''; ?>>
-                        <strong>Menú <?php echo $tipo; ?></strong>
-                        <span style="font-size:13px;opacity:.75;"> · $<?php echo number_format($precio, 0); ?></span>
+                    <label class="bg-campo">
+                        <span>Nombre</span>
+                        <input type="text" name="personas[<?php echo $i; ?>][nombre]" maxlength="80" autocomplete="off"
+                               class="bg-nombre" data-persona="<?php echo $i; ?>"
+                               value="<?php echo htmlspecialchars($_POST["personas"][$i]["nombre"] ?? ""); ?>"<?php echo $dis; ?>>
                     </label>
-                    <?php endforeach; ?>
-                </div>
 
-                <!-- Platos fuertes y complementos (filtrados por tipo) -->
-                <?php
-                $compSel = array_map('intval', array_filter($_POST["personas"][$i]["complementos"] ?? [], fn($v) => (int)$v > 0));
-                ?>
-                <?php foreach (["Zabisu", "Ejecutivo"] as $tipo): ?>
-                <div class="grupo-categoria platos-grupo"
-                     id="platos-<?php echo $i; ?>-<?php echo $tipo; ?>"
-                     style="<?php echo $tipoSel !== $tipo ? 'display:none;' : ''; ?>margin-top:14px;">
-
-                    <h3>🍽 Guisado</h3>
-                    <?php if (!empty($platosPorTipo[$tipo])): ?>
-                        <?php foreach ($platosPorTipo[$tipo] as $prod): ?>
-                        <label class="opcion-producto <?php echo $prod["agotado"] ? "opcion-agotada" : ""; ?> <?php echo $platoSel === (int)$prod["id_producto"] ? "opcion-seleccionada" : ""; ?>">
-                            <input type="radio"
-                                   name="personas[<?php echo $i; ?>][plato_fuerte]"
-                                   value="<?php echo (int)$prod["id_producto"]; ?>"
-                                   class="radio-plato"
-                                   data-persona="<?php echo $i; ?>"
-                                   <?php echo $platoSel === (int)$prod["id_producto"] ? 'checked' : ''; ?>
-                                   <?php echo $prod["agotado"] ? 'disabled' : ''; ?>
-                                   <?php echo $i >= $cantidadPersonas ? 'disabled' : ''; ?>>
-                            <span><?php echo htmlspecialchars($prod["nombre"]); ?></span>
-                            <?php if ($prod["agotado"]): ?>
-                                <small class="badge-agotado">Agotado</small>
-                            <?php endif; ?>
-                        </label>
-                        <?php echo htmlOpcionesPlato($prod, "personas[{$i}]", $_POST["personas"][$i]["opcion"] ?? null); ?>
+                    <div class="bg-tipos" role="radiogroup" aria-label="Tipo de menú de la persona <?php echo $i + 1; ?>">
+                        <?php foreach (["Zabisu", "Ejecutivo"] as $tipo): ?>
+                            <label class="bg-tipo">
+                                <input type="radio" name="personas[<?php echo $i; ?>][tipo_menu]" value="<?php echo $tipo; ?>"
+                                       class="radio-tipo-menu" data-persona="<?php echo $i; ?>"
+                                       <?php echo $tipoSel === $tipo ? "checked" : ""; ?><?php echo $dis; ?>>
+                                <span class="bg-tipo__nombre">Menú <?php echo $tipo; ?></span>
+                                <span class="bg-tipo__precio">$<?php echo number_format($preciosMenus[$tipo] ?? 0, 0); ?></span>
+                            </label>
                         <?php endforeach; ?>
-                    <?php else: ?>
-                        <p class="nota-formulario">Sin opciones para este tipo de menú.</p>
-                    <?php endif; ?>
+                    </div>
 
-                    <?php if (!empty($complementosPorTipo[$tipo])): ?>
-                    <h3 style="margin-top:16px;">🥗 Complementos <span class="cat-hint">· opcional, hasta 2</span></h3>
-                    <?php foreach ($complementosPorTipo[$tipo] as $comp): ?>
-                    <label class="opcion-producto <?php echo in_array((int)$comp["id_producto"], $compSel) ? "opcion-seleccionada" : ""; ?>">
-                        <input type="checkbox"
-                               name="personas[<?php echo $i; ?>][complementos][]"
-                               value="<?php echo (int)$comp["id_producto"]; ?>"
-                               class="check-complemento"
-                               data-persona="<?php echo $i; ?>"
-                               data-tipo="<?php echo htmlspecialchars($tipo); ?>"
-                               <?php echo in_array((int)$comp["id_producto"], $compSel) ? 'checked' : ''; ?>
-                               <?php echo $i >= $cantidadPersonas ? 'disabled' : ''; ?>>
-                        <span><?php echo htmlspecialchars($comp["nombre"]); ?></span>
-                    </label>
+                    <?php foreach (["Zabisu", "Ejecutivo"] as $tipo): $visible = $tipoSel === $tipo; ?>
+                    <div class="bg-platos" id="platos-<?php echo $i; ?>-<?php echo $tipo; ?>"<?php echo $visible ? "" : " hidden"; ?>>
+                        <p class="bg-titulo-sec">Guisado</p>
+                        <?php if (!empty($platosPorTipo[$tipo])): ?>
+                        <div class="bg-lista">
+                            <?php foreach ($platosPorTipo[$tipo] as $prod): $idP = (int)$prod["id_producto"]; ?>
+                                <label class="bg-opcion<?php echo $prod["agotado"] ? " bg-opcion--agotado" : ""; ?>">
+                                    <input type="radio" name="personas[<?php echo $i; ?>][plato_fuerte]" value="<?php echo $idP; ?>"
+                                           class="radio-plato" data-persona="<?php echo $i; ?>"
+                                           data-max="<?php echo !empty($prod["complementos_max"]) ? (int)$prod["complementos_max"] : 2; ?>"
+                                           data-nombre="<?php echo htmlspecialchars($prod["nombre"]); ?>"
+                                           <?php echo $prod["agotado"] ? 'data-agotado="1" disabled' : ($oculta || !$visible ? "disabled" : ""); ?>
+                                           <?php echo $platoSel === $idP ? "checked" : ""; ?>>
+                                    <span class="bg-opcion__marca" aria-hidden="true"></span>
+                                    <span class="bg-opcion__nombre"><?php echo htmlspecialchars($prod["nombre"]); ?></span>
+                                    <?php if ($prod["agotado"]): ?><span class="bg-agotado">Agotado</span><?php endif; ?>
+                                </label>
+                                <?php echo htmlOpcionesPlato($prod, "personas[{$i}]", $_POST["personas"][$i]["opcion"] ?? null); ?>
+                            <?php endforeach; ?>
+                        </div>
+                        <?php else: ?>
+                            <p class="bg-nota">Sin guisados para este menú.</p>
+                        <?php endif; ?>
+
+                        <?php if (!empty($complementosPorTipo[$tipo])): ?>
+                        <p class="bg-titulo-sec">Complementos <small>opcional, hasta <span class="bg-max">2</span></small></p>
+                        <div class="bg-chips">
+                            <?php foreach ($complementosPorTipo[$tipo] as $comp): $idC = (int)$comp["id_producto"]; ?>
+                                <label class="bg-chip">
+                                    <input type="checkbox" name="personas[<?php echo $i; ?>][complementos][]" value="<?php echo $idC; ?>"
+                                           class="check-complemento" data-persona="<?php echo $i; ?>" data-tipo="<?php echo $tipo; ?>"
+                                           data-nombre="<?php echo htmlspecialchars($comp["nombre"]); ?>"
+                                           <?php echo in_array($idC, $compSel, true) ? "checked" : ""; ?><?php echo $oculta || !$visible ? " disabled" : ""; ?>>
+                                    <span><?php echo htmlspecialchars($comp["nombre"]); ?></span>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+                        <?php endif; ?>
+                    </div>
                     <?php endforeach; ?>
-                    <?php endif; ?>
 
-                </div>
-                <?php endforeach; ?>
-
-            </div>
+                    <button type="button" class="bg-quitar" data-persona="<?php echo $i; ?>"<?php echo $i === 0 ? " hidden" : ""; ?>>Quitar esta persona</button>
+                </section>
             <?php endfor; ?>
+            </div>
 
-            <!-- Total y envío -->
-            <div class="bloque-formulario resumen-total">
-                <div class="ticket-subtotal" style="font-size:18px;">
-                    <span>Total estimado</span>
-                    <strong id="total-bigoton">$0.00</strong>
+            <button type="button" class="bg-agregar" id="bg-agregar">
+                <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+                Agregar otra persona
+            </button>
+        </div>
+
+        <!-- La cuenta: resumen en vivo, correo y enviar -->
+        <aside class="bg-cuenta" aria-label="Resumen del pedido">
+            <div class="pz-boleto bg-boleto">
+                <div class="pz-boleto__papel">
+                    <span class="pz-boleto__ojo" aria-hidden="true"></span>
+                    <p class="pz-boleto__titulo">Tu pedido</p>
+                    <ol class="bg-resumen" id="bg-resumen"></ol>
+                    <hr class="pz-boleto__corte">
+                    <div class="bg-total"><span>Total, en efectivo</span><b id="total-bigoton">$0</b></div>
                 </div>
-                <p class="nota-formulario" style="margin-top:8px;">Pago en efectivo al recibir.</p>
-                <button type="submit" name="ordenar" value="1" class="btn-principal" style="margin-top:20px;width:100%;">
-                    Enviar pedido
+            </div>
+
+            <label class="bg-campo bg-correo">
+                <span>Correo para la confirmación <small>(opcional)</small></span>
+                <input type="email" name="correo_cliente" id="correo_cliente" maxlength="150" autocomplete="off"
+                       value="<?php echo htmlspecialchars($_POST["correo_cliente"] ?? ""); ?>">
+                <small class="bg-correo__error" id="bg-correo-error" hidden>Ingresa un correo válido.</small>
+            </label>
+
+            <div class="pz-barra bg-barra">
+                <button type="submit" name="ordenar" value="1" class="pz-btn bg-enviar" id="bg-enviar">
+                    <span>Enviar pedido</span>
+                    <span id="bg-total-btn">$0</span>
                 </button>
             </div>
-
-        </form>
+        </aside>
+    </form>
     <?php endif; ?>
 
-</div>
+</main>
 
+<?php if (!$exito): ?>
 <script>
 (function () {
-    var cantidadSel = document.getElementById("cantidad_personas");
-    var precios     = <?php echo $preciosMenusJSON; ?>;
+    var MAX      = 15;
+    var precios  = <?php echo $preciosMenusJSON; ?>;
+    var form     = document.getElementById("form-bigoton");
+    var cantidad = document.getElementById("cantidad_personas");
 
-    /* ── Mostrar/ocultar bloques de persona ── */
-    function actualizarPersonas(cantidad) {
-        for (var i = 0; i < 15; i++) {
-            var bloque = document.getElementById("persona-" + i);
-            if (!bloque) continue;
-            var visible = i < cantidad;
-            bloque.style.display = visible ? "" : "none";
-            bloque.querySelectorAll("input, select").forEach(function (el) {
-                el.disabled = !visible;
-            });
+    function persona(i) { return document.getElementById("persona-" + i); }
+    function n() { return parseInt(cantidad.value, 10) || 1; }
+    function pesos(v) { return "$" + v.toLocaleString("es-MX", { maximumFractionDigits: 2 }); }
+
+    // Activa o apaga los campos de un grupo; los agotados y los aderezos (los maneja
+    // scriptOpcionesPlato) no se tocan
+    function activar(contenedor, si) {
+        contenedor.querySelectorAll("input").forEach(function (el) {
+            if (el.closest(".opciones-plato") || el.dataset.agotado) return;
+            el.disabled = !si;
+        });
+    }
+
+    /* ── Tipo de menú: muestra sus guisados y complementos ── */
+    function mostrarTipo(i) {
+        var p = persona(i);
+        var marcado = p.querySelector(".radio-tipo-menu:checked");
+        var tipo = marcado ? marcado.value : "Zabisu";
+        ["Zabisu", "Ejecutivo"].forEach(function (t) {
+            var g = document.getElementById("platos-" + i + "-" + t);
+            if (!g) return;
+            var ver = t === tipo && !p.hidden;
+            g.hidden = t !== tipo;
+            activar(g, ver);
+            if (t !== tipo) g.querySelectorAll("input").forEach(function (el) { if (!el.closest(".opciones-plato")) el.checked = false; });
+        });
+        limiteComplementos(i);
+    }
+
+    /* ── Cuántas personas ── */
+    function ponerCantidad(c) {
+        c = Math.max(1, Math.min(MAX, c));
+        cantidad.value = c;
+        document.getElementById("bg-num").textContent = c;
+        for (var i = 0; i < MAX; i++) {
+            var p = persona(i);
+            var ver = i < c;
+            p.hidden = !ver;
+            p.querySelectorAll(".bg-nombre, .radio-tipo-menu").forEach(function (el) { el.disabled = !ver; });
+            mostrarTipo(i);
+            var q = p.querySelector(".bg-quitar");
+            if (q) q.hidden = !(ver && i === c - 1 && c > 1);
         }
-        actualizarTotal();
+        document.getElementById("bg-menos").disabled = c <= 1;
+        document.getElementById("bg-mas").disabled = c >= MAX;
+        document.getElementById("bg-agregar").hidden = c >= MAX;
+        actualizar();
     }
 
-    /* ── Mostrar/ocultar platos por tipo de menú ── */
-    function actualizarPlatos(personaIdx, tipoSeleccionado) {
-        ["Zabisu", "Ejecutivo"].forEach(function (tipo) {
-            var grupo = document.getElementById("platos-" + personaIdx + "-" + tipo);
-            if (!grupo) return;
-            var visible = tipo === tipoSeleccionado;
-            grupo.style.display = visible ? "" : "none";
-            grupo.querySelectorAll("input").forEach(function (r) {
-                r.disabled = !visible;
-                if (!visible) r.checked = false;
-            });
-        });
-        actualizarTotal();
-    }
-
-    /* ── Limitar a 2 complementos por persona ── */
-    document.querySelectorAll(".check-complemento").forEach(function (cb) {
-        cb.addEventListener("change", function () {
-            if (!this.checked) return;
-            var persona = this.dataset.persona;
-            var tipo    = this.dataset.tipo;
-            var checks  = Array.from(document.querySelectorAll(
-                ".check-complemento[data-persona='" + persona + "'][data-tipo='" + tipo + "']:checked"
-            ));
-            if (checks.length > 2) {
-                checks[0].checked = false;
-                var lbl = checks[0].closest(".opcion-producto");
-                if (lbl) lbl.classList.remove("opcion-seleccionada");
-            }
-        });
+    document.getElementById("bg-menos").addEventListener("click", function () { ponerCantidad(n() - 1); });
+    document.getElementById("bg-mas").addEventListener("click", function () { ponerCantidad(n() + 1); });
+    document.getElementById("bg-agregar").addEventListener("click", function () {
+        ponerCantidad(n() + 1);
+        var nueva = persona(n() - 1);
+        nueva.scrollIntoView({ behavior: "smooth", block: "start" });
+        setTimeout(function () { nueva.querySelector(".bg-nombre").focus({ preventScroll: true }); }, 300);
+    });
+    form.addEventListener("click", function (e) {
+        var q = e.target.closest(".bg-quitar");
+        if (q) ponerCantidad(n() - 1);
     });
 
-    /* ── Calcular total ── */
-    function actualizarTotal() {
-        var cantidad = parseInt(cantidadSel.value) || 1;
-        var total    = 0;
-        for (var i = 0; i < cantidad; i++) {
-            var radios = document.querySelectorAll("input[name='personas[" + i + "][tipo_menu]']");
-            radios.forEach(function (r) {
-                if (r.checked) total += precios[r.value] || 0;
-            });
+    /* ── Complementos: el máximo depende del guisado elegido ── */
+    function limiteComplementos(i, recien) {
+        var p = persona(i);
+        var plato = p.querySelector(".radio-plato:checked");
+        var max = plato ? parseInt(plato.dataset.max, 10) || 2 : 2;
+        p.querySelectorAll(".bg-max").forEach(function (s) { s.textContent = max; });
+        var grupo = p.querySelector(".bg-platos:not([hidden])");
+        if (!grupo) return;
+        var marcados = Array.prototype.slice.call(grupo.querySelectorAll(".check-complemento:checked"));
+        while (marcados.length > max) {
+            var fuera = marcados[0] === recien ? marcados[1] : marcados[0];
+            fuera.checked = false;
+            marcados.splice(marcados.indexOf(fuera), 1);
         }
-        var el = document.getElementById("total-bigoton");
-        if (el) el.textContent = "$" + total.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     }
 
-    /* ── Activar clases visuales en opciones seleccionadas ── */
-    document.querySelectorAll(".radio-plato").forEach(function (radio) {
-        radio.addEventListener("change", function () {
-            var persona = this.dataset.persona;
-            document.querySelectorAll("input[name='personas[" + persona + "][plato_fuerte]']").forEach(function (r) {
-                var label = r.closest(".opcion-producto");
-                if (label) label.classList.toggle("opcion-seleccionada", r.checked);
-            });
-            actualizarTotal();
-        });
+    /* ── Resumen en vivo y total ── */
+    function actualizar() {
+        var total = 0;
+        var ol = document.getElementById("bg-resumen");
+        ol.innerHTML = "";
+        for (var i = 0; i < n(); i++) {
+            var p = persona(i);
+            var tipo = p.querySelector(".radio-tipo-menu:checked");
+            if (tipo) total += precios[tipo.value] || 0;
+            var nombre = p.querySelector(".bg-nombre").value.trim();
+            var plato = p.querySelector(".radio-plato:checked");
+            var comps = Array.prototype.map.call(p.querySelectorAll(".bg-platos:not([hidden]) .check-complemento:checked"), function (c) { return c.dataset.nombre; });
+            var li = document.createElement("li");
+            var b = document.createElement("b");
+            b.textContent = nombre || "Persona " + (i + 1);
+            li.appendChild(b);
+            var span = document.createElement("span");
+            var aderezo = p.querySelector(".opciones-plato input:checked");
+            span.textContent = plato
+                ? plato.dataset.nombre + (aderezo ? " (" + aderezo.value + ")" : "") + (comps.length ? ", con " + comps.join(" y ") : "")
+                : "Falta el guisado";
+            if (!plato) span.className = "bg-resumen__falta";
+            li.appendChild(span);
+            ol.appendChild(li);
+        }
+        document.getElementById("total-bigoton").textContent = pesos(total);
+        document.getElementById("bg-total-btn").textContent = pesos(total);
+    }
+
+    form.addEventListener("change", function (e) {
+        var t = e.target;
+        var i = parseInt(t.dataset.persona, 10);
+        if (t.classList.contains("radio-tipo-menu")) mostrarTipo(i);
+        if (t.classList.contains("radio-plato")) limiteComplementos(i);
+        if (t.classList.contains("check-complemento") && t.checked) limiteComplementos(i, t);
+        if (!isNaN(i)) persona(i).classList.remove("bg-persona--falta");
+        actualizar();
     });
 
-    /* ── Cambio de tipo de menú ── */
-    document.querySelectorAll(".radio-tipo-menu").forEach(function (radio) {
-        radio.addEventListener("change", function () {
-            var persona = this.dataset.persona;
-            /* Actualizar clases visuales */
-            document.querySelectorAll(".tipo-menu-opcion[data-persona='" + persona + "']").forEach(function (lbl) {
-                lbl.classList.toggle("ubicacion-activa", lbl.dataset.tipo === radio.value);
-            });
-            actualizarPlatos(parseInt(persona), radio.value);
-        });
-    });
-
-    /* ── Cambio de cantidad ── */
-    cantidadSel.addEventListener("change", function () {
-        actualizarPersonas(parseInt(this.value) || 1);
-    });
-
-    /* ── Validación de nombres: solo letras y espacios, MAYÚSCULAS ── */
-    document.getElementById("form-bigoton").addEventListener("input", function (e) {
+    /* ── Nombres: solo letras y espacios, en MAYÚSCULAS ── */
+    form.addEventListener("input", function (e) {
         var input = e.target;
-        if (!input.name || !input.name.match(/personas\[\d+\]\[nombre\]/)) return;
-        var pos   = input.selectionStart;
+        if (!input.classList.contains("bg-nombre")) return;
+        var pos = input.selectionStart;
         var limpio = input.value.replace(/[^A-Za-záéíóúÁÉÍÓÚüÜñÑ\s]/g, "").toUpperCase();
         if (input.value !== limpio) {
             input.value = limpio;
             input.setSelectionRange(pos, pos);
         }
+        actualizar();
     });
 
-    /* ── Validación de correo en tiempo real ── */
-    var correoInput = document.getElementById("correo_cliente");
-    var correoError = document.createElement("p");
-    correoError.style.cssText = "color:#ff6b6b;font-size:13px;margin:4px 0 0;display:none;";
-    correoError.textContent   = "Ingresa un correo válido.";
-    if (correoInput) correoInput.parentNode.insertBefore(correoError, correoInput.nextSibling);
-
-    if (correoInput) {
-        correoInput.addEventListener("blur", function () {
-            var val = this.value.trim();
-            var valido = val === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
-            correoError.style.display = valido ? "none" : "";
-        });
-        correoInput.addEventListener("input", function () {
-            correoError.style.display = "none";
-        });
+    /* ── Correo ── */
+    var correo = document.getElementById("correo_cliente");
+    var correoError = document.getElementById("bg-correo-error");
+    function correoValido() {
+        var v = correo.value.trim();
+        return v === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
     }
+    correo.addEventListener("blur", function () { correoError.hidden = correoValido(); });
+    correo.addEventListener("input", function () { correoError.hidden = true; });
 
-    /* ── Inicializar ── */
-    actualizarPersonas(parseInt(cantidadSel.value) || 1);
-    for (var i = 0; i < 15; i++) {
-        var checked = document.querySelector("input[name='personas[" + i + "][tipo_menu]']:checked");
-        if (checked) actualizarPlatos(i, checked.value);
-    }
-    actualizarTotal();
+    /* ── Antes de enviar: marcar a quién le falta algo ── */
+    form.addEventListener("submit", function (e) {
+        var primera = null;
+        for (var i = 0; i < n(); i++) {
+            var p = persona(i);
+            var faltas = [];
+            if (!p.querySelector(".bg-nombre").value.trim()) faltas.push("nombre");
+            if (!p.querySelector(".radio-plato:checked")) faltas.push("guisado");
+            if (window.opcionesPlatoPendientes && window.opcionesPlatoPendientes(p).length) faltas.push("aderezo");
+            var aviso = p.querySelector(".bg-falta");
+            aviso.hidden = !faltas.length;
+            aviso.textContent = faltas.length ? "Falta: " + faltas.join(", ") : "";
+            p.classList.toggle("bg-persona--falta", faltas.length > 0);
+            if (faltas.length && !primera) primera = p;
+        }
+        if (!correoValido()) { correoError.hidden = false; primera = primera || correo; }
+        if (primera) {
+            e.preventDefault();
+            primera.scrollIntoView({ behavior: "smooth", block: "start" });
+            return;
+        }
+        var b = document.getElementById("bg-enviar");
+        b.disabled = true;
+        b.firstElementChild.textContent = "Enviando…";
+    });
+
+    ponerCantidad(n());
 })();
 </script>
+<?php endif; ?>
 
 <?php echo scriptOpcionesPlato(); ?>
 </body>

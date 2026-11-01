@@ -1,0 +1,154 @@
+/* ══════════════════════════════════════════════════════════════
+   Pedido de El Bigotón (cliente/bigoton.php) en el sistema
+   "Pizarrón de fonda" de DESIGN.md. Una tarjeta por persona y la
+   cuenta en un boleto que se arma en vivo.
+   Usa los tokens y piezas de menu-pizarron.css. Prefijo bg-.
+
+   Responsivo: en el celular, una columna y el botón de enviar fijo
+   abajo; desde 960 px, las personas a la izquierda (dos por fila si
+   caben) y la cuenta fija a la derecha.
+   ══════════════════════════════════════════════════════════════ */
+
+.bg-pagina{padding-bottom:120px}
+.bg-eyebrow{margin:28px 20px 0;font:500 14px var(--pz-sys);color:var(--pz-gris)}
+.bg-sub{margin:6px 20px 0;font:400 16px/1.45 var(--pz-sys);color:var(--pz-gris)}
+
+/* ── Errores del servidor ── */
+.bg-errores{margin:22px 20px 0;padding:14px 16px;border-radius:14px;background:rgba(255,107,107,.12);color:#ff8f8f;
+  font:400 14px/1.45 var(--pz-sys)}
+.bg-errores p{margin:0 0 6px;font-weight:600}
+.bg-errores ul{margin:0;padding-left:18px}
+
+/* ── ¿Cuántos menús? ── */
+.bg-cuantos{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:24px 20px 0;padding:12px 12px 12px 16px;
+  border-radius:16px;background:var(--pz-grupo)}
+.bg-cuantos__txt{font:600 17px var(--pz-sys)}
+.bg-stepper{display:flex;align-items:center;gap:6px}
+.bg-stepper__btn{width:48px;height:48px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:12px;
+  background:var(--pz-linea);color:var(--pz-gis);cursor:pointer}
+.bg-stepper__btn:disabled{opacity:.35;cursor:default}
+.bg-stepper__num{min-width:48px;text-align:center;font:400 30px/1 var(--pz-rotulo);color:var(--pz-naranja);font-variant-numeric:tabular-nums}
+
+/* ── Tarjeta de cada persona ── */
+.bg-persona{margin:18px 20px 0;padding:16px;border-radius:18px;background:var(--pz-grupo);border:1.5px solid transparent}
+.bg-persona[hidden]{display:none}
+.bg-persona--falta{border-color:#ff6b6b}
+.bg-persona__cab{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.bg-persona__cab .pz-cinta{margin:0}
+.bg-persona:nth-child(3n+1) .pz-cinta{transform:rotate(-1.6deg)}
+.bg-persona:nth-child(3n+2) .pz-cinta{transform:rotate(1deg)}
+.bg-persona:nth-child(3n)   .pz-cinta{transform:rotate(-.6deg)}
+.bg-falta{font:600 13px var(--pz-sys);color:#ff8f8f;text-align:right}
+
+.bg-campo{display:block;margin-top:14px}
+.bg-campo > span:first-child{display:block;margin-bottom:7px;font:600 14px var(--pz-sys);color:var(--pz-gis)}
+.bg-campo small{font-weight:400;color:var(--pz-gris)}
+.bg-campo input{width:100%;box-sizing:border-box;min-height:50px;padding:12px 14px;border-radius:12px;
+  background:var(--pz-pizarra);border:1px solid var(--pz-linea);color:var(--pz-gis);font:500 17px var(--pz-sys)}
+.bg-campo input:focus{outline:none;border-color:var(--pz-naranja)}
+
+/* Zabisu o Ejecutivo: dos botones grandes */
+.bg-tipos{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.bg-tipo{position:relative;display:flex;flex-direction:column;gap:2px;padding:12px 14px;min-height:60px;box-sizing:border-box;
+  border-radius:14px;border:1.5px solid var(--pz-linea);cursor:pointer}
+.bg-tipo input{position:absolute;opacity:0;width:1px;height:1px}
+.bg-tipo__nombre{font:600 15px var(--pz-sys)}
+.bg-tipo__precio{font:400 20px var(--pz-rotulo);color:var(--pz-gris)}
+.bg-tipo:has(input:checked){background:var(--pz-naranja);border-color:var(--pz-naranja);color:#111}
+.bg-tipo:has(input:checked) .bg-tipo__precio{color:#111}
+.bg-tipo:has(input:focus-visible){outline:2px solid var(--pz-naranja);outline-offset:3px}
+
+/* Guisados: filas para tocar con su palomita */
+.bg-platos[hidden]{display:none}
+.bg-titulo-sec{margin:18px 0 8px;font:600 14px var(--pz-sys);color:var(--pz-gis)}
+.bg-titulo-sec small{font-weight:400;color:var(--pz-gris)}
+.bg-lista{display:flex;flex-direction:column;gap:8px}
+.bg-opcion{position:relative;display:flex;align-items:center;gap:12px;padding:12px 14px;min-height:54px;box-sizing:border-box;
+  border-radius:12px;background:var(--pz-pizarra);border:1.5px solid var(--pz-linea);cursor:pointer}
+.bg-opcion input{position:absolute;opacity:0;width:1px;height:1px}
+.bg-opcion__marca{flex-shrink:0;width:22px;height:22px;box-sizing:border-box;border-radius:50%;border:2px solid #5b5752}
+.bg-opcion__nombre{flex:1;font:500 15px/1.3 var(--pz-sys)}
+.bg-opcion:has(input:checked){border-color:var(--pz-naranja);background:rgba(255,122,0,.1)}
+.bg-opcion:has(input:checked) .bg-opcion__marca{border-color:var(--pz-naranja);background:var(--pz-naranja)
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 12.5l4 4 8-9' fill='none' stroke='%23111' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/16px no-repeat}
+.bg-opcion:has(input:focus-visible){outline:2px solid var(--pz-naranja);outline-offset:3px}
+.bg-opcion--agotado{cursor:default}
+.bg-opcion--agotado .bg-opcion__nombre{opacity:.45;text-decoration:line-through;text-decoration-thickness:1.5px}
+.bg-agotado{flex-shrink:0;font:600 12px var(--pz-sys);color:var(--pz-gris);border:1.5px solid var(--pz-gris);border-radius:6px;
+  padding:2px 6px;transform:rotate(-6deg);filter:url(#pz-tinta)}
+.bg-nota{margin:0;font:400 14px var(--pz-sys);color:var(--pz-gris)}
+
+/* Aderezo del guisado (mismo selector que el cliente, en colores del pizarrón) */
+.bg .opciones-plato{margin:0;padding:12px 14px;border-radius:14px;background:#1A1816;border:1px dashed #4a4540}
+.bg .opciones-plato--error{border-color:#ff6b6b}
+.bg .opciones-plato__titulo{font:600 14px var(--pz-sys)!important;color:var(--pz-gis)!important;text-transform:none!important;letter-spacing:0!important}
+.bg .opciones-plato .opciones-plato__lista label.opciones-plato__item.opciones-plato__item{
+  background:var(--pz-grupo)!important;border:1px solid var(--pz-linea)!important;color:var(--pz-gis)!important;
+  border-radius:11px!important;min-height:44px;font:500 15px var(--pz-sys)!important;box-shadow:none!important}
+.bg .opciones-plato .opciones-plato__lista label.opciones-plato__item.is-sel{
+  background:var(--pz-naranja)!important;border-color:var(--pz-naranja)!important;color:#111!important}
+
+/* Complementos: fichas */
+.bg-chips{display:flex;flex-wrap:wrap;gap:8px}
+.bg-chip{position:relative;display:inline-flex;align-items:center;min-height:44px;padding:0 14px;box-sizing:border-box;
+  border-radius:999px;border:1.5px solid var(--pz-linea);font:500 14px var(--pz-sys);cursor:pointer}
+.bg-chip input{position:absolute;opacity:0;width:1px;height:1px}
+.bg-chip:has(input:checked){background:var(--pz-estraza);border-color:var(--pz-estraza);color:var(--pz-tinta)}
+.bg-chip:has(input:focus-visible){outline:2px solid var(--pz-naranja);outline-offset:3px}
+
+.bg-quitar{margin-top:14px;min-height:40px;padding:0 4px;border:0;background:none;cursor:pointer;
+  font:500 14px var(--pz-sys);color:var(--pz-gris);text-decoration:underline;text-underline-offset:3px}
+.bg-quitar[hidden]{display:none}
+
+.bg-agregar{display:flex;align-items:center;justify-content:center;gap:8px;width:calc(100% - 40px);margin:16px 20px 0;
+  min-height:56px;border:1.5px dashed var(--pz-estraza);border-radius:16px;background:none;cursor:pointer;
+  font:600 16px var(--pz-sys);color:var(--pz-estraza-cl)}
+.bg-agregar[hidden]{display:none}
+
+/* ── La cuenta ── */
+.bg-cuenta{padding-top:8px}
+.bg-boleto{margin:26px 20px 0;transform:rotate(-.8deg)}
+.bg-boleto .pz-boleto__papel{padding:16px 20px 14px 56px}
+.bg-resumen{margin:8px 0 0;padding:0 0 0 18px;font:400 14px/1.4 var(--pz-sys);color:var(--pz-tinta2)}
+.bg-resumen li+li{margin-top:6px}
+.bg-resumen b{display:block;font-weight:600;color:var(--pz-tinta)}
+.bg-resumen__falta{color:#9a3d00}
+.bg-total{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.bg-total span{font:500 14px var(--pz-sys);color:var(--pz-tinta2)}
+.bg-total b{font:400 28px/1 var(--pz-rotulo);color:var(--pz-tinta);font-variant-numeric:tabular-nums}
+
+.bg-correo{margin:20px 20px 0}
+.bg-correo__error{display:block;margin-top:6px;font:500 13px var(--pz-sys);color:#ff8f8f}
+.bg-correo__error[hidden]{display:none}
+
+.bg-enviar{width:100%;border:0;cursor:pointer}
+.bg-enviar:disabled{background:#3a3633;color:#8d8983;cursor:default}
+
+/* ── Confirmación ── */
+.bg-listo{margin:0 auto}
+.bg-boleto__folio{display:flex;flex-direction:column;margin:0}
+.bg-boleto__folio span{font:500 13px var(--pz-sys);color:var(--pz-tinta2)}
+.bg-boleto__folio b{font:400 30px/1.1 var(--pz-rotulo);color:var(--pz-tinta);letter-spacing:.5px}
+.bg-boleto__entrega{margin:0;font:600 14px var(--pz-sys);color:var(--pz-tinta)}
+.pz .bg-otro{justify-content:center;margin:28px 20px 0;color:#111}
+
+@media (min-width:600px){
+  .bg-pagina{max-width:640px}
+}
+
+/* Computadora: personas a la izquierda, cuenta fija a la derecha */
+@media (min-width:960px){
+  .bg-pagina{max-width:1320px;padding:0 28px 48px}
+  .bg-form{display:grid;grid-template-columns:minmax(0,1fr) 380px;column-gap:40px;align-items:start}
+  .bg-personas{display:grid;grid-template-columns:repeat(auto-fill,minmax(400px,1fr));column-gap:18px;align-items:start;margin:0 20px}
+  .bg-persona{margin:18px 0 0}
+  .bg-cuenta{position:sticky;top:16px;padding-top:0}
+  .bg-boleto{margin-top:24px}
+  .bg .bg-barra{position:static;padding:20px 20px 0;border-top:0;background:none}
+  .bg .bg-enviar{max-width:none}
+  .bg-pagina--listo{max-width:640px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{scroll-behavior:auto!important}
+}
