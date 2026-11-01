@@ -41,7 +41,8 @@ function categoriaPorPalabras(string $clave): string {
     lista se arma sola con lo más capturado.
 */
 function gastosListaArchivo(): string {
-    return __DIR__ . '/../storage/gastos_lista.json';
+    // Junto a login_intentos.json: carpeta bloqueada para la web y con permiso de escritura para PHP
+    return __DIR__ . '/../config/gastos_lista.json';
 }
 
 /* ['compras' => [nombres], 'sueldos' => [nombres]] o null si nunca se ha editado */

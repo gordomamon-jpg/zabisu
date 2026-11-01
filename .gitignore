@@ -30,9 +30,9 @@ Thumbs.db
 # Estado de login (intentos fallidos) — no es código, se regenera solo
 /config/login_intentos.json
 
+# Lista editada de "lo de siempre" en gastos (se crea sola en el servidor)
+/config/gastos_lista.json
+/config/gastos_lista.json.tmp
+
 # Sesiones de PHP (se crean solas en el servidor)
 /storage/sesiones/
-
-# Lista editada de "lo de siempre" en gastos (se crea sola en el servidor)
-/storage/gastos_lista.json
-/storage/gastos_lista.json.tmp
