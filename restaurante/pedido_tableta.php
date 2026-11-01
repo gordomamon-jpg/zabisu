@@ -278,929 +278,584 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
         }
     }
 }
+
+/* ── Entrega rápida: los puntos y horarios que más se usan desde la tableta ── */
+$stmtFrec = $conexion->prepare(
+    "SELECT p.id_horario, COUNT(*) AS n
+     FROM pedidos p
+     INNER JOIN horarios_ubicacion h ON p.id_horario = h.id_horario
+     INNER JOIN ubicaciones u        ON h.id_ubicacion = u.id_ubicacion
+     WHERE p.folio LIKE 'TAB-%' AND p.es_prueba = 0
+       AND p.fecha_pedido >= DATE_SUB(NOW(), INTERVAL 60 DAY)
+       AND h.activo = 1 AND u.activo = 1 AND u.tipo = 'entrega'
+     GROUP BY p.id_horario
+     ORDER BY n DESC
+     LIMIT 4"
+);
+$stmtFrec->execute();
+$horariosPorId = [];
+foreach ($horarios as $h) $horariosPorId[(int)$h["id_horario"]] = $h;
+$entregaRapida = [];
+foreach ($stmtFrec->fetchAll(PDO::FETCH_COLUMN) as $idH) {
+    if (isset($horariosPorId[(int)$idH])) $entregaRapida[] = $horariosPorId[(int)$idH];
+}
+
+$puntosEntrega = array_values(array_filter($ubicaciones, fn($u) => $u["tipo"] === "entrega"));
+$horaBonita = fn($hora) => date("g:i a", strtotime($hora));
+
+/* Para la pantalla de éxito: a dónde va el pedido */
+$entregaCreada = "";
+if ($exito && isset($horariosPorId[(int)$id_horario])) {
+    $hc = $horariosPorId[(int)$id_horario];
+    $entregaCreada = $hc["nombre_ubicacion"] . ", " . $horaBonita($hc["hora_entrega"]);
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Pedido Tableta | Zabisu</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Pedido tableta | Zabisu</title>
 <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
-<style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    background: #0e0e12;
-    color: #f0f0f0;
-    min-height: 100vh;
-    font-size: 18px;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-}
-.t-wrap { max-width: 900px; margin: 0 auto; padding: 0 20px 80px; }
-
-/* HERO */
-.t-hero {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
-    padding: 36px 24px 28px;
-    text-align: center;
-    border-bottom: 3px solid #ff7a00;
-    margin-bottom: 28px;
-}
-.t-hero__eye   { font-size: 12px; letter-spacing: 3px; color: #ff7a00; font-weight: 700; text-transform: uppercase; margin-bottom: 6px; }
-.t-hero__title { font-size: 36px; font-weight: 900; color: #fff; }
-.t-hero__fecha { font-size: 16px; color: #888; margin-top: 6px; }
-.t-hero__back  { display: inline-block; margin-top: 14px; color: #ff7a00; text-decoration: none; font-size: 14px; font-weight: 600; opacity: .75; }
-.t-hero__back:hover { opacity: 1; }
-
-/* BLOQUE */
-.t-bloque {
-    background: #17171f;
-    border-radius: 16px;
-    padding: 26px 22px;
-    margin-bottom: 18px;
-    border: 1px solid #252535;
-}
-.t-bloque h2 { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 18px; }
-
-/* NOMBRE */
-.t-nombre {
-    width: 100%;
-    background: #1e1e2e;
-    border: 2px solid #333345;
-    border-radius: 12px;
-    color: #fff;
-    font-size: 26px;
-    font-weight: 700;
-    padding: 16px 18px;
-    text-transform: uppercase;
-    outline: none;
-    transition: border-color .2s;
-    caret-color: #ff7a00;
-}
-.t-nombre::placeholder { color: #444; font-weight: 400; font-size: 20px; text-transform: none; }
-.t-nombre:focus { border-color: #ff7a00; }
-
-/* CONTADOR */
-.t-counter        { display: flex; align-items: center; justify-content: center; gap: 28px; }
-.t-counter__btn   {
-    width: 84px; height: 84px; border-radius: 50%; border: none;
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    font-size: 40px; font-weight: 300; line-height: 1;
-    transition: transform .08s; user-select: none;
-}
-.t-counter__btn:active { transform: scale(.9); }
-.t-counter__minus { background: #3a1c1c; color: #ff6b6b; }
-.t-counter__plus  { background: #1a3520; color: #4ac86e; }
-.t-counter__num   { font-size: 80px; font-weight: 900; color: #fff; min-width: 110px; text-align: center; line-height: 1; }
-.t-counter__hint  { text-align: center; font-size: 13px; color: #555; margin-top: 10px; }
-
-/* MENU BLOQUE */
-.t-menu {
-    background: #1a1a28;
-    border-radius: 14px;
-    padding: 20px 18px;
-    margin-bottom: 14px;
-    border: 2px solid #2a2a3a;
-}
-.t-menu--error { border-color: #ff6b6b; }
-.t-menu__num   { font-size: 18px; font-weight: 800; color: #ff7a00; margin-bottom: 14px; }
-
-/* TIPO TOGGLE */
-.t-tipo     { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 18px; }
-.t-tipo__btn {
-    padding: 16px 8px; border-radius: 12px; border: 2px solid #2e2e42;
-    background: #12121e; color: #666; font-size: 17px; font-weight: 700;
-    cursor: pointer; text-align: center;
-    transition: background .15s, border-color .15s, color .15s;
-    user-select: none; line-height: 1.3;
-}
-.t-tipo__btn small { display: block; font-size: 12px; font-weight: 400; opacity: .7; margin-top: 3px; }
-.t-tipo__btn--activo { background: rgba(255,122,0,.18); border-color: #ff7a00; color: #ff7a00; }
-
-/* CATEGORIA LABEL */
-.t-cat-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #555; margin-bottom: 10px; display: block; }
-
-/* GRID PRODUCTOS */
-.t-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 10px; margin-bottom: 16px; }
-
-/* CARD */
-.t-card {
-    position: relative;
-    background: #111120; border: 2px solid #252535; border-radius: 12px;
-    padding: 16px 12px; cursor: pointer; text-align: center;
-    user-select: none; min-height: 76px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    transition: background .12s, border-color .12s;
-}
-.t-card:has(input:checked):not(.t-card--ago) { background: rgba(255,122,0,.15); border-color: #ff7a00; }
-.t-card input { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
-.t-card__name { font-size: 16px; font-weight: 700; color: #ccc; line-height: 1.2; }
-.t-card:has(input:checked):not(.t-card--ago) .t-card__name { color: #ff7a00; }
-.t-card--ago { opacity: .35; cursor: not-allowed; }
-.t-card--ago .t-card__name { text-decoration: line-through; }
-.t-ago-badge { font-size: 11px; color: #ff6b6b; font-weight: 600; margin-top: 4px; }
-
-/* INCLUYE */
-.t-incluye {
-    background: #111118; border-radius: 10px; padding: 12px 14px;
-    display: flex; gap: 16px; flex-wrap: wrap; margin-top: 6px;
-}
-.t-incluye__title { width: 100%; font-size: 11px; color: #444; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 4px; }
-.t-incluye__item  { font-size: 14px; color: #666; }
-
-/* UBICACIONES */
-.t-ub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
-.t-ub-card {
-    background: #111120; border: 2px solid #252535; border-radius: 12px;
-    padding: 18px 14px; cursor: pointer; text-align: center; user-select: none;
-    transition: background .12s, border-color .12s; position: relative;
-}
-.t-ub-card input { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
-.t-ub-card:has(input:checked) { background: rgba(255,122,0,.15); border-color: #ff7a00; }
-.t-ub-card__name { font-size: 17px; font-weight: 700; color: #ddd; }
-.t-ub-card:has(input:checked) .t-ub-card__name { color: #ff7a00; }
-
-/* HORARIOS */
-.t-horarios    { display: none; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
-.t-horarios--on { display: flex; }
-.t-hor-btn {
-    position: relative; background: #111120; border: 2px solid #252535; border-radius: 10px;
-    padding: 16px 22px; cursor: pointer; font-size: 22px; font-weight: 700;
-    color: #ddd; user-select: none;
-    transition: background .12s, border-color .12s, color .12s;
-}
-.t-hor-btn:has(input:checked) { background: rgba(255,122,0,.15); border-color: #ff7a00; color: #ff7a00; }
-.t-hor-btn input { position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0; }
-
-/* TOTAL */
-.t-total-row { display: flex; align-items: center; justify-content: space-between; background: #1a1a2a; border-radius: 12px; padding: 18px 20px; margin-bottom: 14px; }
-.t-total-row__label { font-size: 18px; color: #888; }
-.t-total-row__val   { font-size: 40px; font-weight: 900; color: #ff7a00; }
-
-/* SUBMIT */
-.t-submit {
-    width: 100%; background: #ff7a00; border: none; border-radius: 14px;
-    color: #fff; font-size: 24px; font-weight: 800; padding: 22px;
-    cursor: pointer; transition: transform .08s, opacity .2s; user-select: none;
-}
-.t-submit:active   { transform: scale(.98); }
-.t-submit:disabled { background: #444; cursor: not-allowed; opacity: .7; }
-
-/* ERRORES */
-.t-errores {
-    background: rgba(255,107,107,.08); border: 2px solid #ff6b6b;
-    border-radius: 12px; padding: 16px 18px; margin-bottom: 16px;
-}
-.t-errores ul { padding-left: 18px; }
-.t-errores li { color: #ff6b6b; font-size: 16px; margin-bottom: 5px; }
-
-/* ÉXITO */
-.t-exito         { text-align: center; padding: 50px 20px; }
-.t-exito__icon   { font-size: 64px; margin-bottom: 12px; }
-.t-exito__title  { font-size: 38px; font-weight: 900; color: #4ac86e; margin-bottom: 10px; }
-.t-exito__folio  {
-    display: inline-block; background: #1a1a2e; border: 2px solid #ff7a00;
-    border-radius: 12px; padding: 14px 28px; font-size: 26px; font-weight: 900;
-    color: #ff7a00; letter-spacing: 2px; margin-bottom: 10px;
-}
-.t-exito__total  { font-size: 20px; color: #888; margin-bottom: 28px; }
-.t-btn-nuevo {
-    display: inline-block; background: #ff7a00; color: #fff;
-    text-decoration: none; font-size: 22px; font-weight: 800;
-    padding: 18px 36px; border-radius: 12px; transition: transform .08s;
-}
-.t-btn-nuevo:active { transform: scale(.97); }
-
-/* TOGGLE BLOQUE (observaciones y extras) */
-.t-toggle-header {
-    display: flex; align-items: center; justify-content: space-between;
-    cursor: pointer; user-select: none; padding: 2px 0;
-}
-.t-toggle-header h2 { margin-bottom: 0; }
-.t-toggle-arrow {
-    font-size: 22px; color: #555; transition: transform .25s;
-    line-height: 1; flex-shrink: 0;
-}
-.t-toggle-header--abierto .t-toggle-arrow { transform: rotate(180deg); color: #ff7a00; }
-.t-toggle-body {
-    overflow: hidden;
-    max-height: 0;
-    transition: max-height .4s cubic-bezier(.4,0,.2,1), opacity .3s;
-    opacity: 0;
-}
-.t-toggle-body--abierto { max-height: 3000px; opacity: 1; }
-.t-toggle-body > * { margin-top: 16px; }
-
-/* BADGE de cantidad activa en header */
-.t-toggle-badge {
-    font-size: 12px; font-weight: 700; background: #ff7a00;
-    color: #000; border-radius: 99px; padding: 2px 9px;
-    display: none; margin-left: 8px;
-}
-.t-toggle-badge--on { display: inline-block; }
-
-/* OBSERVACIONES */
-.t-obs {
-    width: 100%;
-    background: #1e1e2e;
-    border: 2px solid #333345;
-    border-radius: 12px;
-    color: #fff;
-    font-size: 18px;
-    padding: 12px 14px;
-    outline: none;
-    resize: none;
-    font-family: inherit;
-    line-height: 1.5;
-    transition: border-color .2s;
-    caret-color: #ff7a00;
-}
-.t-obs::placeholder { color: #444; font-size: 16px; }
-.t-obs:focus { border-color: #ff7a00; }
-
-/* EXTRAS */
-.t-extra-grid { display: flex; flex-direction: column; gap: 10px; }
-.t-extra-cat-label {
-    font-size: 13px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: 1.5px; color: #555; margin: 14px 0 8px; display: block;
-}
-.t-extra-cat-label:first-child { margin-top: 0; }
-.t-extra-card {
-    display: flex; align-items: center; justify-content: space-between;
-    background: #111120; border: 2px solid #252535; border-radius: 14px;
-    padding: 14px 16px; gap: 12px;
-    transition: border-color .15s;
-}
-.t-extra-card--activo { border-color: #ff7a00; background: rgba(255,122,0,.1); }
-.t-extra-card__info { flex: 1; }
-.t-extra-card__nombre { font-size: 17px; font-weight: 700; color: #ccc; display: block; }
-.t-extra-card--activo .t-extra-card__nombre { color: #ff7a00; }
-.t-extra-card__precio { font-size: 13px; color: #555; margin-top: 2px; display: block; }
-.t-extra-contador { display: flex; align-items: center; gap: 0; flex-shrink: 0; }
-.t-extra-btn {
-    width: 48px; height: 48px; border-radius: 50%; border: none; cursor: pointer;
-    font-size: 26px; font-weight: 300; line-height: 1;
-    display: flex; align-items: center; justify-content: center;
-    transition: transform .08s; user-select: none;
-}
-.t-extra-btn:active { transform: scale(.88); }
-.t-extra-btn--menos { background: #2a1a1a; color: #ff6b6b; }
-.t-extra-btn--mas   { background: #1a2a1a; color: #4ac86e; }
-.t-extra-num {
-    font-size: 24px; font-weight: 900; color: #fff;
-    min-width: 42px; text-align: center;
-}
-.t-extra-num--cero { color: #333; }
-
-/* EXTRAS PERSONALIZADOS */
-.t-custom-sep { border: none; border-top: 1px solid #252535; margin: 16px 0 12px; }
-.t-custom-row {
-    display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
-}
-.t-custom-nombre {
-    flex: 1; background: #1e1e2e; border: 2px solid #333345; border-radius: 10px;
-    color: #fff; font-size: 16px; padding: 11px 13px; outline: none;
-    caret-color: #ff7a00; font-family: inherit;
-}
-.t-custom-nombre:focus { border-color: #ff7a00; }
-.t-custom-nombre::placeholder { color: #444; }
-.t-custom-precio {
-    width: 82px; background: #1e1e2e; border: 2px solid #333345; border-radius: 10px;
-    color: #ff7a00; font-size: 17px; font-weight: 700; padding: 11px 8px;
-    outline: none; text-align: center; caret-color: #ff7a00; font-family: inherit;
-}
-.t-custom-precio:focus { border-color: #ff7a00; }
-.t-custom-precio::placeholder { color: #333; font-weight: 400; font-size: 14px; }
-.t-custom-remove {
-    background: #2a1a1a; border: none; border-radius: 50%;
-    width: 40px; height: 40px; color: #ff6b6b; font-size: 20px;
-    cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
-    transition: background .12s;
-}
-.t-custom-remove:active { background: #3a1a1a; }
-.t-add-custom-btn {
-    width: 100%; background: transparent; border: 2px dashed #333345; border-radius: 10px;
-    color: #555; font-size: 16px; padding: 13px; cursor: pointer; margin-top: 4px;
-    font-family: inherit; transition: border-color .15s, color .15s;
-}
-.t-add-custom-btn:active { border-color: #ff7a00; color: #ff7a00; }
-
-/* RESPONSIVE */
-@media (max-width: 540px) {
-    .t-counter__num  { font-size: 60px; min-width: 80px; }
-    .t-counter__btn  { width: 70px; height: 70px; font-size: 34px; }
-    .t-grid          { grid-template-columns: 1fr 1fr; }
-    .t-hero__title   { font-size: 28px; }
-}
-
-/* ADEREZOS (opciones del plato) — colores Zabisu: recuadro con borde
-   naranja y el elegido en naranja SÓLIDO, para que en cocina no se confunda
-   con el naranja translúcido del plato y los complementos elegidos */
-.t-opciones .opciones-plato {
-    margin: 12px 0 6px; padding: 16px;
-    background: rgba(255,122,0,.06); border: 2px solid #ff7a00; border-radius: 14px;
-}
-.t-opciones .opciones-plato .opciones-plato__titulo {
-    font-size: 14px; letter-spacing: 1.5px; color: #ff7a00; margin-bottom: 12px;
-}
-.t-opciones .opciones-plato .opciones-plato__titulo span { color: #ac9f90; opacity: 1; }
-.t-opciones .opciones-plato .opciones-plato__lista { gap: 10px; }
-.t-opciones .opciones-plato .opciones-plato__lista label.opciones-plato__item.opciones-plato__item {
-    min-height: 64px; background: #0a0908; border: 2px solid rgba(247,236,220,.18);
-    color: #f7ecdc; font-size: 17px; font-weight: 800;
-}
-.t-opciones .opciones-plato .opciones-plato__lista label.opciones-plato__item.opciones-plato__item.is-sel {
-    background: #ff7a00; border-color: #ff7a00; color: #0a0908;
-    box-shadow: 0 0 0 3px rgba(255,122,0,.3);
-}
-.t-opciones .opciones-plato.opciones-plato--error { border-color: #f2604a; background: rgba(242,96,74,.08); }
-</style>
+<meta name="theme-color" content="#151413">
+<link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
+<link rel="stylesheet" href="../assets/css/tableta-pizarron.css?v=1">
 </head>
-<body>
-<div class="t-wrap">
+<body class="pz tb">
+<?php require __DIR__ . "/../includes/pz_filtros.php"; ?>
 
-<div class="t-hero">
-    <p class="t-hero__eye">RESTAURANTE ZABISU</p>
-    <h1 class="t-hero__title">Pedido rápido</h1>
-    <?php if ($fechaMenuFormateada): ?>
-    <p class="t-hero__fecha"><?= htmlspecialchars($fechaMenuFormateada) ?></p>
-    <?php endif; ?>
-    <a href="panel_general.php" class="t-hero__back">← Panel general</a>
-</div>
+<header class="tb-cab">
+    <a class="pz-marca" href="panel_general.php" aria-label="Zabisu, volver al panel general">
+        <img src="../assets/img/LOGO_N_128.png" alt="">
+        <div>
+            <span class="pz-marca__nombre">Zabisu</span>
+            <span class="pz-marca__lema">Sabor y Servicio</span>
+        </div>
+    </a>
+    <div class="tb-cab__titulo">
+        <h1 class="pz-titulo"><span class="pz-pincel"><span>Pedido rápido</span></span></h1>
+        <?php if ($fechaMenuFormateada): ?><p>Menú del <?= htmlspecialchars($fechaMenuFormateada) ?></p><?php endif; ?>
+    </div>
+    <a class="tb-cab__panel" href="panel_general.php">Panel</a>
+</header>
 
 <?php if ($exito): ?>
-<div class="t-exito">
-    <div class="t-exito__icon">✅</div>
-    <h2 class="t-exito__title">¡Pedido registrado!</h2>
-    <div class="t-exito__folio"><?= htmlspecialchars($folioCreado) ?></div>
-    <p class="t-exito__total">Total: $<?= number_format($totalCreado, 2) ?></p>
-    <a href="pedido_tableta.php" class="t-btn-nuevo">+ Nuevo pedido</a>
-</div>
+<!-- ══ PEDIDO GUARDADO ══ -->
+<main class="tb-listo">
+    <p class="tb-listo__mano">¡Listo!</p>
+    <div class="pz-boleto tb-boleto">
+        <div class="pz-boleto__papel">
+            <span class="pz-boleto__ojo" aria-hidden="true"></span>
+            <p class="tb-boleto__folio"><span>Folio</span><b><?= htmlspecialchars($folioCreado) ?></b></p>
+            <hr class="pz-boleto__corte">
+            <dl class="tb-boleto__lineas">
+                <div><dt>Cliente</dt><dd><?= htmlspecialchars($nombre_cliente) ?></dd></div>
+                <?php if ($entregaCreada): ?><div><dt>Entrega</dt><dd><?= htmlspecialchars($entregaCreada) ?></dd></div><?php endif; ?>
+                <div><dt>Comidas</dt><dd><?= count($menusRecibidos) ?></dd></div>
+                <div class="tb-boleto__total"><dt>Total</dt><dd>$<?= number_format($totalCreado, 0) ?></dd></div>
+            </dl>
+        </div>
+    </div>
+    <a href="pedido_tableta.php" class="pz-btn tb-nuevo" id="tb-nuevo" autofocus>Nuevo pedido</a>
+    <a href="pedidos.php" class="tb-listo__liga">Ver en el panel de pedidos</a>
+</main>
 
 <?php elseif (!$menuActivo): ?>
-<div class="t-bloque">
-    <p style="color:#ff7a00;font-size:20px;">No hay menú disponible. Crea un menú primero.</p>
-</div>
+<main class="tb-listo">
+    <p class="tb-listo__mano">Sin menú</p>
+    <p class="tb-listo__txt">No hay menú disponible. Crea un menú primero.</p>
+    <a href="nuevo_menu.php" class="pz-btn tb-nuevo">Crear menú</a>
+</main>
 
 <?php else: ?>
-
-<?php if (!empty($errores)): ?>
-<div class="t-errores"><ul>
-    <?php foreach ($errores as $e): ?>
-    <li><?= htmlspecialchars($e) ?></li>
-    <?php endforeach; ?>
-</ul></div>
-<?php endif; ?>
-
-<form method="POST" action="pedido_tableta.php" id="form-tableta">
+<form method="POST" action="pedido_tableta.php" id="form-tableta" class="tb-form" novalidate>
 <input type="hidden" name="guardar_pedido" value="1">
 
-<!-- NOMBRE -->
-<div class="t-bloque">
-    <h2>Nombre del cliente</h2>
-    <input type="text" class="t-nombre" name="nombre_cliente" id="t-nombre"
-           maxlength="80" autocomplete="off" autocorrect="off" spellcheck="false"
-           placeholder="Escribe el nombre..."
-           value="<?= htmlspecialchars($_POST["nombre_cliente"] ?? "") ?>">
-</div>
+<!-- ══ LA COMANDA: quién, a dónde, nota, total y guardar ══ -->
+<aside class="tb-lado" aria-label="Datos del pedido">
 
-<!-- OBSERVACIONES -->
-<?php $obsVal = htmlspecialchars($_POST["observaciones"] ?? ""); ?>
-<div class="t-bloque">
-    <div class="t-toggle-header <?= $obsVal ? 't-toggle-header--abierto' : '' ?>" id="t-obs-header">
-        <h2>Observaciones<span class="t-toggle-badge <?= $obsVal ? 't-toggle-badge--on' : '' ?>" id="t-obs-badge">✓</span></h2>
-        <span class="t-toggle-arrow">▾</span>
+    <?php if (!empty($errores)): ?>
+    <div class="tb-errores" role="alert">
+        <p>No se guardó. Revisa:</p>
+        <ul><?php foreach ($errores as $e): ?><li><?= htmlspecialchars($e) ?></li><?php endforeach; ?></ul>
     </div>
-    <div class="t-toggle-body <?= $obsVal ? 't-toggle-body--abierto' : '' ?>" id="t-obs-body">
-        <textarea class="t-obs" name="observaciones" id="t-obs-textarea" rows="3"
-                  placeholder="Sin cebolla, alergia a..., para llevar..."
-        ><?= $obsVal ?></textarea>
-    </div>
-</div>
+    <?php endif; ?>
 
-<!-- CANTIDAD -->
-<div class="t-bloque">
-    <h2>¿Cuántas comidas?</h2>
-    <div class="t-counter">
-        <button type="button" class="t-counter__btn t-counter__minus" id="t-menos">−</button>
-        <span class="t-counter__num" id="t-num-display"><?= (int)$cantidadMenus ?></span>
+    <label class="tb-campo">
+        <span>Nombre del cliente</span>
+        <input type="text" class="tb-nombre" name="nombre_cliente" id="t-nombre"
+               maxlength="80" autocomplete="off" autocorrect="off" spellcheck="false" autocapitalize="characters"
+               value="<?= htmlspecialchars($_POST["nombre_cliente"] ?? "") ?>"<?= empty($_POST) ? " autofocus" : "" ?>>
+    </label>
+
+    <section class="tb-entrega" id="tb-entrega">
+        <p class="tb-titulo">Entrega</p>
+        <?php if ($entregaRapida): ?>
+        <div class="tb-rapida">
+            <?php foreach ($entregaRapida as $h): ?>
+                <button type="button" class="tb-rapida__btn" data-horario="<?= (int)$h["id_horario"] ?>" data-ubicacion="<?= (int)$h["id_ubicacion"] ?>">
+                    <b><?= htmlspecialchars($horaBonita($h["hora_entrega"])) ?></b>
+                    <span><?= htmlspecialchars($h["nombre_ubicacion"]) ?></span>
+                </button>
+            <?php endforeach; ?>
+        </div>
+        <button type="button" class="tb-otro" id="tb-otro" aria-expanded="false">Otro punto u horario</button>
+        <?php endif; ?>
+
+        <div class="tb-puntos" id="tb-puntos"<?= $entregaRapida ? " hidden" : "" ?>>
+            <div class="tb-chips">
+                <?php foreach ($puntosEntrega as $ub): ?>
+                <label class="tb-chip">
+                    <input type="radio" name="ubicacion_sel" value="<?= (int)$ub["id_ubicacion"] ?>">
+                    <span><?= htmlspecialchars($ub["nombre_ubicacion"]) ?></span>
+                </label>
+                <?php endforeach; ?>
+            </div>
+            <?php foreach ($puntosEntrega as $ub): ?>
+            <div class="tb-chips tb-horas" id="t-hors-<?= (int)$ub["id_ubicacion"] ?>" hidden>
+                <?php foreach ($horarios as $h): if ($h["id_ubicacion"] != $ub["id_ubicacion"]) continue; ?>
+                <label class="tb-chip tb-chip--hora">
+                    <input type="radio" name="id_horario" value="<?= (int)$h["id_horario"] ?>"
+                           <?= (($_POST["id_horario"] ?? "") == $h["id_horario"]) ? "checked" : "" ?>>
+                    <span><?= htmlspecialchars($horaBonita($h["hora_entrega"])) ?></span>
+                </label>
+                <?php endforeach; ?>
+            </div>
+            <?php endforeach; ?>
+        </div>
+        <p class="tb-entrega__elegida" id="tb-entrega-elegida" hidden></p>
+    </section>
+
+    <?php $obsVal = $_POST["observaciones"] ?? ""; ?>
+    <details class="tb-nota"<?= $obsVal !== "" ? " open" : "" ?>>
+        <summary>Nota para cocina <small>(opcional)</small></summary>
+        <textarea name="observaciones" id="t-obs-textarea" rows="2" placeholder="Sin cebolla, alergia a..."><?= htmlspecialchars($obsVal) ?></textarea>
+    </details>
+
+    <div class="pz-barra tb-barra">
+        <div class="tb-total"><span id="tb-resumen">1 comida</span><b id="t-total">$0</b></div>
+        <button type="submit" name="guardar_pedido" value="1" class="pz-btn tb-guardar" id="t-submit">Guardar pedido</button>
+    </div>
+</aside>
+
+<!-- ══ LAS COMIDAS ══ -->
+<div class="tb-main">
+
+    <div class="tb-cuantas">
+        <span>Comidas</span>
+        <div class="tb-stepper">
+            <button type="button" id="t-menos" aria-label="Una comida menos"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M5 12h14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></button>
+            <output id="t-num-display" aria-live="polite"><?= (int)$cantidadMenus ?></output>
+            <button type="button" id="t-mas" aria-label="Una comida más"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></button>
+        </div>
         <input type="hidden" name="cantidad_menus" id="t-cantidad" value="<?= (int)$cantidadMenus ?>">
-        <button type="button" class="t-counter__btn t-counter__plus"  id="t-mas">+</button>
     </div>
-    <p class="t-counter__hint" id="t-hint-max" <?= $cantidadMenus === 0 ? 'style="display:none;"' : '' ?>>máximo 10 comidas por ticket</p>
-    <p class="t-counter__hint" id="t-hint-extras" style="<?= $cantidadMenus === 0 ? '' : 'display:none;' ?>color:#ff7a00;font-weight:700;">Solo extras</p>
-</div>
+    <p class="tb-solo-extras" id="t-hint-extras" hidden>Solo extras: agrega abajo lo que lleva.</p>
 
-<!-- BLOQUES DE MENÚ -->
-<?php for ($i = 1; $i <= 10; $i++):
-    $tipoSel  = $_POST["menus"][$i]["tipo_menu"] ?? "Zabisu";
-    $tieneErr = !empty($erroresMenus[$i]);
-?>
-<div class="t-menu <?= $tieneErr ? 't-menu--error' : '' ?>"
-     id="t-menu-<?= $i ?>"
-     <?= $i > $cantidadMenus ? 'style="display:none;"' : '' ?>>
+    <?php for ($i = 1; $i <= 10; $i++):
+        $tipoSel  = $_POST["menus"][$i]["tipo_menu"] ?? "Zabisu";
+        $tieneErr = !empty($erroresMenus[$i]);
+    ?>
+    <section class="tb-comida<?= $tieneErr ? " tb-comida--error" : "" ?>" id="t-menu-<?= $i ?>" data-menu="<?= $i ?>"<?= $i > $cantidadMenus ? " hidden" : "" ?>>
+        <div class="tb-comida__cab">
+            <h2 class="pz-cinta pz-fibra">Comida <?= $i ?></h2>
+            <span class="tb-comida__estado" aria-live="polite"></span>
+            <button type="button" class="tb-duplicar" data-menu="<?= $i ?>">Duplicar</button>
+        </div>
 
-    <div class="t-menu__num">Comida <?= $i ?></div>
+        <div class="tb-tipos">
+            <?php foreach (["Zabisu","Ejecutivo"] as $tipo): ?>
+            <button type="button" class="tb-tipo<?= $tipoSel === $tipo ? " tb-tipo--activo" : "" ?>" data-menu="<?= $i ?>" data-tipo="<?= $tipo ?>" aria-pressed="<?= $tipoSel === $tipo ? "true" : "false" ?>">
+                <span><?= $tipo ?></span><b>$<?= number_format($preciosMenus[$tipo] ?? 0, 0) ?></b>
+            </button>
+            <?php endforeach; ?>
+        </div>
+        <input type="hidden" name="menus[<?= $i ?>][tipo_menu]" id="t-tipo-val-<?= $i ?>" value="<?= htmlspecialchars($tipoSel) ?>">
 
-    <!-- Tipo de menú -->
-    <div class="t-tipo">
-        <?php foreach (["Zabisu","Ejecutivo"] as $tipo): ?>
-        <button type="button"
-                class="t-tipo__btn <?= $tipoSel === $tipo ? 't-tipo__btn--activo' : '' ?>"
-                data-menu="<?= $i ?>"
-                data-tipo="<?= $tipo ?>">
-            <?= $tipo === "Zabisu" ? "🍽 ZABISU" : "⚡ EJECUTIVO" ?>
-            <small>$<?= number_format($preciosMenus[$tipo] ?? 0, 0) ?></small>
-        </button>
-        <?php endforeach; ?>
-    </div>
-    <input type="hidden" name="menus[<?= $i ?>][tipo_menu]" id="t-tipo-val-<?= $i ?>" value="<?= htmlspecialchars($tipoSel) ?>">
+        <?php foreach (["Zabisu","Ejecutivo"] as $tipoMenu): $vis = $tipoSel === $tipoMenu; ?>
+        <div class="t-opciones tb-ops" id="t-ops-<?= $i ?>-<?= $tipoMenu ?>" data-menu="<?= $i ?>" data-tipo="<?= $tipoMenu ?>"<?= $vis ? "" : " hidden" ?>>
 
-    <!-- Opciones por tipo -->
-    <?php foreach (["Zabisu","Ejecutivo"] as $tipoMenu): ?>
-    <div id="t-ops-<?= $i ?>-<?= $tipoMenu ?>"
-         class="t-opciones"
-         data-menu="<?= $i ?>"
-         data-tipo="<?= $tipoMenu ?>"
-         <?= $tipoSel !== $tipoMenu ? 'style="display:none;"' : '' ?>>
-
-        <?php if (!empty($menusPorTipo[$tipoMenu]["Plato fuerte"])): ?>
-        <span class="t-cat-label">🍽 Guisado · elige 1</span>
-        <div class="t-grid">
+            <?php if (!empty($menusPorTipo[$tipoMenu]["Plato fuerte"])): ?>
+            <p class="tb-titulo">Guisado</p>
+            <div class="tb-grid">
+                <?php foreach ($menusPorTipo[$tipoMenu]["Plato fuerte"] as $prod):
+                    $chk = (($_POST["menus"][$i]["plato_fuerte"] ?? "") == $prod["id_producto"] && $vis); ?>
+                <label class="tb-card">
+                    <input type="radio" name="menus[<?= $i ?>][plato_fuerte]" value="<?= (int)$prod["id_producto"] ?>"
+                           <?= $chk ? "checked" : "" ?><?= $vis ? "" : " disabled" ?>>
+                    <span><?= htmlspecialchars($prod["nombre"]) ?></span>
+                </label>
+                <?php endforeach; ?>
+            </div>
             <?php foreach ($menusPorTipo[$tipoMenu]["Plato fuerte"] as $prod): ?>
-            <?php $chk = (($_POST["menus"][$i]["plato_fuerte"] ?? "") == $prod["id_producto"] && $tipoSel === $tipoMenu); ?>
-            <?php $ago = !empty($prod["agotado"]); ?>
-            <label class="t-card <?= $ago ? 't-card--ago' : '' ?>">
-                <input type="radio"
-                       name="menus[<?= $i ?>][plato_fuerte]"
-                       value="<?= (int)$prod["id_producto"] ?>"
-                       <?= $chk ? 'checked' : '' ?>
-                       <?= ($ago || $tipoSel !== $tipoMenu) ? 'disabled' : '' ?>>
-                <span class="t-card__name"><?= htmlspecialchars($prod["nombre"]) ?></span>
-                <?php if ($ago): ?><span class="t-ago-badge">Agotado</span><?php endif; ?>
-            </label>
+                <?php echo htmlOpcionesPlato($prod, "menus[{$i}]", $_POST["menus"][$i]["opcion"] ?? null); ?>
             <?php endforeach; ?>
-        </div>
-        <?php foreach ($menusPorTipo[$tipoMenu]["Plato fuerte"] as $prod): ?>
-            <?php echo htmlOpcionesPlato($prod, "menus[{$i}]", $_POST["menus"][$i]["opcion"] ?? null); ?>
-        <?php endforeach; ?>
-        <?php endif; ?>
+            <?php endif; ?>
 
-        <?php if (!empty($menusPorTipo[$tipoMenu]["Complemento"])): ?>
-        <span class="t-cat-label">🥗 Complementos · elige hasta 2</span>
-        <div class="t-grid">
-            <?php foreach ($menusPorTipo[$tipoMenu]["Complemento"] as $comp): ?>
-            <?php $chk = (in_array($comp["id_producto"], array_map('intval', $_POST["menus"][$i]["complementos"] ?? [])) && $tipoSel === $tipoMenu); ?>
-            <label class="t-card" data-menu="<?= $i ?>" data-tipo="<?= $tipoMenu ?>">
-                <input type="checkbox"
-                       name="menus[<?= $i ?>][complementos][]"
-                       value="<?= (int)$comp["id_producto"] ?>"
-                       <?= $chk ? 'checked' : '' ?>
-                       <?= $tipoSel !== $tipoMenu ? 'disabled' : '' ?>>
-                <span class="t-card__name"><?= htmlspecialchars($comp["nombre"]) ?></span>
-            </label>
-            <?php endforeach; ?>
-        </div>
-        <?php endif; ?>
-
-        <?php
-        $sopaN   = $menusPorTipo[$tipoMenu]["Sopa"][0]["nombre"]   ?? "";
-        $aguaN   = $menusPorTipo[$tipoMenu]["Agua"][0]["nombre"]   ?? "";
-        $cortesiaN = $menusPorTipo[$tipoMenu]["Cortesia"][0]["nombre"] ?? "";
-        ?>
-        <?php if ($sopaN || $aguaN || $cortesiaN): ?>
-        <div class="t-incluye">
-            <span class="t-incluye__title">También incluye</span>
-            <?php if ($sopaN):     ?><span class="t-incluye__item">🥣 <?= htmlspecialchars($sopaN) ?></span><?php endif; ?>
-            <?php if ($aguaN):     ?><span class="t-incluye__item">💧 <?= htmlspecialchars($aguaN) ?></span><?php endif; ?>
-            <?php if ($cortesiaN): ?><span class="t-incluye__item">🍬 <?= htmlspecialchars($cortesiaN) ?></span><?php endif; ?>
-        </div>
-        <?php endif; ?>
-
-    </div>
-    <?php endforeach; ?>
-
-</div>
-<?php endfor; ?>
-
-<!-- EXTRAS -->
-<?php if (!empty($extrasForm)):
-    $hayExtrasPrev = false;
-    foreach ($_POST["extras"] ?? [] as $cant) { if ((int)$cant > 0) { $hayExtrasPrev = true; break; } }
-?>
-<div class="t-bloque">
-    <div class="t-toggle-header <?= $hayExtrasPrev ? 't-toggle-header--abierto' : '' ?>" id="t-ex-header">
-        <h2>Extras<span class="t-toggle-badge <?= $hayExtrasPrev ? 't-toggle-badge--on' : '' ?>" id="t-ex-badge"></span></h2>
-        <span class="t-toggle-arrow">▾</span>
-    </div>
-    <div class="t-toggle-body <?= $hayExtrasPrev ? 't-toggle-body--abierto' : '' ?>" id="t-ex-body">
-    <div class="t-extra-grid">
-        <?php foreach ($extrasForm as $cat => $items): ?>
-        <?php $precioMostrar = ($cat === "Postre") ? number_format((float)($items[0]["precio"] ?? 0), 0) : $PRECIOS_EXTRA[$cat]; ?>
-        <span class="t-extra-cat-label"><?= $iconosExtra[$cat] ?> <?= htmlspecialchars($cat) ?> extra · $<?= $precioMostrar ?> c/u</span>
-        <?php foreach ($items as $prod):
-            $cantPrev = (int)($_POST["extras"][$prod["id_producto"]] ?? 0);
-            $precioCard = ($cat === "Postre") ? (float)($prod["precio"] ?? 0) : ($PRECIOS_EXTRA[$cat] ?? 25);
-        ?>
-        <div class="t-extra-card <?= $cantPrev > 0 ? 't-extra-card--activo' : '' ?>"
-             id="t-ex-card-<?= (int)$prod["id_producto"] ?>"
-             data-precio="<?= $precioCard ?>">
-            <div class="t-extra-card__info">
-                <span class="t-extra-card__nombre"><?= htmlspecialchars($prod["nombre"]) ?></span>
-                <span class="t-extra-card__precio">$<?= number_format($precioCard, 0) ?> por pieza</span>
+            <?php if (!empty($menusPorTipo[$tipoMenu]["Complemento"])): ?>
+            <p class="tb-titulo">Complementos <small>1 o 2</small></p>
+            <div class="tb-grid tb-grid--comp">
+                <?php foreach ($menusPorTipo[$tipoMenu]["Complemento"] as $comp):
+                    $chk = (in_array((int)$comp["id_producto"], array_map('intval', $_POST["menus"][$i]["complementos"] ?? []), true) && $vis); ?>
+                <label class="tb-card tb-card--comp">
+                    <input type="checkbox" name="menus[<?= $i ?>][complementos][]" value="<?= (int)$comp["id_producto"] ?>"
+                           <?= $chk ? "checked" : "" ?><?= $vis ? "" : " disabled" ?>>
+                    <span><?= htmlspecialchars($comp["nombre"]) ?></span>
+                </label>
+                <?php endforeach; ?>
             </div>
-            <div class="t-extra-contador">
-                <button type="button" class="t-extra-btn t-extra-btn--menos"
-                        data-id="<?= (int)$prod["id_producto"] ?>">−</button>
-                <span class="t-extra-num <?= $cantPrev === 0 ? 't-extra-num--cero' : '' ?>"
-                      id="t-ex-num-<?= (int)$prod["id_producto"] ?>"><?= $cantPrev ?></span>
-                <button type="button" class="t-extra-btn t-extra-btn--mas"
-                        data-id="<?= (int)$prod["id_producto"] ?>">+</button>
-            </div>
-            <input type="hidden"
-                   name="extras[<?= (int)$prod["id_producto"] ?>]"
-                   id="t-ex-val-<?= (int)$prod["id_producto"] ?>"
-                   value="<?= $cantPrev ?>">
+            <?php endif; ?>
+
+            <?php
+            $incluye = array_filter([
+                $menusPorTipo[$tipoMenu]["Sopa"][0]["nombre"] ?? "",
+                $menusPorTipo[$tipoMenu]["Agua"][0]["nombre"] ?? "",
+                $menusPorTipo[$tipoMenu]["Cortesia"][0]["nombre"] ?? "",
+            ]);
+            ?>
+            <?php if ($incluye): ?>
+            <p class="tb-incluye">Incluye <?= htmlspecialchars(implode(", ", $incluye)) ?></p>
+            <?php endif; ?>
         </div>
         <?php endforeach; ?>
-        <?php endforeach; ?>
-    </div>
+    </section>
+    <?php endfor; ?>
 
-    <!-- Extra personalizado -->
-    <hr class="t-custom-sep">
-    <span class="t-extra-cat-label">✏️ Extra personalizado · precio libre</span>
-    <div id="t-custom-list"></div>
-    <button type="button" id="t-add-custom" class="t-add-custom-btn">＋ Agregar extra personalizado</button>
-
-    </div><!-- /.t-toggle-body -->
-</div>
-<?php endif; ?>
-
-<!-- ENTREGA -->
-<div class="t-bloque">
-    <h2>Punto de entrega</h2>
-    <div class="t-ub-grid">
-        <?php foreach ($ubicaciones as $ub): ?>
-        <?php if ($ub["tipo"] !== "entrega") continue; ?>
-        <label class="t-ub-card">
-            <input type="radio" name="ubicacion_sel" value="<?= (int)$ub["id_ubicacion"] ?>">
-            <span class="t-ub-card__name">📍 <?= htmlspecialchars($ub["nombre_ubicacion"]) ?></span>
-        </label>
-        <?php endforeach; ?>
-    </div>
-
-    <?php foreach ($ubicaciones as $ub): ?>
-    <?php if ($ub["tipo"] !== "entrega") continue; ?>
-    <div class="t-horarios" id="t-hors-<?= (int)$ub["id_ubicacion"] ?>">
-        <?php foreach ($horarios as $h): ?>
-        <?php if ($h["id_ubicacion"] != $ub["id_ubicacion"]) continue; ?>
-        <label class="t-hor-btn">
-            <input type="radio" name="id_horario" value="<?= (int)$h["id_horario"] ?>"
-                   <?= (($_POST["id_horario"] ?? "") == $h["id_horario"]) ? 'checked' : '' ?>>
-            <?= date("g:i A", strtotime($h["hora_entrega"])) ?>
-        </label>
-        <?php endforeach; ?>
-    </div>
-    <?php endforeach; ?>
-</div>
-
-<!-- TOTAL + SUBMIT -->
-<div class="t-bloque">
-    <div class="t-total-row">
-        <span class="t-total-row__label">Total</span>
-        <span class="t-total-row__val" id="t-total">$0</span>
-    </div>
-    <button type="submit" name="guardar_pedido" value="1" class="t-submit" id="t-submit">
-        Guardar pedido →
+    <button type="button" class="tb-agregar" id="tb-agregar">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        Agregar comida
     </button>
+
+    <!-- EXTRAS (plegados: casi nunca se usan) -->
+    <?php if (!empty($extrasForm)):
+        $hayExtrasPrev = false;
+        foreach ($_POST["extras"] ?? [] as $cant) { if ((int)$cant > 0) { $hayExtrasPrev = true; break; } }
+    ?>
+    <details class="tb-extras" id="t-ex"<?= $hayExtrasPrev || $cantidadMenus === 0 ? " open" : "" ?>>
+        <summary>Extras <span class="tb-extras__badge" id="t-ex-badge" hidden></span></summary>
+        <div class="tb-extras__lista">
+            <?php foreach ($extrasForm as $cat => $items):
+                foreach ($items as $prod):
+                    $cantPrev   = (int)($_POST["extras"][$prod["id_producto"]] ?? 0);
+                    $precioCard = ($cat === "Postre") ? (float)($prod["precio"] ?? 0) : ($PRECIOS_EXTRA[$cat] ?? 25);
+            ?>
+            <div class="tb-extra<?= $cantPrev > 0 ? " tb-extra--activo" : "" ?>" id="t-ex-card-<?= (int)$prod["id_producto"] ?>" data-precio="<?= $precioCard ?>">
+                <span class="tb-extra__txt"><b><?= htmlspecialchars($prod["nombre"]) ?></b><small><?= htmlspecialchars($cat) ?> extra, $<?= number_format($precioCard, 0) ?></small></span>
+                <span class="tb-mini">
+                    <button type="button" class="t-extra-btn t-extra-btn--menos" data-id="<?= (int)$prod["id_producto"] ?>" aria-label="Menos <?= htmlspecialchars($prod["nombre"]) ?>">−</button>
+                    <output id="t-ex-num-<?= (int)$prod["id_producto"] ?>"><?= $cantPrev ?></output>
+                    <button type="button" class="t-extra-btn t-extra-btn--mas" data-id="<?= (int)$prod["id_producto"] ?>" aria-label="Más <?= htmlspecialchars($prod["nombre"]) ?>">+</button>
+                </span>
+                <input type="hidden" name="extras[<?= (int)$prod["id_producto"] ?>]" id="t-ex-val-<?= (int)$prod["id_producto"] ?>" value="<?= $cantPrev ?>">
+            </div>
+            <?php endforeach; endforeach; ?>
+
+            <div id="t-custom-list"></div>
+            <button type="button" id="t-add-custom" class="tb-add-custom">Agregar extra con precio libre</button>
+        </div>
+    </details>
+    <?php endif; ?>
 </div>
 
 </form>
 <?php endif; ?>
-</div>
 
+<?php if (!$exito && $menuActivo): ?>
 <script>
 (function () {
-    var preciosMenus   = <?= json_encode($preciosMenus) ?>;
-    var cantidadActual = <?= (int)$cantidadMenus ?>;
+    var preciosMenus = <?= json_encode($preciosMenus) ?>;
     var MAX = 10;
+    var form = document.getElementById("form-tableta");
+    var cantidadActual = parseInt(document.getElementById("t-cantidad").value, 10) || 0;
+    function $(id) { return document.getElementById(id); }
+    function pesos(v) { return "$" + v.toLocaleString("es-MX", { maximumFractionDigits: 2 }); }
 
-    /* ── Toggles (observaciones y extras) ── */
-    function initToggle(headerId, bodyId) {
-        var header = document.getElementById(headerId);
-        var body   = document.getElementById(bodyId);
-        if (!header || !body) return;
-        header.addEventListener("click", function () {
-            var abierto = body.classList.toggle("t-toggle-body--abierto");
-            header.classList.toggle("t-toggle-header--abierto", abierto);
-        });
-    }
-    initToggle("t-obs-header", "t-obs-body");
-    initToggle("t-ex-header",  "t-ex-body");
-
-    /* Badge observaciones: aparece cuando hay texto */
-    var obsTextarea = document.getElementById("t-obs-textarea");
-    var obsBadge    = document.getElementById("t-obs-badge");
-    if (obsTextarea && obsBadge) {
-        obsTextarea.addEventListener("input", function () {
-            obsBadge.classList.toggle("t-toggle-badge--on", this.value.trim() !== "");
-        });
-    }
-
-    /* ── Nombre → MAYÚSCULAS ── */
-    var nombreInput = document.getElementById("t-nombre");
-    if (nombreInput) {
-        nombreInput.addEventListener("input", function () {
-            var pos    = this.selectionStart;
-            var limpio = this.value.replace(/[^\p{L}\s]/gu, "").toUpperCase();
-            if (this.value !== limpio) {
-                this.value = limpio;
-                try { this.setSelectionRange(pos, pos); } catch (e) {}
-            }
-        });
-    }
-
-    /* ── Contador ── */
-    var numDisplay = document.getElementById("t-num-display");
-    var inputCant  = document.getElementById("t-cantidad");
-
-    function setCantidad(n) {
-        if (n < 0) n = 0;
-        if (n > MAX) n = MAX;
-        cantidadActual = n;
-        numDisplay.textContent = n;
-        inputCant.value = n;
-        actualizarBloques();
-        actualizarTotal();
-
-        var hintMax    = document.getElementById("t-hint-max");
-        var hintExtras = document.getElementById("t-hint-extras");
-        if (hintMax)    hintMax.style.display    = n === 0 ? "none" : "";
-        if (hintExtras) hintExtras.style.display = n === 0 ? "" : "none";
-
-        if (n === 0) {
-            var exBody   = document.getElementById("t-ex-body");
-            var exHeader = document.getElementById("t-ex-header");
-            if (exBody && !exBody.classList.contains("t-toggle-body--abierto")) {
-                exBody.classList.add("t-toggle-body--abierto");
-                if (exHeader) exHeader.classList.add("t-toggle-header--abierto");
-            }
-        }
-    }
-
-    document.getElementById("t-menos").addEventListener("click", function () { setCantidad(cantidadActual - 1); });
-    document.getElementById("t-mas").addEventListener("click",   function () { setCantidad(cantidadActual + 1); });
-
-    function actualizarBloques() {
-        for (var i = 1; i <= MAX; i++) {
-            var bloque = document.getElementById("t-menu-" + i);
-            if (!bloque) continue;
-            var visible = i <= cantidadActual;
-            bloque.style.display = visible ? "" : "none";
-            bloque.querySelectorAll("input").forEach(function (el) {
-                if (!visible) {
-                    if (!el.disabled) { el.disabled = true; el.dataset.sd = "1"; }
-                } else if (el.dataset.sd) {
-                    el.disabled = false; delete el.dataset.sd;
-                }
-            });
-        }
-    }
-
-    /* ── Tipo de menú ── */
-    document.querySelectorAll(".t-tipo__btn").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-            cambiarTipo(parseInt(this.dataset.menu), this.dataset.tipo);
-        });
+    /* ── Nombre → MAYÚSCULAS, solo letras ── */
+    $("t-nombre").addEventListener("input", function () {
+        var pos = this.selectionStart;
+        var limpio = this.value.replace(/[^\p{L}\s]/gu, "").toUpperCase();
+        if (this.value !== limpio) { this.value = limpio; try { this.setSelectionRange(pos, pos); } catch (e) {} }
+        this.closest(".tb-campo").classList.remove("tb-falta");
     });
 
-    function cambiarTipo(menuNum, tipo) {
-        var hidden = document.getElementById("t-tipo-val-" + menuNum);
-        if (hidden) hidden.value = tipo;
+    /* ── Cuántas comidas (0 = solo extras) ── */
+    function setCantidad(n) {
+        cantidadActual = Math.max(0, Math.min(MAX, n));
+        $("t-num-display").textContent = cantidadActual;
+        $("t-cantidad").value = cantidadActual;
+        for (var i = 1; i <= MAX; i++) {
+            var bloque = $("t-menu-" + i);
+            var visible = i <= cantidadActual;
+            bloque.hidden = !visible;
+            // Las comidas ocultas no se envían; al volver, solo se reactiva lo del tipo elegido
+            $("t-tipo-val-" + i).disabled = !visible;
+            bloque.querySelectorAll(".tb-ops").forEach(function (ops) {
+                var activo = visible && !ops.hidden;
+                ops.querySelectorAll(".tb-card input").forEach(function (inp) { inp.disabled = !activo; });
+            });
+        }
+        $("t-menos").disabled = cantidadActual <= 0;
+        $("t-mas").disabled = cantidadActual >= MAX;
+        $("tb-agregar").hidden = cantidadActual >= MAX;
+        $("t-hint-extras").hidden = cantidadActual !== 0;
+        if (cantidadActual === 0 && $("t-ex")) $("t-ex").open = true;
+        actualizarTotal();
+    }
+    $("t-menos").addEventListener("click", function () { setCantidad(cantidadActual - 1); });
+    $("t-mas").addEventListener("click", function () { setCantidad(cantidadActual + 1); });
+    $("tb-agregar").addEventListener("click", function () {
+        setCantidad(cantidadActual + 1);
+        $("t-menu-" + cantidadActual).scrollIntoView({ behavior: "smooth", block: "start" });
+    });
 
-        document.querySelectorAll(".t-tipo__btn[data-menu='" + menuNum + "']").forEach(function (b) {
-            b.classList.toggle("t-tipo__btn--activo", b.dataset.tipo === tipo);
+    /* ── Tipo de menú ── */
+    function cambiarTipo(i, tipo) {
+        $("t-tipo-val-" + i).value = tipo;
+        document.querySelectorAll(".tb-tipo[data-menu='" + i + "']").forEach(function (b) {
+            var on = b.dataset.tipo === tipo;
+            b.classList.toggle("tb-tipo--activo", on);
+            b.setAttribute("aria-pressed", on);
         });
-
-        document.querySelectorAll(".t-opciones[data-menu='" + menuNum + "']").forEach(function (div) {
-            var visible = div.dataset.tipo === tipo;
-            div.style.display = visible ? "" : "none";
-            div.querySelectorAll("input").forEach(function (inp) {
+        document.querySelectorAll(".tb-ops[data-menu='" + i + "']").forEach(function (ops) {
+            var visible = ops.dataset.tipo === tipo;
+            ops.hidden = !visible;
+            ops.querySelectorAll(".tb-card input").forEach(function (inp) {
                 inp.disabled = !visible;
                 if (!visible) inp.checked = false;
             });
         });
+        estadoComida(i);
         actualizarTotal();
     }
+    form.addEventListener("click", function (e) {
+        var t = e.target.closest(".tb-tipo");
+        if (t) cambiarTipo(parseInt(t.dataset.menu, 10), t.dataset.tipo);
+        var d = e.target.closest(".tb-duplicar");
+        if (d) duplicar(parseInt(d.dataset.menu, 10));
+    });
 
-    /* ── Complementos: máx 2 ── */
-    document.querySelectorAll(".t-card input[type='checkbox']").forEach(function (cb) {
-        cb.addEventListener("change", function () {
-            if (!this.checked) { actualizarTotal(); return; }
-            var contenedor = this.closest(".t-opciones");
-            if (!contenedor) { actualizarTotal(); return; }
-            var checks = Array.from(document.querySelectorAll(
-                "#t-ops-" + contenedor.dataset.menu + "-" + contenedor.dataset.tipo + " input[type='checkbox']:checked"
-            ));
-            if (checks.length > 2) checks[0].checked = false;
+    /* ── ¿Ya está completa la comida? (guisado, 1 o 2 complementos y aderezo si aplica) ── */
+    function faltasComida(i) {
+        var ops = document.querySelector(".tb-ops[data-menu='" + i + "']:not([hidden])");
+        var faltas = [];
+        if (!ops) return ["tipo"];
+        if (!ops.querySelector("input[type=radio]:checked")) faltas.push("guisado");
+        else {
+            var ad = ops.querySelector(".opciones-plato[style*='block']");
+            if (ad && !ad.querySelector("input:checked")) faltas.push("aderezo");
+        }
+        if (ops.querySelector(".tb-grid--comp") && !ops.querySelector("input[type=checkbox]:checked")) faltas.push("complemento");
+        return faltas;
+    }
+    function estadoComida(i) {
+        var c = $("t-menu-" + i);
+        var faltas = faltasComida(i);
+        c.classList.toggle("tb-comida--lista", faltas.length === 0);
+        c.querySelector(".tb-comida__estado").textContent = faltas.length ? "" : "Lista";
+        if (!faltas.length) c.classList.remove("tb-comida--error");
+    }
+
+    /* ── Complementos: máximo 2, se suelta el más viejo ── */
+    form.addEventListener("change", function (e) {
+        var t = e.target;
+        var card = t.closest(".tb-comida");
+        if (t.type === "checkbox" && t.closest(".tb-grid--comp") && t.checked) {
+            var marcados = Array.prototype.slice.call(t.closest(".tb-grid--comp").querySelectorAll("input:checked"));
+            if (marcados.length > 2) (marcados[0] === t ? marcados[1] : marcados[0]).checked = false;
+        }
+        if (card) setTimeout(function () { estadoComida(parseInt(card.dataset.menu, 10)); }, 0);
+        actualizarTotal();
+    });
+
+    /* ── Duplicar: copia la comida en una nueva al final ── */
+    function duplicar(i) {
+        if (cantidadActual >= MAX) return;
+        setCantidad(cantidadActual + 1);
+        var j = cantidadActual;
+        var tipo = $("t-tipo-val-" + i).value;
+        cambiarTipo(j, tipo);
+        var origen = document.getElementById("t-ops-" + i + "-" + tipo);
+        var destino = document.getElementById("t-ops-" + j + "-" + tipo);
+        var plato = origen.querySelector(".tb-card input[type=radio]:checked");
+        if (plato) {
+            var p = destino.querySelector(".tb-card input[value='" + plato.value + "']");
+            p.checked = true;
+            p.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+        origen.querySelectorAll(".tb-grid--comp input:checked").forEach(function (c) {
+            destino.querySelector(".tb-grid--comp input[value='" + c.value + "']").checked = true;
+        });
+        // El aderezo aparece un instante después (lo maneja scriptOpcionesPlato)
+        setTimeout(function () {
+            var op = origen.querySelector(".opciones-plato input:checked");
+            if (op) {
+                var od = destino.querySelector(".opciones-plato input[value='" + CSS.escape(op.value) + "']");
+                if (od) { od.disabled = false; od.checked = true; od.dispatchEvent(new Event("change", { bubbles: true })); }
+            }
+            estadoComida(j);
             actualizarTotal();
+            $("t-menu-" + j).scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }, 30);
+    }
+
+    /* ── Entrega: rápida (un toque) o punto y luego hora ── */
+    var elegida = $("tb-entrega-elegida");
+    function mostrarHoras(idUb) {
+        document.querySelectorAll(".tb-horas").forEach(function (d) { d.hidden = d.id !== "t-hors-" + idUb; });
+    }
+    function marcarEntrega() {
+        var h = document.querySelector("input[name='id_horario']:checked");
+        document.querySelectorAll(".tb-rapida__btn").forEach(function (b) {
+            b.classList.toggle("tb-rapida__btn--activo", !!h && b.dataset.horario === h.value);
+        });
+        if (h) {
+            var hora = h.parentNode.textContent.trim();
+            var ub = document.querySelector("input[name='ubicacion_sel'][value='" + h.closest(".tb-horas").id.replace("t-hors-", "") + "']");
+            elegida.textContent = (ub ? ub.parentNode.textContent.trim() + ", " : "") + hora;
+            elegida.hidden = false;
+            $("tb-entrega").classList.remove("tb-falta");
+        } else {
+            elegida.hidden = true;
+        }
+    }
+    document.querySelectorAll(".tb-rapida__btn").forEach(function (b) {
+        b.addEventListener("click", function () {
+            var ub = document.querySelector("input[name='ubicacion_sel'][value='" + b.dataset.ubicacion + "']");
+            if (ub) ub.checked = true;
+            mostrarHoras(b.dataset.ubicacion);
+            document.querySelector("input[name='id_horario'][value='" + b.dataset.horario + "']").checked = true;
+            marcarEntrega();
         });
     });
-
-    document.querySelectorAll(".t-card input[type='radio']").forEach(function (r) {
-        r.addEventListener("change", actualizarTotal);
+    if ($("tb-otro")) $("tb-otro").addEventListener("click", function () {
+        var p = $("tb-puntos");
+        p.hidden = !p.hidden;
+        this.setAttribute("aria-expanded", !p.hidden);
     });
-
-    /* ── Ubicaciones → mostrar horarios ── */
-    document.querySelectorAll(".t-ub-card input[type='radio']").forEach(function (r) {
+    document.querySelectorAll("input[name='ubicacion_sel']").forEach(function (r) {
         r.addEventListener("change", function () {
-            document.querySelectorAll(".t-horarios").forEach(function (d) { d.classList.remove("t-horarios--on"); });
-            var hDiv = document.getElementById("t-hors-" + this.value);
-            if (hDiv) hDiv.classList.add("t-horarios--on");
-            document.querySelectorAll("input[name='id_horario']").forEach(function (rh) { rh.checked = false; });
+            document.querySelectorAll("input[name='id_horario']").forEach(function (h) { h.checked = false; });
+            mostrarHoras(this.value);
+            // Si el punto tiene un solo horario, se elige solo
+            var horas = $("t-hors-" + this.value).querySelectorAll("input");
+            if (horas.length === 1) horas[0].checked = true;
+            marcarEntrega();
         });
     });
-
-    /* Restaurar selección ubicación/horario desde POST con errores */
-    (function () {
-        var horSel = document.querySelector("input[name='id_horario']:checked");
-        if (!horSel) return;
-        var hDiv = horSel.closest(".t-horarios");
-        if (!hDiv) return;
-        hDiv.classList.add("t-horarios--on");
-        var ubId = hDiv.id.replace("t-hors-", "");
-        var ubRadio = document.querySelector("input[name='ubicacion_sel'][value='" + ubId + "']");
-        if (ubRadio) ubRadio.checked = true;
+    document.querySelectorAll("input[name='id_horario']").forEach(function (r) { r.addEventListener("change", marcarEntrega); });
+    (function restaurar() {
+        var h = document.querySelector("input[name='id_horario']:checked");
+        if (!h) return;
+        var idUb = h.closest(".tb-horas").id.replace("t-hors-", "");
+        var ub = document.querySelector("input[name='ubicacion_sel'][value='" + idUb + "']");
+        if (ub) ub.checked = true;
+        mostrarHoras(idUb);
+        marcarEntrega();
     })();
 
     /* ── Extras ── */
-    var exBadge = document.getElementById("t-ex-badge");
-
     function actualizarBadgeExtras() {
-        if (!exBadge) return;
+        var badge = $("t-ex-badge");
+        if (!badge) return;
         var total = 0;
-        document.querySelectorAll(".t-extra-card").forEach(function (card) {
-            var id  = card.id.replace("t-ex-card-", "");
-            total += parseInt(document.getElementById("t-ex-val-" + id)?.value) || 0;
-        });
-        document.querySelectorAll(".t-custom-cant-hidden").forEach(function (inp) {
-            total += parseInt(inp.value) || 0;
-        });
-        exBadge.textContent = total > 0 ? "+" + total : "";
-        exBadge.classList.toggle("t-toggle-badge--on", total > 0);
+        document.querySelectorAll(".tb-extra input[type=hidden]").forEach(function (inp) { total += parseInt(inp.value, 10) || 0; });
+        document.querySelectorAll(".t-custom-cant-hidden").forEach(function (inp) { total += parseInt(inp.value, 10) || 0; });
+        badge.textContent = "+" + total;
+        badge.hidden = total === 0;
     }
-
-    document.querySelectorAll(".t-extra-btn").forEach(function (btn) {
+    document.querySelectorAll(".tb-extra .t-extra-btn").forEach(function (btn) {
         btn.addEventListener("click", function () {
-            var id      = this.dataset.id;
-            var valEl   = document.getElementById("t-ex-val-"  + id);
-            var numEl   = document.getElementById("t-ex-num-"  + id);
-            var cardEl  = document.getElementById("t-ex-card-" + id);
-            if (!valEl || !numEl || !cardEl) return;
-            var n = parseInt(valEl.value) || 0;
-            if (this.classList.contains("t-extra-btn--mas"))   n = Math.min(n + 1, 5);
-            if (this.classList.contains("t-extra-btn--menos")) n = Math.max(n - 1, 0);
-            valEl.value       = n;
-            numEl.textContent = n;
-            numEl.classList.toggle("t-extra-num--cero", n === 0);
-            cardEl.classList.toggle("t-extra-card--activo", n > 0);
+            var id = this.dataset.id;
+            var val = $("t-ex-val-" + id);
+            var n = parseInt(val.value, 10) || 0;
+            n = this.classList.contains("t-extra-btn--mas") ? Math.min(n + 1, 5) : Math.max(n - 1, 0);
+            val.value = n;
+            $("t-ex-num-" + id).textContent = n;
+            $("t-ex-card-" + id).classList.toggle("tb-extra--activo", n > 0);
             actualizarBadgeExtras();
             actualizarTotal();
         });
     });
-    actualizarBadgeExtras();
 
-    /* ── Extras personalizados ── */
     var customCount = 0;
-
     function crearFilaCustom(idx) {
         var row = document.createElement("div");
-        row.className = "t-custom-row";
-
-        var nombre = document.createElement("input");
-        nombre.type = "text";
-        nombre.name = "extras_custom[" + idx + "][nombre]";
-        nombre.placeholder = "Nombre del extra...";
-        nombre.className = "t-custom-nombre";
-        nombre.autocomplete = "off";
-
-        var precio = document.createElement("input");
-        precio.type = "number";
-        precio.name = "extras_custom[" + idx + "][precio]";
-        precio.placeholder = "$";
-        precio.className = "t-custom-precio";
-        precio.min = "0";
-        precio.step = "1";
-        precio.inputMode = "numeric";
-
-        var cantHidden = document.createElement("input");
-        cantHidden.type = "hidden";
-        cantHidden.name = "extras_custom[" + idx + "][cantidad]";
-        cantHidden.value = "1";
-        cantHidden.className = "t-custom-cant-hidden";
-
-        var numSpan = document.createElement("span");
-        numSpan.className = "t-extra-num";
-        numSpan.textContent = "1";
-
-        var btnMenos = document.createElement("button");
-        btnMenos.type = "button";
-        btnMenos.className = "t-extra-btn t-extra-btn--menos";
-        btnMenos.textContent = "−";
-
-        var btnMas = document.createElement("button");
-        btnMas.type = "button";
-        btnMas.className = "t-extra-btn t-extra-btn--mas";
-        btnMas.textContent = "+";
-
-        var contador = document.createElement("div");
-        contador.className = "t-extra-contador";
-        contador.appendChild(btnMenos);
-        contador.appendChild(numSpan);
-        contador.appendChild(btnMas);
-        contador.appendChild(cantHidden);
-
-        var btnRemove = document.createElement("button");
-        btnRemove.type = "button";
-        btnRemove.className = "t-custom-remove";
-        btnRemove.textContent = "✕";
-
-        row.appendChild(nombre);
-        row.appendChild(precio);
-        row.appendChild(contador);
-        row.appendChild(btnRemove);
-
-        btnMenos.addEventListener("click", function () {
-            var n = Math.max(1, parseInt(cantHidden.value) - 1);
-            cantHidden.value = n; numSpan.textContent = n;
-            actualizarBadgeExtras(); actualizarTotal();
-        });
-        btnMas.addEventListener("click", function () {
-            var n = Math.min(10, parseInt(cantHidden.value) + 1);
-            cantHidden.value = n; numSpan.textContent = n;
-            actualizarBadgeExtras(); actualizarTotal();
-        });
-        btnRemove.addEventListener("click", function () {
-            row.remove(); actualizarBadgeExtras(); actualizarTotal();
-        });
-        nombre.addEventListener("input", actualizarTotal);
-        precio.addEventListener("input", function () { actualizarBadgeExtras(); actualizarTotal(); });
-
+        row.className = "t-custom-row tb-custom";
+        row.innerHTML =
+            '<input type="text" class="t-custom-nombre" name="extras_custom[' + idx + '][nombre]" placeholder="¿Qué es?" autocomplete="off">' +
+            '<input type="number" class="t-custom-precio" name="extras_custom[' + idx + '][precio]" placeholder="$" min="0" step="1" inputmode="numeric">' +
+            '<span class="tb-mini"><button type="button" class="tb-c-menos" aria-label="Menos">−</button><output>1</output><button type="button" class="tb-c-mas" aria-label="Más">+</button></span>' +
+            '<input type="hidden" class="t-custom-cant-hidden" name="extras_custom[' + idx + '][cantidad]" value="1">' +
+            '<button type="button" class="tb-c-quitar" aria-label="Quitar extra">✕</button>';
+        var cant = row.querySelector(".t-custom-cant-hidden");
+        var out = row.querySelector("output");
+        row.querySelector(".tb-c-menos").addEventListener("click", function () { cant.value = Math.max(1, cant.value - 1); out.textContent = cant.value; actualizarBadgeExtras(); actualizarTotal(); });
+        row.querySelector(".tb-c-mas").addEventListener("click", function () { cant.value = Math.min(10, +cant.value + 1); out.textContent = cant.value; actualizarBadgeExtras(); actualizarTotal(); });
+        row.querySelector(".tb-c-quitar").addEventListener("click", function () { row.remove(); actualizarBadgeExtras(); actualizarTotal(); });
+        row.querySelector(".t-custom-precio").addEventListener("input", actualizarTotal);
         return row;
     }
-
-    var addCustomBtn = document.getElementById("t-add-custom");
-    if (addCustomBtn) {
-        addCustomBtn.addEventListener("click", function () {
-            document.getElementById("t-custom-list").appendChild(crearFilaCustom(customCount++));
-        });
-    }
+    if ($("t-add-custom")) $("t-add-custom").addEventListener("click", function () {
+        var row = crearFilaCustom(customCount++);
+        $("t-custom-list").appendChild(row);
+        actualizarBadgeExtras();
+        row.querySelector(".t-custom-nombre").focus();
+    });
 
     /* ── Total ── */
     function actualizarTotal() {
         var total = 0;
-        for (var i = 1; i <= cantidadActual; i++) {
-            var bloque = document.getElementById("t-menu-" + i);
-            if (!bloque || bloque.style.display === "none") continue;
-            var hidden = document.getElementById("t-tipo-val-" + i);
-            total += preciosMenus[hidden ? hidden.value : "Zabisu"] || 0;
-        }
-        document.querySelectorAll(".t-extra-card").forEach(function (card) {
-            var id    = card.id.replace("t-ex-card-", "");
-            var val   = parseInt(document.getElementById("t-ex-val-" + id)?.value) || 0;
-            var precio = parseFloat(card.dataset.precio) || 25;
-            total += val * precio;
+        for (var i = 1; i <= cantidadActual; i++) total += preciosMenus[$("t-tipo-val-" + i).value] || 0;
+        document.querySelectorAll(".tb-extra").forEach(function (card) {
+            var id = card.id.replace("t-ex-card-", "");
+            total += (parseInt($("t-ex-val-" + id).value, 10) || 0) * (parseFloat(card.dataset.precio) || 0);
         });
         document.querySelectorAll(".t-custom-row").forEach(function (row) {
-            var precio = parseFloat(row.querySelector(".t-custom-precio")?.value) || 0;
-            var cant   = parseInt(row.querySelector(".t-custom-cant-hidden")?.value) || 1;
-            total += precio * cant;
+            total += (parseFloat(row.querySelector(".t-custom-precio").value) || 0) * (parseInt(row.querySelector(".t-custom-cant-hidden").value, 10) || 1);
         });
-        var el = document.getElementById("t-total");
-        if (el) el.textContent = "$" + total.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        $("t-total").textContent = pesos(total);
+        $("tb-resumen").textContent = cantidadActual === 0 ? "Solo extras" : cantidadActual + " comida" + (cantidadActual !== 1 ? "s" : "");
     }
 
-    /* ── Submit: deshabilitar para evitar doble envío ── */
-    var form   = document.getElementById("form-tableta");
-    var submit   = document.getElementById("t-submit");
+    /* ── Guardar: revisar antes y evitar doble envío ── */
     var enviando = false;
-    if (form && submit) {
-        form.addEventListener("submit", function (e) {
-            if (enviando) { e.preventDefault(); return; }
-            enviando = true;
-            setTimeout(function () {
-                submit.disabled    = true;
-                submit.textContent = "Guardando...";
-            }, 50);
-        });
-    }
+    form.addEventListener("submit", function (e) {
+        if (enviando) { e.preventDefault(); return; }
+        var primero = null;
+        var nombre = $("t-nombre");
+        if (!nombre.value.trim()) { nombre.closest(".tb-campo").classList.add("tb-falta"); primero = nombre; }
+        if (!document.querySelector("input[name='id_horario']:checked")) {
+            $("tb-entrega").classList.add("tb-falta");
+            if ($("tb-puntos").hidden && !document.querySelector(".tb-rapida__btn")) $("tb-puntos").hidden = false;
+            primero = primero || $("tb-entrega");
+        }
+        for (var i = 1; i <= cantidadActual; i++) {
+            var faltas = faltasComida(i);
+            var c = $("t-menu-" + i);
+            c.classList.toggle("tb-comida--error", faltas.length > 0);
+            c.querySelector(".tb-comida__estado").textContent = faltas.length ? "Falta: " + faltas.join(", ") : "Lista";
+            if (faltas.length) primero = primero || c;
+        }
+        if (primero) {
+            e.preventDefault();
+            primero.scrollIntoView({ behavior: "smooth", block: "center" });
+            if (primero === nombre) nombre.focus({ preventScroll: true });
+            return;
+        }
+        enviando = true;
+        var b = $("t-submit");
+        setTimeout(function () { b.disabled = true; b.textContent = "Guardando…"; }, 30);
+    });
 
-    /* ── Init ── */
-    actualizarBloques();
-    actualizarTotal();
+    /* ── Inicio ── */
+    setCantidad(cantidadActual);
+    for (var i = 1; i <= MAX; i++) estadoComida(i);
+    actualizarBadgeExtras();
 })();
 </script>
+<?php endif; ?>
 
 <?php echo scriptOpcionesPlato(); ?>
 </body>
