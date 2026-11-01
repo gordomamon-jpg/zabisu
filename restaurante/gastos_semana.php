@@ -182,14 +182,15 @@ function filaFija(int $i, array $c, array $enviado): void {
     <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
-    <link rel="stylesheet" href="../assets/css/resumen-pizarron.css?v=1">
-    <link rel="stylesheet" href="../assets/css/gastos-pizarron.css?v=3">
+    <link rel="stylesheet" href="../assets/css/resumen-pizarron.css?v=2">
+    <link rel="stylesheet" href="../assets/css/gastos-pizarron.css?v=4">
 </head>
 <body class="pz rp gs">
 <?php require __DIR__ . "/../includes/pz_filtros.php"; ?>
 
 <main class="pz-pagina rp-pagina gs-pagina">
 
+    <div class="gs-top">
     <header class="pz-cab">
         <a class="pz-marca" href="panel_general.php" aria-label="Zabisu, volver al panel general">
             <img src="../assets/img/LOGO_N_128.png" alt="">
@@ -221,6 +222,7 @@ function filaFija(int $i, array $c, array $enviado): void {
     <?php if ($error): ?>
         <p class="gs-aviso gs-aviso--error" role="alert"><?php echo htmlspecialchars($error); ?></p>
     <?php endif; ?>
+    </div>
 
     <!-- Cómo va la semana -->
     <section class="pz-boleto rp-comanda gs-cuenta" aria-label="Cómo va la semana">

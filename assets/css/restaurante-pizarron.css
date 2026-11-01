@@ -3,6 +3,10 @@
    DESIGN.md. Empieza con el login (restaurante/login.php); las demás
    pantallas del panel se irán sumando aquí con el prefijo rz-.
    Usa los tokens y piezas de menu-pizarron.css.
+
+   Responsivo: en el celular todo va en una columna (como el cliente);
+   desde 600 px se centra; desde 960 px (computadora) se usa el ancho
+   completo con dos columnas en lugar de una tira angosta.
    ══════════════════════════════════════════════════════════════ */
 
 .rz-eyebrow{margin:34px 20px 0;font:500 14px var(--pz-sys);color:var(--pz-gris)}
@@ -32,3 +36,31 @@
 .rz-entrar:disabled{background:#3a3633;color:#8d8983;cursor:default}
 
 .rz-login .pz-pie{padding-top:40px}
+
+/* ── Login: la portada con la marca solo aparece en pantallas anchas ── */
+.rz-portada{display:none}
+
+/* Tableta: la forma centrada en la pantalla */
+@media (min-width:600px){
+  .rz-entrada{min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center}
+  .rz-login{width:100%;max-width:460px;padding:24px 0}
+}
+
+/* Computadora: pantalla dividida, marca grande a la izquierda y acceso a la derecha */
+@media (min-width:960px){
+  .rz-entrada{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(440px,1fr);align-items:stretch}
+  .rz-portada{display:flex;flex-direction:column;justify-content:center;gap:56px;
+    padding:64px clamp(48px,7vw,120px);background:#1B1917;border-right:1px solid var(--pz-linea)}
+  .rz-portada__marca{display:flex;flex-direction:column;align-items:flex-start}
+  .rz-portada__marca img{width:104px;height:104px;border-radius:22px}
+  .rz-portada__nombre{margin-top:26px;font:400 clamp(56px,6vw,84px)/1 var(--pz-rotulo);color:var(--pz-gis)}
+  .rz-portada__lema{margin-top:10px;font:400 clamp(34px,3.4vw,46px)/1 var(--pz-pincel);color:var(--pz-estraza-cl);
+    transform:rotate(-2.5deg);transform-origin:left}
+  .rz-portada__boleto{margin:0;max-width:400px;transform:rotate(-1.6deg)}
+  .rz-portada__boleto .pz-boleto__titulo{font:400 18px var(--pz-rotulo);color:var(--pz-tinta)}
+  .rz-portada__boleto p{font-size:15px}
+
+  .rz-entrada > .rz-login{justify-self:center;align-self:center;max-width:440px;padding:40px 0}
+  .rz-login .pz-cab{display:none}
+  .rz-login .rz-eyebrow{margin-top:0}
+}

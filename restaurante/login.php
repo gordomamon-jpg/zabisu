@@ -61,10 +61,28 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
-    <link rel="stylesheet" href="../assets/css/restaurante-pizarron.css?v=1">
+    <link rel="stylesheet" href="../assets/css/restaurante-pizarron.css?v=2">
 </head>
 <body class="pz rz">
 <?php require __DIR__ . "/../includes/pz_filtros.php"; ?>
+
+<div class="rz-entrada">
+
+<!-- Portada con la marca: solo en pantallas anchas (en el celular basta el encabezado) -->
+<aside class="rz-portada" aria-hidden="true">
+    <div class="rz-portada__marca">
+        <img src="../assets/img/LOGO_N_128.png" alt="">
+        <span class="rz-portada__nombre">Zabisu</span>
+        <span class="rz-portada__lema">Sabor y Servicio</span>
+    </div>
+    <div class="pz-boleto rz-portada__boleto">
+        <div class="pz-boleto__papel">
+            <span class="pz-boleto__ojo"></span>
+            <p class="pz-boleto__titulo">Todo el día en un solo lugar</p>
+            <p>Pedidos, ruta, menús y gastos.</p>
+        </div>
+    </div>
+</aside>
 
 <main class="pz-pagina rz-login">
 
@@ -113,6 +131,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     <p class="pz-pie">© 2026 Zabisu - Sabor y Servicio. Todos los derechos reservados.</p>
 </main>
+
+</div>
 
 <script>
 (function () {

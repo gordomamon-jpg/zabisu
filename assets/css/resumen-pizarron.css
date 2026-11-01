@@ -125,3 +125,21 @@
   .rp-comanda__grandes b{font-size:40px}
   .rp-avisado{font-size:10px;padding:3px 5px 2px}
 }
+
+/* ── Responsivo: tableta más ancha; en computadora, la ruta a la izquierda
+   y los totales y la cocina a la derecha. La ruta va en una sola columna
+   para que al abrir un punto no se muevan las demás horas ── */
+@media (min-width:600px){
+  .rp-pagina{max-width:640px}
+}
+@media (min-width:960px){
+  .rp-pagina{max-width:1280px;padding:0 28px 48px;display:grid;column-gap:44px;align-items:start;
+    grid-template-columns:minmax(0,1fr) 400px;grid-template-rows:auto auto 1fr;
+    grid-template-areas:"top top" "ruta totales" "ruta cocina" "pie pie"}
+  .rp-top{grid-area:top}
+  .rp-totales{grid-area:totales}
+  .rp-ruta{grid-area:ruta}
+  .rp-cocina-col{grid-area:cocina}
+  .rp-pie{grid-area:pie}
+  .rp-vacio{grid-column:1/-1;max-width:520px;justify-self:center;width:100%}
+}

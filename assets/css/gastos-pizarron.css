@@ -101,3 +101,28 @@ body:not(.gs-editando) .gs-sec--vacia{display:none}
 .gs-restablecer[hidden]{display:none !important}
 .gs-restablecer{margin-top:14px;padding:8px 2px;min-height:44px;border:0;background:none;cursor:pointer;
   font:500 14px var(--pz-sys);color:var(--pz-gris);text-decoration:underline;text-underline-offset:3px}
+
+/* ── Responsivo: tableta más ancha; en computadora, dos columnas ── */
+@media (min-width:600px){
+  .gs-pagina{max-width:600px}
+}
+@media (min-width:960px){
+  .gs-pagina{max-width:1180px;padding:0 28px 48px;display:grid;column-gap:44px;align-items:start;
+    grid-template-columns:minmax(0,1fr) 400px;grid-template-rows:auto auto 1fr;
+    grid-template-areas:"top top" "form cuenta" "form anotados"}
+  .gs-top{grid-area:top}
+  .gs-cuenta{grid-area:cuenta}
+  #gs-form{grid-area:form}
+  .gs-anotados{grid-area:anotados}
+
+  /* Lo de siempre en dos columnas de filas, para no hacer scroll de más */
+  .gs-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+  .gs-lista .pz-fila+.pz-fila::before{display:none}
+  .gs-lista .gs-fila{box-shadow:inset 0 -1px var(--pz-linea)}
+
+  /* El botón de guardar se queda pegado abajo, pero solo en la columna de la captura */
+  .gs .pz-barra{position:sticky;left:auto;right:auto;margin-top:24px;padding:14px 20px 18px;border-top:0;
+    background:var(--pz-pizarra)}
+  .gs .pz-btn{max-width:none}
+  .gs-anotados{padding-top:26px}
+}

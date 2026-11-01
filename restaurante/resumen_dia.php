@@ -178,13 +178,14 @@ $siguiente = date("Y-m-d", strtotime("$fecha +1 day"));
     <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
-    <link rel="stylesheet" href="../assets/css/resumen-pizarron.css?v=1">
+    <link rel="stylesheet" href="../assets/css/resumen-pizarron.css?v=2">
 </head>
 <body class="pz rp">
 <?php require __DIR__ . "/../includes/pz_filtros.php"; ?>
 
 <main class="pz-pagina rp-pagina">
 
+    <div class="rp-top">
     <header class="pz-cab">
         <a class="pz-marca" href="panel_general.php" aria-label="Zabisu, volver al panel general">
             <img src="../assets/img/LOGO_N_128.png" alt="">
@@ -207,6 +208,7 @@ $siguiente = date("Y-m-d", strtotime("$fecha +1 day"));
     <p class="rp-eyebrow">Resumen del día</p>
     <h1 class="pz-titulo rp-titulo"><span class="pz-pincel"><span><?php echo htmlspecialchars($tituloDia); ?></span></span></h1>
     <p class="rp-sub"><?php echo htmlspecialchars($subMes); ?></p>
+    </div>
 
     <?php if (!$pedidos): ?>
         <div class="rp-vacio">
@@ -215,6 +217,8 @@ $siguiente = date("Y-m-d", strtotime("$fecha +1 day"));
         </div>
     <?php else: ?>
 
+    <!-- En computadora: totales y cocina a la derecha, la ruta a la izquierda -->
+    <div class="rp-totales">
     <!-- La comanda del día: los números grandes -->
     <section class="pz-boleto rp-comanda" aria-label="Totales del día">
         <div class="pz-boleto__papel">
@@ -246,6 +250,9 @@ $siguiente = date("Y-m-d", strtotime("$fecha +1 day"));
     </div>
     <?php endif; ?>
 
+    </div>
+
+    <div class="rp-ruta">
     <h2 class="rp-h2">La ruta</h2>
     <?php foreach ($porHora as $hora => $puntos): ?>
         <?php $comidasHora = array_sum(array_column($puntos, "comidas")); ?>
@@ -299,6 +306,9 @@ $siguiente = date("Y-m-d", strtotime("$fecha +1 day"));
         </section>
     <?php endforeach; ?>
 
+    </div>
+
+    <div class="rp-cocina-col">
     <h2 class="rp-h2">En la cocina</h2>
     <section class="pz-sec rp-cocina">
         <span class="pz-cinta">Platos fuertes</span>
@@ -336,6 +346,7 @@ $siguiente = date("Y-m-d", strtotime("$fecha +1 day"));
         </ul>
     </section>
     <?php endif; ?>
+    </div>
 
     <?php endif; ?>
 
