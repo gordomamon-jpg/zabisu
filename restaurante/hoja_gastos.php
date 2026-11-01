@@ -5,9 +5,9 @@ require_once "../includes/gastos_frecuentes.php";
 
 /*
     Hoja de gastos para imprimir y llenar a mano durante la semana.
-    Las compras van por día (una casilla por día); los sueldos son por
-    semana (una sola casilla). Al cerrar la semana se pasa a
-    gastos_semana.php, que tiene la misma lista en el mismo orden.
+    Las compras van por día, de domingo a jueves (una casilla por día).
+    Los sueldos no van aquí. Al cerrar la semana se pasa a
+    gastos_semana.php.
 
     ?semana=AAAA-MM-DD para otra semana (cualquier día; se toma su lunes).
 */
@@ -21,7 +21,7 @@ $hoy = date('Y-m-d');
 if (isset($_GET['semana']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['semana']) && strtotime($_GET['semana'])) {
     $lunes = lunesDe($_GET['semana']);
 } else {
-    // Igual que gastos_semana.php: el fin de semana ya es la siguiente
+    // Igual que gastos_semana.php: el fin de semana ya es la siguiente (el domingo se surte para ella)
     $lunes = (int)date('N') >= 6 ? date('Y-m-d', strtotime('next monday')) : lunesDe($hoy);
 }
 $anterior  = date('Y-m-d', strtotime($lunes . ' -7 days'));
@@ -29,14 +29,15 @@ $siguiente = date('Y-m-d', strtotime($lunes . ' +7 days'));
 
 $meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 $dias  = [];
-foreach (['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'] as $i => $d) {
-    $ts = strtotime($lunes . " +$i days");
+// La semana de compras va del domingo (el día del surtido grande) al jueves (último día de venta)
+foreach (['Dom', 'Lun', 'Mar', 'Mié', 'Jue'] as $i => $d) {
+    $ts = strtotime($lunes . ' ' . ($i - 1) . ' days');
     $dias[] = ['nombre' => $d, 'num' => date('j', $ts)];
 }
-$sabTs  = strtotime($lunes . ' +5 days');
-$lunTs  = strtotime($lunes);
-$titulo = date('j', $lunTs) . (date('n', $lunTs) !== date('n', $sabTs) ? ' ' . $meses[(int)date('n', $lunTs) - 1] : '')
-        . ' al ' . date('j', $sabTs) . ' de ' . $meses[(int)date('n', $sabTs) - 1] . ' ' . date('Y', $sabTs);
+$iniTs  = strtotime($lunes . ' -1 day');
+$finTs  = strtotime($lunes . ' +3 days');
+$titulo = date('j', $iniTs) . (date('n', $iniTs) !== date('n', $finTs) ? ' ' . $meses[(int)date('n', $iniTs) - 1] : '')
+        . ' al ' . date('j', $finTs) . ' de ' . $meses[(int)date('n', $finTs) - 1] . ' ' . date('Y', $finTs);
 
 // Los sueldos no van en la hoja: se pagan una vez por semana y se anotan directo en gastos_semana.php
 [, $compras] = gastosFrecuentes($conexion);

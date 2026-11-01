@@ -24,8 +24,9 @@ function getLunes(string $date): string {
 
 function formatSemana(string $lunes): string {
     static $meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
-    $lts = strtotime($lunes);
-    $vts = strtotime($lunes . ' +4 days');
+    // De domingo (se surte) a jueves (último día de venta), igual que hoja_gastos.php
+    $lts = strtotime($lunes . ' -1 day');
+    $vts = strtotime($lunes . ' +3 days');
     $str = date('j', $lts);
     if (date('m', $lts) !== date('m', $vts)) $str .= ' ' . $meses[(int)date('n', $lts) - 1];
     return $str . ' al ' . date('j', $vts) . ' ' . $meses[(int)date('n', $vts) - 1];
@@ -74,8 +75,8 @@ $anterior  = date('Y-m-d', strtotime($lunes . ' -7 days'));
 $siguiente = date('Y-m-d', strtotime($lunes . ' +7 days'));
 $esEstaSemana = $lunes === getLunes($hoy);
 
-// Fecha de compra: hoy, salvo que la semana ya haya pasado (entonces su viernes)
-$fechaCompra = $hoy > $domingo ? date('Y-m-d', strtotime($lunes . ' +4 days')) : $hoy;
+// Fecha de compra: hoy, salvo que la semana ya haya pasado (entonces su jueves)
+$fechaCompra = $hoy > $domingo ? date('Y-m-d', strtotime($lunes . ' +3 days')) : $hoy;
 
 // ── Lo de siempre ─────────────────────────────────────────
 [$conceptos, $compras, $sueldos] = gastosFrecuentes($conexion);
