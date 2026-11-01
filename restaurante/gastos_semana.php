@@ -48,20 +48,6 @@ function leerMonto(string $txt): ?float {
     return round($total, 2);
 }
 
-/* Categoría por palabras, para conceptos que nunca se han capturado */
-function categoriaPorPalabras(string $clave): string {
-    $reglas = [
-        'Nómina'                => '/sueldo|nomina|salario|raya|aguinaldo/',
-        'Gas / Transporte'      => '/gasolina|^gas$|gaslp|tanque|uber|didi|taxi|transporte|envio|pasaje/',
-        'Empaque y desechables' => '/desechable|bolsa|cofia|empaque|contenedor|unicel|servilleta|cubierto|guante|charola|vaso/',
-        'Servicios'             => '/^luz$|cfe|internet|renta|telefono|celular|recarga|basura|predial|agua potable|garrafon/',
-    ];
-    foreach ($reglas as $cat => $re) {
-        if (preg_match($re, $clave)) return $cat;
-    }
-    return 'Ingredientes';
-}
-
 // ── Semana ────────────────────────────────────────────────
 $hoy = date('Y-m-d');
 if (isset($_GET['semana']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['semana']) && strtotime($_GET['semana'])) {
@@ -79,7 +65,7 @@ $esEstaSemana = $lunes === getLunes($hoy);
 $fechaCompra = $hoy > $domingo ? date('Y-m-d', strtotime($lunes . ' +3 days')) : $hoy;
 
 // ── Lo de siempre ─────────────────────────────────────────
-[$conceptos, $compras, $sueldos] = gastosFrecuentes($conexion);
+[$conceptos, $compras, $sueldos, $listaEditada] = gastosFrecuentes($conexion);
 
 // ── POST: guardar todo lo anotado ─────────────────────────
 $error   = '';
@@ -99,7 +85,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['g']) && is_array($_PO
         if ($monto === null || $concepto === '') { $malos[] = $concepto !== '' ? $concepto : 'un gasto sin nombre'; continue; }
 
         $k   = claveConcepto($concepto);
-        $cat = $conceptos[$k]['categoria'] ?? categoriaPorPalabras($k);
+        // La lista manda (un sueldo siempre es Nómina); luego lo capturado antes; luego por palabras
+        $cat = ($compras[$k] ?? $sueldos[$k] ?? $conceptos[$k] ?? [])['categoria'] ?? categoriaPorPalabras($k);
         if (!in_array($cat, $categorias, true)) $cat = 'Ingredientes';
 
         $porGuardar[] = [
@@ -156,12 +143,12 @@ $stmt->execute([':l' => $lunes, ':d' => $domingo]);
 $vendido = (float)$stmt->fetchColumn();
 $quedo   = $vendido - $totalGastado;
 
-/* Una fila de "lo de siempre": nombre fijo y solo el monto */
+/* Una fila de "lo de siempre": nombre fijo y solo el monto (la ✕ es para editar la lista) */
 $n = 0;
 function filaFija(int $i, array $c, array $enviado): void {
     $monto = $enviado[$i]['monto'] ?? '';
     ?>
-    <li class="pz-fila gs-fila">
+    <li class="pz-fila gs-fila gs-fila--fija" data-nombre="<?php echo htmlspecialchars($c['nombre']); ?>">
         <span class="pz-tira pz-fibra" aria-hidden="true"></span>
         <label class="pz-fila__txt" for="g<?php echo $i; ?>">
             <span class="pz-fila__nombre"><?php echo htmlspecialchars($c['nombre']); ?></span>
@@ -177,6 +164,9 @@ function filaFija(int $i, array $c, array $enviado): void {
             <input id="g<?php echo $i; ?>" name="g[<?php echo $i; ?>][monto]" value="<?php echo htmlspecialchars($monto); ?>"
                    inputmode="decimal" autocomplete="off" placeholder="0" aria-label="Monto de <?php echo htmlspecialchars($c['nombre']); ?>">
         </span>
+        <button type="button" class="gs-sacar" aria-label="Quitar <?php echo htmlspecialchars($c['nombre']); ?> de la lista">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        </button>
     </li>
     <?php
 }
@@ -193,7 +183,7 @@ function filaFija(int $i, array $c, array $enviado): void {
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
     <link rel="stylesheet" href="../assets/css/resumen-pizarron.css?v=1">
-    <link rel="stylesheet" href="../assets/css/gastos-pizarron.css?v=2">
+    <link rel="stylesheet" href="../assets/css/gastos-pizarron.css?v=3">
 </head>
 <body class="pz rp gs">
 <?php require __DIR__ . "/../includes/pz_filtros.php"; ?>
@@ -251,21 +241,32 @@ function filaFija(int $i, array $c, array $enviado): void {
     <form method="POST" action="gastos_semana.php?semana=<?php echo $lunes; ?>" id="gs-form" novalidate>
 
         <section class="pz-sec">
-            <h2 class="pz-cinta pz-fibra">Lo de siempre</h2>
-            <p class="gs-ayuda">Pon solo lo que gastaste. Si fueron varios tickets, súmalos con +, por ejemplo 138+906.</p>
-            <ul class="pz-grupo">
+            <div class="gs-cab-lista">
+                <h2 class="pz-cinta pz-fibra">Lo de siempre</h2>
+                <button type="button" class="gs-editar" id="gs-editar" aria-pressed="false">Editar lista</button>
+            </div>
+            <p class="gs-ayuda gs-solo-captura">Pon solo lo que gastaste. Si fueron varios tickets, súmalos con +, por ejemplo 138+906.</p>
+            <p class="gs-ayuda gs-solo-edicion">Quita con la ✕ lo que ya no se compra y agrega lo nuevo. Se guarda para todos, también en la hoja para imprimir.</p>
+            <ul class="pz-grupo gs-lista" id="gs-lista-compras">
                 <?php foreach ($compras as $c) filaFija($n++, $c, $enviado); ?>
             </ul>
+            <div class="gs-nuevo" data-grupo="compras">
+                <input class="gs-concepto" placeholder="Agregar a la lista" maxlength="60" autocomplete="off" aria-label="Nombre del gasto a agregar a lo de siempre" enterkeyhint="done">
+                <button type="button">Agregar</button>
+            </div>
         </section>
 
-        <?php if ($sueldos): ?>
-        <section class="pz-sec">
+        <section class="pz-sec gs-sec-sueldos<?php echo $sueldos ? '' : ' gs-sec--vacia'; ?>">
             <h2 class="pz-cinta pz-fibra">Sueldos</h2>
-            <ul class="pz-grupo">
+            <ul class="pz-grupo gs-lista" id="gs-lista-sueldos">
                 <?php foreach ($sueldos as $c) filaFija($n++, $c, $enviado); ?>
             </ul>
+            <div class="gs-nuevo" data-grupo="sueldos">
+                <input class="gs-concepto" placeholder="Agregar persona" maxlength="60" autocomplete="off" aria-label="Nombre de la persona a agregar a sueldos" enterkeyhint="done">
+                <button type="button">Agregar</button>
+            </div>
+            <button type="button" class="gs-restablecer gs-solo-edicion" id="gs-restablecer"<?php echo $listaEditada ? '' : ' hidden'; ?>>Volver a la lista automática</button>
         </section>
-        <?php endif; ?>
 
         <section class="pz-sec">
             <h2 class="pz-cinta pz-fibra">Otro gasto</h2>
@@ -402,6 +403,96 @@ function filaFija(int $i, array $c, array $enviado): void {
         }
         btn.disabled = true;
         btn.firstElementChild.textContent = 'Guardando…';
+    });
+
+    // ── Editar la lista de "lo de siempre" ──────────────────
+    const listas = { compras: document.getElementById('gs-lista-compras'), sueldos: document.getElementById('gs-lista-sueldos') };
+    const btnEditar = document.getElementById('gs-editar');
+    const clave = t => t.toLowerCase().normalize('NFD').replace(/[^a-z0-9]/g, '');
+
+    function nombres(grupo) {
+        return [...listas[grupo].querySelectorAll('.gs-fila--fija')].map(li => li.dataset.nombre);
+    }
+
+    function marcarVacias() {
+        document.querySelector('.gs-sec-sueldos').classList.toggle('gs-sec--vacia', !listas.sueldos.children.length);
+    }
+
+    function guardarLista(cuerpo) {
+        return fetch('gastos_lista.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify(cuerpo),
+        })
+        .then(r => r.json())
+        .then(d => { if (!d.ok) throw new Error(d.mensaje); return d; });
+    }
+
+    function guardarTodo() {
+        return guardarLista({ compras: nombres('compras'), sueldos: nombres('sueldos') })
+            .then(() => { document.getElementById('gs-restablecer').hidden = false; })
+            .catch(() => alert('No se pudo guardar la lista. Revisa la conexión e intenta de nuevo.'));
+    }
+
+    // Misma fila que filaFija() en PHP
+    function filaNueva(nombre) {
+        const i  = siguiente++;
+        const li = document.createElement('li');
+        li.className = 'pz-fila gs-fila gs-fila--fija';
+        li.dataset.nombre = nombre;
+        li.innerHTML =
+            '<span class="pz-tira pz-fibra" aria-hidden="true"></span>' +
+            '<label class="pz-fila__txt" for="g' + i + '"><span class="pz-fila__nombre"></span></label>' +
+            '<input type="hidden" name="g[' + i + '][concepto]">' +
+            '<span class="gs-monto"><span aria-hidden="true">$</span>' +
+            '<input id="g' + i + '" name="g[' + i + '][monto]" inputmode="decimal" autocomplete="off" placeholder="0"></span>' +
+            '<button type="button" class="gs-sacar"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg></button>';
+        li.querySelector('.pz-fila__nombre').textContent = nombre;
+        li.querySelector('input[type=hidden]').value = nombre;
+        li.querySelector('#g' + i).setAttribute('aria-label', 'Monto de ' + nombre);
+        li.querySelector('.gs-sacar').setAttribute('aria-label', 'Quitar ' + nombre + ' de la lista');
+        return li;
+    }
+
+    btnEditar.addEventListener('click', () => {
+        const editando = document.body.classList.toggle('gs-editando');
+        btnEditar.textContent = editando ? 'Listo' : 'Editar lista';
+        btnEditar.setAttribute('aria-pressed', editando);
+    });
+
+    form.addEventListener('click', e => {
+        const b = e.target.closest('.gs-sacar');
+        if (!b) return;
+        const li = b.closest('li');
+        if (li.querySelector('[name$="[monto]"]').value.trim()
+            && !confirm('Ya tiene un monto anotado. ¿Quitarlo de la lista de todos modos?')) return;
+        li.remove();
+        marcarVacias();
+        recalcular();
+        guardarTodo();
+    });
+
+    document.querySelectorAll('.gs-nuevo').forEach(caja => {
+        const inp = caja.querySelector('input');
+        const agregar = () => {
+            const nombre = inp.value.trim().replace(/\s+/g, ' ');
+            if (!nombre) { inp.focus(); return; }
+            const repetido = [...document.querySelectorAll('.gs-fila--fija')].find(li => clave(li.dataset.nombre) === clave(nombre));
+            if (repetido) { alert('"' + repetido.dataset.nombre + '" ya está en la lista.'); return; }
+            listas[caja.dataset.grupo].append(filaNueva(nombre));
+            inp.value = '';
+            marcarVacias();
+            guardarTodo();
+        };
+        caja.querySelector('button').addEventListener('click', agregar);
+        inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); agregar(); } });
+    });
+
+    document.getElementById('gs-restablecer').addEventListener('click', () => {
+        if (!confirm('¿Regresar a la lista automática (lo más capturado)? Se pierden los montos que no hayas guardado.')) return;
+        guardarLista({ restablecer: true })
+            .then(() => location.reload())
+            .catch(() => alert('No se pudo restablecer. Intenta de nuevo.'));
     });
 
     document.querySelectorAll('.gs-quitar').forEach(b => b.addEventListener('click', () => {

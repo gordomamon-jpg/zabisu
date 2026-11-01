@@ -20,11 +20,58 @@ function nombreBonito(string $c): string {
     return $c;
 }
 
+/* Categoría por palabras, para conceptos que nunca se han capturado */
+function categoriaPorPalabras(string $clave): string {
+    $reglas = [
+        'Nómina'                => '/sueldo|nomina|salario|raya|aguinaldo/',
+        'Gas / Transporte'      => '/gasolina|^gas$|gaslp|tanque|uber|didi|taxi|transporte|envio|pasaje/',
+        'Empaque y desechables' => '/desechable|bolsa|cofia|empaque|contenedor|unicel|servilleta|cubierto|guante|charola|vaso/',
+        'Servicios'             => '/^luz$|cfe|internet|renta|telefono|celular|recarga|basura|predial|aguapotable|garrafon/',
+    ];
+    foreach ($reglas as $cat => $re) {
+        if (preg_match($re, $clave)) return $cat;
+    }
+    return 'Ingredientes';
+}
+
 /*
-    Devuelve [conceptos, compras, sueldos]:
+    La lista de "lo de siempre" se puede editar (quitar y agregar) desde
+    gastos_semana.php y hoja_gastos.php. Se guarda en un archivo para que
+    sea la misma en todos los celulares y computadoras; si no existe, la
+    lista se arma sola con lo más capturado.
+*/
+function gastosListaArchivo(): string {
+    return __DIR__ . '/../storage/gastos_lista.json';
+}
+
+/* ['compras' => [nombres], 'sueldos' => [nombres]] o null si nunca se ha editado */
+function gastosListaGuardada(): ?array {
+    $archivo = gastosListaArchivo();
+    if (!is_file($archivo)) return null;
+    $datos = json_decode((string)file_get_contents($archivo), true);
+    if (!is_array($datos) || !is_array($datos['compras'] ?? null) || !is_array($datos['sueldos'] ?? null)) return null;
+    return [
+        'compras' => array_values(array_filter($datos['compras'], 'is_string')),
+        'sueldos' => array_values(array_filter($datos['sueldos'], 'is_string')),
+    ];
+}
+
+/* null borra la lista editada y se regresa a la automática */
+function gastosListaGuardar(?array $lista): bool {
+    $archivo = gastosListaArchivo();
+    if ($lista === null) return !is_file($archivo) || unlink($archivo);
+    $tmp = $archivo . '.tmp';
+    $json = json_encode($lista, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    return file_put_contents($tmp, $json, LOCK_EX) !== false && rename($tmp, $archivo);
+}
+
+/*
+    Devuelve [conceptos, compras, sueldos, editada]:
     - conceptos: todo lo capturado, por clave, con su categoría (para
       ponerle categoría sola a lo que se anote)
-    - compras / sueldos: lo de siempre, con nombre y el monto de la última vez
+    - compras / sueldos: lo de siempre, con nombre, categoría y el monto
+      de la última vez
+    - editada: true si la lista la editaron (no es la automática)
 */
 function gastosFrecuentes(PDO $conexion): array {
     $historial = $conexion->query(
@@ -88,5 +135,24 @@ function gastosFrecuentes(PDO $conexion): array {
         }
     }
 
-    return [$conceptos, $compras, $sueldos];
+    $guardada = gastosListaGuardada();
+    if ($guardada !== null) {
+        // La lista editada manda; de lo capturado solo se toma la categoría y la última vez
+        $armar = function (array $nombres, bool $esSueldo) use ($conceptos): array {
+            $items = [];
+            foreach ($nombres as $nombre) {
+                $k = claveConcepto($nombre);
+                if ($k === '' || isset($items[$k])) continue;
+                $cat = $conceptos[$k]['categoria'] ?? '';
+                if ($esSueldo)            $cat = 'Nómina';
+                elseif ($cat === '' || $cat === 'Nómina') $cat = categoriaPorPalabras($k);
+                $items[$k] = ['nombre' => $nombre, 'categoria' => $cat, 'ultMonto' => $conceptos[$k]['ultMonto'] ?? 0.0];
+            }
+            return $items;
+        };
+        $compras = $armar($guardada['compras'], false);
+        $sueldos = $armar($guardada['sueldos'], true);
+    }
+
+    return [$conceptos, $compras, $sueldos, $guardada !== null];
 }

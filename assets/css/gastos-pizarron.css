@@ -72,3 +72,32 @@
 .gs-hoja{display:inline-flex;align-items:center;gap:8px;margin:14px 20px 0;min-height:44px;padding:0 14px;
   border:1.5px solid var(--pz-estraza);border-radius:12px;text-decoration:none;
   font:600 15px var(--pz-sys);color:var(--pz-estraza-cl)}
+
+/* ── Editar la lista de "lo de siempre" ── */
+.gs-cab-lista{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.gs-cab-lista .pz-cinta{margin-bottom:10px}
+.gs-editar{min-height:40px;margin-bottom:10px;padding:0 14px;border:1.5px solid var(--pz-linea);border-radius:12px;
+  background:none;color:var(--pz-gis);font:600 14px var(--pz-sys);cursor:pointer}
+.gs-editando .gs-editar{background:var(--pz-naranja);border-color:var(--pz-naranja);color:#111}
+
+.gs-solo-edicion,.gs-sacar,.gs-nuevo{display:none}
+.gs-editando .gs-solo-edicion{display:block}
+.gs-editando .gs-solo-captura{display:none}
+body:not(.gs-editando) .gs-sec--vacia{display:none}
+
+/* Editando: la ✕ toma el lugar del monto */
+.gs-editando .gs-fila--fija .gs-monto{display:none}
+.gs-editando .gs-fila--fija .gs-ultima{pointer-events:none;text-decoration:none}
+.gs-editando .gs-sacar{display:inline-flex}
+.gs-sacar{flex-shrink:0;align-items:center;justify-content:center;width:44px;height:44px;border:0;border-radius:12px;
+  background:rgba(255,107,107,.12);color:#ff8f8f;cursor:pointer}
+
+.gs-editando .gs-nuevo{display:flex}
+.gs-nuevo{gap:10px;align-items:center;margin-top:10px;padding:6px 6px 6px 14px;background:var(--pz-grupo);border-radius:14px}
+.gs-nuevo button{flex-shrink:0;min-height:44px;padding:0 16px;border:0;border-radius:10px;
+  background:var(--pz-estraza);color:var(--pz-tinta);font:600 15px var(--pz-sys);cursor:pointer}
+
+.gs-editando .gs-restablecer{display:inline-block}
+.gs-restablecer[hidden]{display:none !important}
+.gs-restablecer{margin-top:14px;padding:8px 2px;min-height:44px;border:0;background:none;cursor:pointer;
+  font:500 14px var(--pz-sys);color:var(--pz-gris);text-decoration:underline;text-underline-offset:3px}

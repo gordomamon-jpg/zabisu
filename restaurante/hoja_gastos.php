@@ -40,7 +40,7 @@ $titulo = date('j', $iniTs) . (date('n', $iniTs) !== date('n', $finTs) ? ' ' . $
         . ' al ' . date('j', $finTs) . ' de ' . $meses[(int)date('n', $finTs) - 1] . ' ' . date('Y', $finTs);
 
 // Los sueldos no van en la hoja: se pagan una vez por semana y se anotan directo en gastos_semana.php
-[, $compras] = gastosFrecuentes($conexion);
+[, $compras, , $listaEditada] = gastosFrecuentes($conexion);
 
 // La lista de siempre más renglones en blanco para lo demás
 $filasBase = array_merge(array_column(array_values($compras), 'nombre'), array_fill(0, 5, ''));
@@ -163,7 +163,7 @@ td.hg-nombre{position:relative}
 
     <div class="hg-acciones">
         <button type="button" class="hg-agregar" id="hg-agregar">+ Agregar renglón</button>
-        <button type="button" class="hg-restablecer" id="hg-restablecer" hidden>Volver a la lista original</button>
+        <button type="button" class="hg-restablecer" id="hg-restablecer"<?php echo $listaEditada ? '' : ' hidden'; ?>>Volver a la lista automática</button>
         <span class="hg-aviso" id="hg-aviso" hidden>Con tantos renglones se imprime en dos hojas.</span>
     </div>
 
@@ -173,28 +173,41 @@ td.hg-nombre{position:relative}
 <script>
 /*
     Antes de imprimir se pueden quitar renglones (la ✕), agregar más y
-    cambiarles el nombre (tocando el nombre). Los cambios se recuerdan en
-    esta computadora para las siguientes semanas.
+    cambiarles el nombre (tocando el nombre). Los renglones con nombre se
+    guardan en la lista de "lo de siempre" (gastos_lista.php), la misma de
+    Gastos de la semana; los renglones en blanco son solo para esta hoja.
 */
 (function () {
-    const CLAVE  = 'zb_hoja_gastos_filas';
     const BASE   = <?php echo json_encode($filasBase, JSON_UNESCAPED_UNICODE); ?>;
     const DIAS   = <?php echo count($dias); ?>;
     const CABEN  = 21; // renglones que caben en una carta
     const tbody  = document.getElementById('hg-filas');
+    let espera   = null;
+    let ultimaGuardada = JSON.stringify(BASE.filter(Boolean));
 
-    let filas = BASE;
-    try {
-        const guardadas = JSON.parse(localStorage.getItem(CLAVE));
-        if (Array.isArray(guardadas)) filas = guardadas.map(String);
-    } catch (e) {}
+    function contar() {
+        document.getElementById('hg-aviso').hidden = tbody.children.length <= CABEN;
+    }
 
+    // Manda la lista solo si cambió algún nombre (no por renglones en blanco)
     function guardar() {
-        filas = [...tbody.querySelectorAll('.hg-texto')].map(s => s.textContent.trim());
-        const igual = JSON.stringify(filas) === JSON.stringify(BASE);
-        try { igual ? localStorage.removeItem(CLAVE) : localStorage.setItem(CLAVE, JSON.stringify(filas)); } catch (e) {}
-        document.getElementById('hg-restablecer').hidden = igual;
-        document.getElementById('hg-aviso').hidden = filas.length <= CABEN;
+        clearTimeout(espera);
+        contar();
+        const compras = [...tbody.querySelectorAll('.hg-texto')].map(s => s.textContent.trim()).filter(Boolean);
+        const json = JSON.stringify(compras);
+        if (json === ultimaGuardada) return;
+        fetch('gastos_lista.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({ compras }),
+        })
+        .then(r => r.json())
+        .then(d => {
+            if (!d.ok) throw new Error(d.mensaje);
+            ultimaGuardada = json;
+            document.getElementById('hg-restablecer').hidden = false;
+        })
+        .catch(() => alert('No se pudo guardar el cambio en la lista. Revisa la conexión e intenta de nuevo.'));
     }
 
     function renglon(nombre) {
@@ -226,18 +239,15 @@ td.hg-nombre{position:relative}
         return tr;
     }
 
-    function pintar() {
-        tbody.replaceChildren(...filas.map(renglon));
-        guardar();
-    }
-
     tbody.addEventListener('click', e => {
         const b = e.target.closest('.hg-quitar');
         if (!b) return;
         b.closest('tr').remove();
         guardar();
     });
-    tbody.addEventListener('input', guardar);
+    // Al escribir un nombre se guarda cuando dejan de teclear o salen del renglón
+    tbody.addEventListener('input', () => { clearTimeout(espera); espera = setTimeout(guardar, 900); contar(); });
+    tbody.addEventListener('focusout', guardar);
     tbody.addEventListener('keydown', e => {
         if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); }
     });
@@ -245,16 +255,24 @@ td.hg-nombre{position:relative}
     document.getElementById('hg-agregar').addEventListener('click', () => {
         const tr = renglon('');
         tbody.append(tr);
-        guardar();
+        contar();
         tr.querySelector('.hg-texto').focus();
     });
 
     document.getElementById('hg-restablecer').addEventListener('click', () => {
-        filas = BASE.slice();
-        pintar();
+        if (!confirm('¿Regresar a la lista automática (lo más capturado)? También cambia en Gastos de la semana.')) return;
+        fetch('gastos_lista.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({ restablecer: true }),
+        })
+        .then(r => r.json())
+        .then(d => { if (!d.ok) throw new Error(d.mensaje); location.reload(); })
+        .catch(() => alert('No se pudo restablecer. Intenta de nuevo.'));
     });
 
-    pintar();
+    tbody.replaceChildren(...BASE.map(renglon));
+    contar();
 })();
 </script>
 
