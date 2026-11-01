@@ -61,7 +61,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
-    <link rel="stylesheet" href="../assets/css/restaurante-pizarron.css?v=2">
+    <link rel="stylesheet" href="../assets/css/restaurante-pizarron.css?v=4">
 </head>
 <body class="pz rz">
 <?php require __DIR__ . "/../includes/pz_filtros.php"; ?>

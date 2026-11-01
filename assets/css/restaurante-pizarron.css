@@ -64,3 +64,105 @@
   .rz-login .pz-cab{display:none}
   .rz-login .rz-eyebrow{margin-top:0}
 }
+
+/* ══ Panel general (restaurante/panel_general.php) ══════════════ */
+.pn-pagina{padding-bottom:40px}
+
+/* Sesión: nombre y salir, en el lugar de las flechas del resumen */
+.pn-sesion{display:flex;align-items:center;gap:8px;margin-top:4px}
+.pn-sesion__nombre{font:500 14px var(--pz-sys);color:var(--pz-gris);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pn-sesion__salir{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border-radius:12px;
+  background:var(--pz-grupo);color:var(--pz-gis);font:600 14px var(--pz-sys);text-decoration:none}
+
+.pn-sub{margin:6px 20px 0;font:400 16px var(--pz-sys);color:var(--pz-gris)}
+
+/* Modo prueba */
+.pn-prueba{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;margin:18px 20px 0}
+.pn-prueba__txt{font:400 14px var(--pz-sys);color:var(--pz-gris)}
+.pn-prueba__btn{min-height:40px;padding:0 14px;border:1.5px solid var(--pz-linea);border-radius:12px;background:none;
+  color:var(--pz-gris);font:600 14px var(--pz-sys);cursor:pointer}
+.pn-prueba--activo{padding:12px 14px;border-radius:14px;background:rgba(255,122,0,.08)}
+.pn-prueba--activo .pn-prueba__btn{border-color:var(--pz-naranja);color:var(--pz-naranja)}
+
+/* Hoy: cuatro números grandes; "sin revisar" se pinta de naranja si hay */
+.pn-kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:24px 20px 0}
+.pn-kpi{display:flex;flex-direction:column;padding:16px;border-radius:16px;background:var(--pz-grupo);text-decoration:none}
+.pn-kpi b{font:400 34px/1 var(--pz-rotulo);color:var(--pz-gis);font-variant-numeric:tabular-nums}
+.pn-kpi span{margin-top:6px;font:500 14px var(--pz-sys);color:var(--pz-gris)}
+.pz .pn-kpi--alerta{background:var(--pz-naranja)}
+.pn-kpi--alerta b,.pn-kpi--alerta span{color:#111}
+
+/* Botones de los módulos: ícono en cuadro de estraza, nombre y su dato */
+.pn-grupo{padding-top:26px}
+.pn-tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.pz .pn-tile{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:12px;padding:16px;min-height:132px;
+  box-sizing:border-box;border-radius:16px;background:var(--pz-grupo);color:var(--pz-gis);text-decoration:none;
+  transition:background .15s}
+.pz .pn-tile:hover{background:#26231F}
+.pz .pn-tile:active{transform:scale(.985)}
+.pn-ico{display:inline-block;box-sizing:content-box;width:30px;height:30px;padding:12px;border-radius:14px;
+  background:var(--pz-estraza);color:var(--pz-tinta)}
+.pn-ico svg{display:block;width:100%;height:100%}
+.pn-tile:nth-child(3n+1) .pn-ico{transform:rotate(-3deg)}
+.pn-tile:nth-child(3n+2) .pn-ico{transform:rotate(2deg)}
+.pn-tile strong{font:600 16px/1.25 var(--pz-sys)}
+.pn-tile small{margin-top:-8px;font:400 13px var(--pz-sys);color:var(--pz-gris)}
+.pn-aviso{position:absolute;top:12px;right:12px;padding:4px 9px;border-radius:999px;background:var(--pz-naranja);
+  color:#111;font:600 12px var(--pz-sys);white-space:nowrap}
+.pn-flecha{flex-shrink:0;color:var(--pz-gris)}
+
+/* Encabezado de sección con liga a la derecha */
+.pn-cab-sec{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.pn-cab-sec .pz-cinta{margin-bottom:10px}
+.pz .pn-vertodo{display:inline-flex;align-items:center;min-height:44px;margin-bottom:10px;font:600 14px var(--pz-sys);
+  color:var(--pz-naranja);text-decoration:none}
+
+/* Últimos pedidos */
+.pn-ultimos .pz-grupo,.pn-proximos .pz-grupo{list-style:none}
+.pn-ultimos li+li,.pn-proximos li+li{border-top:1px solid var(--pz-linea)}
+.pn-pedido{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 16px;min-height:60px;
+  box-sizing:border-box;text-decoration:none;color:inherit;position:relative}
+.pn-pedido:hover,.pn-menu:hover{background:rgba(255,255,255,.025)}
+.pn-pedido--nuevo::before{content:"";position:absolute;left:6px;top:50%;width:6px;height:6px;margin-top:-3px;border-radius:50%;background:var(--pz-naranja)}
+.pn-pedido__txt{min-width:0}
+.pn-pedido__nombre{display:block;font:500 15px var(--pz-sys);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pn-pedido__sec{display:block;margin-top:2px;font:400 13px var(--pz-sys);color:var(--pz-gris)}
+.pn-pedido__der{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.pn-pedido__der b{font:600 15px var(--pz-sys);font-variant-numeric:tabular-nums}
+.pn-pago{font:500 12px var(--pz-sys);color:var(--pz-gris)}
+.pn-pago--revision{color:var(--pz-estraza)}
+.pn-pago--falta{color:var(--pz-naranja)}
+
+/* Próximos menús */
+.pn-menu{display:flex;align-items:center;gap:14px;padding:10px 16px;min-height:60px;box-sizing:border-box;text-decoration:none;color:inherit}
+.pn-menu__fecha{display:flex;flex-direction:column;align-items:center;min-width:44px;padding:4px 0;border-radius:10px;background:var(--pz-linea)}
+.pn-menu__fecha span{font:500 12px var(--pz-sys);color:var(--pz-gris)}
+.pn-menu__fecha b{font:400 22px/1.1 var(--pz-rotulo);color:var(--pz-gis)}
+.pn-menu__txt{flex:1;min-width:0}
+.pn-menu__estado{display:block;font:600 15px var(--pz-sys);color:var(--pz-gris)}
+.pn-menu__estado--activo{color:var(--pz-estraza-cl)}
+.pn-menu__hasta{display:block;margin-top:2px;font:400 13px var(--pz-sys);color:var(--pz-gris)}
+.pn-vacio{margin:0;padding:18px 16px;border-radius:14px;background:var(--pz-grupo);font:400 15px var(--pz-sys);color:var(--pz-gris)}
+
+.pn-pie{padding-top:36px}
+
+/* Responsivo: tableta más ancha; en computadora todo a lo ancho, con
+   los cuatro grupos de botones en 2×2 y las listas de abajo lado a lado */
+@media (prefers-reduced-motion:reduce){
+  .pz .pn-tile{transition:none}
+  .pz .pn-tile:active{transform:none}
+}
+@media (min-width:600px){
+  .pn-pagina{max-width:720px}
+  .pn-kpis{grid-template-columns:repeat(4,1fr)}
+  .pn-tiles{grid-template-columns:repeat(3,1fr)}
+}
+@media (min-width:960px){
+  .pn-pagina{max-width:1320px;padding:0 28px 48px}
+  .pn-kpis{gap:16px}
+  .pn-kpi b{font-size:44px}
+  .pn-grupos{display:grid;grid-template-columns:1fr 1fr;column-gap:28px}
+  .pn-tiles{grid-template-columns:repeat(2,1fr);gap:16px}
+  .pz .pn-tile{min-height:150px}
+  .pn-abajo{display:grid;grid-template-columns:1fr 1fr;column-gap:28px;align-items:start}
+}
