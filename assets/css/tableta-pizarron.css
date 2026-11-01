@@ -42,29 +42,19 @@ body.tb{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
   border:2px solid var(--pz-linea);color:var(--pz-gis);font:700 24px var(--pz-sys);text-transform:uppercase;caret-color:var(--pz-naranja)}
 .tb-nombre:focus{outline:none;border-color:var(--pz-naranja)}
 
-/* ── Comanda: entrega ── */
-.tb-entrega{margin-top:4px}
-.tb-rapida{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.tb-rapida__btn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:68px;padding:10px 14px;border-radius:14px;
-  border:2px solid var(--pz-linea);background:var(--pz-grupo);color:var(--pz-gis);text-align:left;cursor:pointer}
-.tb-rapida__btn b{font:400 22px/1.1 var(--pz-rotulo);font-variant-numeric:tabular-nums}
-.tb-rapida__btn span{font:500 13px/1.25 var(--pz-sys);color:var(--pz-gris)}
-.tb-rapida__btn--activo{background:var(--pz-naranja);border-color:var(--pz-naranja);color:#111}
-.tb-rapida__btn--activo span{color:#111}
-.tb-otro{margin-top:10px;min-height:44px;padding:0 4px;border:0;background:none;cursor:pointer;
-  font:600 14px var(--pz-sys);color:var(--pz-estraza-cl);text-decoration:underline;text-underline-offset:3px}
-.tb-puntos[hidden],.tb-horas[hidden]{display:none}
-.tb-puntos{margin-top:8px}
-.tb-chips{display:flex;flex-wrap:wrap;gap:8px}
-.tb-horas{margin-top:10px}
-.tb-chip{position:relative;display:inline-flex;align-items:center;min-height:52px;padding:0 16px;box-sizing:border-box;border-radius:12px;
-  border:2px solid var(--pz-linea);background:var(--pz-grupo);font:600 15px var(--pz-sys);cursor:pointer}
-.tb-chip input{position:absolute;opacity:0;width:1px;height:1px}
-.tb-chip--hora{font:400 19px var(--pz-rotulo)}
-.tb-chip:has(input:checked){background:var(--pz-naranja);border-color:var(--pz-naranja);color:#111}
-.tb-chip:has(input:focus-visible){outline:2px solid var(--pz-naranja);outline-offset:3px}
-.tb-entrega__elegida{margin:10px 0 0;font:600 15px var(--pz-sys);color:var(--pz-estraza-cl)}
-.tb-entrega__elegida[hidden]{display:none}
+/* ── Comanda: entrega (todos los puntos con todas sus horas; un toque elige ambos) ── */
+.tb-puntos{display:flex;flex-direction:column;gap:6px}
+.tb-punto{padding:6px 10px 8px;border-radius:14px;background:var(--pz-grupo);border:2px solid transparent}
+.tb-punto:has(input:checked){border-color:var(--pz-naranja)}
+.tb-punto__nombre{margin:0 0 5px 2px;font:600 15px var(--pz-sys);color:var(--pz-gis)}
+.tb-punto:has(input:checked) .tb-punto__nombre{color:var(--pz-naranja)}
+.tb-horas{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:6px}
+.tb-hora{position:relative;display:flex;align-items:center;justify-content:center;min-height:46px;border-radius:11px;
+  border:2px solid var(--pz-linea);background:var(--pz-pizarra);font:400 18px var(--pz-rotulo);font-variant-numeric:tabular-nums;cursor:pointer}
+.tb-hora:active{transform:scale(.95)}
+.tb-hora input{position:absolute;opacity:0;width:1px;height:1px}
+.tb-hora:has(input:checked){background:var(--pz-naranja);border-color:var(--pz-naranja);color:#111}
+.tb-hora:has(input:focus-visible){outline:2px solid var(--pz-gis);outline-offset:2px}
 
 /* ── Comanda: nota ── */
 .tb-nota{margin-top:14px;border-radius:14px;background:var(--pz-grupo)}
@@ -191,15 +181,21 @@ body.tb{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .pz .tb-nuevo{justify-content:center;margin-top:28px;min-height:68px;font-size:21px;color:#111}
 .pz .tb-listo__liga{display:inline-block;margin-top:18px;min-height:44px;line-height:44px;font:600 15px var(--pz-sys);color:var(--pz-estraza-cl)}
 
-/* ── Tableta en horizontal y computadora: comidas a la izquierda, comanda fija a la derecha ── */
+/* ── Tableta en horizontal y computadora: la página ocupa justo la pantalla, como una app.
+   Las comidas se desplazan solas a la izquierda y la comanda se queda fija a la derecha,
+   con Guardar siempre a la vista ── */
 @media (min-width:900px){
-  .tb-form{display:grid;grid-template-columns:minmax(0,1fr) 380px;grid-template-areas:"main lado";column-gap:24px;align-items:start;padding-bottom:40px}
-  .tb-main{grid-area:main}
-  .tb-lado{grid-area:lado;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow-y:auto;box-sizing:border-box;
-    padding:16px;margin-top:20px;border-radius:20px;background:#1B1917;border:1px solid var(--pz-linea)}
-  .tb .tb-barra{position:static;flex-direction:column;align-items:stretch;gap:10px;margin-top:16px;padding:16px 0 0;border-top:1px dashed var(--pz-linea);background:none}
+  body.tb:has(.tb-form){height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
+  .tb-cab{flex:none;width:100%;box-sizing:border-box}
+  .tb-form{flex:1;min-height:0;width:100%;box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1fr) 380px;
+    grid-template-rows:minmax(0,1fr);grid-template-areas:"main lado";column-gap:24px;padding-bottom:0}
+  .tb-main{grid-area:main;overflow-y:auto;padding-bottom:24px;overscroll-behavior:contain}
+  .tb-lado{grid-area:lado;overflow-y:auto;box-sizing:border-box;margin:14px 0 16px;padding:16px 16px 0;
+    border-radius:20px;background:#1B1917;border:1px solid var(--pz-linea);overscroll-behavior:contain}
+  .tb .tb-barra{position:sticky;bottom:0;flex-direction:column;align-items:stretch;gap:8px;margin-top:12px;padding:12px 0 16px;
+    border-top:1px dashed var(--pz-linea);background:#1B1917}
   .tb-total{flex-direction:row;justify-content:space-between;align-items:baseline}
-  .tb-total b{font-size:36px}
+  .tb-total b{font-size:32px}
 }
 
 @media (max-width:520px){
@@ -210,5 +206,5 @@ body.tb{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 }
 
 @media (prefers-reduced-motion:reduce){
-  .tb-card:active,.tb-stepper button:active{transform:none}
+  .tb-card:active,.tb-stepper button:active,.tb-hora:active{transform:none}
 }

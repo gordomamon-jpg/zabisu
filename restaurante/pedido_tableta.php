@@ -279,28 +279,28 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
     }
 }
 
-/* ── Entrega rápida: los puntos y horarios que más se usan desde la tableta ── */
-$stmtFrec = $conexion->prepare(
-    "SELECT p.id_horario, COUNT(*) AS n
+/* ── Entrega: todos los puntos con todos sus horarios; el más usado desde la tableta va primero ── */
+$stmtUso = $conexion->prepare(
+    "SELECT h.id_ubicacion, COUNT(*) AS n
      FROM pedidos p
      INNER JOIN horarios_ubicacion h ON p.id_horario = h.id_horario
-     INNER JOIN ubicaciones u        ON h.id_ubicacion = u.id_ubicacion
      WHERE p.folio LIKE 'TAB-%' AND p.es_prueba = 0
        AND p.fecha_pedido >= DATE_SUB(NOW(), INTERVAL 60 DAY)
-       AND h.activo = 1 AND u.activo = 1 AND u.tipo = 'entrega'
-     GROUP BY p.id_horario
-     ORDER BY n DESC
-     LIMIT 4"
+     GROUP BY h.id_ubicacion"
 );
-$stmtFrec->execute();
+$stmtUso->execute();
+$usoPorPunto = array_map('intval', $stmtUso->fetchAll(PDO::FETCH_KEY_PAIR));
+
 $horariosPorId = [];
-foreach ($horarios as $h) $horariosPorId[(int)$h["id_horario"]] = $h;
-$entregaRapida = [];
-foreach ($stmtFrec->fetchAll(PDO::FETCH_COLUMN) as $idH) {
-    if (isset($horariosPorId[(int)$idH])) $entregaRapida[] = $horariosPorId[(int)$idH];
+$horasPorPunto = [];
+foreach ($horarios as $h) {
+    $horariosPorId[(int)$h["id_horario"]] = $h;
+    $horasPorPunto[(int)$h["id_ubicacion"]][] = $h;
 }
 
-$puntosEntrega = array_values(array_filter($ubicaciones, fn($u) => $u["tipo"] === "entrega"));
+$puntosEntrega = array_values(array_filter($ubicaciones, fn($u) => $u["tipo"] === "entrega" && !empty($horasPorPunto[(int)$u["id_ubicacion"]])));
+usort($puntosEntrega, fn($a, $b) => ($usoPorPunto[(int)$b["id_ubicacion"]] ?? 0) <=> ($usoPorPunto[(int)$a["id_ubicacion"]] ?? 0)
+                                    ?: strcmp($a["nombre_ubicacion"], $b["nombre_ubicacion"]));
 $horaBonita = fn($hora) => date("g:i a", strtotime($hora));
 
 /* Para la pantalla de éxito: a dónde va el pedido */
@@ -321,7 +321,7 @@ if ($exito && isset($horariosPorId[(int)$id_horario])) {
 <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
-<link rel="stylesheet" href="../assets/css/tableta-pizarron.css?v=1">
+<link rel="stylesheet" href="../assets/css/tableta-pizarron.css?v=4">
 </head>
 <body class="pz tb">
 <?php require __DIR__ . "/../includes/pz_filtros.php"; ?>
@@ -392,40 +392,23 @@ if ($exito && isset($horariosPorId[(int)$id_horario])) {
 
     <section class="tb-entrega" id="tb-entrega">
         <p class="tb-titulo">Entrega</p>
-        <?php if ($entregaRapida): ?>
-        <div class="tb-rapida">
-            <?php foreach ($entregaRapida as $h): ?>
-                <button type="button" class="tb-rapida__btn" data-horario="<?= (int)$h["id_horario"] ?>" data-ubicacion="<?= (int)$h["id_ubicacion"] ?>">
-                    <b><?= htmlspecialchars($horaBonita($h["hora_entrega"])) ?></b>
-                    <span><?= htmlspecialchars($h["nombre_ubicacion"]) ?></span>
-                </button>
-            <?php endforeach; ?>
-        </div>
-        <button type="button" class="tb-otro" id="tb-otro" aria-expanded="false">Otro punto u horario</button>
-        <?php endif; ?>
-
-        <div class="tb-puntos" id="tb-puntos"<?= $entregaRapida ? " hidden" : "" ?>>
-            <div class="tb-chips">
-                <?php foreach ($puntosEntrega as $ub): ?>
-                <label class="tb-chip">
-                    <input type="radio" name="ubicacion_sel" value="<?= (int)$ub["id_ubicacion"] ?>">
-                    <span><?= htmlspecialchars($ub["nombre_ubicacion"]) ?></span>
-                </label>
-                <?php endforeach; ?>
-            </div>
+        <div class="tb-puntos">
             <?php foreach ($puntosEntrega as $ub): ?>
-            <div class="tb-chips tb-horas" id="t-hors-<?= (int)$ub["id_ubicacion"] ?>" hidden>
-                <?php foreach ($horarios as $h): if ($h["id_ubicacion"] != $ub["id_ubicacion"]) continue; ?>
-                <label class="tb-chip tb-chip--hora">
-                    <input type="radio" name="id_horario" value="<?= (int)$h["id_horario"] ?>"
-                           <?= (($_POST["id_horario"] ?? "") == $h["id_horario"]) ? "checked" : "" ?>>
-                    <span><?= htmlspecialchars($horaBonita($h["hora_entrega"])) ?></span>
-                </label>
-                <?php endforeach; ?>
+            <div class="tb-punto">
+                <p class="tb-punto__nombre"><?= htmlspecialchars($ub["nombre_ubicacion"]) ?></p>
+                <div class="tb-horas">
+                    <?php foreach ($horasPorPunto[(int)$ub["id_ubicacion"]] as $h): ?>
+                    <label class="tb-hora">
+                        <input type="radio" name="id_horario" value="<?= (int)$h["id_horario"] ?>"
+                               aria-label="<?= htmlspecialchars($ub["nombre_ubicacion"] . ", " . $horaBonita($h["hora_entrega"])) ?>"
+                               <?= (($_POST["id_horario"] ?? "") == $h["id_horario"]) ? "checked" : "" ?>>
+                        <span><?= date("g:i", strtotime($h["hora_entrega"])) ?></span>
+                    </label>
+                    <?php endforeach; ?>
+                </div>
             </div>
             <?php endforeach; ?>
         </div>
-        <p class="tb-entrega__elegida" id="tb-entrega-elegida" hidden></p>
     </section>
 
     <?php $obsVal = $_POST["observaciones"] ?? ""; ?>
@@ -700,60 +683,10 @@ if ($exito && isset($horariosPorId[(int)$id_horario])) {
         }, 30);
     }
 
-    /* ── Entrega: rápida (un toque) o punto y luego hora ── */
-    var elegida = $("tb-entrega-elegida");
-    function mostrarHoras(idUb) {
-        document.querySelectorAll(".tb-horas").forEach(function (d) { d.hidden = d.id !== "t-hors-" + idUb; });
-    }
-    function marcarEntrega() {
-        var h = document.querySelector("input[name='id_horario']:checked");
-        document.querySelectorAll(".tb-rapida__btn").forEach(function (b) {
-            b.classList.toggle("tb-rapida__btn--activo", !!h && b.dataset.horario === h.value);
-        });
-        if (h) {
-            var hora = h.parentNode.textContent.trim();
-            var ub = document.querySelector("input[name='ubicacion_sel'][value='" + h.closest(".tb-horas").id.replace("t-hors-", "") + "']");
-            elegida.textContent = (ub ? ub.parentNode.textContent.trim() + ", " : "") + hora;
-            elegida.hidden = false;
-            $("tb-entrega").classList.remove("tb-falta");
-        } else {
-            elegida.hidden = true;
-        }
-    }
-    document.querySelectorAll(".tb-rapida__btn").forEach(function (b) {
-        b.addEventListener("click", function () {
-            var ub = document.querySelector("input[name='ubicacion_sel'][value='" + b.dataset.ubicacion + "']");
-            if (ub) ub.checked = true;
-            mostrarHoras(b.dataset.ubicacion);
-            document.querySelector("input[name='id_horario'][value='" + b.dataset.horario + "']").checked = true;
-            marcarEntrega();
-        });
+    /* ── Entrega: un toque en la hora elige punto y hora ── */
+    document.querySelectorAll("input[name='id_horario']").forEach(function (r) {
+        r.addEventListener("change", function () { $("tb-entrega").classList.remove("tb-falta"); });
     });
-    if ($("tb-otro")) $("tb-otro").addEventListener("click", function () {
-        var p = $("tb-puntos");
-        p.hidden = !p.hidden;
-        this.setAttribute("aria-expanded", !p.hidden);
-    });
-    document.querySelectorAll("input[name='ubicacion_sel']").forEach(function (r) {
-        r.addEventListener("change", function () {
-            document.querySelectorAll("input[name='id_horario']").forEach(function (h) { h.checked = false; });
-            mostrarHoras(this.value);
-            // Si el punto tiene un solo horario, se elige solo
-            var horas = $("t-hors-" + this.value).querySelectorAll("input");
-            if (horas.length === 1) horas[0].checked = true;
-            marcarEntrega();
-        });
-    });
-    document.querySelectorAll("input[name='id_horario']").forEach(function (r) { r.addEventListener("change", marcarEntrega); });
-    (function restaurar() {
-        var h = document.querySelector("input[name='id_horario']:checked");
-        if (!h) return;
-        var idUb = h.closest(".tb-horas").id.replace("t-hors-", "");
-        var ub = document.querySelector("input[name='ubicacion_sel'][value='" + idUb + "']");
-        if (ub) ub.checked = true;
-        mostrarHoras(idUb);
-        marcarEntrega();
-    })();
 
     /* ── Extras ── */
     function actualizarBadgeExtras() {
@@ -828,7 +761,6 @@ if ($exito && isset($horariosPorId[(int)$id_horario])) {
         if (!nombre.value.trim()) { nombre.closest(".tb-campo").classList.add("tb-falta"); primero = nombre; }
         if (!document.querySelector("input[name='id_horario']:checked")) {
             $("tb-entrega").classList.add("tb-falta");
-            if ($("tb-puntos").hidden && !document.querySelector(".tb-rapida__btn")) $("tb-puntos").hidden = false;
             primero = primero || $("tb-entrega");
         }
         for (var i = 1; i <= cantidadActual; i++) {
