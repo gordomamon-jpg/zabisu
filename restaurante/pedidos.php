@@ -918,7 +918,8 @@ function formatearFechaBonita($fecha)
                                                     Ver detalle
                                                 </a>
                                                 <?php if ($pedido["metodo_pago"] === "Transferencia" && $pedido["estado_pago"] === "Pendiente de validación"): ?>
-                                                    <a class="btn-tabla btn-tabla--confirmar" href="confirmar_pago.php?id=<?php echo (int)$pedido["id_pedido"]; ?>">
+                                                    <a class="btn-tabla btn-tabla--confirmar" href="confirmar_pago.php?id=<?php echo (int)$pedido["id_pedido"]; ?>"
+                                                       data-id="<?php echo (int)$pedido["id_pedido"]; ?>" data-menus="<?php echo (int)$pedido["num_menus"]; ?>">
                                                         Confirmar pago
                                                     </a>
                                                 <?php endif; ?>
@@ -1139,66 +1140,77 @@ document.addEventListener("DOMContentLoaded", function () {
         setTimeout(refrescarEstadosWA, 6000);
     }
 
-    // Restaurar posición de scroll al volver de confirmar pago
-    <?php if (!empty($_GET['scroll'])): ?>
-    var scrollGuardado = sessionStorage.getItem("pedidos_scroll");
-    if (scrollGuardado !== null) {
-        window.scrollTo(0, parseInt(scrollGuardado, 10));
-        sessionStorage.removeItem("pedidos_scroll");
-    }
-    <?php endif; ?>
-
-    // Guardar posición de scroll al confirmar pago
-    document.querySelectorAll(".btn-tabla--confirmar").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-            sessionStorage.setItem("pedidos_scroll", window.scrollY);
-        });
-    });
-
-    // Imprimir ticket directo sin abrir nueva pestaña
+    // Imprimir ticket directo sin abrir nueva pestaña. Un solo manejador para
+    // "Imprimir ticket" e "Imprimir separado" (el separado también lleva la clase
+    // --imprimir), que además sirve para los botones que aparecen al confirmar un pago.
     var iframeTicket = document.getElementById("iframe-ticket");
 
-    document.querySelectorAll(".btn-tabla--imprimir").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-            var id = btn.dataset.id;
-            var fila = btn.closest("tr");
+    document.addEventListener("click", function (e) {
+        var btn = e.target.closest(".btn-tabla--imprimir");
+        if (!btn) return;
+        var id = btn.dataset.id;
+        var separado = btn.classList.contains("btn-tabla--imprimir-sep");
+        var fila = btn.closest("tr");
 
-            // Marcar fila como vista visualmente
-            if (fila) {
-                fila.classList.remove("fila-pedido-nuevo");
-                fila.classList.add("fila-pedido-visto");
-                var badge = fila.querySelector(".badge-nuevo");
-                if (badge) badge.remove();
-            }
+        // Marcar fila como vista visualmente
+        if (fila) {
+            fila.classList.remove("fila-pedido-nuevo");
+            fila.classList.add("fila-pedido-visto");
+            var badge = fila.querySelector(".badge-nuevo");
+            if (badge) badge.remove();
+        }
 
-            // Llamar imprimir_y_notificar para marcar visto (correo desactivado)
-            fetch("imprimir_y_notificar.php?id=" + id, { cache: "no-store" }).then(revisarEstadosWAPronto);
+        // Llamar imprimir_y_notificar para marcar visto (correo desactivado)
+        fetch("imprimir_y_notificar.php?id=" + id, { cache: "no-store" }).then(revisarEstadosWAPronto);
 
-            // Cargar ticket en iframe oculto y disparar print
-            iframeTicket.onload = function () {
-                iframeTicket.contentWindow.focus();
-                iframeTicket.contentWindow.print();
-            };
-            iframeTicket.src = "ticket.php?id=" + id;
-        });
+        // Cargar ticket en iframe oculto y disparar print
+        iframeTicket.onload = function () {
+            iframeTicket.contentWindow.focus();
+            iframeTicket.contentWindow.print();
+        };
+        iframeTicket.src = "ticket.php?id=" + id + (separado ? "&separado=1" : "");
     });
 
-    document.querySelectorAll(".btn-tabla--imprimir-sep").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-            var id = btn.dataset.id;
+    // Confirmar pago por transferencia sin recargar: solo cambia esa fila,
+    // la pantalla no se mueve y el botón pasa a "Imprimir ticket" en su lugar
+    document.addEventListener("click", function (e) {
+        var btn = e.target.closest(".btn-tabla--confirmar");
+        if (!btn || btn.dataset.enviando) return;
+        e.preventDefault();
+        btn.dataset.enviando = "1";
+        var textoOriginal = btn.textContent;
+        btn.textContent = "Confirmando…";
+        btn.style.pointerEvents = "none";
+        btn.style.opacity = ".6";
+
+        fetch("confirmar_pago.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json" },
+            body: "id=" + encodeURIComponent(btn.dataset.id),
+            cache: "no-store"
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (!data.ok) throw new Error(data.mensaje || "No se pudo confirmar el pago.");
             var fila = btn.closest("tr");
-            if (fila) {
-                fila.classList.remove("fila-pedido-nuevo");
-                fila.classList.add("fila-pedido-visto");
-                var badge = fila.querySelector(".badge-nuevo");
-                if (badge) badge.remove();
+            var estado = fila ? fila.querySelector("span.estado") : null;
+            if (estado) {
+                estado.className = data.clase;
+                estado.textContent = data.texto;
             }
-            fetch("imprimir_y_notificar.php?id=" + id, { cache: "no-store" }).then(revisarEstadosWAPronto);
-            iframeTicket.onload = function () {
-                iframeTicket.contentWindow.focus();
-                iframeTicket.contentWindow.print();
-            };
-            iframeTicket.src = "ticket.php?id=" + id + "&separado=1";
+            var imprimir = document.createElement("button");
+            var separado = parseInt(btn.dataset.menus, 10) > 1;
+            imprimir.className = "btn-tabla btn-tabla--imprimir" + (separado ? " btn-tabla--imprimir-sep" : "");
+            imprimir.dataset.id = btn.dataset.id;
+            imprimir.textContent = separado ? "Imprimir separado" : "Imprimir ticket";
+            btn.replaceWith(imprimir);
+        })
+        .catch(function (err) {
+            alert(err.message || "No se pudo confirmar el pago. Revisa la conexión e intenta de nuevo.");
+            btn.textContent = textoOriginal;
+            btn.style.pointerEvents = "";
+            btn.style.opacity = "";
+            delete btn.dataset.enviando;
         });
     });
 
