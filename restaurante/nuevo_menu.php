@@ -61,11 +61,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 }
 
-$fechaDefault     = $_POST["fecha"]            ?? date("Y-m-d");
-$pubDefault       = $_POST["publicado_desde"]  ?? date("Y-m-d") . "T17:00";
-$hastaDefault     = $_POST["pedido_hasta"]     ?? date("Y-m-d") . "T11:50";
-$pzDefault        = $_POST["precio_zabisu"]    ?? "100";
-$peDefault        = $_POST["precio_ejecutivo"] ?? "110";
+/*
+    El menú se crea un día antes para el siguiente día de servicio (lunes a
+    jueves): el domingo se crea el del lunes y de jueves a sábado también el
+    del lunes. Se publica la víspera a las 5:00 pm y cierra ese día a las 11:50 am.
+*/
+$diaMenu = new DateTime("tomorrow");
+while ((int)$diaMenu->format("N") > 4) $diaMenu->modify("+1 day");
+$vispera = (clone $diaMenu)->modify("-1 day");
+
+$fechaDefault     = $_POST["fecha"]            ?? $diaMenu->format("Y-m-d");
+$pubDefault       = $_POST["publicado_desde"]  ?? $vispera->format("Y-m-d") . "T17:00";
+$hastaDefault     = $_POST["pedido_hasta"]     ?? $diaMenu->format("Y-m-d") . "T11:50";
+$pzDefault        = $_POST["precio_zabisu"]    ?? "110";
+$peDefault        = $_POST["precio_ejecutivo"] ?? "120";
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -199,5 +208,23 @@ $peDefault        = $_POST["precio_ejecutivo"] ?? "110";
 
     </form>
 </div>
+
+<script>
+// Si cambian la fecha del menú, el cierre se va a ese día y la publicación a la víspera (misma hora)
+(function () {
+    var fecha = document.getElementById("fecha");
+    var pub   = document.getElementById("publicado_desde");
+    var hasta = document.getElementById("pedido_hasta");
+    function hora(input, porDefecto) { return (input.value.split("T")[1] || porDefecto).slice(0, 5); }
+    fecha.addEventListener("change", function () {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha.value)) return;
+        var p = fecha.value.split("-").map(Number);
+        var antes = new Date(p[0], p[1] - 1, p[2] - 1);
+        var vispera = antes.getFullYear() + "-" + String(antes.getMonth() + 1).padStart(2, "0") + "-" + String(antes.getDate()).padStart(2, "0");
+        hasta.value = fecha.value + "T" + hora(hasta, "11:50");
+        pub.value   = vispera + "T" + hora(pub, "17:00");
+    });
+})();
+</script>
 </body>
 </html>
