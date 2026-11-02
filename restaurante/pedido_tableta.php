@@ -128,12 +128,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
     foreach ($menusRecibidos as $nMenu => $menu) {
         $tipo_menu    = $menu["tipo_menu"]    ?? "";
         $plato_fuerte = $menu["plato_fuerte"] ?? "";
-        $complementos = $menu["complementos"] ?? [];
+        // Solo cuentan los complementos que de verdad son de este menú y de este tipo
+        $complementos = array_values(array_filter(array_map('intval', (array)($menu["complementos"] ?? [])), fn($id) =>
+            isset($productosIndexados[$id]) && $productosIndexados[$id]["categoria"] === "Complemento" && $productosIndexados[$id]["tipo_menu"] === $tipo_menu));
+        $menusRecibidos[$nMenu]["complementos"] = $complementos;
 
         if (!in_array($tipo_menu, ["Zabisu","Ejecutivo"], true))
             $erroresMenus[$nMenu][] = "Selecciona el tipo de menú.";
         if ($plato_fuerte === "") {
             $erroresMenus[$nMenu][] = "Falta el guisado.";
+        } elseif (!ctype_digit((string)$plato_fuerte) || !isset($productosIndexados[$plato_fuerte])
+                  || $productosIndexados[$plato_fuerte]["categoria"] !== "Plato fuerte" || $productosIndexados[$plato_fuerte]["tipo_menu"] !== $tipo_menu) {
+            $erroresMenus[$nMenu][] = "Ese guisado ya no está en el menú (se subió uno nuevo). Vuelve a elegirlo.";
+            $plato_fuerte = "";
         }
 
         // Opción sin costo del plato (p. ej. aderezo de la ensalada)
@@ -143,8 +150,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
             if ($resOpcion["error"]) $erroresMenus[$nMenu][] = $resOpcion["error"];
             $menusRecibidos[$nMenu]["opcion"] = $resOpcion["opcion"];
         }
-        if (empty($complementos))      $erroresMenus[$nMenu][] = "Falta al menos un complemento.";
-        if (count($complementos) > 2)  $erroresMenus[$nMenu][] = "Máximo 2 complementos.";
+        // El máximo lo pone el guisado (la ensalada ejecutiva lleva 1), igual que en el cliente y el Bigotón
+        $maxComp = ($plato_fuerte !== "" && !empty($productosIndexados[$plato_fuerte]["complementos_max"]))
+            ? (int)$productosIndexados[$plato_fuerte]["complementos_max"] : 2;
+        if (empty($complementos))            $erroresMenus[$nMenu][] = "Falta al menos un complemento.";
+        if (count($complementos) > $maxComp) $erroresMenus[$nMenu][] = "Máximo {$maxComp} complemento" . ($maxComp !== 1 ? "s" : "") . " con este guisado.";
     }
 
     foreach ($erroresMenus as $nMenu => $lista) {
@@ -467,6 +477,7 @@ if ($exito && isset($horariosPorId[(int)$id_horario])) {
                     $chk = (($_POST["menus"][$i]["plato_fuerte"] ?? "") == $prod["id_producto"] && $vis); ?>
                 <label class="tb-card">
                     <input type="radio" name="menus[<?= $i ?>][plato_fuerte]" value="<?= (int)$prod["id_producto"] ?>"
+                           data-max="<?= !empty($prod["complementos_max"]) ? (int)$prod["complementos_max"] : 2 ?>"
                            <?= $chk ? "checked" : "" ?><?= $vis ? "" : " disabled" ?>>
                     <span><?= htmlspecialchars($prod["nombre"]) ?></span>
                 </label>
@@ -478,7 +489,7 @@ if ($exito && isset($horariosPorId[(int)$id_horario])) {
             <?php endif; ?>
 
             <?php if (!empty($menusPorTipo[$tipoMenu]["Complemento"])): ?>
-            <p class="tb-titulo">Complementos <small>1 o 2</small></p>
+            <p class="tb-titulo">Complementos <small class="tb-max">1 o 2</small></p>
             <div class="tb-grid tb-grid--comp">
                 <?php foreach ($menusPorTipo[$tipoMenu]["Complemento"] as $comp):
                     $chk = (in_array((int)$comp["id_producto"], array_map('intval', $_POST["menus"][$i]["complementos"] ?? []), true) && $vis); ?>
@@ -640,14 +651,24 @@ if ($exito && isset($horariosPorId[(int)$id_horario])) {
         if (!faltas.length) c.classList.remove("tb-comida--error");
     }
 
-    /* ── Complementos: máximo 2, se suelta el más viejo ── */
+    /* ── Complementos: el máximo lo pone el guisado (2, o 1 en la ensalada); se suelta el más viejo ── */
+    function limiteComplementos(ops, recien) {
+        var plato = ops.querySelector(".tb-card input[type=radio]:checked");
+        var max = plato ? parseInt(plato.dataset.max, 10) || 2 : 2;
+        var txt = ops.querySelector(".tb-max");
+        if (txt) txt.textContent = max === 1 ? "solo 1 con este guisado" : "1 o " + max;
+        var marcados = Array.prototype.slice.call(ops.querySelectorAll(".tb-grid--comp input:checked"));
+        while (marcados.length > max) {
+            var fuera = marcados[0] === recien ? marcados[1] : marcados[0];
+            fuera.checked = false;
+            marcados.splice(marcados.indexOf(fuera), 1);
+        }
+    }
     form.addEventListener("change", function (e) {
         var t = e.target;
         var card = t.closest(".tb-comida");
-        if (t.type === "checkbox" && t.closest(".tb-grid--comp") && t.checked) {
-            var marcados = Array.prototype.slice.call(t.closest(".tb-grid--comp").querySelectorAll("input:checked"));
-            if (marcados.length > 2) (marcados[0] === t ? marcados[1] : marcados[0]).checked = false;
-        }
+        var ops = t.closest(".tb-ops");
+        if (ops && (t.type === "radio" || (t.type === "checkbox" && t.checked))) limiteComplementos(ops, t.type === "checkbox" ? t : null);
         if (card) setTimeout(function () { estadoComida(parseInt(card.dataset.menu, 10)); }, 0);
         actualizarTotal();
     });
@@ -783,6 +804,7 @@ if ($exito && isset($horariosPorId[(int)$id_horario])) {
 
     /* ── Inicio ── */
     setCantidad(cantidadActual);
+    document.querySelectorAll(".tb-ops").forEach(function (ops) { limiteComplementos(ops); });
     for (var i = 1; i <= MAX; i++) estadoComida(i);
     actualizarBadgeExtras();
 })();
