@@ -86,6 +86,7 @@ function textoEstado($estado) {
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
     <link rel="stylesheet" href="../assets/css/pedido-pizarron.css?v=2">
     <link rel="stylesheet" href="../assets/css/cliente-pizarron.css?v=5">
+    <link rel="stylesheet" href="../assets/css/cliente-fluido.css?v=1">
     <?php endif; ?>
 </head>
 <style>

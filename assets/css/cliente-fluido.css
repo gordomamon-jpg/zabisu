@@ -1,0 +1,64 @@
+/* ══════════════════════════════════════════════════════════════
+   Cliente: transiciones entre pantallas y acomodo según la pantalla.
+   Se carga en todas las pantallas del cliente con diseño Pizarrón
+   (menú, pedido, pago, confirmación, estado, avisos y privacidad).
+
+   Transiciones: View Transitions del navegador (Chrome y Safari 18.2+).
+   El encabezado de Zabisu se queda quieto y el contenido se desvanece y
+   sube un poco. Donde no hay soporte, la página entra con un fundido.
+
+   Responsivo: celular una columna (480 px); desde 600 px más ancho;
+   desde 960 px (computadora) más ancho todavía. El menú tiene su propio
+   acomodo en menu-pizarron.css (los dos menús lado a lado).
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Transiciones entre pantallas ── */
+@view-transition { navigation: auto; }
+
+.pz-cab .pz-marca { view-transition-name: zb-marca; }
+.pz-barra { view-transition-name: zb-barra; }
+
+::view-transition-old(root) { animation: zbSale .2s cubic-bezier(.4, 0, 1, 1) both; }
+::view-transition-new(root) { animation: zbEntra .34s cubic-bezier(0, 0, .2, 1) .04s both; }
+::view-transition-group(zb-marca),
+::view-transition-group(zb-barra) { animation-duration: .3s; }
+
+@keyframes zbSale { to { opacity: 0; transform: translateY(-10px); } }
+@keyframes zbEntra { from { opacity: 0; transform: translateY(14px); } }
+
+/* Sin View Transitions: la página entra con un fundido suave */
+@supports not (view-transition-name: none) {
+  .pz-pagina, .pz-pedido .contenedor, .pz-cliente .contenedor, .pa-pagina {
+    animation: zbEntra .34s cubic-bezier(0, 0, .2, 1) both;
+  }
+}
+
+/* ── Pasos del pedido (misma página): el paso nuevo entra deslizándose ── */
+.paso-stepper--entra-adelante { animation: zbPasoAdelante .32s cubic-bezier(0, 0, .2, 1) both; }
+.paso-stepper--entra-atras    { animation: zbPasoAtras .32s cubic-bezier(0, 0, .2, 1) both; }
+@keyframes zbPasoAdelante { from { opacity: 0; transform: translateX(28px); } }
+@keyframes zbPasoAtras    { from { opacity: 0; transform: translateX(-28px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+  .pz-pagina, .pz-pedido .contenedor, .pz-cliente .contenedor, .pa-pagina,
+  .paso-stepper--entra-adelante, .paso-stepper--entra-atras { animation: none !important; }
+}
+
+/* ── Responsivo ── */
+@media (min-width: 600px) {
+  .pz-pedido .contenedor, .pz-cliente .contenedor { max-width: 640px; }
+  .pz-cliente .pago-body, .pz-cliente .conf-body { max-width: 640px; }
+  .pg-form { max-width: 640px; }
+  .pa-pagina { max-width: 600px; }
+}
+
+@media (min-width: 960px) {
+  /* Pedido: más ancho y los platillos y complementos en dos columnas */
+  .pz-pedido .contenedor { max-width: 860px; }
+  .pz-pedido .grupo-categoria { display: grid; grid-template-columns: 1fr 1fr; column-gap: 12px; align-items: start; }
+  .pz-pedido .grupo-categoria > :not(label) { grid-column: 1 / -1; }
+
+  /* Pago, confirmación y estado: columna cómoda para leer, centrada */
+  .pz-cliente .contenedor, .pz-cliente .pago-body, .pz-cliente .conf-body, .pg-form { max-width: 720px; }
+}

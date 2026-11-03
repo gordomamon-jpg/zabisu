@@ -37,12 +37,17 @@ $pzSecciones = ["Plato fuerte" => "Plato fuerte", "Sopa" => "Sopa", "Complemento
     <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
     <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=4">
+    <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=5">
+    <link rel="stylesheet" href="../assets/css/cliente-fluido.css?v=1">
 </head>
-<body class="pz">
+<body class="pz pz-menu">
 
 <!-- Entrada: la taza (con su vapor) y "Zabisu" sobre un trazo de pincel que se pinta
      mientras carga, como los títulos del sitio. Se quita sola con CSS a los ~1.9 s. -->
+<script>
+// La entrada sale una vez por visita: al regresar al menú desde el pedido ya no se repite
+try { if (sessionStorage.getItem("zb_entrada")) document.documentElement.classList.add("zb-sin-entrada"); else sessionStorage.setItem("zb_entrada", "1"); } catch (e) {}
+</script>
 <div class="pz-splash" aria-hidden="true">
     <div class="pz-splash__taza">
         <img class="pz-splash__cuerpo" src="../assets/img/LOGO_NARA_300.png" alt="">
@@ -111,9 +116,13 @@ $pzSecciones = ["Plato fuerte" => "Plato fuerte", "Sopa" => "Sopa", "Complemento
     </div>
     <?php endif; ?>
 
+    <div class="pz-menus">
     <?php foreach ($pzTipos as $i => $tipoMenu): $cats = $menusPorTipo[$tipoMenu]; ?>
     <div class="pz-panel" id="pz-panel-<?php echo $tipoMenu; ?>" role="tabpanel"
          aria-labelledby="pz-tab-<?php echo $tipoMenu; ?>" <?php echo $i === 0 ? '' : 'hidden'; ?>>
+
+        <!-- En computadora no hay pestañas: cada menú lleva su encabezado -->
+        <h3 class="pz-panel__titulo">Menú <?php echo $tipoMenu; ?><?php if (isset($precios[$tipoMenu])): ?> <b><?php echo pzPrecio($precios[$tipoMenu]); ?></b><?php endif; ?></h3>
 
         <?php foreach ($pzSecciones as $cat => $titulo):
             if (empty($cats[$cat])) continue; ?>
@@ -157,6 +166,7 @@ $pzSecciones = ["Plato fuerte" => "Plato fuerte", "Sopa" => "Sopa", "Complemento
         <?php endif; ?>
     </div>
     <?php endforeach; ?>
+    </div>
 
     <?php if ($postreDelDia): ?>
     <section class="pz-sec">

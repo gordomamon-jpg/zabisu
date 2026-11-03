@@ -22,6 +22,7 @@ $waContacto     = "https://wa.me/" . WHATSAPP_DUDAS;
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
     <link rel="stylesheet" href="../assets/css/pedido-pizarron.css?v=2">
     <link rel="stylesheet" href="../assets/css/cliente-pizarron.css?v=5">
+    <link rel="stylesheet" href="../assets/css/cliente-fluido.css?v=1">
     <?php endif; ?>
     <style>
         .privacidad .md-hero__marca { font-size: 38px; letter-spacing: -1px; }

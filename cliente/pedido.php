@@ -633,6 +633,7 @@ if ($scrollDestino === "bloque-entrega") {
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
     <link rel="stylesheet" href="../assets/css/pedido-pizarron.css?v=2">
+    <link rel="stylesheet" href="../assets/css/cliente-fluido.css?v=1">
     <?php else: ?>
     <style>
         /* ── Rediseño: tipografía, marca sólida, vidrio y atmósfera ── */
@@ -1266,14 +1267,23 @@ document.addEventListener("DOMContentLoaded", function () {
     // STEPPER
     // ============================================================
     let pasoActual = <?php echo (int)$pasoInicial; ?>;
+    let primerPaso = true;
 
     function irAPaso(n) {
         document.querySelectorAll(".paso-stepper").forEach(function (p) {
-            p.classList.remove("paso-stepper--activo");
+            p.classList.remove("paso-stepper--activo", "paso-stepper--entra-adelante", "paso-stepper--entra-atras");
         });
 
         const pasoEl = document.querySelector(".paso-stepper[data-paso='" + n + "']");
-        if (pasoEl) pasoEl.classList.add("paso-stepper--activo");
+        if (pasoEl) {
+            pasoEl.classList.add("paso-stepper--activo");
+            // El paso nuevo entra deslizándose (adelante o atrás); el primero al cargar, no
+            if (!primerPaso && n !== pasoActual) {
+                void pasoEl.offsetWidth;
+                pasoEl.classList.add(n > pasoActual ? "paso-stepper--entra-adelante" : "paso-stepper--entra-atras");
+            }
+        }
+        primerPaso = false;
 
         document.querySelectorAll(".stepper-paso-item").forEach(function (item) {
             const num = parseInt(item.dataset.paso);

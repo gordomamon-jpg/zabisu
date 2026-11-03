@@ -195,3 +195,27 @@ body.pz{
   .pz-splash__pincel::before{animation:none;clip-path:none}
   .pz-splash__pincel span{animation:none;color:#111}
 }
+.zb-sin-entrada .pz-splash{display:none}
+
+/* ── Menú responsivo (solo la pantalla del menú: body.pz-menu) ──
+   Celular: una columna con pestañas. Tableta: más ancho.
+   Computadora: los dos menús lado a lado, sin pestañas. */
+.pz-panel__titulo{display:none}
+@media (min-width:600px){
+  .pz-menu .pz-pagina{max-width:640px}
+}
+@media (min-width:960px){
+  .pz-menu .pz-pagina{max-width:1160px;padding:0 32px 140px}
+  .pz-menu .pz-seg{display:none}
+  .pz-menu .pz-menus{display:grid;grid-template-columns:1fr 1fr;column-gap:40px;align-items:start}
+  .pz-menu .pz-panel[hidden]{display:block}
+  .pz-menu .pz-panel__titulo{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:30px 20px 0;
+    padding-bottom:12px;border-bottom:2px dashed var(--pz-linea);font:400 30px/1.1 var(--pz-rotulo);color:var(--pz-gis)}
+  .pz-menu .pz-panel__titulo b{font-weight:400;color:var(--pz-naranja)}
+  .pz-menu .pz-panel .pz-sec:first-of-type{padding-top:18px}
+  /* Con los dos menús a la vista el botón ya no muestra un solo precio */
+  .pz-menu #pz-btn-precio{display:none}
+  .pz-menu .pz-btn{justify-content:center}
+  .pz-menu .pz-ligas{max-width:560px;margin-left:auto;margin-right:auto}
+  .pz-menu .pz-pagina > .pz-sec{max-width:600px;margin-left:auto;margin-right:auto}
+}
