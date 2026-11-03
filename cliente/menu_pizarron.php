@@ -37,17 +37,19 @@ $pzSecciones = ["Plato fuerte" => "Plato fuerte", "Sopa" => "Sopa", "Complemento
     <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
     <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=3">
+    <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=4">
 </head>
 <body class="pz">
 
-<!-- Entrada: el logo, la marca y un trazo de pincel que se pinta mientras carga.
-     Se quita sola con CSS (sin depender de JavaScript) a los ~1.8 s. -->
+<!-- Entrada: la taza (con su vapor) y "Zabisu" sobre un trazo de pincel que se pinta
+     mientras carga, como los títulos del sitio. Se quita sola con CSS a los ~1.9 s. -->
 <div class="pz-splash" aria-hidden="true">
-    <img class="pz-splash__logo" src="../assets/img/LOGO_N_128.png" alt="">
-    <span class="pz-splash__nombre">Zabisu</span>
+    <div class="pz-splash__taza">
+        <img class="pz-splash__cuerpo" src="../assets/img/LOGO_NARA_300.png" alt="">
+        <img class="pz-splash__vapor" src="../assets/img/LOGO_NARA_300.png" alt="">
+    </div>
+    <div class="pz-splash__pincel"><span>Zabisu</span></div>
     <span class="pz-splash__lema">Sabor y Servicio</span>
-    <span class="pz-splash__trazo"></span>
 </div>
 
 <!-- Filtros de las orillas irregulares (tinta y papel roto) -->
