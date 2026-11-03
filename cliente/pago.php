@@ -766,12 +766,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
                         <span class="pg-cuenta__grapa" aria-hidden="true"></span>
                         <p class="pg-cuenta__titulo">La cuenta</p>
                         <div class="pg-cuenta__total"><span>Total</span><b>$<?php echo number_format($totalPedido, 2); ?></b></div>
-                        <div class="pg-cuenta__linea"><span>Mercado Pago</span><b>Diana Piña</b></div>
+                        <div class="pg-cuenta__linea"><span>Banorte</span><b>Diana Piña</b></div>
 
                         <div class="copiar-campo">
                             <span class="copiar-campo__label">CLABE</span>
                             <button type="button" class="copiar-campo__btn" data-copiar="texto-clabe">
-                                <span class="copiar-campo__valor" id="texto-clabe">722969014258283039</span>
+                                <span class="copiar-campo__valor" id="texto-clabe">072180013541137610</span>
                                 <span class="copiar-campo__accion">Copiar</span>
                             </button>
                         </div>
@@ -893,7 +893,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
         <div class="pago-lineas">
             <div class="pago-linea">
                 <span class="pago-linea__label">Banco</span>
-                <span class="pago-linea__val">Mercado Pago</span>
+                <span class="pago-linea__val">Banorte</span>
             </div>
             <div class="pago-linea">
                 <span class="pago-linea__label">Titular</span>
@@ -908,7 +908,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
         <div class="copiar-campo">
             <span class="copiar-campo__label">CLABE</span>
             <button type="button" class="copiar-campo__btn" data-copiar="texto-clabe">
-                <span class="copiar-campo__valor" id="texto-clabe">722969014258283039</span>
+                <span class="copiar-campo__valor" id="texto-clabe">072180013541137610</span>
                 <span class="copiar-campo__accion">Copiar</span>
             </button>
         </div>
