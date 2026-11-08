@@ -99,7 +99,6 @@ $extrasVer = $stmtExtras->fetchAll(PDO::FETCH_ASSOC);
     5. Extras disponibles para agregar (del menú más reciente)
 */
 $PRECIOS_EXTRA_ED  = ["Sopa" => 25, "Complemento" => 25, "Agua" => 20];
-$iconosExtra       = ["Sopa" => "🥣", "Complemento" => "🥗", "Agua" => "💧"];
 $extrasDisponibles = [];
 
 $menuRecienteId = $conexion->query("SELECT id_menu FROM menu_dia m WHERE EXISTS (SELECT 1 FROM productos p WHERE p.id_menu = m.id_menu) ORDER BY m.fecha DESC, m.activo DESC, m.id_menu DESC LIMIT 1")->fetchColumn();
@@ -172,129 +171,148 @@ function obtenerClaseEstadoPago($estadoPago)
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detalle del pedido | Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
-    <link rel="stylesheet" href="../assets/css/styles.css?v=8">
+    <meta name="theme-color" content="#151413">
+    <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=5">
+    <link rel="stylesheet" href="../assets/css/ver-pedido-pizarron.css?v=1">
 </head>
-<body>
+<body class="pz">
+<?php require __DIR__ . "/../includes/pz_filtros.php"; ?>
 
-<div class="contenedor">
-    <div class="hero-zabisu">
-        <div class="hero-zabisu__glow"></div>
-        <div class="hero-zabisu__contenido">
-            <p class="hero-zabisu__eyebrow">RESTAURANTE</p>
-            <h1 class="hero-zabisu__titulo">Detalle del pedido</h1>
-            <p class="hero-zabisu__texto">
-                Folio: <?php echo htmlspecialchars($pedido["folio"]); ?>
-            </p>
+<main class="vp">
+    <header class="vp-cab">
+        <div class="pz-marca">
+            <img src="../assets/img/LOGO_N_128.png" alt="">
+            <div>
+                <span class="pz-marca__nombre">Zabisu</span>
+                <span class="pz-marca__lema">Sabor y Servicio</span>
+            </div>
         </div>
+        <h1 class="pz-titulo"><span class="pz-pincel"><span>Detalle del pedido</span></span></h1>
+        <nav class="vp-cab__acc" aria-label="Navegación">
+            <a class="vp-btn" href="pedidos.php">← Pedidos</a>
+        </nav>
+    </header>
+
+    <div class="vp-folio">
+        <span class="vp-folio__etiqueta">Folio</span>
+        <b><?php echo htmlspecialchars($pedido["folio"]); ?></b>
+        <span class="<?php echo obtenerClaseEstadoPago($pedido["estado_pago"]); ?>">
+            <?php echo htmlspecialchars(obtenerTextoEstadoPago($pedido["estado_pago"])); ?>
+        </span>
     </div>
 
-    <div class="bloque-formulario resumen-total">
-        <h2>Información general</h2>
+    <?php if ($editadoOk): ?>
+    <p class="vp-aviso-ok">✓ Pedido actualizado correctamente.</p>
+    <?php endif; ?>
 
-        <div class="ticket-resumen">
-            <div class="ticket-menu">
-                <div class="ticket-linea">
-                    <span>Cliente</span>
-                    <span><?php echo htmlspecialchars($pedido["nombre_cliente"]); ?></span>
-                </div>
+    <div class="vp-grid">
+    <div class="vp-col">
 
+    <section class="vp-sec">
+        <h2 class="pz-cinta pz-fibra">Información general</h2>
+
+        <div class="vp-tarjeta">
+            <p class="vp-cliente"><?php echo htmlspecialchars($pedido["nombre_cliente"]); ?></p>
+            <dl class="vp-lineas">
                 <?php if (trim((string)$pedido["telefono"]) !== ""): ?>
-                <div class="ticket-linea">
-                    <span>Teléfono</span>
-                    <span><?php echo htmlspecialchars($pedido["telefono"]); ?></span>
+                <div class="vp-linea">
+                    <dt>Teléfono</dt>
+                    <dd><?php echo htmlspecialchars($pedido["telefono"]); ?></dd>
                 </div>
                 <?php endif; ?>
 
                 <?php if (!empty($pedido["correo_cliente"])): ?>
-                    <div class="ticket-linea">
-                        <span>Correo</span>
-                        <span><?php echo htmlspecialchars($pedido["correo_cliente"]); ?></span>
-                    </div>
+                <div class="vp-linea">
+                    <dt>Correo</dt>
+                    <dd><?php echo htmlspecialchars($pedido["correo_cliente"]); ?></dd>
+                </div>
                 <?php endif; ?>
 
-                <div class="ticket-linea">
-                    <span>Ubicación</span>
-                    <span><?php echo htmlspecialchars($pedido["nombre_ubicacion"]); ?> (<?php echo htmlspecialchars($pedido["tipo_ubicacion"]); ?>)</span>
+                <div class="vp-linea">
+                    <dt>Ubicación</dt>
+                    <dd><?php echo htmlspecialchars($pedido["nombre_ubicacion"]); ?> (<?php echo htmlspecialchars($pedido["tipo_ubicacion"]); ?>)</dd>
                 </div>
 
-                <div class="ticket-linea">
-                    <span>Hora</span>
-                    <span><?php echo date("g:i A", strtotime($pedido["hora_entrega"])); ?></span>
+                <div class="vp-linea">
+                    <dt>Hora</dt>
+                    <dd class="vp-hora"><?php echo date("g:i A", strtotime($pedido["hora_entrega"])); ?></dd>
                 </div>
 
-                <div class="ticket-linea">
-                    <span>Método de pago</span>
-                    <span><?php echo htmlspecialchars($pedido["metodo_pago"]); ?></span>
+                <div class="vp-linea">
+                    <dt>Método de pago</dt>
+                    <dd><?php echo htmlspecialchars($pedido["metodo_pago"]); ?></dd>
                 </div>
 
-                <div class="ticket-linea">
-                    <span>Estado del pago</span>
-                    <span class="<?php echo obtenerClaseEstadoPago($pedido["estado_pago"]); ?>">
-                        <?php echo htmlspecialchars(obtenerTextoEstadoPago($pedido["estado_pago"])); ?>
-                    </span>
+                <div class="vp-linea">
+                    <dt>Estado del pago</dt>
+                    <dd>
+                        <span class="<?php echo obtenerClaseEstadoPago($pedido["estado_pago"]); ?>">
+                            <?php echo htmlspecialchars(obtenerTextoEstadoPago($pedido["estado_pago"])); ?>
+                        </span>
+                    </dd>
                 </div>
 
                 <?php if (isset($pedido["correo_enviado"])): ?>
-                    <div class="ticket-linea">
-                        <span>Correo enviado</span>
-                        <span><?php echo ((int)$pedido["correo_enviado"] === 1) ? "Sí" : "No"; ?></span>
-                    </div>
+                <div class="vp-linea">
+                    <dt>Correo enviado</dt>
+                    <dd><?php echo ((int)$pedido["correo_enviado"] === 1) ? "Sí" : "No"; ?></dd>
+                </div>
                 <?php endif; ?>
 
-                <div class="ticket-linea">
-                    <span>Observaciones</span>
-                    <span>
-                        <?php echo $pedido["observaciones"] !== "" ? htmlspecialchars($pedido["observaciones"]) : "Sin observaciones"; ?>
-                    </span>
+                <div class="vp-linea">
+                    <dt>Observaciones</dt>
+                    <dd><?php echo $pedido["observaciones"] !== "" ? htmlspecialchars($pedido["observaciones"]) : "Sin observaciones"; ?></dd>
                 </div>
+            </dl>
 
-                <div class="ticket-subtotal">
-                    <span>Total</span>
-                    <strong>$<?php echo number_format((float)$pedido["total"], 2); ?></strong>
-                </div>
+            <div class="vp-total">
+                <span>Total</span>
+                <strong>$<?php echo number_format((float)$pedido["total"], 2); ?></strong>
             </div>
         </div>
-    </div>
+    </section>
 
     <?php foreach ($menusPedido as $menu): ?>
-        <div class="bloque-formulario">
-            <h2>Menú <?php echo (int)$menu["numero_menu"]; ?> — <?php echo htmlspecialchars($menu["tipo_menu"]); ?></h2>
+    <section class="vp-sec">
+        <h2 class="pz-cinta pz-fibra">Menú <?php echo (int)$menu["numero_menu"]; ?> — <?php echo htmlspecialchars($menu["tipo_menu"]); ?></h2>
 
-            <div class="ticket-resumen">
-                <div class="ticket-menu">
-                    <?php if (!empty($detallePorMenu[$menu["id_pedido_menu"]])): ?>
-                        <?php foreach ($detallePorMenu[$menu["id_pedido_menu"]] as $detalle): ?>
-                            <div class="ticket-linea">
-                                <span><?php echo htmlspecialchars($detalle["categoria"]); ?></span>
-                                <span><?php echo htmlspecialchars(nombreConOpcion($detalle)); ?></span>
-                            </div>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <p class="ticket-vacio">No hay productos registrados en este menú.</p>
-                    <?php endif; ?>
-                </div>
-            </div>
+        <div class="vp-comanda">
+            <?php if (!empty($detallePorMenu[$menu["id_pedido_menu"]])): ?>
+                <dl class="vp-lineas">
+                <?php foreach ($detallePorMenu[$menu["id_pedido_menu"]] as $detalle): ?>
+                    <div class="vp-linea">
+                        <dt><?php echo htmlspecialchars($detalle["categoria"]); ?></dt>
+                        <dd><?php echo htmlspecialchars(nombreConOpcion($detalle)); ?></dd>
+                    </div>
+                <?php endforeach; ?>
+                </dl>
+            <?php else: ?>
+                <p class="vp-vacio">No hay productos registrados en este menú.</p>
+            <?php endif; ?>
         </div>
+    </section>
     <?php endforeach; ?>
 
     <?php if (!empty($extrasVer)): ?>
-        <div class="bloque-formulario">
-            <h2>Extras</h2>
-            <div class="ticket-resumen">
-                <div class="ticket-menu">
-                    <?php foreach ($extrasVer as $extra): ?>
-                        <div class="ticket-linea">
-                            <span><?php echo htmlspecialchars($extra["categoria"]); ?> — <?php echo htmlspecialchars($extra["nombre"]); ?> ×<?php echo (int)$extra["cantidad"]; ?></span>
-                            <span>$<?php echo number_format($extra["cantidad"] * $extra["precio_unitario"], 2); ?></span>
-                        </div>
-                    <?php endforeach; ?>
-                    <div class="ticket-subtotal">
-                        <span>Subtotal extras</span>
-                        <strong>$<?php echo number_format(array_sum(array_map(fn($e) => $e["cantidad"] * $e["precio_unitario"], $extrasVer)), 2); ?></strong>
-                    </div>
+    <section class="vp-sec">
+        <h2 class="pz-cinta pz-fibra">Extras</h2>
+        <div class="vp-comanda">
+            <dl class="vp-lineas">
+                <?php foreach ($extrasVer as $extra): ?>
+                <div class="vp-linea">
+                    <dt><?php echo htmlspecialchars($extra["categoria"]); ?> — <?php echo htmlspecialchars($extra["nombre"]); ?> ×<?php echo (int)$extra["cantidad"]; ?></dt>
+                    <dd class="vp-dinero">$<?php echo number_format($extra["cantidad"] * $extra["precio_unitario"], 2); ?></dd>
                 </div>
+                <?php endforeach; ?>
+            </dl>
+            <div class="vp-total vp-total--comanda">
+                <span>Subtotal extras</span>
+                <strong>$<?php echo number_format(array_sum(array_map(fn($e) => $e["cantidad"] * $e["precio_unitario"], $extrasVer)), 2); ?></strong>
             </div>
         </div>
+    </section>
     <?php endif; ?>
 
     <?php if (!empty($pedido["comprobante_pago"])): ?>
@@ -302,96 +320,122 @@ function obtenerClaseEstadoPago($estadoPago)
         $rutaComprobanteFisica = __DIR__ . "/../uploads/comprobantes/" . $pedido["comprobante_pago"];
         $rutaComprobanteWeb = "../uploads/comprobantes/" . rawurlencode($pedido["comprobante_pago"]);
         ?>
-        <div class="bloque-formulario">
-            <h2>Comprobante de pago</h2>
-
-            <p class="nota-formulario">
-                Archivo cargado por el cliente:
-            </p>
+    <section class="vp-sec">
+        <h2 class="pz-cinta pz-fibra">Comprobante de pago</h2>
+        <div class="vp-tarjeta">
+            <p class="nota-formulario">Archivo cargado por el cliente:</p>
 
             <?php if (file_exists($rutaComprobanteFisica)): ?>
-                <a class="btn-link" target="_blank" href="<?php echo htmlspecialchars($rutaComprobanteWeb); ?>">
+                <a class="vp-btn" target="_blank" href="<?php echo htmlspecialchars($rutaComprobanteWeb); ?>">
                     Ver comprobante
                 </a>
             <?php else: ?>
-                <p class="nota-formulario" style="color:#ffb3b3;">
+                <p class="nota-formulario vp-error">
                     El comprobante no se encontró en la carpeta de archivos.
                 </p>
             <?php endif; ?>
         </div>
+    </section>
     <?php endif; ?>
 
-    <?php if ($editadoOk): ?>
-    <div class="bloque-formulario" style="border-left:4px solid #2ecc71;">
-        <p style="margin:0;color:#2ecc71;font-weight:700;">✓ Pedido actualizado correctamente.</p>
     </div>
-    <?php endif; ?>
+
+    <aside class="vp-col vp-col--lado">
+
+    <!-- ── Acciones ─────────────────────────────────────── -->
+    <section class="vp-sec">
+        <h2 class="pz-cinta pz-fibra">Acciones</h2>
+
+        <div class="vp-tarjeta vp-acciones">
+            <?php if ($pedido["metodo_pago"] === "Transferencia" && $pedido["estado_pago"] === "Pendiente de validación"): ?>
+                <a class="vp-btn vp-btn--naranja" href="confirmar_pago.php?id=<?php echo (int)$pedido["id_pedido"]; ?>">
+                    Confirmar pago
+                </a>
+            <?php endif; ?>
+
+            <?php if (in_array($pedido["metodo_pago"], ["Efectivo", "Tarjeta"]) || $pedido["estado_pago"] === "Pagado"): ?>
+                <a class="vp-btn vp-btn--estraza" target="_blank" href="imprimir_y_notificar.php?id=<?php echo (int)$pedido["id_pedido"]; ?>">
+                    Imprimir ticket
+                </a>
+            <?php endif; ?>
+            <?php if (count($menusPedido) > 1): ?>
+                <a class="vp-btn vp-btn--estraza" target="_blank" href="ticket.php?id=<?php echo (int)$pedido["id_pedido"]; ?>&separado=1">
+                    Imprimir separado
+                </a>
+            <?php endif; ?>
+
+            <a class="vp-btn" href="pedidos.php">Volver a pedidos</a>
+            <button type="button" class="vp-btn vp-btn--eliminar" id="btn-eliminar-pedido">Eliminar pedido</button>
+        </div>
+    </section>
 
     <!-- ── Editar pedido ─────────────────────────────────── -->
-    <div class="bloque-formulario">
-        <h2>Cambiar horario de entrega</h2>
+    <section class="vp-sec">
+        <h2 class="pz-cinta pz-fibra">Cambiar horario de entrega</h2>
 
-        <form method="POST" action="guardar_edicion_pedido.php">
+        <form method="POST" action="guardar_edicion_pedido.php" class="vp-tarjeta vp-form">
             <input type="hidden" name="id_pedido" value="<?php echo $id_pedido; ?>">
             <input type="hidden" name="accion"    value="horario">
 
             <label for="id_horario_sel">Horario de entrega</label>
-            <select name="id_horario" id="id_horario_sel">
-                <?php foreach ($horariosDisponibles as $h): ?>
-                <option value="<?php echo (int)$h["id_horario"]; ?>"
-                    <?php echo (int)$h["id_horario"] === (int)$pedido["id_horario"] ? "selected" : ""; ?>>
-                    <?php echo date("g:i A", strtotime($h["hora_entrega"])); ?>
-                </option>
-                <?php endforeach; ?>
-            </select>
-
-            <button type="submit" class="btn-tabla" style="margin-top:16px;">Guardar cambio</button>
+            <div class="vp-form__fila">
+                <select name="id_horario" id="id_horario_sel">
+                    <?php foreach ($horariosDisponibles as $h): ?>
+                    <option value="<?php echo (int)$h["id_horario"]; ?>"
+                        <?php echo (int)$h["id_horario"] === (int)$pedido["id_horario"] ? "selected" : ""; ?>>
+                        <?php echo date("g:i A", strtotime($h["hora_entrega"])); ?>
+                    </option>
+                    <?php endforeach; ?>
+                </select>
+                <button type="submit" class="vp-btn vp-btn--estraza">Guardar cambio</button>
+            </div>
         </form>
-    </div>
+    </section>
 
-    <div class="bloque-formulario">
-        <h2>Cambiar método de pago</h2>
+    <section class="vp-sec">
+        <h2 class="pz-cinta pz-fibra">Cambiar método de pago</h2>
 
-        <form method="POST" action="guardar_edicion_pedido.php">
+        <form method="POST" action="guardar_edicion_pedido.php" class="vp-tarjeta vp-form">
             <input type="hidden" name="id_pedido" value="<?php echo $id_pedido; ?>">
             <input type="hidden" name="accion"    value="metodo_pago">
 
             <label for="metodo_pago_sel">Método de pago</label>
-            <select name="metodo_pago" id="metodo_pago_sel">
-                <option value="Efectivo"      <?php echo $pedido["metodo_pago"] === "Efectivo"      ? "selected" : ""; ?>>Efectivo</option>
-                <option value="Transferencia" <?php echo $pedido["metodo_pago"] === "Transferencia" ? "selected" : ""; ?>>Transferencia</option>
-                <option value="Tarjeta"       <?php echo $pedido["metodo_pago"] === "Tarjeta"       ? "selected" : ""; ?>>Tarjeta</option>
-            </select>
+            <div class="vp-form__fila">
+                <select name="metodo_pago" id="metodo_pago_sel">
+                    <option value="Efectivo"      <?php echo $pedido["metodo_pago"] === "Efectivo"      ? "selected" : ""; ?>>Efectivo</option>
+                    <option value="Transferencia" <?php echo $pedido["metodo_pago"] === "Transferencia" ? "selected" : ""; ?>>Transferencia</option>
+                    <option value="Tarjeta"       <?php echo $pedido["metodo_pago"] === "Tarjeta"       ? "selected" : ""; ?>>Tarjeta</option>
+                </select>
+                <button type="submit" class="vp-btn vp-btn--estraza">Guardar cambio</button>
+            </div>
 
             <?php if ($pedido["estado_pago"] === "Pagado"): ?>
                 <p class="nota-formulario">El estado del pago no cambiará porque ya fue confirmado.</p>
             <?php endif; ?>
-
-            <button type="submit" class="btn-tabla" style="margin-top:16px;">Guardar cambio</button>
         </form>
-    </div>
+    </section>
 
     <?php if (!empty($extrasDisponibles)): ?>
-    <div class="bloque-formulario">
-        <h2>Agregar extras</h2>
+    <section class="vp-sec">
+        <h2 class="pz-cinta pz-fibra">Agregar extras</h2>
 
-        <form method="POST" action="guardar_edicion_pedido.php" id="form-agregar-extras">
+        <form method="POST" action="guardar_edicion_pedido.php" id="form-agregar-extras" class="vp-tarjeta vp-form">
             <input type="hidden" name="id_pedido" value="<?php echo $id_pedido; ?>">
             <input type="hidden" name="accion"    value="extras">
 
             <?php foreach ($extrasDisponibles as $cat => $items): ?>
-            <div class="grupo-categoria">
-                <h3><?php echo $iconosExtra[$cat]; ?> <?php echo htmlspecialchars($cat === "Complemento" ? "Complemento extra" : $cat . " extra"); ?></h3>
+            <div class="vp-extras-grupo">
+                <h3><?php echo htmlspecialchars($cat === "Complemento" ? "Complemento extra" : $cat . " extra"); ?></h3>
                 <?php foreach ($items as $item): ?>
                 <?php $precioEd = $PRECIOS_EXTRA_ED[$cat] ?? 25; ?>
                 <div class="extra-item" data-precio="<?php echo $precioEd; ?>">
                     <span class="extra-item__nombre"><?php echo htmlspecialchars($item["nombre"]); ?></span>
                     <span class="extra-item__precio-hint">$<?php echo $precioEd; ?> c/u</span>
                     <div class="extra-item__contador">
-                        <button type="button" class="extra-btn-menos">−</button>
+                        <button type="button" class="extra-btn-menos" aria-label="Quitar uno">−</button>
                         <input type="number" name="extras[<?php echo (int)$item["id_producto"]; ?>]"
                                class="extra-cantidad" value="0" min="0" max="5" readonly>
-                        <button type="button" class="extra-btn-mas">+</button>
+                        <button type="button" class="extra-btn-mas" aria-label="Agregar uno">+</button>
                     </div>
                 </div>
                 <?php endforeach; ?>
@@ -399,54 +443,31 @@ function obtenerClaseEstadoPago($estadoPago)
             <?php endforeach; ?>
 
             <p class="nota-formulario" id="nota-extras-vacio">Selecciona al menos un extra para continuar.</p>
-            <button type="submit" class="btn-tabla" id="btn-agregar-extras" disabled style="margin-top:8px;">
+            <button type="submit" class="vp-btn vp-btn--naranja vp-btn--ancho" id="btn-agregar-extras" disabled>
                 Agregar extras al pedido
             </button>
         </form>
-    </div>
+    </section>
     <?php endif; ?>
 
-    <div class="bloque-formulario acciones-panel">
-        <h2>Acciones</h2>
-
-        <div class="acciones-panel__botones">
-            <?php if ($pedido["metodo_pago"] === "Transferencia" && $pedido["estado_pago"] === "Pendiente de validación"): ?>
-                <a class="btn-tabla" href="confirmar_pago.php?id=<?php echo (int)$pedido["id_pedido"]; ?>">
-                    Confirmar pago
-                </a>
-            <?php endif; ?>
-
-            <?php if (in_array($pedido["metodo_pago"], ["Efectivo", "Tarjeta"]) || $pedido["estado_pago"] === "Pagado"): ?>
-                <a class="btn-tabla" target="_blank" href="imprimir_y_notificar.php?id=<?php echo (int)$pedido["id_pedido"]; ?>">
-                    Imprimir ticket
-                </a>
-            <?php endif; ?>
-            <?php if (count($menusPedido) > 1): ?>
-                <a class="btn-tabla btn-tabla--imprimir" target="_blank" href="ticket.php?id=<?php echo (int)$pedido["id_pedido"]; ?>&separado=1">
-                    Imprimir separado
-                </a>
-            <?php endif; ?>
-
-            <a class="btn-link" href="pedidos.php">Volver a pedidos</a>
-            <button type="button" class="btn-eliminar-pedido" id="btn-eliminar-pedido">🗑 Eliminar pedido</button>
-        </div>
+    </aside>
     </div>
-</div>
+</main>
 
 <!-- Modal confirmación eliminar -->
-<div id="modal-eliminar" class="zb-modal-overlay" style="display:none;">
-    <div class="zb-modal" style="max-width:360px;">
-        <p class="zb-modal__eyebrow" style="color:#f87171;">⚠️ Eliminar pedido</p>
-        <h2 class="zb-modal__titulo" style="font-size:17px;">¿Seguro que quieres eliminar este pedido?</h2>
-        <p class="zb-modal__desc">
-            Se borrará el pedido <strong style="color:var(--zabisu-orange);"><?php echo htmlspecialchars($pedido["folio"]); ?></strong> de forma permanente. Esta acción no se puede deshacer.
+<div id="modal-eliminar" class="vp-modal-fondo" style="display:none;">
+    <div class="vp-modal" role="dialog" aria-modal="true" aria-labelledby="modal-eliminar-titulo">
+        <p class="vp-modal__eyebrow">Eliminar pedido</p>
+        <h2 class="vp-modal__titulo" id="modal-eliminar-titulo">¿Seguro que quieres eliminar este pedido?</h2>
+        <p class="vp-modal__desc">
+            Se borrará el pedido <strong><?php echo htmlspecialchars($pedido["folio"]); ?></strong> de forma permanente. Esta acción no se puede deshacer.
         </p>
         <form method="POST" action="">
             <input type="hidden" name="accion"    value="eliminar_pedido">
             <input type="hidden" name="id_pedido" value="<?php echo (int)$pedido["id_pedido"]; ?>">
-            <div class="zb-modal__acciones" style="margin-top:8px;">
-                <button type="submit" class="btn-principal" style="background:#ef4444;flex:1;">Sí, eliminar</button>
-                <button type="button" id="btn-cancelar-eliminar" class="btn-volver-panel" style="flex:1;">Cancelar</button>
+            <div class="vp-modal__acciones">
+                <button type="submit" class="vp-btn vp-btn--rojo">Sí, eliminar</button>
+                <button type="button" id="btn-cancelar-eliminar" class="vp-btn">Cancelar</button>
             </div>
         </form>
     </div>

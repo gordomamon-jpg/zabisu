@@ -292,3 +292,7 @@
 
 .hm-sin-resultados{display:none;grid-column:1 / -1;padding:40px 20px;text-align:center;font:500 15px var(--pz-sys);color:var(--pz-gris)}
 @media (prefers-reduced-motion:reduce){ .hm-top__chevron,.hm-top-pill{transition:none} }
+
+/* Botones que son enlaces: menu-pizarron.css pone ".pz a{color:inherit}" */
+.pz a.mz-btn--naranja{color:#111}
+.pz a.btn-tabla--estraza{color:var(--pz-tinta)}

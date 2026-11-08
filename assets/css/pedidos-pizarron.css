@@ -281,3 +281,7 @@
 @keyframes ppParpadeo{50%{border-color:var(--pz-linea)}}
 @media (max-width:599px){ .pp-cab__acc .btn-activar-sonido{grid-column:1 / -1} }
 @media (prefers-reduced-motion:reduce){ .btn-activar-sonido{animation:none} }
+
+/* Botones que son enlaces: menu-pizarron.css pone ".pz a{color:inherit}" */
+.pz a.btn-tabla--confirmar{color:#111}
+.pz a.btn-tabla--imprimir{color:var(--pz-tinta)}
