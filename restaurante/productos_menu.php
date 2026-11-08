@@ -318,15 +318,6 @@ $estructura = [
     "Ejecutivo"=> ["Plato fuerte" => 4, "Sopa" => 1, "Complemento" => 5, "Agua" => 1, "Cortesia" => 1],
 ];
 
-$iconosCategoria = [
-    "Plato fuerte" => "🍽️",
-    "Sopa"         => "🥣",
-    "Complemento"  => "🥗",
-    "Agua"         => "💧",
-    "Cortesia"     => "🍬",
-    "Postre"       => "🍮",
-];
-
 $meses = [
     '01'=>'enero','02'=>'febrero','03'=>'marzo','04'=>'abril',
     '05'=>'mayo','06'=>'junio','07'=>'julio','08'=>'agosto',
@@ -347,20 +338,31 @@ $esCreacion = !isset($_GET["editar"]) && empty($productosGuardados);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Productos del menú | Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
-    <link rel="stylesheet" href="../assets/css/styles.css?v=8">
+    <meta name="theme-color" content="#151413">
+    <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=5">
+    <link rel="stylesheet" href="../assets/css/menus-pizarron.css?v=1">
 </head>
-<body>
-<div class="contenedor">
+<body class="pz">
+<?php require __DIR__ . "/../includes/pz_filtros.php"; ?>
 
-    <div class="hero-zabisu">
-        <div class="hero-zabisu__glow"></div>
-        <div class="hero-zabisu__contenido">
-            <p class="hero-zabisu__eyebrow">RESTAURANTE</p>
-            <h1 class="hero-zabisu__titulo">Productos del menú</h1>
-            <p class="hero-zabisu__texto"><?php echo htmlspecialchars($fechaBonita); ?></p>
-            <a href="panel_general.php" class="btn-volver-panel">← Panel general</a>
+<main class="mz">
+    <header class="mz-cab">
+        <div class="pz-marca">
+            <img src="../assets/img/LOGO_N_128.png" alt="">
+            <div>
+                <span class="pz-marca__nombre">Zabisu</span>
+                <span class="pz-marca__lema">Sabor y Servicio</span>
+            </div>
         </div>
-    </div>
+        <h1 class="pz-titulo"><span class="pz-pincel"><span>Productos del menú</span></span></h1>
+
+        <nav class="mz-cab__acc" aria-label="Acciones">
+            <a href="panel_general.php" class="btn-volver-panel">← Panel general</a>
+        </nav>
+    </header>
+    <p class="mz-sub"><?php echo htmlspecialchars($fechaBonita); ?></p>
 
     <?php if ($esCreacion): ?>
     <!-- Indicador de pasos solo en flujo de creación -->
@@ -426,15 +428,13 @@ $esCreacion = !isset($_GET["editar"]) && empty($productosGuardados);
     <form action="" method="POST" id="form-productos">
 
         <!-- FECHA Y HORARIOS -->
-        <div class="bloque-formulario nm-seccion">
+        <section class="nm-seccion">
             <div class="nm-seccion__header">
-                <span class="nm-seccion__icono">📅</span>
-                <div>
-                    <h2>Fecha y horarios</h2>
-                    <p class="nota-formulario" style="margin:0;">Modifica la fecha del menú y el horario de publicación y cierre.</p>
-                </div>
+                <h2 class="pz-cinta pz-fibra">Fecha y horarios</h2>
+                <p class="nota-formulario">Modifica la fecha del menú y el horario de publicación y cierre.</p>
             </div>
 
+            <div class="mz-tarjeta">
             <div class="nm-campos-fecha">
                 <div class="nm-campo">
                     <label for="campo-fecha">Fecha del menú</label>
@@ -453,7 +453,7 @@ $esCreacion = !isset($_GET["editar"]) && empty($productosGuardados);
                 </div>
             </div>
 
-            <h3 style="font-size:14px;color:var(--texto-secundario);margin:20px 0 10px;font-weight:600;">Precios por tipo de menú</h3>
+            <h3 class="mz-subtitulo">Precios por tipo de menú</h3>
             <div class="nm-campos-fecha">
                 <?php foreach ($preciosActuales as $nombreMenu => $precio): ?>
                 <div class="nm-campo">
@@ -464,41 +464,41 @@ $esCreacion = !isset($_GET["editar"]) && empty($productosGuardados);
                 </div>
                 <?php endforeach; ?>
             </div>
-        </div>
+            </div>
+        </section>
 
         <!-- CARGA RÁPIDA -->
-        <div class="bloque-formulario nm-seccion" id="seccion-carga-rapida">
+        <section class="nm-seccion" id="seccion-carga-rapida">
             <div class="nm-seccion__header">
-                <span class="nm-seccion__icono">⚡</span>
-                <div>
-                    <h2>Carga rápida</h2>
-                    <p class="nota-formulario" style="margin:0;">Pega el menú completo en el formato de abajo y se llenarán todos los campos automáticamente.</p>
-                </div>
+                <h2 class="pz-cinta pz-fibra">Carga rápida</h2>
+                <p class="nota-formulario">Pega el menú completo en el formato de abajo y se llenarán todos los campos automáticamente.</p>
             </div>
 
-            <div style="background:var(--fondo-card,#1a1a1a);border:1px solid var(--borde,#333);border-radius:8px;padding:14px 16px;margin:16px 0 0;">
-                <p style="font-size:12px;color:var(--texto-secundario);margin:0 0 8px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;">Formato</p>
-                <pre style="font-family:monospace;font-size:13px;color:var(--texto-principal,#eee);margin:0;white-space:pre-wrap;line-height:1.7;">PLATO ZABISU: Nombre 1 | Nombre 2
+            <div class="mz-tarjeta">
+                <div class="pm-carga">
+                    <div class="pm-formato">
+                        <p class="pm-formato__titulo">Formato</p>
+                        <pre>PLATO ZABISU: Nombre 1 | Nombre 2
 PLATO EJECUTIVO: Nombre 1 | Nombre 2 | Nombre 3 | Nombre 4
 SOPA: Nombre de la sopa
 COMPLEMENTO: Opción 1 | Opción 2 | Opción 3 | Opción 4 | Opción 5
 AGUA: Nombre del agua
 CORTESIA: Nombre de la cortesia
 POSTRE: Nombre del postre (descripción)</pre>
-                <p style="font-size:12px;color:var(--texto-secundario);margin:10px 0 0;">Descripción opcional entre paréntesis: <code style="background:#2a2a2a;padding:1px 5px;border-radius:3px;">Milanesa de res (Con papas y ensalada)</code></p>
-                <p style="font-size:12px;color:var(--texto-secundario);margin:6px 0 0;">Sopa, Complemento, Agua y Cortesia se aplican igual a Zabisu y Ejecutivo. El precio del postre se captura manualmente.</p>
-            </div>
+                        <p>Descripción opcional entre paréntesis: <code>Milanesa de res (Con papas y ensalada)</code></p>
+                        <p>Sopa, Complemento, Agua y Cortesia se aplican igual a Zabisu y Ejecutivo. El precio del postre se captura manualmente.</p>
+                    </div>
 
-            <textarea id="carga-rapida-texto" rows="8"
-                placeholder="Pega aquí el menú..."
-                style="width:100%;box-sizing:border-box;margin-top:16px;padding:12px 14px;background:var(--fondo-input,#111);border:1px solid var(--borde,#333);border-radius:8px;color:var(--texto-principal,#eee);font-size:14px;font-family:monospace;line-height:1.6;resize:vertical;"></textarea>
+                    <textarea id="carga-rapida-texto" rows="8" placeholder="Pega aquí el menú..."></textarea>
+                </div>
 
-            <div style="margin-top:12px;display:flex;gap:14px;align-items:center;">
-                <button type="button" id="btn-carga-rapida" class="btn-principal">Aplicar al formulario</button>
-                <span id="carga-rapida-ok" style="font-size:13px;color:#4caf50;display:none;">✓ Campos llenados — revisa y guarda</span>
-                <span id="carga-rapida-err" style="font-size:13px;color:#e57373;display:none;"></span>
+                <div class="pm-carga__pie">
+                    <button type="button" id="btn-carga-rapida" class="btn-principal">Aplicar al formulario</button>
+                    <span id="carga-rapida-ok" style="display:none;">✓ Campos llenados — revisa y guarda</span>
+                    <span id="carga-rapida-err" style="display:none;"></span>
+                </div>
             </div>
-        </div>
+        </section>
 
         <!-- TABS -->
         <div class="pm-tabs">
@@ -527,21 +527,17 @@ POSTRE: Nombre del postre (descripción)</pre>
             <?php endif; ?>
 
             <?php foreach ($categorias as $categoria => $cantidad):
-                $icono = $iconosCategoria[$categoria] ?? "•";
                 $guardadosCategoria = $productosGuardados[$tipoMenu][$categoria] ?? [];
             ?>
             <div class="pm-categoria">
                 <div class="pm-categoria__header">
-                    <span class="pm-categoria__icono"><?php echo $icono; ?></span>
-                    <div class="pm-categoria__info">
-                        <h3><?php echo htmlspecialchars($categoria); ?></h3>
-                        <span class="pm-categoria__cantidad">
-                            <?php echo $cantidad; ?> opción<?php echo $cantidad > 1 ? "es" : ""; ?> disponible<?php echo $cantidad > 1 ? "s" : ""; ?> para elegir
-                        </span>
-                    </div>
+                    <h3><?php echo htmlspecialchars($categoria); ?></h3>
+                    <span class="pm-categoria__cantidad">
+                        <?php echo $cantidad; ?> opción<?php echo $cantidad > 1 ? "es" : ""; ?> disponible<?php echo $cantidad > 1 ? "s" : ""; ?> para elegir
+                    </span>
                 </div>
 
-                <div class="pm-productos-lista">
+                <div class="pm-productos-lista <?php echo $categoria === "Plato fuerte" ? "pm-productos-lista--fuertes" : "pm-productos-lista--chicos"; ?>">
                     <?php for ($i = 0; $i < $cantidad; $i++):
                         $guardado    = $guardadosCategoria[$i] ?? null;
                         $nombreVal   = $guardado["nombre"] ?? "";
@@ -566,6 +562,7 @@ POSTRE: Nombre del postre (descripción)</pre>
                                       placeholder="Descripción opcional…"><?php echo htmlspecialchars($descVal); ?></textarea>
 
                             <?php if ($categoria === "Plato fuerte"): ?>
+                            <div class="pm-detalles">
                             <div class="pm-limite">
                                 <label>Límite de pedidos</label>
                                 <input type="number" min="1"
@@ -590,6 +587,7 @@ POSTRE: Nombre del postre (descripción)</pre>
                                           placeholder="Una por línea, p. ej. aderezos"><?php echo htmlspecialchars($opcionesVal); ?></textarea>
                                 <span class="nm-campo__ayuda">Si escribes opciones, el cliente tendrá que elegir una (sin costo). Se recuerdan solas para este plato.</span>
                             </div>
+                            </div>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -601,15 +599,12 @@ POSTRE: Nombre del postre (descripción)</pre>
         <?php endforeach; ?>
 
         <!-- POSTRE DEL DÍA -->
-        <div class="bloque-formulario nm-seccion">
+        <section class="nm-seccion">
             <div class="nm-seccion__header">
-                <span class="nm-seccion__icono">🍮</span>
-                <div>
-                    <h2>Postre del día</h2>
-                    <p class="nota-formulario" style="margin:0;">Opcional. Se ofrece a los clientes como extra con costo adicional.</p>
-                </div>
+                <h2 class="pz-cinta pz-fibra">Postre del día</h2>
+                <p class="nota-formulario">Opcional. Se ofrece a los clientes como extra con costo adicional.</p>
             </div>
-            <div class="pm-producto-card">
+            <div class="pm-producto-card pm-postre">
                 <div class="pm-producto-card__campos">
                     <input type="text" name="postre[nombre]"
                            placeholder="Nombre del postre…"
@@ -618,12 +613,11 @@ POSTRE: Nombre del postre (descripción)</pre>
                               placeholder="Descripción opcional…"><?php echo htmlspecialchars($postreGuardado["descripcion"] ?? ""); ?></textarea>
                     <div class="pm-limite">
                         <label>Precio adicional</label>
-                        <div style="display:flex;align-items:center;gap:8px;">
-                            <span style="color:var(--texto-secundario);">$</span>
+                        <div class="pm-precio-extra">
+                            <span>$</span>
                             <input type="number" step="0.50" min="0"
                                    name="postre[precio]"
                                    placeholder="0.00"
-                                   style="max-width:140px;"
                                    value="<?php echo ($postreGuardado && (float)$postreGuardado["precio"] > 0)
                                        ? number_format((float)$postreGuardado["precio"], 2, ".", "")
                                        : ""; ?>">
@@ -632,17 +626,12 @@ POSTRE: Nombre del postre (descripción)</pre>
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
 
         <!-- GUARDAR -->
-        <div class="bloque-formulario nm-seccion">
-            <div class="nm-seccion__header">
-                <span class="nm-seccion__icono">💾</span>
-                <div>
-                    <h2>Guardar menú</h2>
-                    <p class="nota-formulario" style="margin:0;">Los productos vacíos se omitirán automáticamente al guardar.</p>
-                </div>
-            </div>
+        <div class="mz-guardar">
+            <h2>Guardar menú</h2>
+            <p class="nota-formulario">Los productos vacíos se omitirán automáticamente al guardar.</p>
 
             <label class="pm-activar-label">
                 <input type="checkbox" name="activar_menu" value="1"
@@ -658,7 +647,7 @@ POSTRE: Nombre del postre (descripción)</pre>
         </div>
 
     </form>
-</div>
+</main>
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {

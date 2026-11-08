@@ -83,20 +83,31 @@ $peDefault        = $_POST["precio_ejecutivo"] ?? "120";
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nuevo menú | Restaurante Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
-    <link rel="stylesheet" href="../assets/css/styles.css?v=8">
+    <meta name="theme-color" content="#151413">
+    <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=5">
+    <link rel="stylesheet" href="../assets/css/menus-pizarron.css?v=1">
 </head>
-<body>
-<div class="contenedor">
+<body class="pz">
+<?php require __DIR__ . "/../includes/pz_filtros.php"; ?>
 
-    <div class="hero-zabisu">
-        <div class="hero-zabisu__glow"></div>
-        <div class="hero-zabisu__contenido">
-            <p class="hero-zabisu__eyebrow">RESTAURANTE</p>
-            <h1 class="hero-zabisu__titulo">Crear menú del día</h1>
-            <p class="hero-zabisu__texto">Paso 1 de 2 — Configuración general del menú</p>
-            <a href="panel_general.php" class="btn-volver-panel">← Panel general</a>
+<main class="mz">
+    <header class="mz-cab">
+        <div class="pz-marca">
+            <img src="../assets/img/LOGO_N_128.png" alt="">
+            <div>
+                <span class="pz-marca__nombre">Zabisu</span>
+                <span class="pz-marca__lema">Sabor y Servicio</span>
+            </div>
         </div>
-    </div>
+        <h1 class="pz-titulo"><span class="pz-pincel"><span>Nuevo menú</span></span></h1>
+
+        <nav class="mz-cab__acc" aria-label="Acciones">
+            <a href="panel_general.php" class="btn-volver-panel">← Panel general</a>
+        </nav>
+    </header>
+    <p class="mz-sub">Paso 1 de 2 — Configuración general del menú</p>
 
     <!-- Indicador de pasos -->
     <div class="nm-pasos">
@@ -124,15 +135,13 @@ $peDefault        = $_POST["precio_ejecutivo"] ?? "120";
     <form action="" method="POST">
 
         <!-- FECHA Y HORARIOS -->
-        <div class="bloque-formulario nm-seccion">
+        <section class="nm-seccion">
             <div class="nm-seccion__header">
-                <span class="nm-seccion__icono">📅</span>
-                <div>
-                    <h2>Fecha y ventana de pedidos</h2>
-                    <p class="nota-formulario" style="margin:0;">Define para qué día aplica el menú y en qué horario pueden hacerse pedidos.</p>
-                </div>
+                <h2 class="pz-cinta pz-fibra">Fecha y ventana de pedidos</h2>
+                <p class="nota-formulario">Define para qué día aplica el menú y en qué horario pueden hacerse pedidos.</p>
             </div>
 
+            <div class="mz-tarjeta">
             <div class="nm-campo-grupo">
                 <div class="nm-campo">
                     <label for="fecha">Fecha del menú</label>
@@ -156,16 +165,14 @@ $peDefault        = $_POST["precio_ejecutivo"] ?? "120";
                     <span class="nm-campo__ayuda">Después de esta hora no se aceptan pedidos</span>
                 </div>
             </div>
-        </div>
+            </div>
+        </section>
 
         <!-- PRECIOS -->
-        <div class="bloque-formulario nm-seccion">
+        <section class="nm-seccion">
             <div class="nm-seccion__header">
-                <span class="nm-seccion__icono">💰</span>
-                <div>
-                    <h2>Precios de los menús</h2>
-                    <p class="nota-formulario" style="margin:0;">Estos precios se aplicarán a todos los pedidos del menú activo.</p>
-                </div>
+                <h2 class="pz-cinta pz-fibra">Precios de los menús</h2>
+                <p class="nota-formulario">Estos precios se aplicarán a todos los pedidos del menú activo.</p>
             </div>
 
             <div class="nm-campo-grupo nm-campo-grupo--dos">
@@ -193,10 +200,10 @@ $peDefault        = $_POST["precio_ejecutivo"] ?? "120";
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
 
         <!-- ACCIONES -->
-        <div class="bloque-formulario">
+        <div class="mz-guardar">
             <div class="nm-acciones">
                 <button type="submit" class="btn-principal">Continuar a productos →</button>
                 <a href="panel_general.php" class="btn-link">Cancelar</a>
@@ -207,7 +214,7 @@ $peDefault        = $_POST["precio_ejecutivo"] ?? "120";
         </div>
 
     </form>
-</div>
+</main>
 
 <script>
 // Si cambian la fecha del menú, el cierre se va a ese día y la publicación a la víspera (misma hora)

@@ -143,23 +143,32 @@ function formatearFechaBonita($fecha)
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Menús | Restaurante Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
-    <link rel="stylesheet" href="../assets/css/styles.css?v=8">
+    <meta name="theme-color" content="#151413">
+    <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=5">
+    <link rel="stylesheet" href="../assets/css/menus-pizarron.css?v=1">
 </head>
-<body>
+<body class="pz">
+<?php require __DIR__ . "/../includes/pz_filtros.php"; ?>
 
-<div class="contenedor">
-    <div class="hero-zabisu">
-        <div class="hero-zabisu__glow"></div>
-        <div class="hero-zabisu__contenido">
-            <p class="hero-zabisu__eyebrow">RESTAURANTE</p>
-            <h1 class="hero-zabisu__titulo">Panel de menús</h1>
-            <p class="hero-zabisu__texto">
-                Administra los menús del día y prepara la operación semanal.
-            </p>
-            <a href="panel_general.php" class="btn-volver-panel">← Panel general</a>
-            <a href="historico_menus.php" class="btn-volver-panel">📖 Historial de menús</a>
+<main class="mz">
+    <header class="mz-cab">
+        <div class="pz-marca">
+            <img src="../assets/img/LOGO_N_128.png" alt="">
+            <div>
+                <span class="pz-marca__nombre">Zabisu</span>
+                <span class="pz-marca__lema">Sabor y Servicio</span>
+            </div>
         </div>
-    </div>
+        <h1 class="pz-titulo"><span class="pz-pincel"><span>Menús</span></span></h1>
+
+        <nav class="mz-cab__acc" aria-label="Acciones">
+            <a href="nuevo_menu.php" class="mz-btn--naranja">Nuevo menú</a>
+            <a href="historico_menus.php" class="btn-volver-panel">Historial de menús</a>
+            <a href="panel_general.php" class="btn-volver-panel">← Panel general</a>
+        </nav>
+    </header>
 
     <?php if ($mensajeEliminar): ?>
         <?php [$tipo, $texto] = explode(":", $mensajeEliminar, 2); ?>
@@ -168,95 +177,71 @@ function formatearFechaBonita($fecha)
         </div>
     <?php endif; ?>
 
-    <div class="bloque-formulario">
-        <div class="cabecera-modulo">
-            <h2>Menús registrados</h2>
-            <a href="nuevo_menu.php" class="btn-tabla">Nuevo menú</a>
-        </div>
-
-        <?php if (empty($menus)): ?>
-            <p class="nota-formulario">No hay menús registrados todavía.</p>
-        <?php else: ?>
-            <div class="tabla-pedidos-wrapper">
-                <table class="tabla-pedidos">
-                    <thead>
-                       <tr>
-                            <th>Fecha del menú</th>
-                            <th>Publicado desde</th>
-                            <th>Pedido hasta</th>
-                            <th>Estado</th>
-                            <th>Creado</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($menus as $menu): ?>
-                            <tr>
-                                <td>
-                                    <strong><?php echo htmlspecialchars(formatearFechaBonita($menu["fecha"])); ?></strong><br>
-                                    <span class="texto-secundario">ID: <?php echo (int)$menu["id_menu"]; ?></span>
-                                </td>
-
-                                <td>
-                                    <?php if ((int)$menu["activo"] === 1): ?>
-                                        <span class="estado estado-pagado">En uso</span>
-                                    <?php else: ?>
-                                        <a href="activar_menu.php?id_menu=<?php echo (int)$menu["id_menu"]; ?>" class="btn-tabla">
-                                            Activar menú
-                                        </a>
-                                    <?php endif; ?>
-                                </td>
-
-                                <td>
-                                    <?php echo htmlspecialchars(date("d/m/Y g:i A", strtotime($menu["publicado_desde"]))); ?>
-                                </td>
-                                <td>
-                                    <?php echo htmlspecialchars(date("d/m/Y g:i A", strtotime($menu["pedido_hasta"]))); ?>
-                                </td>
-                                <td>
-                                    <?php if ((int)$menu["activo"] === 1): ?>
-                                        <span class="estado estado-pagado">Activo</span>
-                                    <?php else: ?>
-                                        <span class="estado estado-pendiente">Inactivo</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td>
-                                    <span class="texto-secundario">
-                                        <?php echo htmlspecialchars(date("d/m/Y g:i A", strtotime($menu["creado_en"]))); ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="acciones-fila">
-                                        <a class="btn-tabla" href="productos_menu.php?id_menu=<?php echo (int)$menu["id_menu"]; ?>&editar=1">
-                                            Editar
-                                        </a>
-                                        <?php if ((int)$menu["activo"] !== 1): ?>
-                                        <form method="POST" action="" class="form-eliminar-menu"
-                                              data-fecha="<?php echo htmlspecialchars(formatearFechaBonita($menu["fecha"])); ?>">
-                                            <input type="hidden" name="id_menu" value="<?php echo (int)$menu["id_menu"]; ?>">
-                                            <button type="submit" name="eliminar_menu" class="btn-tabla btn-tabla--eliminar">
-                                                Eliminar
-                                            </button>
-                                        </form>
-                                        <?php endif; ?>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+    <?php if (empty($menus)): ?>
+        <p class="nota-formulario" style="margin-top:24px;">No hay menús registrados todavía.</p>
+    <?php else: ?>
+        <?php
+            // Agrupados por mes para encontrarlos rápido
+            $mesesNombre = [1 => "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            $menusPorMes = [];
+            foreach ($menus as $menu) {
+                $ts = strtotime($menu["fecha"]);
+                $menusPorMes[$mesesNombre[(int)date("n", $ts)] . " " . date("Y", $ts)][] = $menu;
+            }
+        ?>
+        <?php foreach ($menusPorMes as $nombreMes => $menusMes): ?>
+        <section class="mz-mes">
+            <h2 class="pz-cinta pz-fibra"><?php echo $nombreMes; ?></h2>
+            <div class="mz-lista">
+                <?php foreach ($menusMes as $menu): ?>
+                    <?php $activo = (int)$menu["activo"] === 1; ?>
+                    <article class="mz-menu<?php echo $activo ? ' mz-menu--activo' : ''; ?>">
+                        <div class="mz-menu__dia">
+                            <b><?php echo htmlspecialchars(formatearFechaBonita($menu["fecha"])); ?></b>
+                            <small>ID: <?php echo (int)$menu["id_menu"]; ?> · creado <?php echo htmlspecialchars(date("d/m/Y g:i A", strtotime($menu["creado_en"]))); ?></small>
+                        </div>
+                        <div class="mz-menu__horas">
+                            <span>Publica <b><?php echo htmlspecialchars(date("d/m/Y g:i A", strtotime($menu["publicado_desde"]))); ?></b></span>
+                            <span>Cierra <b><?php echo htmlspecialchars(date("d/m/Y g:i A", strtotime($menu["pedido_hasta"]))); ?></b></span>
+                        </div>
+                        <div class="mz-menu__estado">
+                            <?php if ($activo): ?>
+                                <span class="estado estado-pagado">Activo · en uso</span>
+                            <?php else: ?>
+                                <span class="estado estado-pendiente">Inactivo</span>
+                            <?php endif; ?>
+                        </div>
+                        <div class="mz-menu__acc">
+                            <?php if (!$activo): ?>
+                                <a href="activar_menu.php?id_menu=<?php echo (int)$menu["id_menu"]; ?>" class="btn-tabla btn-tabla--estraza">
+                                    Activar menú
+                                </a>
+                            <?php endif; ?>
+                            <a class="btn-tabla" href="productos_menu.php?id_menu=<?php echo (int)$menu["id_menu"]; ?>&editar=1">
+                                Editar
+                            </a>
+                            <?php if (!$activo): ?>
+                            <form method="POST" action="" class="form-eliminar-menu"
+                                  data-fecha="<?php echo htmlspecialchars(formatearFechaBonita($menu["fecha"])); ?>">
+                                <input type="hidden" name="id_menu" value="<?php echo (int)$menu["id_menu"]; ?>">
+                                <button type="submit" name="eliminar_menu" class="btn-tabla btn-tabla--eliminar">
+                                    Eliminar
+                                </button>
+                            </form>
+                            <?php endif; ?>
+                        </div>
+                    </article>
+                <?php endforeach; ?>
             </div>
-        <?php endif; ?>
-    </div>
+        </section>
+        <?php endforeach; ?>
+    <?php endif; ?>
 
-    <div class="bloque-formulario">
-        <h2>Siguientes acciones</h2>
-        <div class="acciones-panel__botones">
-            <a href="pedidos.php" class="btn-link">Ir a pedidos</a>
-            <a href="nuevo_menu.php" class="btn-tabla">Crear menú del día</a>
-        </div>
-    </div>
-</div>
+    <nav class="mz-siguientes" aria-label="Siguientes acciones">
+        <a href="pedidos.php" class="btn-link">Ir a pedidos</a>
+        <a href="nuevo_menu.php" class="btn-tabla">Crear menú del día</a>
+    </nav>
+</main>
 
 <script>
 document.querySelectorAll(".form-eliminar-menu").forEach(function (form) {

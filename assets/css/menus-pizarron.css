@@ -1,0 +1,215 @@
+/* ══════════════════════════════════════════════════════════════
+   Gestión de menús en estilo Pizarrón: lista de menús (menus.php),
+   crear menú (nuevo_menu.php) y productos del menú (productos_menu.php).
+   Mismas funciones que antes: solo cambia la piel.
+   Se carga junto con menu-pizarron.css (colores, letras y piezas).
+
+   Celular una columna; desde 600 px más aire; desde 960 px los campos
+   y los platillos se acomodan en columnas.
+   ══════════════════════════════════════════════════════════════ */
+
+.mz{max-width:1120px;margin:0 auto;padding:0 16px 90px;box-sizing:border-box}
+.mz *,.mz *::before,.mz *::after{box-sizing:border-box}
+.mz h2,.mz h3,.mz p{margin:0}
+.texto-secundario{color:var(--pz-gris);font-size:13px}
+.nota-formulario{font:400 14px/1.5 var(--pz-sys);color:var(--pz-gris);margin:6px 0 0}
+@media (min-width:600px){ .mz{padding:0 24px 90px} }
+@media (min-width:960px){ .mz{padding:0 32px 90px} }
+
+/* ── Encabezado: marca, título con pincel y botones ── */
+.mz-cab{display:flex;align-items:center;flex-wrap:wrap;gap:12px 18px;padding:20px 0 4px}
+.mz-cab .pz-marca{margin:0}
+.mz-cab .pz-titulo{padding:0;margin:0}
+.mz-cab .pz-pincel span{font-size:34px}
+.mz-cab__acc{display:flex;flex-wrap:wrap;gap:8px;width:100%}
+.mz-sub{margin:12px 0 0;font:400 15px var(--pz-sys);color:var(--pz-gris)}
+@media (min-width:960px){ .mz-cab__acc{width:auto;margin-left:auto} }
+
+/* Botones */
+.mz-btn,.btn-volver-panel,.btn-link,.btn-tabla,.btn-limpiar-filtros{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 16px;
+  border-radius:12px;border:1.5px solid var(--pz-linea);background:var(--pz-grupo);color:var(--pz-gis);
+  font:600 15px var(--pz-sys);text-decoration:none;white-space:nowrap;cursor:pointer;transition:border-color .15s,background .15s}
+.mz-btn:hover,.btn-volver-panel:hover,.btn-link:hover,.btn-tabla:hover,.btn-limpiar-filtros:hover{border-color:#4a4540}
+.mz-btn--naranja,.btn-principal{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:50px;padding:0 22px;
+  border:0;border-radius:12px;background:var(--pz-naranja);color:#111;font:700 16px var(--pz-sys);text-decoration:none;cursor:pointer}
+.mz-btn--naranja:hover,.btn-principal:hover{background:#ff8a1f}
+.btn-principal:active,.mz-btn--naranja:active{transform:scale(.985)}
+.mz-cab .mz-btn--naranja{min-height:46px;font-size:15px}
+.btn-tabla{min-height:42px;padding:0 14px;font-size:14px;background:transparent}
+.btn-tabla--estraza{background:var(--pz-estraza);border-color:var(--pz-estraza);color:var(--pz-tinta)}
+.btn-tabla--estraza:hover{background:var(--pz-estraza-cl);border-color:var(--pz-estraza-cl)}
+.btn-tabla--eliminar{color:#ff8f86;border-color:rgba(229,83,75,.45)}
+.btn-tabla--eliminar:hover{background:rgba(229,83,75,.12);border-color:#e5534b}
+
+@media (max-width:599px){
+  .mz-cab__acc{display:grid;grid-template-columns:1fr 1fr}
+  .mz-cab__acc > :first-child:nth-last-child(odd){grid-column:1 / -1}
+  .mz-cab__acc > *{padding:0 10px;font-size:14px}
+}
+
+/* Mensajes */
+.mensaje-error{margin-top:18px;padding:12px 16px;border-radius:14px;background:rgba(229,83,75,.1);border:1px solid rgba(229,83,75,.4);
+  color:#ff9a8f;font:500 14px/1.5 var(--pz-sys)}
+.mensaje-error ul{margin:0;padding-left:18px}
+.nm-exito{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;margin-top:18px;padding:14px 16px;border-radius:14px;
+  background:rgba(196,154,108,.12);border:1px solid rgba(196,154,108,.45);color:var(--pz-estraza-cl);font:500 15px/1.5 var(--pz-sys)}
+.nm-exito strong{color:var(--pz-gis)}
+.nm-exito p{margin:2px 0 0;color:var(--pz-gris);font-size:14px}
+.nm-exito__icono{display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--pz-estraza);color:var(--pz-tinta);font-weight:800;flex-shrink:0}
+.nm-exito > div:not(.nm-exito__acciones){flex:1;min-width:200px}
+.nm-exito__acciones{display:flex;flex-wrap:wrap;gap:8px}
+
+/* Estado */
+.estado{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:999px;font:600 13px var(--pz-sys);
+  background:var(--pz-linea);color:var(--pz-gris);white-space:nowrap}
+.estado-pagado{background:rgba(123,211,137,.14);color:#8fdc9c}
+.estado-pagado::before{content:"";width:8px;height:8px;border-radius:50%;background:#7bd389}
+
+/* ══ Lista de menús (menus.php) ══ */
+.mz-mes{margin-top:30px}
+.mz-mes .pz-cinta{font-size:17px;margin:0 0 12px}
+.mz-mes:nth-of-type(odd) .pz-cinta{transform:rotate(-1.2deg)}
+.mz-mes:nth-of-type(even) .pz-cinta{transform:rotate(.8deg)}
+.mz-lista{display:grid;gap:8px}
+.mz-menu{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 14px;align-items:center;padding:14px;border-radius:16px;background:var(--pz-grupo)}
+.mz-menu--activo{background:#1f2620;box-shadow:inset 4px 0 0 #7bd389}
+.mz-menu__dia{min-width:0}
+.mz-menu__dia b{display:block;font:400 19px/1.2 var(--pz-rotulo);color:var(--pz-gis)}
+.mz-menu__dia small{font:400 12px var(--pz-sys);color:var(--pz-gris)}
+.mz-menu__estado{grid-column:2;grid-row:1;align-self:start}
+.mz-menu__horas{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:4px 18px;font:400 13px/1.4 var(--pz-sys);color:var(--pz-gris)}
+.mz-menu__horas b{font-weight:600;color:var(--pz-gis)}
+.mz-menu__acc{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:6px}
+.mz-menu__acc form{display:contents}
+.mz-menu__acc .btn-tabla{flex:1 1 auto}
+@media (min-width:760px){
+  .mz-menu{grid-template-columns:minmax(310px,1.2fr) minmax(0,1.5fr) auto auto}
+  .mz-menu__horas{grid-column:auto}
+  .mz-menu__estado{grid-column:auto;grid-row:auto;align-self:center}
+  .mz-menu__acc{grid-column:auto;flex-wrap:nowrap}
+  .mz-menu__acc .btn-tabla{flex:0 0 auto}
+}
+.mz-siguientes{display:flex;flex-wrap:wrap;gap:10px;margin-top:34px;padding-top:20px;border-top:1px solid var(--pz-linea)}
+
+/* ══ Formularios (nuevo_menu.php y productos_menu.php) ══ */
+
+/* Pasos 1 y 2 */
+.nm-pasos{display:flex;align-items:center;gap:12px;margin-top:20px}
+.nm-paso{display:flex;align-items:center;gap:8px;font:600 14px var(--pz-sys);color:var(--pz-gris)}
+.nm-paso__circulo{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;border:1.5px solid var(--pz-linea);font:400 15px var(--pz-rotulo)}
+.nm-paso--activo{color:var(--pz-gis)}
+.nm-paso--activo .nm-paso__circulo{background:var(--pz-naranja);border-color:var(--pz-naranja);color:#111}
+.nm-paso--completado .nm-paso__circulo{background:var(--pz-estraza);border-color:var(--pz-estraza);color:var(--pz-tinta);font-family:var(--pz-sys);font-weight:800}
+.nm-pasos__linea{flex:0 1 80px;height:2px;background:var(--pz-linea)}
+.nm-pasos__linea--completada{background:var(--pz-estraza)}
+
+/* Datos del menú en boletos */
+.nm-info-menu{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px}
+.nm-info-menu__item{padding:10px 14px;border-radius:14px;background:var(--pz-grupo);min-width:0}
+.nm-info-menu__label{display:block;font:500 12px var(--pz-sys);color:var(--pz-gris);margin-bottom:3px}
+.nm-info-menu__item strong{font:600 15px/1.3 var(--pz-sys)}
+@media (min-width:760px){ .nm-info-menu{grid-template-columns:1.6fr 1fr 1fr 1fr} }
+
+/* Secciones con cinta */
+.nm-seccion{margin-top:28px}
+.nm-seccion__header{margin-bottom:14px}
+.nm-seccion__header h2{font-size:17px;margin:0}
+.nm-seccion__header .nota-formulario{margin-top:4px}
+.mz-tarjeta{padding:18px;border-radius:18px;background:#1B1917;border:1px solid var(--pz-linea)}
+.mz-subtitulo{font:600 14px var(--pz-sys);color:var(--pz-gris);margin:20px 0 10px!important}
+
+/* Campos */
+.mz input[type="text"],.mz input[type="number"],.mz input[type="date"],.mz input[type="datetime-local"],.mz textarea{
+  width:100%;min-height:48px;padding:11px 14px;border-radius:12px;border:1.5px solid var(--pz-linea);background:var(--pz-grupo);
+  color:var(--pz-gis);font:400 15px/1.4 var(--pz-sys);color-scheme:dark}
+.mz textarea{resize:vertical;min-height:0;field-sizing:content;max-height:240px}
+.mz textarea.pm-input-desc,.mz .pm-postre textarea{min-height:68px}
+.mz input:focus,.mz textarea:focus{outline:none;border-color:var(--pz-naranja)}
+.mz input::placeholder,.mz textarea::placeholder{color:#77736c}
+.nm-campo label,.pm-limite label{display:block;margin-bottom:6px;font:600 14px var(--pz-sys);color:var(--pz-gis)}
+.nm-campo__ayuda{display:block;margin-top:5px;font:400 13px/1.4 var(--pz-sys);color:var(--pz-gris)}
+.nm-campos-fecha,.nm-campo-grupo{display:grid;gap:14px}
+.nm-campo-grupo + .nm-campo-grupo{margin-top:14px}
+@media (min-width:600px){ .nm-campo-grupo--dos{grid-template-columns:1fr 1fr} .nm-campos-fecha{grid-template-columns:1fr 1fr} }
+@media (min-width:960px){ .nm-campos-fecha{grid-template-columns:repeat(3,1fr)} }
+
+/* Precios (crear menú) */
+.nm-precio-card{display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:16px;background:var(--pz-grupo);border-left:6px solid var(--pz-naranja)}
+.nm-precio-card--ejecutivo{border-left-color:var(--pz-estraza)}
+.nm-precio-card__header strong{display:block;font:400 19px var(--pz-rotulo)}
+.nm-precio-card__desc{font:400 13px/1.4 var(--pz-sys);color:var(--pz-gris)}
+.nm-precio-card__input{display:flex;align-items:center;gap:8px}
+.nm-precio-card__simbolo{font:400 26px var(--pz-rotulo);color:var(--pz-gris)}
+.nm-precio-card__input input{font:400 24px var(--pz-rotulo)!important;max-width:180px}
+
+.nm-acciones{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+
+/* Carga rápida: formato en una hoja de estraza */
+.pm-carga{display:grid;gap:14px}
+@media (min-width:960px){ .pm-carga{grid-template-columns:1fr 1fr;align-items:stretch} }
+.pm-formato{padding:14px 16px;border-radius:12px;background:var(--pz-estraza-cl);color:var(--pz-tinta);transform:rotate(-.4deg)}
+.pm-formato__titulo{font:400 15px var(--pz-rotulo);margin:0 0 8px!important}
+.pm-formato pre{margin:0;font:500 13px/1.7 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap}
+.pm-formato p{font:400 13px/1.5 var(--pz-sys);margin:8px 0 0!important}
+.pm-formato code{padding:1px 5px;border-radius:4px;background:rgba(34,24,15,.1);font-size:12px}
+.mz #carga-rapida-texto{height:100%;min-height:220px;font:400 14px/1.6 ui-monospace,Menlo,Consolas,monospace}
+.pm-carga__pie{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:14px}
+#carga-rapida-ok{font:600 14px var(--pz-sys);color:#8fdc9c}
+#carga-rapida-err{font:600 14px var(--pz-sys);color:#ff9a8f}
+
+/* Pestañas Zabisu / Ejecutivo (control segmentado) */
+.pm-tabs{display:flex;gap:4px;margin-top:30px;padding:4px;border-radius:14px;background:var(--pz-grupo);position:sticky;top:8px;z-index:5;
+  box-shadow:0 8px 20px rgba(0,0,0,.35)}
+.pm-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 12px;border:0;border-radius:11px;background:transparent;
+  color:var(--pz-gris);font:600 16px var(--pz-sys);cursor:pointer;transition:background .2s,color .2s}
+.pm-tab__sub{font:400 12px var(--pz-sys)}
+.pm-tab--activo{background:var(--pz-estraza);color:var(--pz-tinta);transform:rotate(-.5deg)}
+@media (min-width:960px){ .pm-tabs{max-width:560px} }
+
+.pm-tab-contenido{display:none}
+.pm-tab-contenido--activo{display:block}
+
+.pm-copiar-aviso{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;margin-top:18px;padding:12px 14px;
+  border-radius:14px;border:1.5px dashed var(--pz-linea);font:400 14px/1.4 var(--pz-sys);color:var(--pz-gris)}
+.pm-copiar-aviso p{flex:1;min-width:220px}
+
+/* Categorías y platillos */
+.pm-categoria{margin-top:26px}
+.pm-categoria__header{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 12px;margin-bottom:10px}
+.pm-categoria__header h3{font:400 20px var(--pz-rotulo);color:var(--pz-gis)}
+.pm-categoria__cantidad{font:400 13px var(--pz-sys);color:var(--pz-gris)}
+.pm-productos-lista{display:grid;gap:10px}
+@media (min-width:700px){ .pm-productos-lista{grid-template-columns:1fr 1fr} }
+@media (min-width:1040px){
+  .pm-productos-lista--chicos{grid-template-columns:repeat(3,1fr)}
+}
+
+.pm-producto-card{display:flex;gap:12px;padding:14px 14px 14px 12px;border-radius:16px;background:var(--pz-grupo)}
+.pm-producto-card__num{flex-shrink:0;display:grid;place-items:center;width:30px;height:34px;background:var(--pz-estraza);color:var(--pz-tinta);
+  font:400 16px var(--pz-rotulo);clip-path:polygon(0 4%,40% 0,100% 3%,94% 50%,100% 97%,55% 100%,0 96%,6% 50%)}
+.pm-producto-card:nth-child(even) .pm-producto-card__num{transform:rotate(3deg)}
+.pm-producto-card:nth-child(odd) .pm-producto-card__num{transform:rotate(-2deg)}
+.pm-producto-card__campos{flex:1;min-width:0;display:flex;flex-direction:column;gap:10px}
+.mz .pm-input-nombre{font-weight:600}
+.pm-limite{margin-top:2px}
+.pm-detalles{display:grid;gap:12px;padding-top:12px;border-top:1px dashed var(--pz-linea)}
+@media (min-width:600px){ .pm-detalles{grid-template-columns:1fr 1fr} .pm-detalles .pm-limite:last-child{grid-column:1 / -1} }
+
+/* Postre */
+.pm-postre{background:var(--pz-grupo)}
+.pm-precio-extra{display:flex;align-items:center;gap:8px}
+.pm-precio-extra span{font:400 20px var(--pz-rotulo);color:var(--pz-gris)}
+.pm-precio-extra input{max-width:160px}
+
+/* Guardar */
+.mz-guardar{margin-top:32px;padding:18px;border-radius:18px;background:#1B1917;border:1px solid var(--pz-linea)}
+.mz-guardar h2{font:400 20px var(--pz-rotulo);color:var(--pz-gis)}
+.pm-activar-label{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;align-items:center;margin-top:16px;padding:14px;border-radius:14px;
+  background:var(--pz-grupo);cursor:pointer;font:600 16px var(--pz-sys)}
+.pm-activar-label input{width:24px;height:24px;margin:0;accent-color:var(--pz-naranja);cursor:pointer}
+.pm-activar-label .nm-campo__ayuda{grid-column:2;margin:0}
+
+@media (prefers-reduced-motion:reduce){
+  .pm-tab,.mz-btn,.btn-tabla,.btn-volver-panel{transition:none}
+}
