@@ -299,335 +299,40 @@ $mostrarExito = isset($_GET['ok']);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Finanzas | Restaurante Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
-    <link rel="stylesheet" href="../assets/css/styles.css?v=8">
+    <meta name="theme-color" content="#151413">
+    <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=5">
+    <link rel="stylesheet" href="../assets/css/finanzas-pizarron.css?v=1">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-<style>
-/* ── Tabs ──────────────────────────────────────────────── */
-.fin-tabs {
-    display: flex;
-    gap: 4px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 12px;
-    padding: 5px;
-    margin-bottom: 28px;
-}
-.fin-tab {
-    flex: 1;
-    background: none;
-    border: none;
-    color: var(--zabisu-gray);
-    font-family: inherit;
-    font-size: 14px;
-    font-weight: 600;
-    padding: 10px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background .15s, color .15s;
-    letter-spacing: .3px;
-}
-.fin-tab:hover { color: var(--zabisu-white); background: rgba(255,255,255,0.05); }
-.fin-tab.active { background: var(--zabisu-orange); color: #fff; }
-.fin-panel { display: none; }
-.fin-panel.active { display: block; }
-
-/* ── Resumen semana actual ─────────────────────────────── */
-.fin-resumen {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 14px;
-    margin-bottom: 24px;
-}
-@media (max-width: 700px) { .fin-resumen { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 400px) { .fin-resumen { grid-template-columns: 1fr; } }
-
-.fin-kpi {
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 12px;
-    padding: 18px 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-.fin-kpi--presupuesto { border-color: rgba(255,122,0,0.25); background: rgba(255,122,0,0.05); }
-.fin-kpi--ingresos    { border-color: rgba(78,205,196,0.2); background: rgba(78,205,196,0.04); }
-.fin-kpi--gastos      { border-color: rgba(255,107,107,0.2); background: rgba(255,107,107,0.04); }
-.fin-kpi--ganancia    { border-color: rgba(199,242,164,0.2); background: rgba(199,242,164,0.04); }
-.fin-kpi--ganancia-neg { border-color: rgba(255,107,107,0.3); background: rgba(255,107,107,0.06); }
-
-.fin-kpi__label {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-    color: var(--zabisu-gray);
-}
-.fin-kpi__valor {
-    font-size: 26px;
-    font-weight: 800;
-    line-height: 1;
-}
-.fin-kpi--presupuesto .fin-kpi__valor { color: var(--zabisu-orange); }
-.fin-kpi--ingresos    .fin-kpi__valor { color: #4ecdc4; }
-.fin-kpi--gastos      .fin-kpi__valor { color: #ff6b9d; }
-.fin-kpi--ganancia    .fin-kpi__valor { color: #c7f2a4; }
-.fin-kpi--ganancia-neg .fin-kpi__valor { color: #ff6b6b; }
-.fin-kpi__sub {
-    font-size: 12px;
-    color: var(--zabisu-gray);
-}
-
-/* ── Presupuesto form ───────────────────────────────────── */
-.pres-form-wrap {
-    background: rgba(255,122,0,0.06);
-    border: 1px solid rgba(255,122,0,0.2);
-    border-radius: 12px;
-    padding: 20px;
-    margin-bottom: 24px;
-}
-.pres-form-wrap h3 {
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--zabisu-orange);
-    margin: 0 0 14px;
-}
-.pres-form-row {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    align-items: flex-end;
-}
-.pres-form-row label {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--zabisu-gray);
-}
-.pres-form-row input, .pres-form-row select {
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 8px;
-    color: var(--zabisu-white);
-    font-size: 15px;
-    padding: 9px 12px;
-    font-family: inherit;
-}
-.pres-form-row input:focus, .pres-form-row select:focus {
-    outline: none;
-    border-color: var(--zabisu-orange);
-}
-.pres-form-row select option { background: #1a1a20; }
-.pres-monto-wrap { position: relative; }
-.pres-monto-wrap span {
-    position: absolute;
-    left: 12px; top: 50%;
-    transform: translateY(-50%);
-    color: var(--zabisu-orange);
-    font-weight: 800;
-    font-size: 16px;
-    pointer-events: none;
-}
-.pres-monto-wrap input { padding-left: 26px; }
-
-/* ── P&L table ──────────────────────────────────────────── */
-.pl-table { width: 100%; border-collapse: collapse; }
-.pl-table th {
-    font-size: 11px; font-weight: 700;
-    letter-spacing: 1.5px; text-transform: uppercase;
-    color: var(--zabisu-gray);
-    padding: 0 12px 10px;
-    border-bottom: 1px solid rgba(255,255,255,0.07);
-    text-align: right;
-}
-.pl-table th:first-child { text-align: left; }
-.pl-table td {
-    padding: 12px;
-    font-size: 14px;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-    vertical-align: middle;
-    text-align: right;
-}
-.pl-table td:first-child { text-align: left; }
-.pl-table tr:last-child td { border-bottom: none; }
-.pl-table tr:hover td { background: rgba(255,255,255,0.02); }
-.pl-semana { color: var(--zabisu-white); font-weight: 600; }
-.pl-badge {
-    display: inline-block;
-    font-size: 10px; font-weight: 700;
-    letter-spacing: 1px; text-transform: uppercase;
-    background: rgba(255,122,0,0.12);
-    color: var(--zabisu-orange);
-    border-radius: 4px; padding: 2px 6px;
-    margin-left: 6px;
-}
-.pl-presupuesto { color: var(--zabisu-orange); font-weight: 700; }
-.pl-ingreso  { color: #4ecdc4; font-weight: 700; }
-.pl-gasto    { color: #ff6b9d; font-weight: 700; }
-.pl-balance  { font-weight: 800; }
-.pl-balance--pos  { color: #c7f2a4; }
-.pl-balance--neg  { color: #ff6b6b; }
-.pl-balance--cero { color: var(--zabisu-gray); }
-.pl-vacio { color: var(--zabisu-gray); font-size: 13px; }
-.pl-sem-link { color: var(--zabisu-orange); text-decoration: none; font-size: 11px; }
-.pl-sem-link:hover { text-decoration: underline; }
-
-/* ── Progress bar de gastos vs presupuesto ─────────────── */
-.pres-progress {
-    margin-top: 8px;
-    height: 5px;
-    background: rgba(255,255,255,0.08);
-    border-radius: 3px;
-    overflow: hidden;
-}
-.pres-progress__fill {
-    height: 100%;
-    border-radius: 3px;
-    transition: width .3s;
-}
-.pres-progress__fill--ok  { background: #4ecdc4; }
-.pres-progress__fill--warn { background: #ffe66d; }
-.pres-progress__fill--over { background: #ff6b6b; }
-
-/* ── Stats KPIs ─────────────────────────────────────────── */
-.estadisticas-filtro__form {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    align-items: flex-end;
-}
-.estadisticas-filtro__grupo {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--zabisu-gray);
-}
-.estadisticas-filtro__grupo input[type=date] {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 8px;
-    color: var(--zabisu-white);
-    font-size: 14px;
-    padding: 9px 12px;
-    font-family: inherit;
-}
-.estadisticas-filtro__grupo input:focus { outline: none; border-color: var(--zabisu-orange); }
-.estadisticas-filtro__acciones {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    align-items: center;
-}
-.estadisticas-filtro__rango { font-size: 13px; color: var(--zabisu-gray); margin-top: 10px; }
-
-/* ── Gastos form ────────────────────────────────────────── */
-.gastos-form-grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
-}
-.gastos-form-grid .campo-full { grid-column: 1 / -1; }
-@media (max-width: 560px) {
-    .gastos-form-grid { grid-template-columns: 1fr; }
-    .gastos-form-grid .campo-full { grid-column: 1; }
-}
-.gastos-form-grid label {
-    display: flex; flex-direction: column; gap: 5px;
-    font-size: 12px; font-weight: 700; letter-spacing: 1px;
-    text-transform: uppercase; color: var(--zabisu-gray);
-}
-.gastos-form-grid input,
-.gastos-form-grid select,
-.gastos-form-grid textarea {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 8px; color: var(--zabisu-white);
-    font-size: 15px; padding: 10px 12px;
-    transition: border-color .15s; font-family: inherit;
-}
-.gastos-form-grid input:focus,
-.gastos-form-grid select:focus,
-.gastos-form-grid textarea:focus { outline: none; border-color: var(--zabisu-orange); }
-.gastos-form-grid textarea { resize: vertical; min-height: 70px; }
-.gastos-form-grid select option { background: #1a1a20; }
-.gastos-monto-wrap { position: relative; }
-.gastos-monto-wrap span {
-    position: absolute; left: 12px; top: 50%;
-    transform: translateY(-50%); color: var(--zabisu-orange);
-    font-weight: 800; font-size: 16px; pointer-events: none;
-}
-.gastos-monto-wrap input { padding-left: 26px; }
-.cat-badge {
-    display: inline-block; font-size: 11px; font-weight: 700;
-    border-radius: 5px; padding: 3px 8px; white-space: nowrap;
-}
-.cat-Ingredientes { background: rgba(255,122,0,0.15); color: #ff9a40; }
-.cat-Empaque      { background: rgba(78,205,196,0.15); color: #4ecdc4; }
-.cat-Gas          { background: rgba(255,230,109,0.15); color: #ffe66d; }
-.cat-Servicios    { background: rgba(162,155,254,0.15); color: #a29bfe; }
-.cat-Nómina       { background: rgba(74,144,226,0.15); color: #6ab0ff; }
-.cat-Varios       { background: rgba(167,167,173,0.12); color: #a7a7ad; }
-.gastos-filtro {
-    display: flex; align-items: center; gap: 10px;
-    flex-wrap: wrap; margin-bottom: 16px;
-}
-.gastos-filtro label {
-    font-size: 12px; font-weight: 700; letter-spacing: 1px;
-    text-transform: uppercase; color: var(--zabisu-gray);
-}
-.gastos-filtro select {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 8px; color: var(--zabisu-white);
-    font-size: 13px; padding: 7px 10px; font-family: inherit;
-}
-.gastos-filtro select option { background: #1a1a20; }
-.gasto-notas { color: var(--zabisu-gray); font-size: 12px; }
-.gasto-btn-del {
-    background: none; border: 1px solid rgba(255,107,107,0.3);
-    color: rgba(255,107,107,0.7); border-radius: 6px;
-    padding: 4px 10px; font-size: 12px; cursor: pointer;
-    transition: background .15s, color .15s; font-family: inherit;
-}
-.gasto-btn-del:hover {
-    background: rgba(255,107,107,0.12); color: #ff6b6b; border-color: #ff6b6b;
-}
-</style>
 </head>
-<body>
-<div class="contenedor">
+<body class="pz">
+<?php require __DIR__ . "/../includes/pz_filtros.php"; ?>
 
-    <div class="hero-zabisu">
-        <div class="hero-zabisu__glow"></div>
-        <div class="hero-zabisu__contenido">
-            <p class="hero-zabisu__eyebrow">RESTAURANTE</p>
-            <div class="hero-zabisu__marca-grupo">
-                <img class="hero-zabisu__logo" src="../assets/img/LOGO_BLANCO.png" alt="Zabisu">
-                <h1 class="hero-zabisu__titulo">Control financiero</h1>
-            </div>
-            <p class="hero-zabisu__texto">Presupuesto, ingresos, gastos y estadísticas de ventas</p>
-            <div style="margin-top:10px;">
-                <a href="panel_general.php" class="btn-volver-panel">← Volver al panel</a>
+<main class="fz">
+    <header class="fz-cab">
+        <div class="pz-marca">
+            <img src="../assets/img/LOGO_N_128.png" alt="">
+            <div>
+                <span class="pz-marca__nombre">Zabisu</span>
+                <span class="pz-marca__lema">Sabor y Servicio</span>
             </div>
         </div>
-    </div>
+        <h1 class="pz-titulo"><span class="pz-pincel"><span>Finanzas</span></span></h1>
+        <nav class="fz-cab__acc" aria-label="Navegación">
+            <a href="panel_general.php" class="fz-btn">← Volver al panel</a>
+        </nav>
+    </header>
+    <p class="fz-sub">Presupuesto, ingresos, gastos y estadísticas de ventas</p>
 
     <?php if ($mostrarExito): ?>
-        <div class="nota-formulario nota-formulario--exito" style="margin-bottom:18px;">
+        <p class="fz-aviso fz-aviso--ok" role="status">
             <?php if ($_GET['ok'] === 'presupuesto'): ?>
-                Presupuesto actualizado correctamente.
+                ✓ Presupuesto actualizado correctamente.
             <?php else: ?>
-                Gasto registrado correctamente.
+                ✓ Gasto registrado correctamente.
             <?php endif; ?>
-        </div>
+        </p>
     <?php endif; ?>
 
     <!-- ══ TABS ══════════════════════════════════════════════ -->
@@ -689,12 +394,12 @@ $mostrarExito = isset($_GET['ok']);
         </div>
 
         <!-- Formulario presupuesto -->
-        <div class="pres-form-wrap">
-            <h3>Fijar presupuesto semanal</h3>
-            <form method="POST" action="finanzas.php">
+        <section class="fz-sec">
+            <h2 class="pz-cinta pz-fibra">Fijar presupuesto semanal</h2>
+            <form method="POST" action="finanzas.php" class="fz-tarjeta">
                 <div class="pres-form-row">
-                    <label>
-                        Semana
+                    <label class="fz-campo">
+                        <span>Semana</span>
                         <select name="semana_presupuesto">
                             <?php foreach ($weekOptions as $lunes): ?>
                                 <option value="<?php echo $lunes; ?>"
@@ -706,38 +411,37 @@ $mostrarExito = isset($_GET['ok']);
                             <?php endforeach; ?>
                         </select>
                     </label>
-                    <label>
-                        Presupuesto de gastos
-                        <div class="pres-monto-wrap">
-                            <span>$</span>
+                    <label class="fz-campo">
+                        <span>Presupuesto de gastos</span>
+                        <span class="fz-monto">
+                            <i>$</i>
                             <input type="number" name="presupuesto_monto" step="0.01" min="0"
                                    placeholder="0.00"
-                                   value="<?php echo $presupuestoMonto > 0 ? $presupuestoMonto : ''; ?>"
-                                   style="width:160px;">
-                        </div>
+                                   value="<?php echo $presupuestoMonto > 0 ? $presupuestoMonto : ''; ?>">
+                        </span>
                     </label>
-                    <label>
-                        Nota (opcional)
+                    <label class="fz-campo">
+                        <span>Nota (opcional)</span>
                         <input type="text" name="presupuesto_notas" placeholder="Ej: fondo inicial $3,000"
                                value="<?php echo htmlspecialchars($presupuestoActual['notas'] ?? ''); ?>"
-                               style="width:200px;" maxlength="255">
+                               maxlength="255">
                     </label>
-                    <button type="submit" name="guardar_presupuesto" class="btn-stepper" style="margin-bottom:1px;">
+                    <button type="submit" name="guardar_presupuesto" class="fz-btn fz-btn--naranja">
                         Guardar
                     </button>
                 </div>
             </form>
-        </div>
+        </section>
 
         <!-- P&L histórico semanal -->
-        <div class="bloque-formulario">
-            <h2>Historial semanal</h2>
+        <section class="fz-sec">
+            <h2 class="pz-cinta pz-fibra">Historial semanal</h2>
             <?php if (empty($todasSemanas)): ?>
-                <p class="texto-secundario" style="text-align:center;padding:20px 0;">
+                <p class="fz-vacio">
                     Aún no hay datos. Registra tu primer gasto o espera a tener pedidos.
                 </p>
             <?php else: ?>
-            <div class="tabla-pedidos-wrapper">
+            <div class="fz-tabla-wrap">
                 <table class="pl-table">
                     <thead>
                         <tr>
@@ -756,27 +460,27 @@ $mostrarExito = isset($_GET['ok']);
                             $balance    = $ingresos - $gastos;
                             $esSemActual = $sem === $lunesActual;
                         ?>
-                        <tr>
-                            <td class="pl-semana">
+                        <tr<?php echo $esSemActual ? ' class="pl-actual"' : ''; ?>>
+                            <td class="pl-semana" data-th="Semana">
                                 <?php echo htmlspecialchars(formatSemana($sem)); ?>
                                 <?php if ($esSemActual): ?><span class="pl-badge">esta semana</span><?php endif; ?>
                                 <br>
                                 <a href="finanzas.php?tab=gastos&semana=<?php echo urlencode($sem); ?>"
                                    class="pl-sem-link">ver gastos →</a>
                             </td>
-                            <td class="pl-presupuesto">
+                            <td class="pl-presupuesto" data-th="Presupuesto">
                                 <?php echo $pres > 0 ? fmtPeso($pres) : '<span class="pl-vacio">—</span>'; ?>
                             </td>
-                            <td class="pl-ingreso">
+                            <td class="pl-ingreso" data-th="Ingresos">
                                 <?php echo $ingresos > 0 ? fmtPeso($ingresos) : '<span class="pl-vacio">—</span>'; ?>
                             </td>
-                            <td class="pl-gasto">
+                            <td class="pl-gasto" data-th="Gastos">
                                 <?php if ($gastos > 0):
                                     echo fmtPeso($gastos);
                                     if ($pres > 0):
                                         $overPct = round(($gastos / $pres) * 100);
-                                        $overClass = $gastos > $pres ? 'color:#ff6b6b' : 'color:var(--zabisu-gray)';
-                                        echo '<br><span style="font-size:11px;font-weight:400;'.$overClass.'">'.$overPct.'% del pres.</span>';
+                                        $overClass = $gastos > $pres ? 'pl-pct pl-pct--over' : 'pl-pct';
+                                        echo '<br><span class="'.$overClass.'">'.$overPct.'% del pres.</span>';
                                     endif;
                                 else: echo '<span class="pl-vacio">—</span>'; endif; ?>
                             </td>
@@ -784,7 +488,7 @@ $mostrarExito = isset($_GET['ok']);
                                 if ($balance > 0)     echo 'pl-balance--pos';
                                 elseif ($balance < 0) echo 'pl-balance--neg';
                                 else                  echo 'pl-balance--cero';
-                            ?>">
+                            ?>" data-th="Ganancia">
                                 <?php
                                 if ($ingresos == 0 && $gastos == 0) echo '<span class="pl-vacio">—</span>';
                                 else echo ($balance >= 0 ? '+' : '') . fmtPeso($balance);
@@ -796,7 +500,7 @@ $mostrarExito = isset($_GET['ok']);
                 </table>
             </div>
             <?php endif; ?>
-        </div>
+        </section>
 
     </div><!-- /tab-semana -->
 
@@ -807,99 +511,102 @@ $mostrarExito = isset($_GET['ok']);
     <div class="fin-panel <?php echo $activeTab === 'ventas' ? 'active' : ''; ?>" id="tab-ventas">
 
         <!-- Filtro de fechas -->
-        <div class="bloque-formulario">
-            <form method="GET" action="finanzas.php" class="estadisticas-filtro__form">
+        <div class="fz-tarjeta fz-filtro">
+            <form method="GET" action="finanzas.php" class="fz-filtro__form">
                 <input type="hidden" name="tab" value="ventas">
-                <div class="estadisticas-filtro__grupo">
-                    <label for="fi">Desde</label>
+                <label class="fz-campo" for="fi">
+                    <span>Desde</span>
                     <input type="date" id="fi" name="fi"
                            value="<?php echo htmlspecialchars($fechaInicio); ?>"
                            max="<?php echo $hoy; ?>">
-                </div>
-                <div class="estadisticas-filtro__grupo">
-                    <label for="ff">Hasta</label>
+                </label>
+                <label class="fz-campo" for="ff">
+                    <span>Hasta</span>
                     <input type="date" id="ff" name="ff"
                            value="<?php echo htmlspecialchars($fechaFin); ?>"
                            max="<?php echo $hoy; ?>">
-                </div>
-                <div class="estadisticas-filtro__acciones">
-                    <button type="submit" class="btn-stepper btn-stepper--siguiente">Aplicar</button>
-                    <a href="finanzas.php?tab=ventas" class="btn-limpiar-filtros">Este mes</a>
-                    <a href="finanzas.php?tab=ventas&fi=<?php echo date('Y-m-d', strtotime('monday this week')); ?>&ff=<?php echo $hoy; ?>" class="btn-limpiar-filtros">Esta semana</a>
-                    <a href="finanzas.php?tab=ventas&fi=<?php echo $hoy; ?>&ff=<?php echo $hoy; ?>" class="btn-limpiar-filtros">Hoy</a>
-                    <a href="reporte_ventas.php?fecha_inicio=<?php echo urlencode($fechaInicio); ?>&fecha_fin=<?php echo urlencode($fechaFin); ?>" class="btn-tabla" style="text-decoration:none;padding:10px 18px;font-size:14px;">Generar reporte</a>
-                </div>
+                </label>
+                <button type="submit" class="fz-btn fz-btn--naranja">Aplicar</button>
             </form>
-            <p class="estadisticas-filtro__rango">
+            <div class="fz-filtro__atajos">
+                <a href="finanzas.php?tab=ventas" class="fz-chip">Este mes</a>
+                <a href="finanzas.php?tab=ventas&fi=<?php echo date('Y-m-d', strtotime('monday this week')); ?>&ff=<?php echo $hoy; ?>" class="fz-chip">Esta semana</a>
+                <a href="finanzas.php?tab=ventas&fi=<?php echo $hoy; ?>&ff=<?php echo $hoy; ?>" class="fz-chip">Hoy</a>
+                <a href="reporte_ventas.php?fecha_inicio=<?php echo urlencode($fechaInicio); ?>&fecha_fin=<?php echo urlencode($fechaFin); ?>" class="fz-btn fz-btn--estraza">Generar reporte</a>
+            </div>
+            <p class="fz-filtro__rango">
                 Del <strong><?php echo fmtFecha($fechaInicio); ?></strong>
                 al <strong><?php echo fmtFecha($fechaFin); ?></strong>
             </p>
         </div>
 
         <?php if ((int)$kpis['total_pedidos'] === 0): ?>
-            <div class="bloque-formulario">
-                <p class="nota-formulario">No hay pedidos en el período seleccionado.</p>
-            </div>
+            <p class="fz-vacio">No hay pedidos en el período seleccionado.</p>
         <?php else: ?>
 
         <!-- KPI cards -->
-        <div class="estadisticas-kpis">
-            <div class="kpi-card kpi-card--principal">
-                <span class="kpi-card__etiqueta">Ventas totales</span>
-                <strong class="kpi-card__valor"><?php echo fmtPeso($kpis['total_ventas']); ?></strong>
-                <span class="kpi-card__sub"><?php echo (int)$kpis['total_pedidos']; ?> pedido<?php echo (int)$kpis['total_pedidos'] !== 1 ? 's' : ''; ?> · <?php echo $totalComidas; ?> comida<?php echo $totalComidas !== 1 ? 's' : ''; ?></span>
+        <div class="fin-resumen fin-resumen--ventas">
+            <div class="fin-kpi fin-kpi--principal">
+                <span class="fin-kpi__label">Ventas totales</span>
+                <strong class="fin-kpi__valor"><?php echo fmtPeso($kpis['total_ventas']); ?></strong>
+                <span class="fin-kpi__sub"><?php echo (int)$kpis['total_pedidos']; ?> pedido<?php echo (int)$kpis['total_pedidos'] !== 1 ? 's' : ''; ?> · <?php echo $totalComidas; ?> comida<?php echo $totalComidas !== 1 ? 's' : ''; ?></span>
             </div>
-            <div class="kpi-card">
-                <span class="kpi-card__etiqueta">Transferencia</span>
-                <strong class="kpi-card__valor"><?php echo fmtPeso($kpis['total_transferencia']); ?></strong>
-                <span class="kpi-card__sub">Pagos digitales</span>
+            <div class="fin-kpi">
+                <span class="fin-kpi__label">Transferencia</span>
+                <strong class="fin-kpi__valor"><?php echo fmtPeso($kpis['total_transferencia']); ?></strong>
+                <span class="fin-kpi__sub">Pagos digitales</span>
             </div>
-            <div class="kpi-card">
-                <span class="kpi-card__etiqueta">Efectivo</span>
-                <strong class="kpi-card__valor"><?php echo fmtPeso($kpis['total_efectivo']); ?></strong>
-                <span class="kpi-card__sub">Pago al recibir</span>
+            <div class="fin-kpi">
+                <span class="fin-kpi__label">Efectivo</span>
+                <strong class="fin-kpi__valor"><?php echo fmtPeso($kpis['total_efectivo']); ?></strong>
+                <span class="fin-kpi__sub">Pago al recibir</span>
             </div>
-            <div class="kpi-card kpi-card--confirmado">
-                <span class="kpi-card__etiqueta">Confirmado</span>
-                <strong class="kpi-card__valor"><?php echo fmtPeso($kpis['total_confirmado']); ?></strong>
-                <span class="kpi-card__sub">Por confirmar: <?php echo fmtPeso($kpis['total_por_confirmar']); ?></span>
+            <div class="fin-kpi fin-kpi--confirmado">
+                <span class="fin-kpi__label">Confirmado</span>
+                <strong class="fin-kpi__valor"><?php echo fmtPeso($kpis['total_confirmado']); ?></strong>
+                <span class="fin-kpi__sub">Por confirmar: <?php echo fmtPeso($kpis['total_por_confirmar']); ?></span>
             </div>
         </div>
 
         <!-- Gráficas fila 1 -->
-        <div class="estadisticas-grid estadisticas-grid--70-30">
-            <div class="bloque-formulario">
-                <h2>Ventas por día</h2>
-                <div class="estadisticas-chart-wrapper">
-                    <canvas id="chart-ventas-dia"></canvas>
+        <div class="fz-grid fz-grid--70-30">
+            <section class="fz-sec">
+                <h2 class="pz-cinta pz-fibra">Ventas por día</h2>
+                <div class="fz-tarjeta">
+                    <div class="fz-grafica">
+                        <canvas id="chart-ventas-dia"></canvas>
+                    </div>
                 </div>
-            </div>
-            <div class="bloque-formulario">
-                <h2>Método de pago</h2>
-                <div class="estadisticas-chart-wrapper estadisticas-chart-wrapper--donut">
-                    <canvas id="chart-metodo-pago"></canvas>
+            </section>
+            <section class="fz-sec">
+                <h2 class="pz-cinta pz-fibra">Método de pago</h2>
+                <div class="fz-tarjeta">
+                    <div class="fz-grafica fz-grafica--dona">
+                        <canvas id="chart-metodo-pago"></canvas>
+                    </div>
+                    <div class="fz-leyenda">
+                        <?php foreach ($ventasPorMetodo as $iMetodo => $metodo): ?>
+                            <div class="fz-leyenda__item">
+                                <span class="fz-leyenda__nombre">
+                                    <i class="fz-leyenda__color fz-leyenda__color--<?php echo $iMetodo; ?>"></i>
+                                    <?php echo htmlspecialchars($metodo['metodo_pago'] ?: 'Sin especificar'); ?>
+                                </span>
+                                <span class="fz-leyenda__valor">
+                                    <?php echo fmtPeso($metodo['total']); ?>
+                                    <em><?php echo (int)$metodo['pedidos']; ?> ped.</em>
+                                </span>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
-                <div class="estadisticas-leyenda">
-                    <?php foreach ($ventasPorMetodo as $metodo): ?>
-                        <div class="estadisticas-leyenda__item">
-                            <span class="estadisticas-leyenda__nombre">
-                                <?php echo htmlspecialchars($metodo['metodo_pago'] ?: 'Sin especificar'); ?>
-                            </span>
-                            <span class="estadisticas-leyenda__valor">
-                                <?php echo fmtPeso($metodo['total']); ?>
-                                <em><?php echo (int)$metodo['pedidos']; ?> ped.</em>
-                            </span>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            </div>
+            </section>
         </div>
 
         <!-- Ventas por ubicación -->
         <?php if (!empty($ventasPorUbicacion)): ?>
-        <div class="bloque-formulario">
-            <h2>Ventas por ubicación</h2>
-            <div class="estadisticas-ubicaciones">
+        <section class="fz-sec">
+            <h2 class="pz-cinta pz-fibra">Ventas por ubicación</h2>
+            <div class="fz-tarjeta fz-ubicaciones">
                 <?php
                 $maxUb = max(array_column($ventasPorUbicacion, 'total')) ?: 1;
                 foreach ($ventasPorUbicacion as $ub):
@@ -920,14 +627,15 @@ $mostrarExito = isset($_GET['ok']);
                     </div>
                 <?php endforeach; ?>
             </div>
-        </div>
+        </section>
         <?php endif; ?>
 
         <!-- Top productos -->
-        <div class="estadisticas-grid estadisticas-grid--50-50">
+        <div class="fz-grid fz-grid--50-50">
             <?php if (!empty($topPlatos)): ?>
-            <div class="bloque-formulario">
-                <h2>Platos más pedidos</h2>
+            <section class="fz-sec">
+                <h2 class="pz-cinta pz-fibra">Platos más pedidos</h2>
+                <div class="fz-tarjeta">
                 <?php
                 $maxP = max(array_column($topPlatos, 'total')) ?: 1;
                 foreach ($topPlatos as $i => $plato):
@@ -944,11 +652,13 @@ $mostrarExito = isset($_GET['ok']);
                         <span class="ranking-item__total"><?php echo (int)$plato['total']; ?></span>
                     </div>
                 <?php endforeach; ?>
-            </div>
+                </div>
+            </section>
             <?php endif; ?>
             <?php if (!empty($topComplementos)): ?>
-            <div class="bloque-formulario">
-                <h2>Complementos más pedidos</h2>
+            <section class="fz-sec">
+                <h2 class="pz-cinta pz-fibra">Complementos más pedidos</h2>
+                <div class="fz-tarjeta">
                 <?php
                 $maxC = max(array_column($topComplementos, 'total')) ?: 1;
                 foreach ($topComplementos as $i => $comp):
@@ -965,7 +675,8 @@ $mostrarExito = isset($_GET['ok']);
                         <span class="ranking-item__total"><?php echo (int)$comp['total']; ?></span>
                     </div>
                 <?php endforeach; ?>
-            </div>
+                </div>
+            </section>
             <?php endif; ?>
         </div>
 
@@ -980,36 +691,37 @@ $mostrarExito = isset($_GET['ok']);
     <div class="fin-panel <?php echo $activeTab === 'gastos' ? 'active' : ''; ?>" id="tab-gastos">
 
         <!-- Captura rápida: toda la semana en una pantalla -->
-        <a href="gastos_semana.php" class="panel-acceso panel-acceso--estadisticas" style="margin-bottom:20px;">
-            <div class="panel-acceso__icono">⚡</div>
-            <div class="panel-acceso__contenido">
-                <strong class="panel-acceso__titulo">Anotar gastos de la semana</strong>
-                <span class="panel-acceso__desc">Lo de siempre ya está en la lista: solo pon los montos</span>
-            </div>
+        <a href="gastos_semana.php" class="fz-atajo">
+            <span class="fz-atajo__icono" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6M9 4a2 2 0 0 0-2 2v0h10v0a2 2 0 0 0-2-2M7 6H5.5A1.5 1.5 0 0 0 4 7.5v12A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5v-12A1.5 1.5 0 0 0 18.5 6H17"/><path d="m8.5 13.5 2.2 2.2 4.8-4.8"/></svg></span>
+            <span class="fz-atajo__txt">
+                <strong>Anotar gastos de la semana</strong>
+                <span>Lo de siempre ya está en la lista: solo pon los montos</span>
+            </span>
+            <span class="fz-atajo__flecha" aria-hidden="true">→</span>
         </a>
 
         <!-- Formulario -->
-        <div class="bloque-formulario">
-            <h2>Registrar gasto</h2>
+        <section class="fz-sec">
+            <h2 class="pz-cinta pz-fibra">Registrar gasto</h2>
 
             <?php if (!empty($erroresGasto)): ?>
-                <div class="nota-formulario" style="margin-bottom:16px;border-color:rgba(255,107,107,.4);background:rgba(255,107,107,.06);">
+                <div class="fz-aviso fz-aviso--error" role="alert">
                     <?php foreach ($erroresGasto as $e): ?>
-                        <p style="margin:0;color:#ff6b6b;font-size:13px;">⚠ <?php echo htmlspecialchars($e); ?></p>
+                        <p>⚠ <?php echo htmlspecialchars($e); ?></p>
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
 
-            <form method="POST" action="finanzas.php">
+            <form method="POST" action="finanzas.php?tab=gastos" class="fz-tarjeta">
                 <div class="gastos-form-grid">
-                    <label class="campo-full">
-                        Concepto
+                    <label class="fz-campo campo-full">
+                        <span>Concepto</span>
                         <input type="text" name="concepto"
                                value="<?php echo htmlspecialchars($_POST['concepto'] ?? ''); ?>"
                                placeholder="Ej: Pollo, jitomate, cebolla…" required maxlength="255">
                     </label>
-                    <label>
-                        Categoría
+                    <label class="fz-campo">
+                        <span>Categoría</span>
                         <select name="categoria" required>
                             <?php foreach ($categorias as $cat): ?>
                                 <option value="<?php echo htmlspecialchars($cat); ?>"
@@ -1019,23 +731,23 @@ $mostrarExito = isset($_GET['ok']);
                             <?php endforeach; ?>
                         </select>
                     </label>
-                    <label>
-                        Monto
-                        <div class="gastos-monto-wrap">
-                            <span>$</span>
+                    <label class="fz-campo">
+                        <span>Monto</span>
+                        <span class="fz-monto">
+                            <i>$</i>
                             <input type="number" name="monto" step="0.01" min="0.01"
                                    value="<?php echo htmlspecialchars($_POST['monto'] ?? ''); ?>"
                                    placeholder="0.00" required>
-                        </div>
+                        </span>
                     </label>
-                    <label>
-                        Fecha de compra
+                    <label class="fz-campo">
+                        <span>Fecha de compra</span>
                         <input type="date" name="fecha_compra"
                                value="<?php echo htmlspecialchars($_POST['fecha_compra'] ?? $hoy); ?>"
                                required>
                     </label>
-                    <label>
-                        Para la semana de
+                    <label class="fz-campo">
+                        <span>Para la semana de</span>
                         <select name="semana_destino" required>
                             <?php
                             $lunesDefault = $dowHoy >= 6
@@ -1051,20 +763,20 @@ $mostrarExito = isset($_GET['ok']);
                             <?php endforeach; ?>
                         </select>
                     </label>
-                    <label>
-                        Notas <span style="font-weight:400;text-transform:none;letter-spacing:0;">(opcional)</span>
+                    <label class="fz-campo campo-full">
+                        <span>Notas <small>(opcional)</small></span>
                         <textarea name="notas" placeholder="Mercado, proveedor, detalles…"><?php echo htmlspecialchars($_POST['notas'] ?? ''); ?></textarea>
                     </label>
                 </div>
-                <div style="margin-top:20px;">
-                    <button type="submit" name="guardar_gasto" class="btn-stepper">Guardar gasto</button>
+                <div class="fz-form-pie">
+                    <button type="submit" name="guardar_gasto" class="fz-btn fz-btn--naranja">Guardar gasto</button>
                 </div>
             </form>
-        </div>
+        </section>
 
         <!-- Lista de gastos -->
-        <div class="bloque-formulario">
-            <h2>
+        <section class="fz-sec">
+            <h2 class="pz-cinta pz-fibra">
                 <?php if ($filtroSemana !== ''): ?>
                     Gastos — <?php echo htmlspecialchars(formatSemana($filtroSemana)); ?>
                 <?php else: ?>
@@ -1073,7 +785,7 @@ $mostrarExito = isset($_GET['ok']);
             </h2>
 
             <div class="gastos-filtro">
-                <form method="GET" action="finanzas.php" style="display:contents;">
+                <form method="GET" action="finanzas.php" class="gastos-filtro__form">
                     <input type="hidden" name="tab" value="gastos">
                     <label for="filtro-semana">Semana:</label>
                     <select name="semana" id="filtro-semana" onchange="this.form.submit()">
@@ -1086,18 +798,18 @@ $mostrarExito = isset($_GET['ok']);
                         <?php endforeach; ?>
                     </select>
                     <?php if ($filtroSemana !== ''): ?>
-                        <a href="finanzas.php?tab=gastos" class="btn-tabla">Ver todas</a>
+                        <a href="finanzas.php?tab=gastos" class="fz-chip">Ver todas</a>
                     <?php endif; ?>
                 </form>
             </div>
 
             <?php if (empty($listaGastos)): ?>
-                <p class="texto-secundario" style="text-align:center;padding:16px 0;">
+                <p class="fz-vacio">
                     No hay gastos registrados<?php echo $filtroSemana !== '' ? ' para esta semana' : ''; ?>.
                 </p>
             <?php else: ?>
-            <div class="tabla-pedidos-wrapper">
-                <table class="tabla-pedidos" id="tabla-gastos">
+            <div class="fz-tabla-wrap">
+                <table class="fz-gastos" id="tabla-gastos">
                     <thead>
                         <tr>
                             <th>Semana para</th>
@@ -1112,18 +824,18 @@ $mostrarExito = isset($_GET['ok']);
                     <tbody>
                         <?php foreach ($listaGastos as $g): ?>
                         <tr id="gasto-fila-<?php echo (int)$g['id_gasto']; ?>">
-                            <td><?php echo htmlspecialchars(formatSemana($g['semana_destino'])); ?></td>
-                            <td><?php echo htmlspecialchars($g['concepto']); ?></td>
-                            <td>
+                            <td class="fz-gastos__semana"><?php echo htmlspecialchars(formatSemana($g['semana_destino'])); ?></td>
+                            <td class="fz-gastos__concepto"><?php echo htmlspecialchars($g['concepto']); ?></td>
+                            <td class="fz-gastos__cat">
                                 <?php $catKey = explode(' ', $g['categoria'])[0]; ?>
                                 <span class="cat-badge cat-<?php echo htmlspecialchars($catKey); ?>">
                                     <?php echo htmlspecialchars($g['categoria']); ?>
                                 </span>
                             </td>
-                            <td><?php echo date('d/m/Y', strtotime($g['fecha_compra'])); ?></td>
-                            <td><strong><?php echo fmtPeso((float)$g['monto']); ?></strong></td>
+                            <td class="fz-gastos__fecha"><?php echo date('d/m/Y', strtotime($g['fecha_compra'])); ?></td>
+                            <td class="fz-gastos__monto"><strong><?php echo fmtPeso((float)$g['monto']); ?></strong></td>
                             <td class="gasto-notas"><?php echo htmlspecialchars($g['notas'] ?? '—'); ?></td>
-                            <td>
+                            <td class="fz-gastos__acc">
                                 <button class="gasto-btn-del"
                                         onclick="eliminarGasto(<?php echo (int)$g['id_gasto']; ?>, this)">
                                     Eliminar
@@ -1135,11 +847,11 @@ $mostrarExito = isset($_GET['ok']);
                 </table>
             </div>
             <?php endif; ?>
-        </div>
+        </section>
 
     </div><!-- /tab-gastos -->
 
-</div><!-- /contenedor -->
+</main>
 
 <script>
 // ── Tabs ─────────────────────────────────────────────────
@@ -1181,14 +893,13 @@ function initCharts() {
     if (chartsInit) return;
     chartsInit = true;
 
-    const ORANGE       = 'rgba(255, 122, 0, 0.85)';
-    const ORANGE_SOFT  = 'rgba(255, 122, 0, 0.18)';
+        const ORANGE_SOFT  = 'rgba(255, 122, 0, 0.22)';
     const ORANGE_BORDER = 'rgba(255, 122, 0, 1)';
-    const GRID_COLOR   = 'rgba(255, 255, 255, 0.07)';
-    const TEXT_COLOR   = '#a7a7ad';
+    const GRID_COLOR   = 'rgba(236, 235, 231, 0.07)';
+    const TEXT_COLOR   = '#A5A29B';
 
     Chart.defaults.color       = TEXT_COLOR;
-    Chart.defaults.font.family = 'Arial, sans-serif';
+    Chart.defaults.font.family = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
     Chart.defaults.font.size   = 13;
 
     const ctxDia = document.getElementById('chart-ventas-dia');
@@ -1205,7 +916,7 @@ function initCharts() {
                 labels: labels,
                 datasets: [
                     { label: 'Ventas ($)', data: totales, backgroundColor: ORANGE_SOFT, borderColor: ORANGE_BORDER, borderWidth: 2, borderRadius: 8, yAxisID: 'y' },
-                    { label: 'Pedidos', data: pedidos, type: 'line', borderColor: 'rgba(255,255,255,0.45)', backgroundColor: 'transparent', borderWidth: 2, pointBackgroundColor: 'rgba(255,255,255,0.8)', pointRadius: 4, tension: 0.35, yAxisID: 'y2' }
+                    { label: 'Pedidos', data: pedidos, type: 'line', borderColor: 'rgba(217,184,143,0.85)', backgroundColor: 'transparent', borderWidth: 2, pointBackgroundColor: '#D9B88F', pointRadius: 4, tension: 0.35, yAxisID: 'y2' }
                 ]
             },
             options: {
@@ -1236,8 +947,8 @@ function initCharts() {
             data: {
                 labels: metodosData.map(function (d) { return d.metodo; }),
                 datasets: [{ data: metodosData.map(function (d) { return d.total; }),
-                    backgroundColor: ['rgba(255,122,0,0.82)','rgba(255,200,0,0.72)','rgba(255,255,255,0.25)','rgba(160,160,160,0.35)'],
-                    borderColor: 'rgba(0,0,0,0.3)', borderWidth: 2, hoverOffset: 6 }]
+                    backgroundColor: ['#FF7A00','#C49A6C','#ECEBE7','#5E5953'],
+                    borderColor: '#201E1C', borderWidth: 2, hoverOffset: 6 }]
             },
             options: {
                 responsive: true, maintainAspectRatio: true, cutout: '68%',

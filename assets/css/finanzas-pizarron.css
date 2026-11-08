@@ -1,0 +1,257 @@
+/* ══════════════════════════════════════════════════════════════
+   Finanzas (restaurante/finanzas.php) en estilo Pizarrón.
+   Mismas funciones y mismos números que antes: solo cambia la piel.
+   Se carga junto con menu-pizarron.css (colores, letras y piezas).
+
+   Celular una columna; desde 600 px los números de 2 en 2; desde
+   960 px de 4 en 4 y las gráficas lado a lado.
+   ══════════════════════════════════════════════════════════════ */
+
+.fz{max-width:1180px;margin:0 auto;padding:0 16px 90px;box-sizing:border-box}
+.fz *,.fz *::before,.fz *::after{box-sizing:border-box}
+.fz h2,.fz h3,.fz p{margin:0}
+@media (min-width:600px){ .fz{padding:0 24px 90px} }
+@media (min-width:960px){ .fz{padding:0 32px 90px} }
+
+/* ── Encabezado ── */
+.fz-cab{display:flex;align-items:center;flex-wrap:wrap;gap:12px 18px;padding:20px 0 4px}
+.fz-cab .pz-marca{margin:0}
+.fz-cab .pz-titulo{padding:0;margin:0}
+.fz-cab .pz-pincel span{font-size:34px}
+.fz-cab__acc{margin-left:auto}
+.fz-sub{margin-top:10px!important;font:400 15px var(--pz-sys);color:var(--pz-gris)}
+
+.fz-aviso{margin-top:16px!important;padding:12px 16px;border-radius:14px;font:600 15px/1.5 var(--pz-sys)}
+.fz-aviso--ok{background:rgba(123,211,137,.12);border:1px solid rgba(123,211,137,.45);color:#a8e6b4}
+.fz-aviso--error{margin:0 0 12px!important;background:rgba(229,83,75,.1);border:1px solid rgba(229,83,75,.4);color:#ff9a8f;font-weight:500}
+.fz-aviso--error p{margin:2px 0!important}
+
+/* ── Botones ── */
+.fz-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 18px;border-radius:12px;
+  border:1.5px solid var(--pz-linea);background:var(--pz-grupo);color:var(--pz-gis);font:600 15px var(--pz-sys);text-decoration:none;
+  white-space:nowrap;cursor:pointer;transition:border-color .15s,background .15s}
+.fz-btn:hover{border-color:#4a4540}
+.fz-btn:active{transform:scale(.985)}
+.fz-btn--naranja{background:var(--pz-naranja);border-color:var(--pz-naranja);color:#111}
+.fz-btn--naranja:hover{background:#ff8a1f;border-color:#ff8a1f}
+.fz-btn--estraza{background:var(--pz-estraza);border-color:var(--pz-estraza);color:var(--pz-tinta)}
+.fz-btn--estraza:hover{background:var(--pz-estraza-cl);border-color:var(--pz-estraza-cl)}
+.pz a.fz-btn--naranja{color:#111}
+.pz a.fz-btn--estraza{color:var(--pz-tinta)}
+.fz-chip{display:inline-flex;align-items:center;min-height:42px;padding:0 15px;border-radius:999px;border:1.5px solid var(--pz-linea);
+  color:var(--pz-gis);font:600 14px var(--pz-sys);text-decoration:none;white-space:nowrap}
+.fz-chip:hover{border-color:var(--pz-estraza);color:var(--pz-estraza-cl)}
+
+/* ── Pestañas (control segmentado) ── */
+.fin-tabs{display:flex;gap:4px;margin-top:20px;padding:4px;border-radius:14px;background:var(--pz-grupo)}
+.fin-tab{flex:1;min-height:46px;padding:0 12px;border:0;border-radius:11px;background:transparent;color:var(--pz-gris);
+  font:600 15px var(--pz-sys);white-space:nowrap;cursor:pointer;transition:background .2s,color .2s}
+@media (max-width:420px){ .fin-tab{padding:0 6px;font-size:14px} }
+.fin-tab:hover{color:var(--pz-gis)}
+.fin-tab.active{background:var(--pz-estraza);color:var(--pz-tinta);transform:rotate(-.5deg)}
+@media (min-width:960px){ .fin-tabs{max-width:560px} }
+.fin-panel{display:none}
+.fin-panel.active{display:block}
+
+/* ── Secciones ── */
+.fz-sec{margin-top:24px}
+.fz-sec > .pz-cinta{font-size:16px;margin:0 0 10px}
+.fz-sec:nth-of-type(odd) > .pz-cinta{transform:rotate(-1.2deg)}
+.fz-sec:nth-of-type(even) > .pz-cinta{transform:rotate(.8deg)}
+.fz-tarjeta{padding:16px;border-radius:18px;background:var(--pz-grupo)}
+.fz-vacio{margin-top:20px!important;padding:24px 16px;border-radius:18px;background:var(--pz-grupo);text-align:center;font:500 15px var(--pz-sys);color:var(--pz-gris)}
+
+/* ── Números grandes (KPIs) ── */
+.fin-resumen{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
+@media (min-width:960px){ .fin-resumen{grid-template-columns:repeat(4,1fr)} }
+.fin-kpi{display:flex;flex-direction:column;gap:4px;min-width:0;padding:14px 16px;border-radius:18px;background:var(--pz-grupo);border-top:5px solid var(--pz-linea)}
+.fin-kpi__label{font:600 14px var(--pz-sys);color:var(--pz-gris)}
+.fin-kpi__valor{font:400 clamp(20px,5.4vw,28px)/1.15 var(--pz-rotulo);color:var(--pz-gis);overflow-wrap:anywhere}
+.fin-kpi__sub{font:400 13px/1.35 var(--pz-sys);color:var(--pz-gris)}
+.fin-kpi--presupuesto{border-top-color:var(--pz-estraza)}
+.fin-kpi--ingresos,.fin-kpi--principal{border-top-color:var(--pz-naranja)}
+.fin-kpi--ingresos .fin-kpi__valor,.fin-kpi--principal .fin-kpi__valor{color:var(--pz-naranja)}
+.fin-kpi--gastos{border-top-color:#9a948b}
+.fin-kpi--ganancia{border-top-color:#7bd389}
+.fin-kpi--ganancia .fin-kpi__valor,.fin-kpi--confirmado .fin-kpi__valor{color:#8fdc9c}
+.fin-kpi--confirmado{border-top-color:#7bd389}
+.fin-kpi--ganancia-neg{border-top-color:#e5534b}
+.fin-kpi--ganancia-neg .fin-kpi__valor{color:#ff8f86}
+@media (min-width:960px){ .fin-kpi__valor{font-size:28px} }
+
+/* Barra de avance del presupuesto */
+.pres-progress{height:8px;margin-top:6px;border-radius:999px;background:var(--pz-pizarra);overflow:hidden}
+.pres-progress__fill{height:100%;border-radius:999px}
+.pres-progress__fill--ok{background:#7bd389}
+.pres-progress__fill--warn{background:var(--pz-naranja)}
+.pres-progress__fill--over{background:#e5534b}
+
+/* ── Campos ── */
+.fz-campo{display:flex;flex-direction:column;gap:7px;min-width:0}
+.fz-campo > span:first-child{font:600 14px var(--pz-sys);color:var(--pz-gis)}
+.fz-campo small{font-weight:400;color:var(--pz-gris)}
+.fz input[type="text"],.fz input[type="number"],.fz input[type="date"],.fz select,.fz textarea{
+  width:100%;min-height:48px;padding:10px 14px;border-radius:12px;border:1.5px solid var(--pz-linea);background:var(--pz-pizarra);
+  color:var(--pz-gis);font:400 16px/1.4 var(--pz-sys);color-scheme:dark}
+.fz textarea{min-height:80px;resize:vertical}
+.fz input:focus,.fz select:focus,.fz textarea:focus{outline:none;border-color:var(--pz-naranja)}
+.fz input::placeholder,.fz textarea::placeholder{color:#77736c}
+.fz select option{background:#1c1b1a;color:var(--pz-gis)}
+.fz-monto{position:relative;display:block}
+.fz-monto i{position:absolute;left:14px;top:50%;transform:translateY(-50%);font:400 18px var(--pz-rotulo);color:var(--pz-gris);font-style:normal;pointer-events:none}
+.fz .fz-monto input{padding-left:32px;font:400 19px var(--pz-rotulo)}
+
+/* Presupuesto: en fila en computadora */
+.pres-form-row{display:grid;gap:14px}
+@media (min-width:760px){ .pres-form-row{grid-template-columns:1.2fr 1fr 1.3fr auto;align-items:end} }
+
+/* Registrar gasto */
+.gastos-form-grid{display:grid;gap:14px}
+@media (min-width:700px){ .gastos-form-grid{grid-template-columns:1fr 1fr} .gastos-form-grid .campo-full{grid-column:1 / -1} }
+@media (min-width:960px){ .gastos-form-grid{grid-template-columns:repeat(4,1fr)} }
+.fz-form-pie{margin-top:16px}
+
+/* ── Historial semanal: tabla en computadora, tarjetas en celular ── */
+.fz-tabla-wrap{border-radius:18px;background:var(--pz-grupo);overflow:hidden}
+.pl-table{width:100%;border-collapse:collapse}
+.pl-table th{padding:12px 14px;text-align:left;font:600 13px var(--pz-sys);color:var(--pz-gris);border-bottom:1px solid var(--pz-linea)}
+.pl-table td{padding:12px 14px;border-bottom:1px solid var(--pz-linea);font:500 15px var(--pz-sys);color:var(--pz-gis);vertical-align:top}
+.pl-table tr:last-child td{border-bottom:0}
+.pl-actual td{background:rgba(196,154,108,.08)}
+.pl-semana{font-weight:600!important}
+.pl-badge{display:inline-block;margin-left:6px;padding:2px 8px;border-radius:999px;background:var(--pz-estraza);color:var(--pz-tinta);font:700 11px var(--pz-sys);vertical-align:2px}
+.pl-sem-link{display:inline-block;margin-top:4px;font:600 13px var(--pz-sys);color:var(--pz-estraza-cl)!important;text-decoration:none}
+.pl-sem-link:hover{text-decoration:underline}
+.pl-ingreso{color:var(--pz-naranja)!important}
+.pl-balance{font:400 17px var(--pz-rotulo)!important}
+.pl-balance--pos{color:#8fdc9c!important}
+.pl-balance--neg{color:#ff8f86!important}
+.pl-balance--cero{color:var(--pz-gris)!important}
+.pl-vacio{color:#6f6a63}
+.pl-pct{font:400 12px var(--pz-sys);color:var(--pz-gris)}
+.pl-pct--over{color:#ff8f86;font-weight:600}
+@media (max-width:699px){
+  .fz-tabla-wrap{background:none;border-radius:0;overflow:visible}
+  .pl-table thead{display:none}
+  .pl-table,.pl-table tbody,.pl-table tr{display:block}
+  .pl-table tr{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;margin-bottom:10px;padding:14px;border-radius:16px;background:var(--pz-grupo)}
+  .pl-table td{display:block;padding:0;border:0;background:none!important}
+  .pl-table td::before{content:attr(data-th);display:block;font:500 12px var(--pz-sys);color:var(--pz-gris);margin-bottom:2px}
+  .pl-table td.pl-semana{grid-column:1 / -1;font:400 17px var(--pz-rotulo)!important}
+  .pl-table td.pl-semana::before{display:none}
+  .pl-actual{box-shadow:inset 0 0 0 1.5px var(--pz-estraza)}
+}
+
+/* ── Ventas: filtro de fechas ── */
+.fz-filtro{margin-top:20px}
+.fz-filtro__form{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:end}
+.fz-filtro__form .fz-btn{grid-column:1 / -1}
+@media (min-width:700px){ .fz-filtro__form{grid-template-columns:200px 200px auto;justify-content:start} .fz-filtro__form .fz-btn{grid-column:auto} }
+.fz-filtro__atajos{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.fz-filtro__atajos .fz-btn{min-height:42px;font-size:14px}
+@media (min-width:700px){ .fz-filtro__atajos .fz-btn{margin-left:auto} }
+.fz-filtro__rango{margin-top:12px!important;font:400 14px var(--pz-sys);color:var(--pz-gris)}
+.fz-filtro__rango strong{color:var(--pz-gis)}
+
+/* Gráficas */
+.fz-grid{display:grid;gap:0 18px}
+@media (min-width:960px){
+  .fz-grid--70-30{grid-template-columns:minmax(0,7fr) minmax(0,3fr)}
+  .fz-grid--50-50{grid-template-columns:1fr 1fr}
+}
+.fz-grafica{position:relative}
+.fz-grafica--dona{max-width:220px;margin:0 auto}
+.fz-leyenda{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+.fz-leyenda__item{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font:500 14px var(--pz-sys)}
+.fz-leyenda__nombre{display:flex;align-items:center;gap:8px}
+.fz-leyenda__color{width:12px;height:12px;border-radius:3px;flex-shrink:0;background:#5E5953}
+.fz-leyenda__color--0{background:#FF7A00}
+.fz-leyenda__color--1{background:#C49A6C}
+.fz-leyenda__color--2{background:#ECEBE7}
+.fz-leyenda__valor{font-weight:700;white-space:nowrap}
+.fz-leyenda__valor em{margin-left:6px;font-style:normal;font-weight:400;color:var(--pz-gris)}
+
+/* Ventas por ubicación */
+.fz-ubicaciones{display:flex;flex-direction:column;gap:14px}
+.ubicacion-barra{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 14px;align-items:center}
+.ubicacion-barra__info{display:flex;flex-direction:column}
+.ubicacion-barra__nombre{font:600 15px var(--pz-sys)}
+.ubicacion-barra__tipo{font:400 12px var(--pz-sys);color:var(--pz-gris)}
+.ubicacion-barra__track{grid-column:1 / -1;grid-row:2;height:12px;border-radius:999px;background:var(--pz-pizarra);overflow:hidden}
+.ubicacion-barra__fill{height:100%;border-radius:999px;background:var(--pz-naranja)}
+.ubicacion-barra__nums{grid-column:2;grid-row:1;text-align:right}
+.ubicacion-barra__nums strong{display:block;font:400 17px var(--pz-rotulo)}
+.ubicacion-barra__nums span{font:400 12px var(--pz-sys);color:var(--pz-gris)}
+@media (min-width:760px){
+  .ubicacion-barra{grid-template-columns:200px minmax(0,1fr) 120px}
+  .ubicacion-barra__track{grid-column:2;grid-row:1}
+  .ubicacion-barra__nums{grid-column:3}
+}
+
+/* Más pedidos */
+.ranking-item{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:12px;align-items:center;padding:7px 0}
+.ranking-item__pos{display:grid;place-items:center;width:28px;height:32px;background:var(--pz-estraza);color:var(--pz-tinta);font:400 14px var(--pz-rotulo);
+  clip-path:polygon(0 4%,40% 0,100% 3%,94% 50%,100% 97%,55% 100%,0 96%,6% 50%)}
+.ranking-item:nth-child(even) .ranking-item__pos{transform:rotate(3deg)}
+.ranking-item:nth-child(odd) .ranking-item__pos{transform:rotate(-2deg)}
+.ranking-item__nombre{font:500 14px/1.3 var(--pz-sys);margin-bottom:5px}
+.ranking-item__barra{height:7px;border-radius:999px;background:var(--pz-pizarra);overflow:hidden}
+.ranking-item__fill{height:100%;border-radius:999px;background:var(--pz-naranja)}
+.ranking-item__fill--secundario{background:var(--pz-estraza)}
+.ranking-item__total{font:400 20px var(--pz-rotulo);color:var(--pz-gis);min-width:36px;text-align:right}
+
+/* ── Gastos ── */
+.fz-atajo{display:flex;align-items:center;gap:14px;margin-top:20px;padding:16px;border-radius:18px;background:var(--pz-estraza-cl);
+  color:var(--pz-tinta)!important;text-decoration:none;transform:rotate(-.3deg);transition:transform .15s}
+.fz-atajo:hover{transform:rotate(0) scale(1.005)}
+.fz-atajo__icono{display:grid;place-items:center;width:48px;height:48px;border-radius:14px;background:var(--pz-tinta);color:var(--pz-estraza-cl);flex-shrink:0}
+.fz-atajo__txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.fz-atajo__txt strong{font:400 18px/1.2 var(--pz-rotulo)}
+.fz-atajo__txt span{font:500 14px/1.35 var(--pz-sys);color:var(--pz-tinta2)}
+.fz-atajo__flecha{font:700 22px var(--pz-sys)}
+
+.gastos-filtro{margin-bottom:10px}
+.gastos-filtro__form{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
+.gastos-filtro__form label{font:600 14px var(--pz-sys);color:var(--pz-gris)}
+.fz .gastos-filtro__form select{width:auto;flex:0 1 220px;min-height:44px}
+
+.fz-gastos{width:100%;border-collapse:collapse}
+.fz-gastos th{padding:12px 14px;text-align:left;font:600 13px var(--pz-sys);color:var(--pz-gris);border-bottom:1px solid var(--pz-linea)}
+.fz-gastos td{padding:11px 14px;border-bottom:1px solid var(--pz-linea);font:400 14px var(--pz-sys);color:var(--pz-gis);vertical-align:middle}
+.fz-gastos tr:last-child td{border-bottom:0}
+.fz-gastos__concepto{font-weight:600!important}
+.fz-gastos__monto strong{font:400 17px var(--pz-rotulo)}
+.gasto-notas{color:var(--pz-gris)!important;max-width:220px}
+.gasto-btn-del{min-height:38px;padding:0 12px;border-radius:10px;border:1.5px solid rgba(229,83,75,.4);background:transparent;color:#ff8f86;
+  font:600 13px var(--pz-sys);cursor:pointer}
+.gasto-btn-del:hover{background:rgba(229,83,75,.12);border-color:#e5534b}
+.gasto-btn-del:disabled{opacity:.5;cursor:default}
+
+.cat-badge{display:inline-block;padding:3px 10px;border-radius:999px;font:600 12px var(--pz-sys);white-space:nowrap;background:var(--pz-linea);color:var(--pz-gis)}
+.cat-Ingredientes{background:rgba(255,122,0,.15);color:var(--pz-naranja)}
+.cat-Empaque{background:rgba(196,154,108,.2);color:var(--pz-estraza-cl)}
+.cat-Gas{background:rgba(156,201,222,.14);color:#9cc9de}
+.cat-Servicios{background:rgba(242,167,160,.13);color:#f2a7a0}
+.cat-Nómina{background:rgba(123,211,137,.13);color:#8fdc9c}
+
+@media (max-width:759px){
+  .fz-gastos thead{display:none}
+  .fz-gastos,.fz-gastos tbody{display:block}
+  .fz-tabla-wrap:has(.fz-gastos){background:none;border-radius:0;overflow:visible}
+  .fz-gastos tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;margin-bottom:8px;padding:12px 14px;border-radius:16px;background:var(--pz-grupo);
+    grid-template-areas:"concepto monto" "cat cat" "semana fecha" "notas acc"}
+  .fz-gastos td{display:block;padding:0;border:0}
+  .fz-gastos__concepto{grid-area:concepto;font-size:15px!important}
+  .fz-gastos__monto{grid-area:monto;text-align:right}
+  .fz-gastos__cat{grid-area:cat;margin-top:2px}
+  .fz-gastos__semana{grid-area:semana;font-size:13px!important;color:var(--pz-gris)!important}
+  .fz-gastos__semana::before{content:"Para la semana de "}
+  .fz-gastos__fecha{grid-area:fecha;text-align:right;font-size:13px!important;color:var(--pz-gris)!important;white-space:nowrap}
+  .fz-gastos__fecha::before{content:"Compra "}
+  .gasto-notas{grid-area:notas;max-width:none;font-size:13px!important}
+  .fz-gastos__acc{grid-area:acc;margin-top:4px;text-align:right}
+  .gasto-btn-del{min-height:40px}
+  .gasto-notas{align-self:center}
+}
+
+@media (prefers-reduced-motion:reduce){ .fin-tab,.fz-btn,.fz-atajo{transition:none} }
