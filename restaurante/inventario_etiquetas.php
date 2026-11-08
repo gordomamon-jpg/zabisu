@@ -54,7 +54,7 @@ $propias = $conexion->query(
     <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=5">
-    <link rel="stylesheet" href="../assets/css/inventario-pizarron.css?v=1">
+    <link rel="stylesheet" href="../assets/css/inventario-pizarron.css?v=2">
     <?php if ($etiqueta): ?>
     <!-- Igual que ticket.php: el rollo de 80 mm lo pone el controlador de la impresora -->
     <style>@media print { @page { margin: 4mm; } }</style>

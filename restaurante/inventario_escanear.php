@@ -42,8 +42,9 @@ $titulo = $modo === "recibir" ? "Recibir mercancía" : "Contar lo que hay";
     <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=5">
-    <link rel="stylesheet" href="../assets/css/inventario-pizarron.css?v=1">
-    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <link rel="stylesheet" href="../assets/css/inventario-pizarron.css?v=2">
+    <!-- ZXing: lector de códigos para los navegadores sin lector propio (iPhone) -->
+    <script src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js" defer></script>
 </head>
 <body class="pz iv-escaner" data-modo="<?php echo $modo; ?>">
 <?php require __DIR__ . "/../includes/pz_filtros.php"; ?>
@@ -63,8 +64,14 @@ $titulo = $modo === "recibir" ? "Recibir mercancía" : "Contar lo que hay";
 
     <!-- Cámara -->
     <section class="iv-camara" id="camara">
-        <div id="lector" class="iv-camara__video"></div>
+        <video id="lector" class="iv-camara__video" playsinline muted autoplay></video>
         <div class="iv-camara__marco" aria-hidden="true"><i></i></div>
+        <div class="iv-camara__controles" id="camara-controles" hidden>
+            <div class="iv-zoom" id="zoom" hidden role="group" aria-label="Zoom"></div>
+            <button type="button" class="iv-linterna" id="btn-linterna" hidden aria-pressed="false" aria-label="Linterna">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 2h10v4l-2 3v13H9V9L7 6z"/><path d="M12 13v3"/></svg>
+            </button>
+        </div>
         <div class="iv-camara__inicio" id="camara-inicio">
             <button type="button" class="iv-btn iv-btn--naranja iv-btn--grande" id="btn-camara">Abrir cámara</button>
             <p>El celular te pedirá permiso para usar la cámara.</p>
@@ -337,7 +344,6 @@ $titulo = $modo === "recibir" ? "Recibir mercancía" : "Contar lo que hay";
         });
     }
     window.zbProcesarCodigo = procesarCodigo; // también para pruebas
-    window.zbEstadoCamara = function () { try { return lector ? lector.getState() : 0; } catch (e) { return -1; } };
 
     $("form-manual").addEventListener("submit", function (e) {
         e.preventDefault();
@@ -418,42 +424,138 @@ $titulo = $modo === "recibir" ? "Recibir mercancía" : "Contar lo que hay";
     $("btn-sin-codigo").addEventListener("click", function () { abrirHoja(""); });
 
     // ── Cámara ──────────────────────────────────────────────
-    var lector = null, camaraActiva = false;
-    function pausarCamara(pausar) {
-        if (!lector || !camaraActiva) return;
-        try { pausar ? lector.pause(true) : lector.resume(); } catch (e) {}
-        // La librería escribe "Scanner paused" en inglés encima del video: se esconde
-        document.querySelectorAll("#lector div").forEach(function (d) {
-            if (d.children.length === 0 && /paused/i.test(d.textContent)) d.style.display = "none";
-        });
+    // Se lee sobre la imagen en resolución completa (Full HD) para que el código
+    // se lea aunque esté lejos: con el lector propio del navegador cuando existe
+    // (Android/Chrome) y si no con ZXing sobre la franja del marco (iPhone).
+    var video = $("lector"), flujo = null, pista = null;
+    var camaraActiva = false, pausada = false, detector = null, zx = null;
+    var lienzo = document.createElement("canvas"), ctxLienzo = lienzo.getContext("2d", { willReadFrequently: true });
+    var FORMATOS = ["ean_13", "ean_8", "upc_a", "upc_e", "code_128", "code_39", "code_93", "itf", "codabar"];
+    var forzarZxing = new URLSearchParams(location.search).get("lector") === "zxing"; // solo para diagnóstico
+
+    function pausarCamara(pausar) { pausada = !!pausar; }
+
+    function prepararLector() {
+        if (!forzarZxing && "BarcodeDetector" in window) {
+            return BarcodeDetector.getSupportedFormats().then(function (sop) {
+                var usar = FORMATOS.filter(function (f) { return sop.indexOf(f) !== -1; });
+                if (usar.length) detector = new BarcodeDetector({ formats: usar });
+            }).catch(function () {});
+        }
+        return Promise.resolve();
     }
+    function prepararZxing() {
+        if (zx || typeof ZXing === "undefined") return !!zx;
+        var Z = ZXing, hints = new Map();
+        hints.set(Z.DecodeHintType.POSSIBLE_FORMATS, [Z.BarcodeFormat.EAN_13, Z.BarcodeFormat.EAN_8, Z.BarcodeFormat.UPC_A, Z.BarcodeFormat.UPC_E,
+            Z.BarcodeFormat.CODE_128, Z.BarcodeFormat.CODE_39, Z.BarcodeFormat.CODE_93, Z.BarcodeFormat.ITF, Z.BarcodeFormat.CODABAR]);
+        hints.set(Z.DecodeHintType.TRY_HARDER, true);
+        zx = new Z.MultiFormatReader();
+        zx.setHints(hints);
+        return true;
+    }
+
+    // Franja del marco naranja, en pixeles reales del video (lo que se ve en pantalla)
+    function franja() {
+        var vw = video.videoWidth, vh = video.videoHeight;
+        var caja = video.getBoundingClientRect(), proporcion = caja.width / caja.height;
+        var visW = Math.min(vw, vh * proporcion), visH = Math.min(vh, vw / proporcion);
+        var w = Math.round(visW * 0.9), h = Math.round(visH * 0.45);
+        return { x: Math.round((vw - w) / 2), y: Math.round((vh - h) / 2), w: w, h: h };
+    }
+
+    function leerCuadro() {
+        if (!camaraActiva) return;
+        if (pausada || !video.videoWidth || document.hidden) { setTimeout(leerCuadro, 150); return; }
+        if (detector) {
+            detector.detect(video).then(function (codigos) {
+                if (codigos.length) procesarCodigo(codigos[0].rawValue, true);
+                setTimeout(leerCuadro, 90);
+            }).catch(function () { setTimeout(leerCuadro, 200); });
+            return;
+        }
+        if (prepararZxing()) {
+            var f = franja();
+            lienzo.width = f.w; lienzo.height = f.h;
+            ctxLienzo.drawImage(video, f.x, f.y, f.w, f.h, 0, 0, f.w, f.h);
+            try {
+                var fuente = new ZXing.HTMLCanvasElementLuminanceSource(lienzo);
+                var r = zx.decode(new ZXing.BinaryBitmap(new ZXing.HybridBinarizer(fuente)));
+                procesarCodigo(r.getText(), true);
+            } catch (e) { /* sin código en este cuadro */ }
+            setTimeout(leerCuadro, 110);
+            return;
+        }
+        setTimeout(leerCuadro, 300); // ZXing todavía cargando
+    }
+
+    // Zoom (si el celular lo permite) para leer de más lejos, y linterna
+    function prepararControles() {
+        var cap = {};
+        try { cap = pista.getCapabilities ? pista.getCapabilities() : {}; } catch (e) {}
+        if (cap.focusMode && cap.focusMode.indexOf("continuous") !== -1) {
+            pista.applyConstraints({ advanced: [{ focusMode: "continuous" }] }).catch(function () {});
+        }
+        var hay = false;
+        if (cap.zoom && cap.zoom.max >= 1.5) {
+            var cont = $("zoom"), niveles = [1, 2, 3].filter(function (z) { return z >= cap.zoom.min && z <= cap.zoom.max; });
+            cont.innerHTML = "";
+            niveles.forEach(function (z) {
+                var b = document.createElement("button");
+                b.type = "button"; b.textContent = z + "×"; b.dataset.zoom = z;
+                b.addEventListener("click", function () { ponerZoom(z); });
+                cont.appendChild(b);
+            });
+            cont.hidden = false; hay = true;
+            ponerZoom(niveles.indexOf(2) !== -1 ? 2 : niveles[niveles.length - 1]);
+        }
+        if (cap.torch) { $("btn-linterna").hidden = false; hay = true; }
+        $("camara-controles").hidden = !hay;
+    }
+    function ponerZoom(z) {
+        pista.applyConstraints({ advanced: [{ zoom: z }] }).catch(function () {});
+        document.querySelectorAll("#zoom button").forEach(function (b) { b.classList.toggle("activo", +b.dataset.zoom === z); });
+    }
+    $("btn-linterna").addEventListener("click", function () {
+        var on = this.getAttribute("aria-pressed") !== "true";
+        pista.applyConstraints({ advanced: [{ torch: on }] }).catch(function () {});
+        this.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+
     $("btn-camara").addEventListener("click", function () {
-        if (typeof Html5Qrcode === "undefined") { toast("No se pudo cargar el lector. Revisa el internet.", true); return; }
-        var F = Html5QrcodeSupportedFormats;
-        lector = new Html5Qrcode("lector", {
-            formatsToSupport: [F.EAN_13, F.EAN_8, F.UPC_A, F.UPC_E, F.CODE_128, F.CODE_39, F.CODE_93, F.ITF, F.CODABAR],
-            experimentalFeatures: { useBarCodeDetectorIfSupported: true },
-            verbose: false
-        });
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            toast("Este navegador no deja usar la cámara. Escribe el código o usa la pistola lectora.", true); return;
+        }
         $("camara-inicio").hidden = true;
         $("camara-estado").hidden = false;
         $("camara-estado").textContent = "Abriendo cámara…";
-        lector.start(
-            { facingMode: "environment" },
-            { fps: 12, qrbox: function (w, h) { return { width: Math.round(w * 0.86), height: Math.round(Math.min(h * 0.5, 170)) }; }, aspectRatio: 1.333 },
-            function (texto) { procesarCodigo(texto, true); },
-            function () {}
-        ).then(function () {
+        navigator.mediaDevices.getUserMedia({
+            audio: false,
+            video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } }
+        }).then(function (s) {
+            flujo = s; pista = s.getVideoTracks()[0];
+            video.srcObject = s;
+            return video.play();
+        }).then(prepararLector).then(function () {
             camaraActiva = true;
             document.body.classList.add("iv-camara-activa");
             $("camara-estado").textContent = "Apunta al código de barras";
+            prepararControles();
+            leerCuadro();
         }).catch(function () {
             $("camara-inicio").hidden = false;
             $("camara-estado").hidden = true;
             toast("No se pudo abrir la cámara. Revisa el permiso del navegador o escribe el código.", true);
         });
     });
-    window.addEventListener("pagehide", function () { if (lector && camaraActiva) { try { lector.stop(); } catch (e) {} } });
+    function apagarCamara() {
+        camaraActiva = false;
+        if (flujo) flujo.getTracks().forEach(function (t) { t.stop(); });
+        flujo = null;
+    }
+    window.addEventListener("pagehide", apagarCamara);
+    window.zbEstadoCamara = function () { return camaraActiva ? (pausada ? 3 : 2) : 0; };
+    window.zbLectorCamara = function () { return detector ? "nativo" : (zx ? "zxing" : "ninguno"); };
 
     // ── Guardar ─────────────────────────────────────────────
     $("btn-guardar").addEventListener("click", function () {
@@ -472,7 +574,7 @@ $titulo = $modo === "recibir" ? "Recibir mercancía" : "Contar lo que hay";
         api({ accion: MODO, lineas: JSON.stringify(datos) }).then(function (r) {
             if (!r.ok) throw new Error(r.mensaje);
             borrarBorrador();
-            if (lector && camaraActiva) { try { lector.stop(); } catch (e) {} camaraActiva = false; }
+            apagarCamara();
             document.body.classList.add("iv-guardado");
             $("hecho-titulo").textContent = MODO === "recibir" ? "✓ Entrada guardada" : "✓ Conteo guardado";
             $("hecho-lista").innerHTML = r.articulos.map(function (a) {

@@ -126,7 +126,7 @@ function fmtFechaInv($ts) {
     <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=5">
-    <link rel="stylesheet" href="../assets/css/inventario-pizarron.css?v=1">
+    <link rel="stylesheet" href="../assets/css/inventario-pizarron.css?v=2">
 </head>
 <body class="pz">
 <?php require __DIR__ . "/../includes/pz_filtros.php"; ?>
