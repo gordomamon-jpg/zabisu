@@ -67,12 +67,13 @@ $hoy = date('Y-m-d');
 
 // Orden de categorías para mostrar
 $ordenCats = ['Plato fuerte', 'Sopa', 'Complemento', 'Postre', 'Agua'];
-$catColors = [
-    'Plato fuerte' => ['bg' => 'rgba(255,122,0,0.12)', 'color' => '#ff9a40', 'label' => 'Plato fuerte'],
-    'Sopa'         => ['bg' => 'rgba(255,230,109,0.12)', 'color' => '#ffe66d', 'label' => 'Sopa'],
-    'Complemento'  => ['bg' => 'rgba(78,205,196,0.12)', 'color' => '#4ecdc4', 'label' => 'Complemento'],
-    'Postre'       => ['bg' => 'rgba(255,107,157,0.12)', 'color' => '#ff6b9d', 'label' => 'Postre'],
-    'Agua'         => ['bg' => 'rgba(162,155,254,0.12)', 'color' => '#a29bfe', 'label' => 'Agua'],
+// Cada categoría con su clase de color (en menus-pizarron.css)
+$catClase = [
+    'Plato fuerte' => 'hm-c--plato',
+    'Sopa'         => 'hm-c--sopa',
+    'Complemento'  => 'hm-c--comp',
+    'Postre'       => 'hm-c--postre',
+    'Agua'         => 'hm-c--agua',
 ];
 ?>
 <!DOCTYPE html>
@@ -82,302 +83,33 @@ $catColors = [
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Historial de menús | Restaurante Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
-    <link rel="stylesheet" href="../assets/css/styles.css?v=8">
-<style>
-/* ── Search ──────────────────────────────────────────────── */
-.hm-search-wrap {
-    position: relative;
-    margin-bottom: 28px;
-}
-.hm-search {
-    width: 100%;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 10px;
-    color: var(--zabisu-white);
-    font-size: 16px;
-    font-family: inherit;
-    padding: 13px 16px 13px 44px;
-    transition: border-color .15s;
-    box-sizing: border-box;
-}
-.hm-search:focus { outline: none; border-color: var(--zabisu-orange); }
-.hm-search::placeholder { color: var(--zabisu-gray); }
-.hm-search-icon {
-    position: absolute;
-    left: 14px; top: 50%;
-    transform: translateY(-50%);
-    color: var(--zabisu-gray);
-    font-size: 18px;
-    pointer-events: none;
-}
-.hm-search-count {
-    position: absolute;
-    right: 14px; top: 50%;
-    transform: translateY(-50%);
-    font-size: 12px;
-    color: var(--zabisu-gray);
-}
-
-/* ── Top platos ──────────────────────────────────────────── */
-.hm-top {
-    margin-bottom: 28px;
-}
-.hm-top__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    cursor: pointer;
-    user-select: none;
-    padding: 16px 20px;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 12px;
-    transition: background .15s;
-}
-.hm-top__header:hover { background: rgba(255,255,255,0.05); }
-.hm-top__titulo {
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: .5px;
-    color: var(--zabisu-white);
-    margin: 0;
-}
-.hm-top__chevron {
-    color: var(--zabisu-gray);
-    font-size: 13px;
-    transition: transform .2s;
-}
-.hm-top__chevron.open { transform: rotate(180deg); }
-.hm-top__body {
-    display: none;
-    padding: 16px 0 0;
-}
-.hm-top__body.open { display: block; }
-.hm-top-cats {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-}
-.hm-top-cat__label {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-    color: var(--zabisu-gray);
-    margin-bottom: 8px;
-}
-.hm-top-pills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 7px;
-}
-.hm-top-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    border-radius: 20px;
-    padding: 5px 12px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: opacity .15s, transform .1s;
-    border: none;
-    font-family: inherit;
-}
-.hm-top-pill:hover { opacity: .8; transform: scale(1.03); }
-.hm-top-pill__count {
-    font-size: 10px;
-    font-weight: 800;
-    opacity: .7;
-}
-
-/* ── Grid de menús ───────────────────────────────────────── */
-.hm-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 18px;
-}
-@media (max-width: 720px) { .hm-grid { grid-template-columns: 1fr; } }
-
-.hm-card {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 14px;
-    overflow: hidden;
-    transition: border-color .15s;
-}
-.hm-card:hover { border-color: rgba(255,255,255,0.14); }
-.hm-card--activo { border-color: rgba(255,122,0,0.35); }
-
-.hm-card__header {
-    padding: 14px 18px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-}
-.hm-card__fecha-wrap { display: flex; flex-direction: column; gap: 2px; }
-.hm-card__dia {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-    color: var(--zabisu-orange);
-}
-.hm-card__fecha {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--zabisu-white);
-}
-.hm-card__badge {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: .8px;
-    text-transform: uppercase;
-    padding: 4px 10px;
-    border-radius: 20px;
-}
-.hm-card__badge--activo { background: rgba(255,122,0,0.15); color: var(--zabisu-orange); }
-.hm-card__badge--pasado { background: rgba(255,255,255,0.06); color: var(--zabisu-gray); }
-
-.hm-card__body {
-    padding: 16px 18px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-/* ── Tipos (Zabisu / Ejecutivo) ──────────────────────────── */
-.hm-tipos {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-}
-@media (max-width: 480px) { .hm-tipos { grid-template-columns: 1fr; } }
-
-.hm-tipo__label {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-    color: var(--zabisu-gray);
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-.hm-tipo__dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    display: inline-block;
-}
-.hm-tipo__dot--zabisu { background: var(--zabisu-orange); }
-.hm-tipo__dot--ejecutivo { background: #a29bfe; }
-
-/* ── Items por categoría ─────────────────────────────────── */
-.hm-cat-section { margin-bottom: 10px; }
-.hm-cat-section:last-child { margin-bottom: 0; }
-.hm-cat-label {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-bottom: 5px;
-}
-.hm-items {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-.hm-item {
-    font-size: 13px;
-    color: var(--zabisu-white);
-    padding: 3px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.04);
-}
-.hm-item:last-child { border-bottom: none; }
-.hm-item__desc {
-    font-size: 11px;
-    color: var(--zabisu-gray);
-    margin-top: 1px;
-}
-
-/* ── Shared cats (complemento, postre, agua) ─────────────── */
-.hm-shared {
-    border-top: 1px solid rgba(255,255,255,0.06);
-    padding-top: 14px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-.hm-shared-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-.hm-shared-label {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    min-width: 90px;
-}
-.hm-pill {
-    font-size: 12px;
-    font-weight: 500;
-    padding: 3px 10px;
-    border-radius: 20px;
-}
-
-/* ── Card vacía ──────────────────────────────────────────── */
-.hm-card--vacia { opacity: .4; }
-.hm-card__vacia-msg {
-    padding: 20px 18px;
-    color: var(--zabisu-gray);
-    font-size: 13px;
-    text-align: center;
-}
-
-/* ── Sin resultados ──────────────────────────────────────── */
-.hm-sin-resultados {
-    display: none;
-    text-align: center;
-    padding: 40px 20px;
-    color: var(--zabisu-gray);
-    font-size: 15px;
-    grid-column: 1 / -1;
-}
-
-/* ── Stats header ────────────────────────────────────────── */
-.hm-stats {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 24px;
-    flex-wrap: wrap;
-}
-.hm-stat {
-    font-size: 13px;
-    color: var(--zabisu-gray);
-}
-.hm-stat strong { color: var(--zabisu-white); }
-</style>
+    <meta name="theme-color" content="#151413">
+    <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=5">
+    <link rel="stylesheet" href="../assets/css/menus-pizarron.css?v=2">
 </head>
-<body>
-<div class="contenedor">
+<body class="pz">
+<?php require __DIR__ . "/../includes/pz_filtros.php"; ?>
 
-    <div class="hero-zabisu">
-        <div class="hero-zabisu__glow"></div>
-        <div class="hero-zabisu__contenido">
-            <p class="hero-zabisu__eyebrow">RESTAURANTE</p>
-            <div class="hero-zabisu__marca-grupo">
-                <img class="hero-zabisu__logo" src="../assets/img/LOGO_BLANCO.png" alt="Zabisu">
-                <h1 class="hero-zabisu__titulo">Historial de menús</h1>
-            </div>
-            <p class="hero-zabisu__texto">Todos los menús del historial para inspirar los próximos</p>
-            <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
-                <a href="panel_general.php" class="btn-volver-panel">← Panel</a>
-                <a href="menus.php" class="btn-volver-panel">Gestión de menús</a>
-                <a href="nuevo_menu.php" class="btn-volver-panel">+ Nuevo menú</a>
+<main class="mz">
+    <header class="mz-cab">
+        <div class="pz-marca">
+            <img src="../assets/img/LOGO_N_128.png" alt="">
+            <div>
+                <span class="pz-marca__nombre">Zabisu</span>
+                <span class="pz-marca__lema">Sabor y Servicio</span>
             </div>
         </div>
-    </div>
+        <h1 class="pz-titulo"><span class="pz-pincel"><span>Historial de menús</span></span></h1>
+
+        <nav class="mz-cab__acc" aria-label="Acciones">
+            <a href="nuevo_menu.php" class="mz-btn--naranja">+ Nuevo menú</a>
+            <a href="menus.php" class="btn-volver-panel">Gestión de menús</a>
+            <a href="panel_general.php" class="btn-volver-panel">← Panel</a>
+        </nav>
+    </header>
+    <p class="mz-sub">Todos los menús del historial para inspirar los próximos</p>
 
     <!-- Stats rápidas -->
     <div class="hm-stats">
@@ -388,7 +120,7 @@ $catColors = [
 
     <!-- Búsqueda -->
     <div class="hm-search-wrap">
-        <span class="hm-search-icon">&#x1F50D;</span>
+        <svg class="hm-search-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <input type="text" class="hm-search" id="hm-search"
                placeholder="Buscar platillo, sopa, complemento…"
                autocomplete="off">
@@ -406,14 +138,12 @@ $catColors = [
             <div class="hm-top-cats">
                 <?php foreach ($ordenCats as $cat):
                     if (empty($topPorCategoria[$cat])) continue;
-                    $cc = $catColors[$cat] ?? ['bg' => 'rgba(255,255,255,0.08)', 'color' => '#fff'];
                 ?>
                 <div>
                     <div class="hm-top-cat__label"><?php echo htmlspecialchars($cat); ?></div>
                     <div class="hm-top-pills">
                         <?php foreach ($topPorCategoria[$cat] as $plato): ?>
-                        <button class="hm-top-pill"
-                                style="background:<?php echo $cc['bg']; ?>;color:<?php echo $cc['color']; ?>;"
+                        <button type="button" class="hm-top-pill <?php echo $catClase[$cat] ?? ''; ?>"
                                 onclick="buscarPlato('<?php echo htmlspecialchars(addslashes($plato['nombre']), ENT_QUOTES); ?>')">
                             <?php echo htmlspecialchars($plato['nombre']); ?>
                             <?php if ((int)$plato['veces'] > 1): ?>
@@ -480,7 +210,6 @@ $catColors = [
                 <div class="hm-tipos">
                     <?php foreach (['Zabisu' => 'zabisu', 'Ejecutivo' => 'ejecutivo'] as $tipo => $tipoSlug):
                         if (!isset($menu['prods'][$tipo])) continue;
-                        $cc = $catColors;
                     ?>
                     <div>
                         <div class="hm-tipo__label">
@@ -489,10 +218,9 @@ $catColors = [
                         </div>
                         <?php foreach ($mainCats as $cat):
                             if (empty($menu['prods'][$tipo][$cat])) continue;
-                            $c = $catColors[$cat] ?? ['color' => '#fff'];
                         ?>
                         <div class="hm-cat-section">
-                            <div class="hm-cat-label" style="color:<?php echo $c['color']; ?>">
+                            <div class="hm-cat-label <?php echo $catClase[$cat] ?? ''; ?>">
                                 <?php echo htmlspecialchars($cat); ?>
                             </div>
                             <div class="hm-items">
@@ -531,15 +259,13 @@ $catColors = [
                 <div class="hm-shared">
                     <?php foreach ($sharedCats as $cat):
                         if (empty($sharedData[$cat])) continue;
-                        $c = $catColors[$cat] ?? ['bg' => 'rgba(255,255,255,0.06)', 'color' => '#ccc'];
                     ?>
                     <div class="hm-shared-row">
-                        <span class="hm-shared-label" style="color:<?php echo $c['color']; ?>">
+                        <span class="hm-shared-label <?php echo $catClase[$cat] ?? ''; ?>">
                             <?php echo htmlspecialchars($cat); ?>
                         </span>
                         <?php foreach ($sharedData[$cat] as $nombre): ?>
-                        <span class="hm-pill"
-                              style="background:<?php echo $c['bg']; ?>;color:<?php echo $c['color']; ?>;">
+                        <span class="hm-pill <?php echo $catClase[$cat] ?? ''; ?>">
                             <?php echo htmlspecialchars($nombre); ?>
                         </span>
                         <?php endforeach; ?>
@@ -559,7 +285,7 @@ $catColors = [
         </p>
     </div>
 
-</div>
+</main>
 
 <script>
 // ── Búsqueda en tiempo real ───────────────────────────────
