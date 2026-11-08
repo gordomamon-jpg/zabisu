@@ -449,76 +449,51 @@ function formatearFechaBonita($fecha)
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pedidos | Restaurante Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
-    <link rel="stylesheet" href="../assets/css/styles.css?v=8">
-    <style>
-        .tarjeta-produccion[data-id-producto] {
-            cursor: pointer;
-            user-select: none;
-            transition: opacity .15s, transform .1s;
-        }
-        .tarjeta-produccion[data-id-producto]:hover {
-            opacity: .75;
-            transform: scale(.97);
-        }
-        .tarjeta-produccion--agotado {
-            position: relative;
-            opacity: .45;
-        }
-        .tarjeta-produccion--agotado::after {
-            content: 'AGOTADO';
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(220, 38, 38, .12);
-            border: 1px solid rgba(220, 38, 38, .35);
-            border-radius: inherit;
-            font-size: 9px;
-            font-weight: 900;
-            letter-spacing: 2px;
-            color: #ef4444;
-        }
-        .tarjeta-produccion--agotado .tarjeta-produccion__nombre,
-        .tarjeta-produccion--agotado .tarjeta-produccion__total {
-            text-decoration: line-through;
-        }
-    </style>
+    <meta name="theme-color" content="#151413">
+    <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=5">
+    <link rel="stylesheet" href="../assets/css/pedidos-pizarron.css?v=1">
 </head>
-<body>
+<body class="pz">
 
-<div class="contenedor">
-    <div class="hero-zabisu">
-        <div class="hero-zabisu__glow"></div>
-        <div class="hero-zabisu__contenido">
-            <p class="hero-zabisu__eyebrow">RESTAURANTE</p>
-            <h1 class="hero-zabisu__titulo">Panel de pedidos</h1>
-            <p class="hero-zabisu__texto">
-                Visualiza, revisa y administra los pedidos registrados.
-            </p>
-            <a href="panel_general.php" class="btn-volver-panel">← Panel general</a>
+<?php require __DIR__ . "/../includes/pz_filtros.php"; ?>
 
-            <form method="POST" action="toggle_pedidos.php" style="display:inline;">
+<main class="pp">
+    <header class="pp-cab">
+        <div class="pz-marca">
+            <img src="../assets/img/LOGO_N_128.png" alt="">
+            <div>
+                <span class="pz-marca__nombre">Zabisu</span>
+                <span class="pz-marca__lema">Sabor y Servicio</span>
+            </div>
+        </div>
+        <h1 class="pz-titulo"><span class="pz-pincel"><span>Pedidos</span></span></h1>
+
+        <nav class="pp-cab__acc" aria-label="Acciones del panel">
+            <form method="POST" action="toggle_pedidos.php">
                 <button type="submit" class="btn-toggle-pedidos <?php echo $recibiendoPedidos ? 'btn-toggle-pedidos--activo' : 'btn-toggle-pedidos--pausado'; ?>">
+                    <i aria-hidden="true"></i>
                     <?php if ($recibiendoPedidos): ?>
-                        ✅ Recibiendo pedidos — Pausar
+                        Recibiendo pedidos <small>· Pausar</small>
                     <?php else: ?>
-                        ⏸ Pedidos pausados — Reanudar
+                        Pedidos pausados <small>· Reanudar</small>
                     <?php endif; ?>
                 </button>
             </form>
             <button type="button" id="btn-toggle-notificacion" class="btn-notificar-ruta">
-                📍 Notificar llegada al punto <span class="avisos-pendientes" id="avisos-pendientes" hidden></span>
+                Notificar llegada <span class="avisos-pendientes" id="avisos-pendientes" hidden></span>
             </button>
             <button type="button" id="btn-toggle-resumen-ruta" class="btn-notificar-ruta btn-resumen-ruta">
-                🚚 Ver resumen de ruta
+                Resumen de ruta
             </button>
-        </div>
-    </div>
+            <a href="panel_general.php" class="btn-volver-panel">← Panel general</a>
+        </nav>
+    </header>
 
     <!-- ══ PANEL NOTIFICACIÓN DE RUTA ══════════════════════════ -->
     <div class="bloque-formulario bloque-notificacion-ruta" id="bloque-notificacion-ruta" style="display:none;">
-        <h2>📍 Notificar llegada al punto</h2>
+        <h2>Notificar llegada al punto</h2>
         <p class="nota-formulario">
             Cada punto y horario de hoy con su botón. Al avisar, se marca con la hora; los que ya pasaron de su hora sin aviso salen en rojo.
         </p>
@@ -603,7 +578,7 @@ function formatearFechaBonita($fecha)
     <div class="bloque-formulario bloque-resumen-ruta" id="bloque-resumen-ruta" style="display:none;">
         <div class="ruta-panel-header">
             <div>
-                <h2>🚚 Resumen de ruta</h2>
+                <h2>Resumen de ruta</h2>
                 <p class="nota-formulario" style="margin:4px 0 0;">
                     Pedidos de hoy — <?php echo htmlspecialchars(formatearFechaBonita(date("Y-m-d"))); ?>
                 </p>
@@ -634,7 +609,7 @@ function formatearFechaBonita($fecha)
                     <tr>
                         <td>
                             <strong class="ruta-tabla__ubicacion">
-                                📍 <?php echo htmlspecialchars($punto["nombre_ubicacion"]); ?>
+                                <?php echo htmlspecialchars($punto["nombre_ubicacion"]); ?>
                             </strong>
                         </td>
                         <td>
@@ -702,9 +677,9 @@ function formatearFechaBonita($fecha)
     <?php endif; ?>
 
     <?php if ($modoPrueba && !empty($pedidosPrueba)): ?>
-    <div class="bloque-formulario">
+    <div class="bloque-formulario pp-prueba">
         <div class="cabecera-modulo">
-            <h2>🧪 Pedidos de prueba</h2>
+            <h2>Pedidos de prueba (<?php echo count($pedidosPrueba); ?>)</h2>
             <button type="button" id="btn-toggle-prueba" class="btn-tabla">Mostrar</button>
         </div>
         <div id="seccion-prueba" style="display:none;">
@@ -736,7 +711,7 @@ function formatearFechaBonita($fecha)
                                     <?php echo htmlspecialchars($pedido["nombre_ubicacion"]); ?><br>
                                     <span class="texto-secundario"><?php echo ucfirst(htmlspecialchars($pedido["tipo_ubicacion"])); ?></span>
                                 </td>
-                                <td><?php echo date("g:i A", strtotime($pedido["hora_entrega"])); ?></td>
+                                <td><span class="pp-hora"><?php echo date("g:i A", strtotime($pedido["hora_entrega"])); ?></span></td>
                                 <td>
                                     <span class="<?php echo obtenerClaseEstadoPago($pedido["estado_pago"]); ?>">
                                         <?php echo htmlspecialchars(obtenerTextoEstadoPago($pedido["estado_pago"])); ?>
@@ -757,7 +732,7 @@ function formatearFechaBonita($fecha)
     </div>
     <?php endif; ?>
 
-    <div class="bloque-formulario">
+    <div class="bloque-formulario pp-pedidos">
         <h2>Pedidos registrados</h2>
 
         <?php if (empty($pedidosPorFecha)): ?>
@@ -766,7 +741,7 @@ function formatearFechaBonita($fecha)
             <?php foreach ($pedidosPorFecha as $fecha => $listaPedidos): ?>
                 <div class="grupo-fecha-pedidos">
                     <div class="cabecera-fecha-pedidos">
-                        <h3 class="titulo-fecha-pedidos">
+                        <h3 class="titulo-fecha-pedidos pz-cinta pz-fibra">
                             <?php echo htmlspecialchars(formatearFechaBonita($fecha)); ?>
                         </h3>
                         <div class="stats-dia">
@@ -786,12 +761,17 @@ function formatearFechaBonita($fecha)
                                     <?php echo count($listaPedidos) === 1 ? "pedido" : "pedidos"; ?>
                                 </span>
                             </div>
+                            <div class="stat-dia stat-dia--secundario">
+                                <span class="stat-dia__numero">
+                                    $<?php echo number_format(array_sum(array_map(fn($p) => (float)$p["total"], $listaPedidos)), 0); ?>
+                                </span>
+                            </div>
                         </div>
                     </div>
 
                     <?php if (!empty($resumenPlatosPorFecha[$fecha])): ?>
                         <div class="resumen-produccion-dia">
-                            <h4 class="resumen-produccion-dia__titulo">Producción de platos fuertes</h4>
+                            <h4 class="resumen-produccion-dia__titulo">Producción de platos fuertes <small>(toca para marcar agotado)</small></h4>
 
                             <div class="resumen-produccion-dia__grid">
                                 <?php foreach ($resumenPlatosPorFecha[$fecha] as $plato): ?>
@@ -806,10 +786,11 @@ function formatearFechaBonita($fecha)
                                              data-disponible="<?php echo $agotadoManual ? '0' : '1'; ?>"
                                              data-nombre="<?php echo htmlspecialchars($plato['nombre_producto']); ?>"
                                          <?php endif; ?>>
+                                        <span class="pz-tira pz-fibra" aria-hidden="true"></span>
                                         <span class="tarjeta-produccion__nombre">
                                             <?php echo htmlspecialchars($plato["nombre_producto"]); ?>
                                             <?php if (!empty($resumenOpciones[$fecha][$plato["nombre_producto"]])): ?>
-                                                <small class="tarjeta-produccion__opciones" style="display:block;margin-top:4px;font-size:12px;opacity:.8;">
+                                                <small class="tarjeta-produccion__opciones">
                                                     <?php echo htmlspecialchars(implode(" · ", $resumenOpciones[$fecha][$plato["nombre_producto"]])); ?>
                                                 </small>
                                             <?php endif; ?>
@@ -840,6 +821,7 @@ function formatearFechaBonita($fecha)
                                              data-disponible="<?php echo $agotadoManual ? '0' : '1'; ?>"
                                              data-nombre="<?php echo htmlspecialchars($complemento['nombre_producto']); ?>"
                                          <?php endif; ?>>
+                                        <span class="pz-tira pz-fibra" aria-hidden="true"></span>
                                         <span class="tarjeta-produccion__nombre">
                                             <?php echo htmlspecialchars($complemento["nombre_producto"]); ?>
                                         </span>
@@ -898,7 +880,8 @@ function formatearFechaBonita($fecha)
                                             </span>
                                         </td>
                                         <td>
-                                            <?php echo date("g:i A", strtotime($pedido["hora_entrega"])); ?>
+                                            <span class="pp-hora"><?php echo date("g:i A", strtotime($pedido["hora_entrega"])); ?></span>
+                                            <span class="pp-comidas"><?php echo (int)$pedido["num_menus"]; ?> <?php echo (int)$pedido["num_menus"] === 1 ? "comida" : "comidas"; ?></span>
                                         </td>
                                         <td>
                                             <span class="<?php echo obtenerClaseEstadoPago($pedido["estado_pago"]); ?>">
@@ -953,7 +936,7 @@ function formatearFechaBonita($fecha)
             <?php endforeach; ?>
         <?php endif; ?>
     </div>
-</div>
+</main>
 
 <iframe id="iframe-ticket" style="display:none;"></iframe>
 
