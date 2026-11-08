@@ -9,7 +9,10 @@ $stmt = $conexion->prepare($sql);
 $stmt->execute();
 $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
 
+$ultimoId = (int)$conexion->query("SELECT COALESCE(MAX(id_pedido), 0) FROM pedidos")->fetchColumn();
+
 header('Content-Type: application/json');
 echo json_encode([
-    "total_nuevos" => (int)($resultado["total_nuevos"] ?? 0)
+    "total_nuevos" => (int)($resultado["total_nuevos"] ?? 0),
+    "ultimo_id"    => $ultimoId
 ]);

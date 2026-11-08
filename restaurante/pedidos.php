@@ -79,6 +79,9 @@ $pedidosPrueba = $stmtPrueba->fetchAll(PDO::FETCH_ASSOC);
 $totalNuevosActual = count(array_filter($pedidos, function ($pedido) {
     return (int)$pedido["visto"] === 0;
 }));
+// El último pedido registrado: si llega uno con id mayor, es nuevo (aunque en
+// esos segundos hayan impreso otro y el número de "sin ver" no cambie)
+$ultimoIdPedido = (int)$conexion->query("SELECT COALESCE(MAX(id_pedido), 0) FROM pedidos")->fetchColumn();
 
 /*
     Pedidos TAB- sin ver para auto-impresión en esta página
@@ -453,7 +456,7 @@ function formatearFechaBonita($fecha)
     <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=5">
-    <link rel="stylesheet" href="../assets/css/pedidos-pizarron.css?v=1">
+    <link rel="stylesheet" href="../assets/css/pedidos-pizarron.css?v=2">
 </head>
 <body class="pz">
 
@@ -488,6 +491,7 @@ function formatearFechaBonita($fecha)
                 Resumen de ruta
             </button>
             <a href="panel_general.php" class="btn-volver-panel">← Panel general</a>
+            <button type="button" id="aviso-sonido" class="btn-activar-sonido" hidden>Activar sonido de pedidos nuevos</button>
         </nav>
     </header>
 
@@ -1060,18 +1064,60 @@ document.addEventListener("DOMContentLoaded", function () {
     // ============================================================
     // ALERTAS DE NUEVOS PEDIDOS
     // ============================================================
+    // El navegador solo deja sonar audio si alguien tocó la página. Como la
+    // página se recarga sola con cada pedido, al cargar se prueba si puede
+    // sonar; si no, se muestra el aviso "Activar sonido" hasta que lo toquen.
     let totalNuevosActual = <?php echo (int)$totalNuevosActual; ?>;
+    let ultimoIdActual = <?php echo $ultimoIdPedido; ?>;
     const audioAlerta = document.getElementById("audio-alerta-pedido");
-    let audioHabilitado = false;
+    const avisoSonido = document.getElementById("aviso-sonido");
+
+    let sonidoListo = false;
+
+    function marcarSonido(activo) {
+        sonidoListo = activo;
+        if (avisoSonido) avisoSonido.hidden = activo;
+    }
+
+    function probarSonido() {
+        if (!audioAlerta) return;
+        audioAlerta.volume = 0;
+        audioAlerta.play().then(function () {
+            audioAlerta.pause();
+            audioAlerta.currentTime = 0;
+            audioAlerta.volume = 1;
+            marcarSonido(true);
+        }).catch(function () {
+            audioAlerta.volume = 1;
+            marcarSonido(false);
+        });
+    }
 
     function habilitarAudio() {
-        audioHabilitado = true;
-        document.removeEventListener("click", habilitarAudio);
-        document.removeEventListener("keydown", habilitarAudio);
+        if (!sonidoListo) probarSonido();
     }
 
     document.addEventListener("click", habilitarAudio);
     document.addEventListener("keydown", habilitarAudio);
+    document.addEventListener("touchend", habilitarAudio);
+    probarSonido();
+
+    function sonarYRecargar() {
+        var recargado = false;
+        function recargar() {
+            if (recargado) return;
+            recargado = true;
+            window.location.reload();
+        }
+        if (audioAlerta) {
+            audioAlerta.currentTime = 0;
+            audioAlerta.volume = 1;
+            audioAlerta.onended = recargar;
+            audioAlerta.play().catch(function () { marcarSonido(false); });
+        }
+        // Se recarga al terminar el sonido (o a los 4 s si no pudo sonar)
+        setTimeout(recargar, 4000);
+    }
 
     function revisarNuevosPedidos() {
         fetch("check_nuevos_pedidos.php", {
@@ -1081,18 +1127,16 @@ document.addEventListener("DOMContentLoaded", function () {
         .then(response => response.json())
         .then(data => {
             const totalNuevosServidor = parseInt(data.total_nuevos || 0, 10);
+            const ultimoIdServidor = parseInt(data.ultimo_id || 0, 10);
 
-            if (totalNuevosServidor > totalNuevosActual) {
-                if (audioHabilitado && audioAlerta) {
-                    audioAlerta.currentTime = 0;
-                    audioAlerta.play().catch(() => {});
-                }
-
-                setTimeout(function () {
-                    window.location.reload();
-                }, 1200);
+            if (ultimoIdServidor > ultimoIdActual || totalNuevosServidor > totalNuevosActual) {
+                ultimoIdActual = ultimoIdServidor;
+                totalNuevosActual = totalNuevosServidor;
+                sonarYRecargar();
+                return;
             }
 
+            ultimoIdActual = Math.max(ultimoIdActual, ultimoIdServidor);
             totalNuevosActual = totalNuevosServidor;
         })
         .catch(error => {

@@ -271,3 +271,13 @@
 @media (max-width:599px){ .tabla-pedidos.ruta-tabla th,.tabla-pedidos.ruta-tabla td{padding:8px 6px} }
 .tabla-pedidos.ruta-tabla td[style*="center"],.tabla-pedidos.ruta-tabla th[style*="center"]{text-align:center!important}
 .ruta-tabla__hora{white-space:nowrap}
+
+/* Aviso cuando el navegador no deja sonar la alerta de pedidos nuevos */
+.btn-activar-sonido{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 16px;border-radius:12px;
+  border:1.5px solid #e5534b;background:rgba(229,83,75,.14);color:#ff8f86;font:700 15px var(--pz-sys);cursor:pointer;
+  animation:ppParpadeo 1.6s ease-in-out infinite}
+.btn-activar-sonido[hidden]{display:none}
+.btn-activar-sonido::before{content:"";width:10px;height:10px;border-radius:50%;background:#e5534b;margin-right:8px}
+@keyframes ppParpadeo{50%{border-color:var(--pz-linea)}}
+@media (max-width:599px){ .pp-cab__acc .btn-activar-sonido{grid-column:1 / -1} }
+@media (prefers-reduced-motion:reduce){ .btn-activar-sonido{animation:none} }
