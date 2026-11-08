@@ -1,0 +1,252 @@
+/* ══════════════════════════════════════════════════════════════
+   Inventario desechable en estilo Pizarrón: pantalla principal,
+   escáner (recibir / contar) y etiquetas con código de barras.
+   Se carga junto con menu-pizarron.css (colores, letras y piezas).
+   El escáner está pensado primero para el celular.
+   ══════════════════════════════════════════════════════════════ */
+
+.iv{max-width:1080px;margin:0 auto;padding:0 16px 120px;box-sizing:border-box}
+.iv *,.iv *::before,.iv *::after{box-sizing:border-box}
+.iv h2,.iv h3,.iv p{margin:0}
+@media (min-width:600px){ .iv{padding:0 24px 120px} }
+@media (min-width:960px){ .iv{padding:0 32px 120px} }
+
+/* ── Encabezado ── */
+.iv-cab{display:flex;align-items:center;flex-wrap:wrap;gap:12px 18px;padding:20px 0 4px}
+.iv-cab .pz-marca{margin:0}
+.iv-cab .pz-titulo{padding:0;margin:0}
+.iv-cab .pz-pincel span{font-size:34px}
+.iv-cab__acc{margin-left:auto}
+.iv-cab--escaner{flex-wrap:nowrap;padding-top:14px}
+.iv-cab--escaner .pz-pincel span{font-size:28px}
+.iv-sub{margin-top:10px!important;font:400 15px/1.45 var(--pz-sys);color:var(--pz-gris)}
+
+/* ── Botones ── */
+.iv-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 18px;border-radius:12px;
+  border:1.5px solid var(--pz-linea);background:var(--pz-grupo);color:var(--pz-gis);font:600 15px var(--pz-sys);text-decoration:none;
+  white-space:nowrap;cursor:pointer;transition:border-color .15s,background .15s}
+.iv-btn:hover{border-color:#4a4540}
+.iv-btn:active{transform:scale(.98)}
+.iv-btn:disabled{background:#3a3633;border-color:#3a3633;color:#8d8983;cursor:default;transform:none}
+.iv-btn--naranja{background:var(--pz-naranja);border-color:var(--pz-naranja);color:#111;font-weight:700}
+.iv-btn--naranja:hover{background:#ff8a1f;border-color:#ff8a1f}
+.iv-btn--estraza{background:var(--pz-estraza);border-color:var(--pz-estraza);color:var(--pz-tinta)}
+.iv-btn--estraza:hover{background:var(--pz-estraza-cl);border-color:var(--pz-estraza-cl)}
+.iv-btn--linea{background:transparent;border-style:dashed;width:100%;margin-top:8px;color:var(--pz-gris)}
+.iv-btn--chico{min-height:40px;padding:0 13px;font-size:14px}
+.iv-btn--rojo{background:transparent;color:#ff8f86;border-color:rgba(229,83,75,.4)}
+.iv-btn--grande{min-height:56px;font-size:17px;width:100%}
+.iv-btn--icono{width:46px;min-height:46px;padding:0;font-size:20px;flex-shrink:0}
+.pz a.iv-btn--naranja{color:#111}
+.pz a.iv-btn--estraza{color:var(--pz-tinta)}
+
+/* ── Avisos ── */
+.iv-aviso{display:flex;align-items:center;flex-wrap:wrap;gap:10px 14px;margin-top:16px;padding:12px 16px;border-radius:14px;background:rgba(123,211,137,.12);
+  border:1px solid rgba(123,211,137,.45);color:#a8e6b4;font:500 15px/1.45 var(--pz-sys)}
+.iv-aviso > span{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#7bd389;color:#111;font-weight:800;flex-shrink:0}
+.iv-aviso > div{flex:1;min-width:200px}
+.iv-aviso strong{color:#c4f0cd}
+.iv-aviso p{margin-top:2px!important;color:var(--pz-gris);font-size:14px}
+.iv-error{margin-top:16px;padding:12px 16px;border-radius:14px;background:rgba(229,83,75,.1);border:1px solid rgba(229,83,75,.4);color:#ff9a8f;font:500 14px/1.5 var(--pz-sys)}
+.iv-alerta{display:flex;align-items:center;flex-wrap:wrap;gap:12px 16px;margin-top:18px;padding:14px 16px;border-radius:16px;
+  background:rgba(229,83,75,.08);border:1.5px dashed rgba(229,83,75,.5);font:400 15px/1.45 var(--pz-sys);color:var(--pz-gis)}
+.iv-alerta p{flex:1;min-width:220px}
+.iv-alerta strong{color:#ff8f86}
+
+/* ── Acciones principales ── */
+.iv-acciones{display:grid;gap:10px;margin-top:20px}
+@media (min-width:700px){ .iv-acciones{grid-template-columns:1.2fr 1fr 1fr} }
+.iv-accion{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;gap:2px 14px;align-items:center;padding:16px;border-radius:18px;
+  background:var(--pz-grupo);border:1.5px solid var(--pz-linea);color:var(--pz-gis)!important;text-decoration:none;transition:transform .12s}
+.iv-accion:active{transform:scale(.985)}
+.iv-accion__icono{grid-row:1 / 3;display:grid;place-items:center;width:52px;height:52px;border-radius:14px;background:var(--pz-pizarra)}
+.iv-accion__icono svg{width:30px;height:30px}
+.iv-accion strong{font:400 18px/1.2 var(--pz-rotulo)}
+.iv-accion small{font:500 14px/1.3 var(--pz-sys);color:var(--pz-gris)}
+.iv-accion--naranja{background:var(--pz-naranja);border-color:var(--pz-naranja);color:#111!important}
+.iv-accion--naranja small{color:#3b1d00}
+.iv-accion--naranja .iv-accion__icono{background:#111;color:var(--pz-naranja)}
+.iv-accion--estraza{background:var(--pz-estraza);border-color:var(--pz-estraza);color:var(--pz-tinta)!important}
+.iv-accion--estraza small{color:var(--pz-tinta2)}
+.iv-accion--estraza .iv-accion__icono{background:var(--pz-tinta);color:var(--pz-estraza-cl)}
+
+/* ── Secciones ── */
+.iv-sec{margin-top:26px}
+.iv-sec .pz-cinta{font-size:16px;margin:0 0 12px;transform:rotate(-1.2deg)}
+.iv-sec:nth-of-type(even) .pz-cinta{transform:rotate(.8deg)}
+.iv-sec__cab{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 14px}
+.iv-sec__dato{font:400 13px var(--pz-sys);color:var(--pz-gris)}
+.iv-sec__sig{margin-top:22px!important}
+.iv-vacio{padding:20px 16px;border-radius:16px;background:var(--pz-grupo);text-align:center;font:500 15px var(--pz-sys);color:var(--pz-gris)}
+.iv-nota{margin-top:10px!important;font:400 13px var(--pz-sys);color:var(--pz-gris)}
+.iv-tarjeta{padding:16px;border-radius:18px;background:var(--pz-grupo)}
+
+/* Stock: cuadro por artículo */
+.iv-stock{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media (min-width:700px){ .iv-stock{grid-template-columns:repeat(4,1fr);gap:10px} }
+.iv-art{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border-radius:16px;background:var(--pz-grupo);border-top:5px solid #7bd389;min-width:0}
+.iv-art__nombre{font:600 14px/1.25 var(--pz-sys)}
+.iv-art__stock{font:400 26px/1.1 var(--pz-rotulo);color:var(--pz-gis);overflow-wrap:anywhere}
+.iv-art__pie{font:400 12px var(--pz-sys);color:var(--pz-gris)}
+.iv-art__estado{display:inline-block;margin-right:4px;padding:1px 7px;border-radius:999px;font-weight:700;background:rgba(123,211,137,.14);color:#8fdc9c}
+.iv-art--bajo{border-top-color:var(--pz-naranja)}
+.iv-art--bajo .iv-art__stock{color:var(--pz-naranja)}
+.iv-art--bajo .iv-art__estado{background:rgba(255,122,0,.16);color:var(--pz-naranja)}
+.iv-art--agotado{border-top-color:#e5534b}
+.iv-art--agotado .iv-art__stock{color:#ff8f86}
+.iv-art--agotado .iv-art__estado{background:rgba(229,83,75,.14);color:#ff8f86}
+
+/* Códigos registrados (plegable) */
+.iv-plegable summary{display:flex;align-items:baseline;gap:12px;cursor:pointer;list-style:none}
+.iv-plegable summary::-webkit-details-marker{display:none}
+.iv-plegable summary::after{content:"▾";margin-left:auto;color:var(--pz-gris);transition:transform .2s}
+.iv-plegable[open] summary::after{transform:rotate(180deg)}
+.iv-codigos{list-style:none;margin:0;padding:0;border-radius:16px;background:var(--pz-grupo);overflow:hidden}
+.iv-codigos li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;font:400 15px var(--pz-sys)}
+.iv-codigos li + li{border-top:1px solid var(--pz-linea)}
+.iv-codigos small{display:block;margin-top:2px;font:500 12px ui-monospace,Menlo,Consolas,monospace;color:var(--pz-gris)}
+.iv-codigos form{margin:0}
+
+/* Historial */
+.iv-historial{list-style:none;margin:0;padding:0;border-radius:16px;background:var(--pz-grupo);overflow:hidden}
+.iv-historial li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 14px}
+.iv-historial li + li{border-top:1px solid var(--pz-linea)}
+.iv-historial__tipo{padding:3px 9px;border-radius:999px;font:700 11px var(--pz-sys);background:rgba(123,211,137,.14);color:#8fdc9c}
+.iv-historial__tipo--ajuste{background:rgba(196,154,108,.2);color:var(--pz-estraza-cl)}
+.iv-historial__txt b{display:block;font:600 15px var(--pz-sys)}
+.iv-historial__txt small{display:block;margin-top:2px;font:400 12px/1.4 var(--pz-sys);color:var(--pz-gris)}
+.iv-historial__cant{font:400 18px var(--pz-rotulo);white-space:nowrap}
+.iv-historial__cant--mas{color:#8fdc9c}
+.iv-historial__cant--menos{color:#ff8f86}
+
+/* ══ Escáner ══ */
+.iv--escaner{max-width:620px;padding-bottom:140px}
+.iv-camara{position:relative;margin-top:14px;aspect-ratio:4/3;border-radius:20px;overflow:hidden;background:#0b0a0a;border:1px solid var(--pz-linea)}
+.iv-camara__video,#lector{position:absolute;inset:0;width:100%;height:100%}
+#lector video{width:100%!important;height:100%!important;object-fit:cover}
+#lector img,#lector #qr-shaded-region{display:none!important}
+.iv-camara__marco{position:absolute;left:7%;right:7%;top:50%;height:42%;transform:translateY(-50%);border:3px solid var(--pz-naranja);border-radius:14px;
+  box-shadow:0 0 0 999px rgba(0,0,0,.35);opacity:0;transition:opacity .2s;pointer-events:none}
+.iv-camara__marco i{position:absolute;left:6%;right:6%;top:50%;height:2px;background:rgba(255,122,0,.8);animation:ivLinea 1.6s ease-in-out infinite alternate}
+@keyframes ivLinea{from{transform:translateY(-34px)}to{transform:translateY(34px)}}
+.iv-camara-activa .iv-camara__marco{opacity:1}
+.iv-camara__inicio{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;text-align:center;
+  font:400 14px var(--pz-sys);color:var(--pz-gris)}
+.iv-camara__inicio .iv-btn{width:auto;min-width:220px}
+.iv-camara__inicio[hidden]{display:none}
+.iv-camara__estado{position:absolute;left:0;right:0;bottom:10px;text-align:center;font:600 14px var(--pz-sys);color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.8)}
+
+.iv-manual{display:flex;gap:8px;margin-top:10px}
+.iv-manual input{flex:1;min-width:0;min-height:48px;padding:0 14px;border-radius:12px;border:1.5px solid var(--pz-linea);background:var(--pz-grupo);
+  color:var(--pz-gis);font:500 16px ui-monospace,Menlo,Consolas,monospace;color-scheme:dark}
+.iv-manual input:focus{outline:none;border-color:var(--pz-naranja)}
+
+/* Último escaneado: grande para ver de lejos */
+.iv-ultimo{margin-top:16px;padding:16px;border-radius:20px;background:var(--pz-estraza-cl);color:var(--pz-tinta);text-align:center}
+.iv-ultimo__etiqueta{font:700 12px var(--pz-sys);color:var(--pz-tinta2);text-transform:uppercase;letter-spacing:.06em}
+.iv-ultimo__nombre{margin-top:4px!important;font:400 22px/1.2 var(--pz-rotulo)}
+.iv-ultimo__paquete{font:500 15px var(--pz-sys);color:var(--pz-tinta2)}
+.iv-ultimo__total{margin-top:6px!important;font:700 16px var(--pz-sys)}
+.iv-contador{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:12px}
+.iv-contador__btn{width:60px;height:60px;border-radius:16px;border:2px solid var(--pz-tinta);background:transparent;color:var(--pz-tinta);font:600 30px/1 var(--pz-sys);cursor:pointer}
+.iv-contador__btn--mas{background:var(--pz-tinta);color:var(--pz-estraza-cl)}
+.iv-contador__btn:active{transform:scale(.94)}
+.iv-contador__num{display:flex;flex-direction:column;align-items:center;min-width:80px}
+.iv-contador__num b{font:400 44px/1 var(--pz-rotulo)}
+.iv-contador__num small{font:600 13px var(--pz-sys);color:var(--pz-tinta2)}
+
+/* Lista de lo escaneado */
+.iv-lista{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.iv-linea{padding:12px 14px;border-radius:16px;background:var(--pz-grupo)}
+.iv-linea__cab{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.iv-linea__cab b{font:600 16px var(--pz-sys)}
+.iv-linea__cab span{font:400 18px var(--pz-rotulo);color:var(--pz-naranja);white-space:nowrap}
+.iv-linea__paq{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px}
+.iv-linea__det{font:400 14px var(--pz-sys);color:var(--pz-gris)}
+.iv-mini{display:flex;align-items:center;gap:6px}
+.iv-mini button{width:42px;height:42px;border-radius:10px;border:1.5px solid var(--pz-linea);background:var(--pz-pizarra);color:var(--pz-gis);font:600 20px/1 var(--pz-sys);cursor:pointer}
+.iv-mini button:last-child{border-color:var(--pz-naranja);color:var(--pz-naranja)}
+.iv-mini b{min-width:30px;text-align:center;font:400 20px var(--pz-rotulo)}
+.iv-linea__sueltas{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px;font:400 14px var(--pz-sys);color:var(--pz-gris)}
+.iv-linea__sueltas input{width:110px;min-height:42px;padding:0 10px;border-radius:10px;border:1.5px solid var(--pz-linea);background:var(--pz-pizarra);
+  color:var(--pz-gis);font:500 16px var(--pz-sys);text-align:right;color-scheme:dark}
+.iv-linea__antes{margin-top:8px!important;padding-top:8px;border-top:1px dashed var(--pz-linea);font:400 13px var(--pz-sys);color:var(--pz-gris)}
+.iv-linea__antes b{color:var(--pz-gis)}
+
+/* Guardado */
+.iv-hecho{margin-top:18px;padding:18px;border-radius:20px;background:var(--pz-grupo);border:1.5px solid rgba(123,211,137,.5)}
+.iv-hecho__titulo{font:400 22px var(--pz-rotulo);color:#8fdc9c}
+.iv-hecho__lista{list-style:none;margin:12px 0 0;padding:0}
+.iv-hecho__lista li{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--pz-linea);font:400 15px var(--pz-sys)}
+.iv-hecho__lista b{font:400 17px var(--pz-rotulo);color:var(--pz-gis)}
+.iv-hecho__acc{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.iv-guardado .iv-camara,.iv-guardado .iv-manual,.iv-guardado #btn-sin-codigo,.iv-guardado .iv-ultimo,.iv-guardado .iv-sec,.iv-guardado .iv-pie{display:none}
+
+/* Barra fija para guardar */
+.iv-pie{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;align-items:center;gap:12px;
+  padding:12px max(16px,env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));
+  background:#1B1917;border-top:1px solid var(--pz-linea);box-shadow:0 -10px 24px rgba(0,0,0,.45)}
+.iv-pie__resumen{flex:1;margin:0;font:400 14px var(--pz-sys);color:var(--pz-gris)}
+.iv-pie__resumen b{font:400 17px var(--pz-rotulo);color:var(--pz-gis)}
+@media (min-width:660px){ .iv-pie{left:50%;right:auto;width:620px;transform:translateX(-50%);border-radius:18px 18px 0 0;border:1px solid var(--pz-linea);border-bottom:0} }
+
+/* Hoja: producto nuevo */
+.iv-hoja-fondo{position:fixed;inset:0;z-index:40;display:flex;align-items:flex-end;justify-content:center;background:rgba(10,9,8,.7)}
+.iv-hoja-fondo[hidden]{display:none}
+.iv-hoja{width:100%;max-width:620px;max-height:92vh;overflow-y:auto;padding:18px 16px calc(16px + env(safe-area-inset-bottom));border-radius:22px 22px 0 0;
+  background:#1F1C1A;border:1px solid var(--pz-linea);border-bottom:0;box-sizing:border-box}
+.iv-hoja__eyebrow{font:600 13px ui-monospace,Menlo,Consolas,monospace;color:var(--pz-naranja);margin:0}
+.iv-hoja__titulo{margin:4px 0 14px;font:400 21px/1.2 var(--pz-rotulo);color:var(--pz-gis)}
+.iv-hoja__productos{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.iv-producto{min-height:56px;padding:8px 12px;border-radius:14px;border:1.5px solid var(--pz-linea);background:var(--pz-grupo);color:var(--pz-gis);
+  font:600 15px/1.25 var(--pz-sys);text-align:left;cursor:pointer}
+.iv-producto:active{border-color:var(--pz-naranja);background:#2a1f15}
+.iv-hoja input[type="number"]{width:100%;min-height:60px;padding:0 16px;border-radius:14px;border:1.5px solid var(--pz-linea);background:var(--pz-pizarra);
+  color:var(--pz-gis);font:400 30px var(--pz-rotulo);box-sizing:border-box;color-scheme:dark}
+.iv-hoja input[type="number"]:focus{outline:none;border-color:var(--pz-naranja)}
+.iv-hoja__chips{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.iv-chip{min-height:40px;padding:0 14px;border-radius:999px;border:1.5px solid var(--pz-linea);background:transparent;color:var(--pz-gis);font:600 15px var(--pz-sys);cursor:pointer}
+.iv-chip:active{border-color:var(--pz-naranja)}
+.iv-hoja__nota{margin:0 0 12px;font:400 13px var(--pz-sys);color:var(--pz-gris)}
+
+.iv-toast{position:fixed;left:50%;bottom:96px;z-index:50;max-width:calc(100% - 32px);transform:translateX(-50%);margin:0;padding:10px 16px;border-radius:12px;
+  background:#2b4a33;color:#d6f5dd;font:600 15px var(--pz-sys);box-shadow:0 10px 24px rgba(0,0,0,.4);pointer-events:none}
+.iv-toast--error{background:#5a2420;color:#ffd6d2}
+.iv-toast[hidden]{display:none}
+
+/* ══ Etiquetas ══ */
+.iv-opciones{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media (min-width:700px){ .iv-opciones{grid-template-columns:repeat(4,1fr)} }
+.iv-opcion{position:relative;cursor:pointer}
+.iv-opcion input{position:absolute;opacity:0;pointer-events:none}
+.iv-opcion span{display:flex;align-items:center;min-height:56px;padding:8px 12px;border-radius:14px;border:1.5px solid var(--pz-linea);background:var(--pz-grupo);
+  font:600 15px/1.25 var(--pz-sys);color:var(--pz-gis)}
+.iv-opcion input:checked + span{border-color:var(--pz-naranja);background:#2a1f15;color:var(--pz-naranja)}
+.iv-opcion input:focus-visible + span{outline:2px solid var(--pz-naranja);outline-offset:2px}
+.iv-campos{display:grid;gap:14px}
+@media (min-width:600px){ .iv-campos{grid-template-columns:1fr 1fr} }
+.iv-campo{display:flex;flex-direction:column;gap:7px;font:600 14px var(--pz-sys);color:var(--pz-gis)}
+.iv-campo input{min-height:52px;padding:0 14px;border-radius:12px;border:1.5px solid var(--pz-linea);background:var(--pz-pizarra);color:var(--pz-gis);
+  font:400 22px var(--pz-rotulo);color-scheme:dark}
+.iv-campo input:focus{outline:none;border-color:var(--pz-naranja)}
+
+/* Etiqueta impresa (papel de 80 mm): solo existe al imprimir */
+.iv-etiquetas{display:none}
+@media print{
+  html,body{width:80mm;margin:0;background:#fff!important;color:#000!important}
+  .iv-pantalla,svg[aria-hidden="true"]{display:none!important}
+  .iv-etiquetas{display:block}
+  .iv-etiqueta{width:72mm;padding:3mm 2mm 4mm;border-bottom:1px dashed #000;text-align:center;font-family:Arial,Helvetica,sans-serif;break-inside:avoid}
+  .iv-etiqueta:last-child{border-bottom:0}
+  .iv-etiqueta p{margin:0}
+  .iv-etiqueta__marca{font-size:8pt;letter-spacing:.12em;font-weight:700}
+  .iv-etiqueta__nombre{margin-top:1mm!important;font-size:15pt;font-weight:900;line-height:1.15}
+  .iv-etiqueta__piezas{font-size:11pt;font-weight:700;margin-bottom:2mm!important}
+  .iv-etiqueta__barras svg{display:block;width:66mm;height:18mm;margin:0 auto}
+  .iv-etiqueta__codigo{margin-top:1mm!important;font:700 11pt "Courier New",monospace;letter-spacing:.1em}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .iv-camara__marco i{animation:none}
+  .iv-btn,.iv-accion{transition:none}
+}

@@ -79,13 +79,33 @@ $itemsBajos = array_filter($items, function ($i) {
 });
 
 /*
-    Últimos 30 movimientos
+    Códigos de barras registrados (escáner) y descuentos automáticos de hoy
+*/
+require_once "../includes/inventario.php";
+inventarioPrepararTablas($conexion);
+$codigos = $conexion->query(
+    "SELECT c.codigo, c.piezas, c.propio, i.nombre
+       FROM inventario_codigos c JOIN inventario_desechable i ON i.id_item = c.id_item
+      ORDER BY i.id_item, c.piezas"
+)->fetchAll(PDO::FETCH_ASSOC);
+$enNegativo = count(array_filter($items, fn($i) => (int)$i["stock_actual"] < 0));
+$ultimoConteo = $conexion->query(
+    "SELECT MAX(creado_en) FROM inventario_movimientos WHERE tipo = 'ajuste' AND notas LIKE 'Conteo físico%'"
+)->fetchColumn();
+$descuentosHoy = (int)$conexion->query(
+    "SELECT COUNT(DISTINCT id_pedido) FROM inventario_movimientos WHERE tipo = 'descuento' AND DATE(creado_en) = CURDATE()"
+)->fetchColumn();
+
+/*
+    Últimos 30 movimientos hechos a mano o con el escáner
+    (los descuentos automáticos por pedido son miles y no dejaban verlos)
 */
 $stmtMovs = $conexion->prepare(
     "SELECT m.*, i.nombre AS nombre_item
        FROM inventario_movimientos m
        INNER JOIN inventario_desechable i ON i.id_item = m.id_item
-      ORDER BY m.creado_en DESC
+      WHERE m.tipo IN ('entrada', 'ajuste')
+      ORDER BY m.creado_en DESC, m.id_movimiento DESC
       LIMIT 30"
 );
 $stmtMovs->execute();
@@ -100,246 +120,150 @@ function fmtFechaInv($ts) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventario desechable | Restaurante Zabisu</title>
+    <title>Inventario | Restaurante Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
-    <link rel="stylesheet" href="../assets/css/styles.css?v=8">
-    <style>
-        .inv-tabla { width:100%; border-collapse:collapse; font-size:14px; }
-        .inv-tabla th {
-            text-align:left; padding:10px 12px;
-            font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
-            color:#888; border-bottom:2px solid #2a2a2e;
-        }
-        .inv-tabla td { padding:12px 12px; border-bottom:1px solid #1e1e22; vertical-align:middle; }
-        .inv-tabla tr:last-child td { border-bottom:none; }
-        .inv-tabla tr:hover td { background:rgba(255,122,0,.04); }
-
-        .badge-stock {
-            display:inline-flex; align-items:center; gap:5px;
-            padding:4px 10px; border-radius:20px; font-size:12px; font-weight:700;
-        }
-        .badge-stock--ok    { background:rgba(74,222,128,.12); color:#4ade80; }
-        .badge-stock--bajo  { background:rgba(251,146,60,.15); color:#fb923c; }
-        .badge-stock--agotado { background:rgba(248,113,113,.15); color:#f87171; }
-
-        .alerta-inv {
-            background:rgba(251,146,60,.1); border:1px solid rgba(251,146,60,.35);
-            border-radius:12px; padding:16px 20px; margin-bottom:20px;
-        }
-        .alerta-inv__titulo { font-weight:700; color:#fb923c; margin:0 0 8px; font-size:14px; }
-        .alerta-inv__lista  { margin:0; padding-left:18px; color:#ccc; font-size:13px; line-height:1.8; }
-
-        .inv-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
-        @media(max-width:700px){ .inv-grid{ grid-template-columns:1fr; } }
-
-        .mov-tipo-entrada  { color:#4ade80; font-weight:700; font-size:12px; }
-        .mov-tipo-descuento{ color:#f87171; font-weight:700; font-size:12px; }
-        .mov-tipo-ajuste   { color:#60a5fa; font-weight:700; font-size:12px; }
-
-        .mov-cantidad-pos { color:#4ade80; font-weight:700; }
-        .mov-cantidad-neg { color:#f87171; font-weight:700; }
-
-        .stock-numero { font-size:18px; font-weight:800; }
-    </style>
+    <meta name="theme-color" content="#151413">
+    <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=5">
+    <link rel="stylesheet" href="../assets/css/inventario-pizarron.css?v=1">
 </head>
-<body>
+<body class="pz">
+<?php require __DIR__ . "/../includes/pz_filtros.php"; ?>
 
-<div class="contenedor">
-
-    <div class="hero-zabisu">
-        <div class="hero-zabisu__glow"></div>
-        <div class="hero-zabisu__contenido">
-            <p class="hero-zabisu__eyebrow">RESTAURANTE</p>
-            <h1 class="hero-zabisu__titulo">Inventario desechable</h1>
-            <p class="hero-zabisu__texto">
-                Control de stock de desechable. Se descuenta automáticamente al confirmar cada pedido.
-            </p>
-            <a href="panel_general.php" class="btn-volver-panel">← Panel general</a>
+<main class="iv">
+    <header class="iv-cab">
+        <div class="pz-marca">
+            <img src="../assets/img/LOGO_N_128.png" alt="">
+            <div>
+                <span class="pz-marca__nombre">Zabisu</span>
+                <span class="pz-marca__lema">Sabor y Servicio</span>
+            </div>
         </div>
-    </div>
+        <h1 class="pz-titulo"><span class="pz-pincel"><span>Inventario</span></span></h1>
+        <nav class="iv-cab__acc"><a href="panel_general.php" class="iv-btn">← Panel general</a></nav>
+    </header>
+    <p class="iv-sub">Desechable. Se descuenta solo con cada pedido; aquí se anota lo que llega.</p>
 
     <?php if ($mensaje !== ""): ?>
-        <div class="bloque-formulario" style="padding:14px 20px; margin-bottom:0;
-             border-left:4px solid <?php echo $tipoMensaje === 'ok' ? '#4ade80' : '#f87171'; ?>;">
-            <p style="margin:0; color:<?php echo $tipoMensaje === 'ok' ? '#4ade80' : '#f87171'; ?>; font-weight:700;">
-                <?php echo htmlspecialchars($mensaje); ?>
-            </p>
-        </div>
+        <div class="<?php echo $tipoMensaje === 'ok' ? 'iv-aviso' : 'iv-error'; ?>"><p><?php echo htmlspecialchars($mensaje); ?></p></div>
     <?php endif; ?>
 
-    <?php if (!empty($itemsBajos)): ?>
-        <div class="alerta-inv">
-            <p class="alerta-inv__titulo">⚠️ Stock bajo — hay que comprar pronto</p>
-            <ul class="alerta-inv__lista">
-                <?php foreach ($itemsBajos as $ib): ?>
-                    <li>
-                        <strong><?php echo htmlspecialchars($ib["nombre"]); ?></strong>
-                        — quedan <strong><?php echo (int)$ib["stock_actual"]; ?></strong>
-                        (mínimo: <?php echo (int)$ib["stock_minimo"]; ?>)
-                    </li>
+    <!-- Lo que se hace aquí: grande y a la mano -->
+    <nav class="iv-acciones" aria-label="Acciones de inventario">
+        <a href="inventario_escanear.php?modo=recibir" class="iv-accion iv-accion--naranja">
+            <span class="iv-accion__icono" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 8v8M10 8v8M13 8v8M16.5 8v8"/></svg></span>
+            <strong>Recibir mercancía</strong>
+            <small>Escanea los paquetes que llegaron</small>
+        </a>
+        <a href="inventario_escanear.php?modo=contar" class="iv-accion iv-accion--estraza">
+            <span class="iv-accion__icono" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6M9 4a2 2 0 0 0-2 2h10a2 2 0 0 0-2-2M7 6H5.5A1.5 1.5 0 0 0 4 7.5v12A1.5 1.5 0 0 0 5.5 21h13a1.5 1.5 0 0 0 1.5-1.5v-12A1.5 1.5 0 0 0 18.5 6H17"/><path d="M8 12h8M8 16h5"/></svg></span>
+            <strong>Contar lo que hay</strong>
+            <small>Deja el stock en lo que hay en el almacén</small>
+        </a>
+        <a href="inventario_etiquetas.php" class="iv-accion">
+            <span class="iv-accion__icono" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><path d="M7 9V3h10v6"/><rect x="7" y="14" width="10" height="7" rx="1"/></svg></span>
+            <strong>Etiquetas</strong>
+            <small>Imprime códigos para lo que no trae</small>
+        </a>
+    </nav>
+
+    <?php if ($enNegativo > 0): ?>
+    <div class="iv-alerta">
+        <p><strong><?php echo $enNegativo; ?> producto<?php echo $enNegativo !== 1 ? "s" : ""; ?> en negativo.</strong>
+        El sistema descontó más de lo que se anotó que llegó<?php echo $ultimoConteo ? "" : " (nunca se ha hecho un conteo)"; ?>. Haz un conteo para arrancar con lo que de verdad hay.</p>
+        <a href="inventario_escanear.php?modo=contar" class="iv-btn iv-btn--estraza">Contar ahora</a>
+    </div>
+    <?php endif; ?>
+
+    <!-- STOCK -->
+    <section class="iv-sec">
+        <div class="iv-sec__cab">
+            <h2 class="pz-cinta pz-fibra">Stock actual</h2>
+            <span class="iv-sec__dato"><?php echo count($items); ?> artículos<?php echo $descuentosHoy ? " · hoy se descontaron " . $descuentosHoy . " pedido" . ($descuentosHoy !== 1 ? "s" : "") : ""; ?></span>
+        </div>
+        <div class="iv-stock">
+            <?php foreach ($items as $item): ?>
+                <?php
+                    $stock  = (int)$item["stock_actual"];
+                    $minimo = (int)$item["stock_minimo"];
+                    if ($stock <= 0) {
+                        $estado = "agotado"; $label = $stock < 0 ? "En negativo" : "Agotado";
+                    } elseif ($stock <= $minimo) {
+                        $estado = "bajo"; $label = "Stock bajo";
+                    } else {
+                        $estado = "ok"; $label = "OK";
+                    }
+                ?>
+                <div class="iv-art iv-art--<?php echo $estado; ?>">
+                    <span class="iv-art__nombre"><?php echo htmlspecialchars($item["nombre"]); ?></span>
+                    <strong class="iv-art__stock"><?php echo number_format($stock); ?></strong>
+                    <span class="iv-art__pie"><span class="iv-art__estado"><?php echo $label; ?></span> mínimo <?php echo number_format($minimo); ?></span>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </section>
+
+    <!-- CÓDIGOS -->
+    <section class="iv-sec">
+        <details class="iv-plegable">
+            <summary><span class="pz-cinta pz-fibra">Códigos registrados</span><span class="iv-sec__dato"><?php echo count($codigos); ?></span></summary>
+            <?php if (empty($codigos)): ?>
+                <p class="iv-vacio">Todavía no hay códigos. Se guardan solos la primera vez que escaneas un paquete.</p>
+            <?php else: ?>
+            <ul class="iv-codigos" id="lista-codigos">
+                <?php foreach ($codigos as $c): ?>
+                <li>
+                    <span><b><?php echo htmlspecialchars($c["nombre"]); ?></b> · paquete de <?php echo number_format($c["piezas"]); ?>
+                        <small><?php echo htmlspecialchars($c["codigo"]); ?><?php echo (int)$c["propio"] ? " · etiqueta Zabisu" : ""; ?></small></span>
+                    <button type="button" class="iv-btn iv-btn--chico iv-btn--rojo" data-borrar="<?php echo htmlspecialchars($c["codigo"]); ?>">Quitar</button>
+                </li>
                 <?php endforeach; ?>
             </ul>
-        </div>
-    <?php endif; ?>
-
-    <!-- TABLA DE STOCK -->
-    <div class="bloque-formulario">
-        <div class="cabecera-modulo">
-            <h2>Stock actual</h2>
-            <span style="font-size:13px;color:#888;"><?php echo count($items); ?> artículos</span>
-        </div>
-        <div style="overflow-x:auto;">
-            <table class="inv-tabla">
-                <thead>
-                    <tr>
-                        <th>Artículo</th>
-                        <th>Stock actual</th>
-                        <th>Mínimo</th>
-                        <th>Estado</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($items as $item): ?>
-                        <?php
-                            $stock   = (int)$item["stock_actual"];
-                            $minimo  = (int)$item["stock_minimo"];
-                            if ($stock <= 0) {
-                                $badgeClass = "badge-stock--agotado";
-                                $badgeLabel = "Agotado";
-                            } elseif ($stock <= $minimo) {
-                                $badgeClass = "badge-stock--bajo";
-                                $badgeLabel = "Stock bajo";
-                            } else {
-                                $badgeClass = "badge-stock--ok";
-                                $badgeLabel = "OK";
-                            }
-                        ?>
-                        <tr>
-                            <td><?php echo htmlspecialchars($item["nombre"]); ?></td>
-                            <td><span class="stock-numero"><?php echo $stock; ?></span></td>
-                            <td style="color:#888;"><?php echo $minimo; ?></td>
-                            <td><span class="badge-stock <?php echo $badgeClass; ?>"><?php echo $badgeLabel; ?></span></td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- FORMULARIOS -->
-    <div class="inv-grid">
-
-        <!-- Entrada de stock -->
-        <div class="bloque-formulario">
-            <h2>Agregar stock</h2>
-            <form method="POST" action="">
-                <input type="hidden" name="accion" value="entrada">
-                <label for="id_item_entrada">Artículo</label>
-                <select id="id_item_entrada" name="id_item" required>
-                    <option value="">— Selecciona —</option>
-                    <?php foreach ($items as $item): ?>
-                        <option value="<?php echo (int)$item["id_item"]; ?>">
-                            <?php echo htmlspecialchars($item["nombre"]); ?>
-                            (<?php echo (int)$item["stock_actual"]; ?> en stock)
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-                <label for="cantidad_entrada">Cantidad a agregar</label>
-                <input type="number" id="cantidad_entrada" name="cantidad" min="1" required placeholder="Ej. 100">
-                <label for="notas_entrada">Nota (opcional)</label>
-                <input type="text" id="notas_entrada" name="notas" placeholder="Ej. Compra semanal">
-                <button type="submit" class="btn-stepper btn-stepper--siguiente" style="margin-top:14px;">
-                    Agregar stock
-                </button>
-            </form>
-        </div>
-
-        <!-- Ajuste manual -->
-        <div class="bloque-formulario">
-            <h2>Ajuste manual</h2>
-            <p style="font-size:13px;color:#888;margin-top:0;">
-                Usa esto si el conteo físico no coincide con el sistema.
-            </p>
-            <form method="POST" action="">
-                <label for="id_item_ajuste">Artículo</label>
-                <select id="id_item_ajuste" name="id_item" required>
-                    <option value="">— Selecciona —</option>
-                    <?php foreach ($items as $item): ?>
-                        <option value="<?php echo (int)$item["id_item"]; ?>">
-                            <?php echo htmlspecialchars($item["nombre"]); ?>
-                            (<?php echo (int)$item["stock_actual"]; ?> en stock)
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-                <label for="accion_ajuste">Tipo de ajuste</label>
-                <select id="accion_ajuste" name="accion" required>
-                    <option value="ajuste_suma">+ Sumar piezas</option>
-                    <option value="ajuste_resta">− Restar piezas</option>
-                </select>
-                <label for="cantidad_ajuste">Cantidad</label>
-                <input type="number" id="cantidad_ajuste" name="cantidad" min="1" required placeholder="Ej. 10">
-                <label for="notas_ajuste">Motivo (opcional)</label>
-                <input type="text" id="notas_ajuste" name="notas" placeholder="Ej. Corrección conteo">
-                <button type="submit" class="btn-stepper btn-stepper--siguiente" style="margin-top:14px;">
-                    Aplicar ajuste
-                </button>
-            </form>
-        </div>
-
-    </div>
+            <p class="iv-nota">Si un código quedó con el producto o las piezas equivocadas, quítalo y vuelve a escanearlo.</p>
+            <?php endif; ?>
+        </details>
+    </section>
 
     <!-- HISTORIAL -->
-    <div class="bloque-formulario">
-        <h2>Últimos movimientos</h2>
+    <section class="iv-sec">
+        <h2 class="pz-cinta pz-fibra">Entradas y conteos</h2>
         <?php if (empty($movimientos)): ?>
-            <p class="nota-formulario">No hay movimientos registrados todavía.</p>
+            <p class="iv-vacio">Todavía no hay entradas registradas.</p>
         <?php else: ?>
-        <div style="overflow-x:auto;">
-            <table class="inv-tabla">
-                <thead>
-                    <tr>
-                        <th>Fecha</th>
-                        <th>Artículo</th>
-                        <th>Tipo</th>
-                        <th>Cantidad</th>
-                        <th>Pedido</th>
-                        <th>Nota</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($movimientos as $mov): ?>
-                        <?php
-                            $tipoLabel = match($mov["tipo"]) {
-                                "entrada"   => ["label" => "Entrada",    "class" => "mov-tipo-entrada"],
-                                "descuento" => ["label" => "Pedido",     "class" => "mov-tipo-descuento"],
-                                "ajuste"    => ["label" => "Ajuste",     "class" => "mov-tipo-ajuste"],
-                                default     => ["label" => $mov["tipo"], "class" => ""],
-                            };
-                            $cant    = (int)$mov["cantidad"];
-                            $cantCls = $cant >= 0 ? "mov-cantidad-pos" : "mov-cantidad-neg";
-                            $cantStr = $cant >= 0 ? "+$cant" : "$cant";
-                        ?>
-                        <tr>
-                            <td style="color:#888;font-size:12px;white-space:nowrap;">
-                                <?php echo fmtFechaInv($mov["creado_en"]); ?>
-                            </td>
-                            <td><?php echo htmlspecialchars($mov["nombre_item"]); ?></td>
-                            <td><span class="<?php echo $tipoLabel['class']; ?>"><?php echo $tipoLabel['label']; ?></span></td>
-                            <td><span class="<?php echo $cantCls; ?>"><?php echo $cantStr; ?></span></td>
-                            <td style="color:#888;font-size:12px;">
-                                <?php echo $mov["id_pedido"] ? "#" . (int)$mov["id_pedido"] : "—"; ?>
-                            </td>
-                            <td style="color:#888;font-size:12px;">
-                                <?php echo $mov["notas"] ? htmlspecialchars($mov["notas"]) : "—"; ?>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
+        <ul class="iv-historial">
+            <?php foreach ($movimientos as $mov): ?>
+                <?php $cant = (int)$mov["cantidad"]; ?>
+                <li>
+                    <span class="iv-historial__tipo iv-historial__tipo--<?php echo $mov["tipo"]; ?>"><?php echo $mov["tipo"] === "entrada" ? "Entrada" : "Ajuste"; ?></span>
+                    <span class="iv-historial__txt">
+                        <b><?php echo htmlspecialchars($mov["nombre_item"]); ?></b>
+                        <small><?php echo fmtFechaInv($mov["creado_en"]); ?><?php echo $mov["notas"] ? " · " . htmlspecialchars($mov["notas"]) : ""; ?></small>
+                    </span>
+                    <strong class="iv-historial__cant <?php echo $cant >= 0 ? 'iv-historial__cant--mas' : 'iv-historial__cant--menos'; ?>"><?php echo ($cant >= 0 ? "+" : "−") . number_format(abs($cant)); ?></strong>
+                </li>
+            <?php endforeach; ?>
+        </ul>
         <?php endif; ?>
-    </div>
+    </section>
+</main>
 
-</div><!-- /contenedor -->
+<script>
+// Quitar un código mal registrado
+document.querySelectorAll("[data-borrar]").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+        if (!confirm("¿Quitar el código " + btn.dataset.borrar + "? La próxima vez que lo escanees te preguntará de nuevo qué producto es.")) return;
+        btn.disabled = true;
+        fetch("inventario_api.php", {
+            method: "POST",
+            headers: { "Accept": "application/json", "Content-Type": "application/x-www-form-urlencoded" },
+            body: "accion=borrar_codigo&codigo=" + encodeURIComponent(btn.dataset.borrar)
+        }).then(function (r) { return r.json(); }).then(function (r) {
+            if (!r.ok) throw new Error();
+            btn.closest("li").remove();
+        }).catch(function () { btn.disabled = false; alert("No se pudo quitar. Intenta de nuevo."); });
+    });
+});
+</script>
 </body>
 </html>
