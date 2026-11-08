@@ -1,0 +1,153 @@
+/* ══════════════════════════════════════════════════════════════
+   Reporte de ventas (restaurante/reporte_ventas.php).
+   Documento tamaño carta: en pantalla se ve la hoja sobre la mesa;
+   al imprimir o guardar como PDF salen hojas con márgenes, encabezados
+   de tabla que se repiten y pie con el número de página.
+   ══════════════════════════════════════════════════════════════ */
+
+@font-face{font-family:'Alfa Slab One';src:url('../fonts/alfa-slab-one-400.woff2') format('woff2');font-weight:400;font-display:swap}
+
+:root{
+  --rv-tinta:#1d1b19;
+  --rv-gris:#6b6660;
+  --rv-gris-cl:#9a948c;
+  --rv-linea:#dcd7cf;
+  --rv-fondo:#f6f3ee;
+  --rv-naranja:#e86f00;
+  --rv-estraza:#c49a6c;
+  --rv-sys:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --rv-rotulo:'Alfa Slab One',Georgia,serif;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{margin:0;background:#3a3633;color:var(--rv-tinta);font:400 10pt/1.45 var(--rv-sys);font-variant-numeric:tabular-nums}
+
+/* ── Barra de acciones (solo pantalla) ── */
+.rv-barra{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;padding:12px 20px;background:#151413;color:#ECEBE7;
+  box-shadow:0 2px 12px rgba(0,0,0,.35)}
+.rv-barra__volver{color:#ECEBE7;text-decoration:none;font:600 15px var(--rv-sys);padding:10px 14px;border-radius:10px;border:1.5px solid #2F2C29}
+.rv-barra__volver:hover{border-color:#4a4540}
+.rv-barra__info{margin-left:auto;font:400 14px var(--rv-sys);color:#A5A29B}
+.rv-barra__pdf{min-height:44px;padding:0 20px;border:0;border-radius:10px;background:#FF7A00;color:#111;font:700 15px var(--rv-sys);cursor:pointer}
+.rv-barra__pdf:hover{background:#ff8a1f}
+@media (max-width:560px){ .rv-barra__info{display:none} .rv-barra{justify-content:space-between} }
+
+/* ── Hoja ── */
+.rv-hoja{width:215.9mm;max-width:calc(100% - 24px);margin:24px auto 48px;padding:16mm 15mm 14mm;background:#fff;
+  box-shadow:0 10px 40px rgba(0,0,0,.45)}
+
+/* Encabezado */
+.rv-cab{display:flex;justify-content:space-between;align-items:center;gap:16px;padding-bottom:10px;border-bottom:3px solid var(--rv-naranja)}
+.rv-cab__marca{display:flex;align-items:center;gap:10px}
+.rv-cab__marca img{width:44px;height:44px}
+.rv-cab__marca strong{display:block;font:400 18pt/1 var(--rv-rotulo)}
+.rv-cab__marca span{display:block;margin-top:2px;font:italic 400 9.5pt var(--rv-sys);color:var(--rv-gris)}
+.rv-cab__datos{display:grid;gap:2px;margin:0;text-align:right}
+.rv-cab__datos div{display:flex;justify-content:flex-end;gap:8px}
+.rv-cab__datos dt{font:600 7.5pt var(--rv-sys);color:var(--rv-gris-cl);text-transform:uppercase;letter-spacing:.06em;align-self:center}
+.rv-cab__datos dd{margin:0;font:600 9pt var(--rv-sys)}
+
+.rv-titulo{margin:16px 0 4px}
+.rv-titulo__tipo{margin:0;font:700 8.5pt var(--rv-sys);color:var(--rv-naranja);text-transform:uppercase;letter-spacing:.12em}
+.rv-titulo h1{margin:4px 0 0;font:400 19pt/1.2 var(--rv-rotulo)}
+.rv-titulo__nota{margin:4px 0 0;font:400 8.5pt var(--rv-sys);color:var(--rv-gris)}
+
+/* Secciones */
+.rv-sec{margin-top:18px}
+.rv-sec h2{display:flex;align-items:center;gap:8px;margin:0 0 8px;padding-bottom:5px;border-bottom:1px solid var(--rv-linea);
+  font:700 11pt var(--rv-sys)}
+.rv-sec h2 span{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:5px;background:var(--rv-tinta);color:#fff;font:700 9pt var(--rv-sys)}
+.rv-vacio{padding:24px;border:1px dashed var(--rv-linea);text-align:center;color:var(--rv-gris)}
+
+/* Números del resumen */
+.rv-kpis{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--rv-linea);border-radius:6px;overflow:hidden}
+.rv-kpi{display:flex;flex-direction:column;gap:1px;padding:9px 12px;border-right:1px solid var(--rv-linea);border-bottom:1px solid var(--rv-linea)}
+.rv-kpi:nth-child(3n){border-right:0}
+.rv-kpi:nth-last-child(-n+3){border-bottom:0}
+.rv-kpi span{font:600 7.5pt var(--rv-sys);color:var(--rv-gris);text-transform:uppercase;letter-spacing:.05em}
+.rv-kpi strong{font:700 14pt/1.25 var(--rv-sys);letter-spacing:-.01em}
+.rv-kpi small{font:400 8pt var(--rv-sys);color:var(--rv-gris)}
+.rv-kpi--principal{background:var(--rv-fondo)}
+.rv-kpi--principal strong{color:var(--rv-naranja)}
+
+.rv-hallazgos{margin:10px 0 0;padding:10px 14px 10px 28px;border-left:3px solid var(--rv-estraza);background:var(--rv-fondo);font-size:9pt}
+.rv-hallazgos li{margin:2px 0}
+.rv-hallazgos b{font-weight:700}
+
+/* Tablas */
+.rv-tabla{width:100%;border-collapse:collapse;font-size:9pt}
+.rv-tabla th{padding:6px 8px;background:var(--rv-tinta);color:#fff;font:600 7.5pt var(--rv-sys);text-transform:uppercase;letter-spacing:.05em;text-align:left}
+.rv-tabla td{padding:5px 8px;border-bottom:1px solid #ece8e1;vertical-align:middle}
+.rv-tabla tbody tr:nth-child(even) td{background:#faf8f5}
+.rv-tabla tfoot td{padding:7px 8px;border-top:2px solid var(--rv-tinta);border-bottom:0;font-weight:700;background:var(--rv-fondo)}
+.rv-tabla tr{break-inside:avoid}
+.rv-c{text-align:center!important}
+.rv-d{text-align:right!important;white-space:nowrap}
+.rv-dia{display:inline-block;min-width:66px;color:var(--rv-gris)}
+.rv-tipo{display:block;font-size:7.5pt;color:var(--rv-gris-cl)}
+.rv-barra-col{width:22%}
+.rv-barra-col i{display:block;height:8px;border-radius:2px;background:var(--rv-naranja)}
+
+.rv-dos{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+.rv-dos .rv-sec{break-inside:avoid}
+
+.rv-tabla--detalle{font-size:7.5pt;table-layout:fixed}
+.rv-tabla--detalle td{padding:3px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rv-tabla--detalle th{padding:5px 6px}
+.rv-tabla--detalle th:nth-child(1){width:5%}
+.rv-tabla--detalle th:nth-child(2){width:20%}
+.rv-tabla--detalle th:nth-child(3){width:20%}
+.rv-tabla--detalle th:nth-child(4){width:17%}
+.rv-tabla--detalle th:nth-child(5){width:8%}
+.rv-tabla--detalle th:nth-child(6){width:20%}
+.rv-tabla--detalle th:nth-child(7){width:10%}
+.rv-tabla--detalle tfoot td,.rv-grupo__cab td{overflow:visible;text-overflow:clip}
+.rv-tabla--detalle tbody tr:nth-child(even) td{background:none}
+.rv-tabla--detalle tbody tr:nth-child(odd):not(.rv-grupo__cab) td{background:#faf8f5}
+.rv-grupo__cab td{padding:6px 6px 4px!important;border-bottom:1.5px solid var(--rv-tinta)!important;background:#fff!important;
+  font:700 8.5pt var(--rv-sys);color:var(--rv-tinta)}
+.rv-grupo__cab td:nth-child(2){font-weight:500;color:var(--rv-gris)}
+.rv-grupo{break-inside:auto}
+.rv-grupo__cab{break-after:avoid}
+.rv-num{color:var(--rv-gris-cl)}
+.rv-folio{font-weight:600;white-space:nowrap;letter-spacing:-.01em}
+.rv-pendiente td{color:#a24a00}
+
+.rv-fin{display:flex;justify-content:space-between;gap:12px;margin-top:20px;padding-top:8px;border-top:1px solid var(--rv-linea);font-size:7.5pt;color:var(--rv-gris-cl)}
+
+/* Pantallas angostas: la hoja se adapta para poder leerla */
+@media screen and (max-width:820px){
+  .rv-hoja{padding:20px 16px}
+  .rv-kpis{grid-template-columns:1fr 1fr}
+  .rv-kpi:nth-child(3n){border-right:1px solid var(--rv-linea)}
+  .rv-kpi:nth-child(2n){border-right:0}
+  .rv-kpi:nth-last-child(-n+3){border-bottom:1px solid var(--rv-linea)}
+  .rv-kpi:nth-last-child(-n+2){border-bottom:0}
+  .rv-dos{grid-template-columns:1fr}
+  .rv-sec{overflow-x:auto}
+  .rv-barra-col{display:none}
+  .rv-cab{flex-wrap:wrap}
+  .rv-cab__datos{text-align:left}
+  .rv-cab__datos div{justify-content:flex-start}
+  .rv-tabla--detalle{min-width:640px}
+}
+
+/* ── Impresión / PDF ── */
+@page{
+  size:letter;
+  margin:14mm 13mm 16mm;
+  @bottom-left{font:400 7.5pt system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:#9a948c;vertical-align:top;padding-top:4mm}
+  @bottom-right{font:400 7.5pt system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:#9a948c;vertical-align:top;padding-top:4mm}
+}
+@media print{
+  body{background:#fff}
+  .rv-barra{display:none}
+  .rv-hoja{width:auto;max-width:none;margin:0;padding:0;box-shadow:none}
+  .rv-sec h2{break-after:avoid}
+  thead{display:table-header-group}
+  tfoot{display:table-row-group}
+}
+
+/* Nombres y puntos largos bajan de renglón en lugar de recortarse */
+.rv-tabla--detalle td.rv-cliente,.rv-tabla--detalle td.rv-punto{white-space:normal;overflow:visible;line-height:1.25}

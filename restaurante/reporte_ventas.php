@@ -137,491 +137,303 @@ function rfCorta($f) {
     return date("d/m/Y", $t);
 }
 
-$generadoEn   = date("d/m/Y H:i A");
+$generadoEn   = date("d/m/Y g:i A");
 $periodoTexto = rf($fechaInicio) . " — " . rf($fechaFin);
+
+/* ── Datos para el resumen escrito (con lo ya consultado) ── */
+function rDia($f) {
+    $dias = ["domingo","lunes","martes","miércoles","jueves","viernes","sábado"];
+    return $dias[(int)date("w", strtotime($f))];
+}
+$totalVentas   = (float)$kpis["total_ventas"];
+$totalPedidos  = (int)$kpis["total_pedidos"];
+$diasConVenta  = count($ventasPorDia);
+$promedioDia   = $diasConVenta > 0 ? $totalVentas / $diasConVenta : 0;
+$ticketProm    = $totalPedidos > 0 ? $totalVentas / $totalPedidos : 0;
+$comidasPorPed = $totalPedidos > 0 ? $totalComidas / $totalPedidos : 0;
+$pctEfectivo   = $totalVentas > 0 ? number_format((float)$kpis["total_efectivo"] / $totalVentas * 100, 1) : "0.0";
+$pctTransfer   = $totalVentas > 0 ? number_format((float)$kpis["total_transferencia"] / $totalVentas * 100, 1) : "0.0";
+$diaTop = null;
+foreach ($ventasPorDia as $d) {
+    if ($diaTop === null || (float)$d["total"] > (float)$diaTop["total"]) $diaTop = $d;
+}
+$maxDia  = $diaTop ? max((float)$diaTop["total"], 1) : 1;
+$ubTop   = $ventasPorUbicacion[0] ?? null;
+$pctUbTop = ($ubTop && $totalVentas > 0) ? number_format((float)$ubTop["total"] / $totalVentas * 100, 1) : "0.0";
+$folioReporte = "RV-" . date("Ymd", strtotime($fechaInicio)) . "-" . date("Ymd", strtotime($fechaFin));
+$periodoCorto = date("d/m/Y", strtotime($fechaInicio)) . " – " . date("d/m/Y", strtotime($fechaFin));
+$nombreArchivo = "Reporte de ventas Zabisu " . $fechaInicio . " a " . $fechaFin;
+// Texto del pie de cada página (va dentro de un string de CSS)
+$piePagina = addcslashes("Zabisu · Reporte de ventas · " . $periodoCorto, '"\\');
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reporte de Ventas · Zabisu · <?php echo date("Y-m-d"); ?></title>
+    <!-- El navegador usa el título como nombre del PDF al guardarlo -->
+    <title><?php echo htmlspecialchars($nombreArchivo); ?></title>
+    <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
+    <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../assets/css/reporte-ventas.css?v=1">
     <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            font-family: Arial, Helvetica, sans-serif;
-            font-size: 13px;
-            color: #1a1a1a;
-            background: #f0f0f0;
-            padding: 24px;
-        }
-
-        .reporte {
-            background: #fff;
-            max-width: 900px;
-            margin: 0 auto;
-            border: 1px solid #ddd;
-            box-shadow: 0 4px 24px rgba(0,0,0,.1);
-        }
-
-        /* ── ENCABEZADO ── */
-        .rp-header {
-            background: #0c0c0f;
-            color: #fff;
-            padding: 28px 36px 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 24px;
-        }
-        .rp-header__logo {
-            height: 56px;
-            width: auto;
-            object-fit: contain;
-            flex-shrink: 0;
-        }
-        .rp-header__info { flex: 1; }
-        .rp-header__eyebrow {
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 3px;
-            color: #ff7a00;
-            text-transform: uppercase;
-            margin-bottom: 4px;
-        }
-        .rp-header__titulo {
-            font-size: 22px;
-            font-weight: 800;
-            line-height: 1.2;
-            margin-bottom: 10px;
-        }
-        .rp-header__meta {
-            font-size: 12px;
-            color: rgba(255,255,255,.65);
-            line-height: 1.7;
-        }
-        .rp-header__meta strong { color: #fff; }
-
-        /* ── SECCIONES ── */
-        .rp-section {
-            padding: 24px 36px;
-            border-bottom: 1px solid #e8e8e8;
-        }
-        .rp-section:last-child { border-bottom: none; }
-
-        .rp-section__titulo {
-            font-size: 10px;
-            font-weight: 800;
-            letter-spacing: 2.5px;
-            text-transform: uppercase;
-            color: #ff7a00;
-            margin-bottom: 16px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid #ff7a00;
-            display: inline-block;
-        }
-
-        /* ── RESUMEN KPIs ── */
-        .rp-kpis {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
-            margin-top: 4px;
-        }
-        .rp-kpi {
-            background: #f8f8f8;
-            border: 1px solid #e8e8e8;
-            border-radius: 8px;
-            padding: 14px 16px;
-        }
-        .rp-kpi--destaque {
-            background: #0c0c0f;
-            border-color: #0c0c0f;
-            color: #fff;
-        }
-        .rp-kpi__label {
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            color: #888;
-            margin-bottom: 4px;
-        }
-        .rp-kpi--destaque .rp-kpi__label { color: rgba(255,255,255,.6); }
-        .rp-kpi__valor {
-            font-size: 20px;
-            font-weight: 800;
-            color: #1a1a1a;
-            line-height: 1.1;
-        }
-        .rp-kpi--destaque .rp-kpi__valor { color: #fff; }
-        .rp-kpi__sub {
-            font-size: 11px;
-            color: #999;
-            margin-top: 3px;
-        }
-        .rp-kpi--destaque .rp-kpi__sub { color: rgba(255,255,255,.5); }
-
-        /* ── TABLAS ── */
-        .rp-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-            margin-top: 4px;
-        }
-        .rp-table th {
-            background: #1a1a1a;
-            color: #fff;
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            padding: 9px 12px;
-            text-align: left;
-            white-space: nowrap;
-        }
-        .rp-table td {
-            padding: 9px 12px;
-            border-bottom: 1px solid #efefef;
-            vertical-align: middle;
-        }
-        .rp-table tbody tr:nth-child(even) td { background: #fafafa; }
-        .rp-table tbody tr:last-child td { border-bottom: none; }
-        .rp-table tfoot td {
-            background: #f0f0f0;
-            font-weight: 800;
-            font-size: 13px;
-            border-top: 2px solid #1a1a1a;
-            padding: 10px 12px;
-        }
-        .rp-table .text-right { text-align: right; }
-        .rp-table .text-center { text-align: center; }
-
-        .badge-metodo {
-            display: inline-block;
-            font-size: 10px;
-            font-weight: 700;
-            padding: 2px 7px;
-            border-radius: 4px;
-            background: #e8e8e8;
-            color: #444;
-        }
-        .badge-metodo--efectivo    { background: #e8f5e9; color: #2e7d32; }
-        .badge-metodo--transferencia { background: #e3f2fd; color: #1565c0; }
-        .badge-estado { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; }
-        .badge-estado--pagado      { background: #e8f5e9; color: #2e7d32; }
-        .badge-estado--efectivo    { background: #fff8e1; color: #f57f17; }
-        .badge-estado--pendiente   { background: #fff3e0; color: #e65100; }
-
-        /* ── FIRMA / PIE ── */
-        .rp-footer {
-            background: #f8f8f8;
-            padding: 18px 36px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-top: 2px solid #e8e8e8;
-            font-size: 11px;
-            color: #888;
-        }
-        .rp-footer strong { color: #1a1a1a; }
-
-        /* ── BOTÓN IMPRIMIR (solo en pantalla) ── */
-        .rp-print-bar {
-            max-width: 900px;
-            margin: 0 auto 16px;
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-        .rp-btn-print {
-            background: #ff7a00;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            padding: 11px 24px;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            letter-spacing: .3px;
-        }
-        .rp-btn-print:hover { background: #e06900; }
-        .rp-btn-back {
-            color: #666;
-            font-size: 13px;
-            text-decoration: none;
-        }
-        .rp-btn-back:hover { color: #1a1a1a; }
-
-        /* ── SEPARADOR ── */
-        .rp-divider {
-            height: 1px;
-            background: #e8e8e8;
-            margin: 16px 0;
-        }
-
-        /* ── PRINT ── */
-        @media print {
-            body {
-                background: #fff;
-                padding: 0;
-                font-size: 11px;
-            }
-            .rp-print-bar { display: none; }
-            .reporte {
-                box-shadow: none;
-                border: none;
-                max-width: 100%;
-            }
-            .rp-section { padding: 16px 24px; }
-            .rp-header  { padding: 20px 24px; }
-            .rp-kpis    { grid-template-columns: repeat(3, 1fr); }
-            .rp-table th, .rp-table td { padding: 6px 8px; }
-            @page {
-                size: A4;
-                margin: 10mm 12mm;
-            }
-            .rp-header {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-            .rp-kpi--destaque {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-            .rp-table th {
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
+        /* Pie de cada página del PDF: periodo y número de página */
+        @page {
+            @bottom-left  { content: "<?php echo $piePagina; ?>"; }
+            @bottom-right { content: "Página " counter(page) " de " counter(pages); }
         }
     </style>
 </head>
 <body>
 
 <!-- Barra de acciones (solo en pantalla) -->
-<div class="rp-print-bar">
-    <button class="rp-btn-print" onclick="window.print()">⬇ Guardar como PDF / Imprimir</button>
-    <a class="rp-btn-back" href="estadisticas.php?fecha_inicio=<?php echo $fechaInicio; ?>&fecha_fin=<?php echo $fechaFin; ?>">← Volver a estadísticas</a>
+<div class="rv-barra">
+    <a class="rv-barra__volver" href="finanzas.php?tab=ventas&fi=<?php echo urlencode($fechaInicio); ?>&ff=<?php echo urlencode($fechaFin); ?>">← Volver a Finanzas</a>
+    <span class="rv-barra__info">Tamaño carta · <?php echo $totalPedidos; ?> pedidos</span>
+    <button class="rv-barra__pdf" type="button" onclick="window.print()">Descargar PDF</button>
 </div>
 
-<div class="reporte">
+<main class="rv-hoja">
 
     <!-- ══ ENCABEZADO ══════════════════════════════════════════ -->
-    <div class="rp-header">
-        <img class="rp-header__logo" src="../assets/img/dd.png" alt="Zabisu">
-        <div class="rp-header__info">
-            <p class="rp-header__eyebrow">Zabisu — Sabor y Servicio</p>
-            <h1 class="rp-header__titulo">Reporte de Ventas</h1>
-            <div class="rp-header__meta">
-                <strong>Período:</strong> <?php echo $periodoTexto; ?><br>
-                <strong>Generado:</strong> <?php echo $generadoEn; ?>
+    <header class="rv-cab">
+        <div class="rv-cab__marca">
+            <img src="../assets/img/LOGO_NARA_300.png" alt="">
+            <div>
+                <strong>Zabisu</strong>
+                <span>Sabor y Servicio</span>
             </div>
         </div>
+        <dl class="rv-cab__datos">
+            <div><dt>Documento</dt><dd><?php echo $folioReporte; ?></dd></div>
+            <div><dt>Generado</dt><dd><?php echo $generadoEn; ?></dd></div>
+        </dl>
+    </header>
+
+    <div class="rv-titulo">
+        <p class="rv-titulo__tipo">Reporte de ventas</p>
+        <h1><?php echo $periodoTexto; ?></h1>
+        <p class="rv-titulo__nota">Pedidos reales (sin pedidos de prueba), agrupados por la fecha del menú.</p>
     </div>
 
     <?php if (empty($pedidosDetalle)): ?>
-    <div class="rp-section">
-        <p style="color:#888;">No se encontraron pedidos en el período seleccionado.</p>
-    </div>
+    <section class="rv-sec">
+        <p class="rv-vacio">No se encontraron pedidos en el período seleccionado.</p>
+    </section>
     <?php else: ?>
 
-    <!-- ══ RESUMEN EJECUTIVO ════════════════════════════════════ -->
-    <div class="rp-section">
-        <span class="rp-section__titulo">Resumen Ejecutivo</span>
-        <div class="rp-kpis">
-            <div class="rp-kpi rp-kpi--destaque">
-                <div class="rp-kpi__label">Ventas totales</div>
-                <div class="rp-kpi__valor"><?php echo rp($kpis["total_ventas"]); ?></div>
-                <div class="rp-kpi__sub"><?php echo (int)$kpis["total_pedidos"]; ?> pedidos · <?php echo $totalComidas; ?> comidas</div>
+    <!-- ══ RESUMEN ═════════════════════════════════════════════ -->
+    <section class="rv-sec">
+        <h2><span>1</span> Resumen</h2>
+
+        <div class="rv-kpis">
+            <div class="rv-kpi rv-kpi--principal">
+                <span>Ventas totales</span>
+                <strong><?php echo rp($totalVentas); ?></strong>
+                <small><?php echo $totalPedidos; ?> pedidos · <?php echo $totalComidas; ?> comidas</small>
             </div>
-            <div class="rp-kpi">
-                <div class="rp-kpi__label">Pago en efectivo</div>
-                <div class="rp-kpi__valor"><?php echo rp($kpis["total_efectivo"]); ?></div>
-                <div class="rp-kpi__sub">Cobro al entregar</div>
+            <div class="rv-kpi">
+                <span>Ticket promedio</span>
+                <strong><?php echo rp($ticketProm); ?></strong>
+                <small>Por pedido</small>
             </div>
-            <div class="rp-kpi">
-                <div class="rp-kpi__label">Transferencia</div>
-                <div class="rp-kpi__valor"><?php echo rp($kpis["total_transferencia"]); ?></div>
-                <div class="rp-kpi__sub">Pagos digitales</div>
+            <div class="rv-kpi">
+                <span>Promedio por día</span>
+                <strong><?php echo rp($promedioDia); ?></strong>
+                <small><?php echo $diasConVenta; ?> día<?php echo $diasConVenta !== 1 ? "s" : ""; ?> con venta</small>
             </div>
-            <div class="rp-kpi">
-                <div class="rp-kpi__label">Pago confirmado</div>
-                <div class="rp-kpi__valor"><?php echo rp($kpis["total_confirmado"]); ?></div>
-                <div class="rp-kpi__sub">Transferencias validadas</div>
+            <div class="rv-kpi">
+                <span>Efectivo</span>
+                <strong><?php echo rp($kpis["total_efectivo"]); ?></strong>
+                <small><?php echo $pctEfectivo; ?>% · cobro al entregar</small>
             </div>
-            <div class="rp-kpi">
-                <div class="rp-kpi__label">Por confirmar</div>
-                <div class="rp-kpi__valor"><?php echo rp($kpis["total_por_confirmar"]); ?></div>
-                <div class="rp-kpi__sub">Pendientes de validación</div>
+            <div class="rv-kpi">
+                <span>Transferencia</span>
+                <strong><?php echo rp($kpis["total_transferencia"]); ?></strong>
+                <small><?php echo $pctTransfer; ?>% · pagos digitales</small>
             </div>
-            <div class="rp-kpi">
-                <div class="rp-kpi__label">Ticket promedio</div>
-                <div class="rp-kpi__valor"><?php echo rp((int)$kpis["total_pedidos"] > 0 ? $kpis["total_ventas"] / $kpis["total_pedidos"] : 0); ?></div>
-                <div class="rp-kpi__sub">Por pedido</div>
+            <div class="rv-kpi">
+                <span>Transferencias confirmadas</span>
+                <strong><?php echo rp($kpis["total_confirmado"]); ?></strong>
+                <small>Por confirmar: <?php echo rp($kpis["total_por_confirmar"]); ?></small>
             </div>
         </div>
-    </div>
+
+        <ul class="rv-hallazgos">
+            <li>Se vendieron <b><?php echo rp($totalVentas); ?></b> en <b><?php echo $totalPedidos; ?> pedidos</b>, con un promedio de <b><?php echo number_format($comidasPorPed, 2); ?> comidas por pedido</b>.</li>
+            <?php if ($diaTop): ?>
+            <li>El día de mayor venta fue el <b><?php echo rDia($diaTop["fecha"]) . " " . rf($diaTop["fecha"]); ?></b>, con <b><?php echo rp($diaTop["total"]); ?></b> en <?php echo (int)$diaTop["pedidos"]; ?> pedidos.</li>
+            <?php endif; ?>
+            <?php if ($ubTop): ?>
+            <li>El punto de entrega con más ventas fue <b><?php echo htmlspecialchars($ubTop["nombre_ubicacion"]); ?></b>, con <b><?php echo rp($ubTop["total"]); ?></b> (<?php echo $pctUbTop; ?>% del total).</li>
+            <?php endif; ?>
+            <li>El <b><?php echo $pctEfectivo; ?>%</b> se cobró en efectivo y el <b><?php echo $pctTransfer; ?>%</b> por transferencia<?php echo (float)$kpis["total_por_confirmar"] > 0 ? "; quedan <b>" . rp($kpis["total_por_confirmar"]) . "</b> en transferencias por confirmar" : ""; ?>.</li>
+        </ul>
+    </section>
 
     <!-- ══ VENTAS POR DÍA ═══════════════════════════════════════ -->
-    <div class="rp-section">
-        <span class="rp-section__titulo">Ventas por Día</span>
-        <table class="rp-table">
+    <section class="rv-sec">
+        <h2><span>2</span> Ventas por día</h2>
+        <table class="rv-tabla">
             <thead>
                 <tr>
                     <th>Fecha</th>
-                    <th class="text-center">Pedidos</th>
-                    <th class="text-right">Efectivo</th>
-                    <th class="text-right">Transferencia</th>
-                    <th class="text-right">Total del día</th>
+                    <th class="rv-c">Pedidos</th>
+                    <th class="rv-d">Efectivo</th>
+                    <th class="rv-d">Transferencia</th>
+                    <th class="rv-d">Total del día</th>
+                    <th class="rv-barra-col" aria-hidden="true"></th>
                 </tr>
             </thead>
             <tbody>
                 <?php foreach ($ventasPorDia as $dia): ?>
                 <tr>
-                    <td><?php echo rfCorta($dia["fecha"]); ?></td>
-                    <td class="text-center"><?php echo (int)$dia["pedidos"]; ?></td>
-                    <td class="text-right"><?php echo rp($dia["efectivo"]); ?></td>
-                    <td class="text-right"><?php echo rp($dia["transferencia"]); ?></td>
-                    <td class="text-right"><strong><?php echo rp($dia["total"]); ?></strong></td>
+                    <td><span class="rv-dia"><?php echo ucfirst(rDia($dia["fecha"])); ?></span> <?php echo rfCorta($dia["fecha"]); ?></td>
+                    <td class="rv-c"><?php echo (int)$dia["pedidos"]; ?></td>
+                    <td class="rv-d"><?php echo rp($dia["efectivo"]); ?></td>
+                    <td class="rv-d"><?php echo rp($dia["transferencia"]); ?></td>
+                    <td class="rv-d"><strong><?php echo rp($dia["total"]); ?></strong></td>
+                    <td class="rv-barra-col"><i style="width:<?php echo round((float)$dia["total"] / $maxDia * 100); ?>%"></i></td>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
             <tfoot>
                 <tr>
-                    <td><strong>Total</strong></td>
-                    <td class="text-center"><strong><?php echo (int)$kpis["total_pedidos"]; ?></strong></td>
-                    <td class="text-right"><strong><?php echo rp($kpis["total_efectivo"]); ?></strong></td>
-                    <td class="text-right"><strong><?php echo rp($kpis["total_transferencia"]); ?></strong></td>
-                    <td class="text-right"><strong><?php echo rp($kpis["total_ventas"]); ?></strong></td>
+                    <td>Total</td>
+                    <td class="rv-c"><?php echo $totalPedidos; ?></td>
+                    <td class="rv-d"><?php echo rp($kpis["total_efectivo"]); ?></td>
+                    <td class="rv-d"><?php echo rp($kpis["total_transferencia"]); ?></td>
+                    <td class="rv-d"><?php echo rp($totalVentas); ?></td>
+                    <td class="rv-barra-col"></td>
                 </tr>
             </tfoot>
         </table>
+    </section>
+
+    <!-- ══ PUNTOS DE ENTREGA Y MÉTODO DE PAGO ══════════════════ -->
+    <div class="rv-dos">
+        <?php if (!empty($ventasPorUbicacion)): ?>
+        <section class="rv-sec">
+            <h2><span>3</span> Por punto de entrega</h2>
+            <table class="rv-tabla">
+                <thead>
+                    <tr>
+                        <th>Punto</th>
+                        <th class="rv-c">Pedidos</th>
+                        <th class="rv-d">Total</th>
+                        <th class="rv-d">%</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($ventasPorUbicacion as $ub):
+                        $pct = $totalVentas > 0 ? number_format(($ub["total"] / $totalVentas) * 100, 1) : "0.0";
+                    ?>
+                    <tr>
+                        <td><?php echo htmlspecialchars($ub["nombre_ubicacion"]); ?><small class="rv-tipo"><?php echo ucfirst(htmlspecialchars($ub["tipo"])); ?></small></td>
+                        <td class="rv-c"><?php echo (int)$ub["pedidos"]; ?></td>
+                        <td class="rv-d"><strong><?php echo rp($ub["total"]); ?></strong></td>
+                        <td class="rv-d"><?php echo $pct; ?>%</td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </section>
+        <?php endif; ?>
+
+        <section class="rv-sec">
+            <h2><span>4</span> Por método de pago</h2>
+            <table class="rv-tabla">
+                <thead>
+                    <tr>
+                        <th>Método</th>
+                        <th class="rv-c">Pedidos</th>
+                        <th class="rv-d">Total</th>
+                        <th class="rv-d">%</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($ventasPorMetodo as $m):
+                        $pct = $totalVentas > 0 ? number_format(($m["total"] / $totalVentas) * 100, 1) : "0.0";
+                    ?>
+                    <tr>
+                        <td><?php echo htmlspecialchars($m["metodo_pago"] ?: "Sin especificar"); ?></td>
+                        <td class="rv-c"><?php echo (int)$m["pedidos"]; ?></td>
+                        <td class="rv-d"><strong><?php echo rp($m["total"]); ?></strong></td>
+                        <td class="rv-d"><?php echo $pct; ?>%</td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </section>
     </div>
 
-    <!-- ══ VENTAS POR PUNTO DE ENTREGA ═════════════════════════ -->
-    <?php if (!empty($ventasPorUbicacion)): ?>
-    <div class="rp-section">
-        <span class="rp-section__titulo">Ventas por Punto de Entrega</span>
-        <table class="rp-table">
+    <!-- ══ DETALLE DE PEDIDOS, agrupado por día ═══════════════ -->
+    <?php
+        $porDia = [];
+        foreach ($pedidosDetalle as $p) $porDia[$p["fecha_menu"]][] = $p;
+        $resumenDia = [];
+        foreach ($ventasPorDia as $d) $resumenDia[$d["fecha"]] = $d;
+        $n = 0;
+    ?>
+    <section class="rv-sec rv-sec--detalle">
+        <h2><span>5</span> Detalle de pedidos</h2>
+        <table class="rv-tabla rv-tabla--detalle">
             <thead>
                 <tr>
-                    <th>Punto de entrega</th>
-                    <th>Tipo</th>
-                    <th class="text-center">Pedidos</th>
-                    <th class="text-right">Total</th>
-                    <th class="text-right">% del total</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($ventasPorUbicacion as $ub):
-                    $pct = $kpis["total_ventas"] > 0 ? round(($ub["total"] / $kpis["total_ventas"]) * 100, 1) : 0;
-                ?>
-                <tr>
-                    <td><?php echo htmlspecialchars($ub["nombre_ubicacion"]); ?></td>
-                    <td><?php echo ucfirst(htmlspecialchars($ub["tipo"])); ?></td>
-                    <td class="text-center"><?php echo (int)$ub["pedidos"]; ?></td>
-                    <td class="text-right"><strong><?php echo rp($ub["total"]); ?></strong></td>
-                    <td class="text-right"><?php echo $pct; ?>%</td>
-                </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-    </div>
-    <?php endif; ?>
-
-    <!-- ══ MÉTODO DE PAGO ═══════════════════════════════════════ -->
-    <div class="rp-section">
-        <span class="rp-section__titulo">Distribución por Método de Pago</span>
-        <table class="rp-table">
-            <thead>
-                <tr>
-                    <th>Método</th>
-                    <th class="text-center">Pedidos</th>
-                    <th class="text-right">Total</th>
-                    <th class="text-right">% del total</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($ventasPorMetodo as $m):
-                    $pct = $kpis["total_ventas"] > 0 ? round(($m["total"] / $kpis["total_ventas"]) * 100, 1) : 0;
-                    $badgeClass = $m["metodo_pago"] === "Efectivo" ? "badge-metodo--efectivo" : "badge-metodo--transferencia";
-                ?>
-                <tr>
-                    <td><span class="badge-metodo <?php echo $badgeClass; ?>"><?php echo htmlspecialchars($m["metodo_pago"] ?: "Sin especificar"); ?></span></td>
-                    <td class="text-center"><?php echo (int)$m["pedidos"]; ?></td>
-                    <td class="text-right"><strong><?php echo rp($m["total"]); ?></strong></td>
-                    <td class="text-right"><?php echo $pct; ?>%</td>
-                </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-    </div>
-
-    <!-- ══ DETALLE COMPLETO DE PEDIDOS ═════════════════════════ -->
-    <div class="rp-section">
-        <span class="rp-section__titulo">Detalle Completo de Pedidos</span>
-        <table class="rp-table">
-            <thead>
-                <tr>
-                    <th>#</th>
+                    <th class="rv-c">#</th>
                     <th>Folio</th>
-                    <th>Fecha</th>
                     <th>Cliente</th>
                     <th>Punto de entrega</th>
                     <th>Hora</th>
-                    <th>Método</th>
-                    <th>Estado</th>
-                    <th class="text-right">Total</th>
+                    <th>Pago</th>
+                    <th class="rv-d">Total</th>
                 </tr>
             </thead>
-            <tbody>
-                <?php foreach ($pedidosDetalle as $i => $p):
-                    $badgeMetodo = $p["metodo_pago"] === "Efectivo" ? "badge-metodo--efectivo" : "badge-metodo--transferencia";
-                    $badgeEstado = match($p["estado_pago"]) {
-                        "Pagado"                   => "badge-estado--pagado",
-                        "Pago en efectivo"         => "badge-estado--efectivo",
-                        "Pendiente de validación"  => "badge-estado--pendiente",
-                        default                    => ""
-                    };
-                    $textoEstado = match($p["estado_pago"]) {
-                        "Pagado"                   => "Pagado",
-                        "Pago en efectivo"         => "Efectivo",
-                        "Pendiente de validación"  => "Pendiente",
-                        default                    => $p["estado_pago"]
-                    };
+            <?php foreach ($porDia as $fechaDia => $pedidosDia):
+                $rd = $resumenDia[$fechaDia] ?? null;
+            ?>
+            <tbody class="rv-grupo">
+                <tr class="rv-grupo__cab">
+                    <td colspan="5"><?php echo ucfirst(rDia($fechaDia)) . " " . rf($fechaDia); ?></td>
+                    <td><?php echo count($pedidosDia); ?> pedido<?php echo count($pedidosDia) !== 1 ? "s" : ""; ?></td>
+                    <td class="rv-d"><?php echo $rd ? rp($rd["total"]) : ""; ?></td>
+                </tr>
+                <?php foreach ($pedidosDia as $p):
+                    $n++;
+                    $textoPago = $p["metodo_pago"];
+                    if ($p["estado_pago"] === "Pagado")                  $textoPago .= " · pagado";
+                    elseif ($p["estado_pago"] === "Pendiente de validación") $textoPago .= " · por confirmar";
+                    elseif (!in_array($p["estado_pago"], ["Pago en efectivo", "Pagado"], true)) $textoPago .= " · " . $p["estado_pago"];
                 ?>
-                <tr>
-                    <td class="text-center" style="color:#999;"><?php echo $i + 1; ?></td>
-                    <td style="font-weight:700;font-size:11px;"><?php echo htmlspecialchars($p["folio"]); ?></td>
-                    <td><?php echo rfCorta($p["fecha_menu"]); ?></td>
-                    <td><?php echo htmlspecialchars($p["nombre_cliente"]); ?></td>
-                    <td><?php echo htmlspecialchars($p["nombre_ubicacion"]); ?></td>
-                    <td><?php echo date("g:i A", strtotime($p["hora_entrega"])); ?></td>
-                    <td><span class="badge-metodo <?php echo $badgeMetodo; ?>"><?php echo htmlspecialchars($p["metodo_pago"]); ?></span></td>
-                    <td><span class="badge-estado <?php echo $badgeEstado; ?>"><?php echo $textoEstado; ?></span></td>
-                    <td class="text-right"><strong><?php echo rp($p["total"]); ?></strong></td>
+                <tr<?php echo $p["estado_pago"] === "Pendiente de validación" ? ' class="rv-pendiente"' : ''; ?>>
+                    <td class="rv-c rv-num"><?php echo $n; ?></td>
+                    <td class="rv-folio"><?php echo htmlspecialchars($p["folio"]); ?></td>
+                    <td class="rv-cliente"><?php echo htmlspecialchars($p["nombre_cliente"]); ?></td>
+                    <td class="rv-punto"><?php echo htmlspecialchars($p["nombre_ubicacion"]); ?></td>
+                    <td class="rv-hora"><?php echo date("g:i A", strtotime($p["hora_entrega"])); ?></td>
+                    <td class="rv-pago"><?php echo htmlspecialchars($textoPago); ?></td>
+                    <td class="rv-d"><?php echo rp($p["total"]); ?></td>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
+            <?php endforeach; ?>
             <tfoot>
                 <tr>
-                    <td colspan="8"><strong>Total del período</strong></td>
-                    <td class="text-right"><strong><?php echo rp($kpis["total_ventas"]); ?></strong></td>
+                    <td colspan="6">Total del período · <?php echo $totalPedidos; ?> pedidos</td>
+                    <td class="rv-d"><?php echo rp($totalVentas); ?></td>
                 </tr>
             </tfoot>
         </table>
-    </div>
+    </section>
 
     <?php endif; ?>
 
-    <!-- ══ PIE DEL REPORTE ══════════════════════════════════════ -->
-    <div class="rp-footer">
-        <span>Zabisu — Sabor y Servicio · Documento generado el <?php echo $generadoEn; ?></span>
-        <span>Uso interno · Confidencial</span>
-    </div>
+    <footer class="rv-fin">
+        <span>Documento de uso interno · Confidencial</span>
+        <span>Zabisu — Sabor y Servicio · zabisu.com</span>
+    </footer>
 
-</div>
+</main>
 
 </body>
 </html>
