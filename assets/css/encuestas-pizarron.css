@@ -1,0 +1,77 @@
+/* ══════════════════════════════════════════════════════════════
+   Encuestas (restaurante/encuestas.php) en estilo Pizarrón:
+   calificaciones de los clientes y sugerencias de plato fuerte.
+   Se carga junto con menu-pizarron.css (colores, letras y piezas).
+   ══════════════════════════════════════════════════════════════ */
+
+.ec{max-width:1120px;margin:0 auto;padding:0 16px 90px;box-sizing:border-box}
+.ec *,.ec *::before,.ec *::after{box-sizing:border-box}
+.ec h2,.ec h3,.ec p{margin:0}
+@media (min-width:600px){ .ec{padding:0 24px 90px} }
+@media (min-width:960px){ .ec{padding:0 32px 90px} }
+
+/* Encabezado */
+.ec-cab{display:flex;align-items:center;flex-wrap:wrap;gap:12px 18px;padding:20px 0 4px}
+.ec-cab .pz-marca{margin:0}
+.ec-cab .pz-titulo{padding:0;margin:0}
+.ec-cab .pz-pincel span{font-size:34px}
+.ec-cab__acc{margin-left:auto}
+.ec-btn{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 16px;border-radius:12px;border:1.5px solid var(--pz-linea);
+  background:var(--pz-grupo);color:var(--pz-gis);font:600 15px var(--pz-sys);text-decoration:none;white-space:nowrap}
+.ec-btn:hover{border-color:#4a4540}
+.ec-sub{margin-top:10px!important;font:400 15px var(--pz-sys);color:var(--pz-gris)}
+
+/* Secciones */
+.ec-sec{margin-top:26px}
+.ec-sec > .pz-cinta{font-size:16px;margin:0 0 12px;transform:rotate(-1.2deg)}
+.ec-sec:nth-of-type(even) > .pz-cinta{transform:rotate(.8deg)}
+.ec-vacio{padding:24px 16px;border-radius:18px;background:var(--pz-grupo);text-align:center;font:500 15px var(--pz-sys);color:var(--pz-gris)}
+
+/* Niveles de calificación (colores de la paleta) */
+.ec-nivel--5,.ec-nivel--excelente{--ec-color:#7bd389}
+.ec-nivel--4,.ec-nivel--bueno{--ec-color:#b5d97a}
+.ec-nivel--3,.ec-nivel--regular{--ec-color:var(--pz-naranja)}
+.ec-nivel--2,.ec-nivel--1,.ec-nivel--mejorable{--ec-color:#ff8f86}
+
+/* Resumen: promedio grande y distribución */
+.ec-resumen{display:grid;gap:18px;padding:18px;border-radius:18px;background:var(--pz-grupo)}
+@media (min-width:700px){ .ec-resumen{grid-template-columns:220px minmax(0,1fr);align-items:center} }
+.ec-promedio{display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center}
+.ec-promedio__num{font:400 64px/1 var(--pz-rotulo);color:var(--ec-color)}
+.ec-promedio__etiqueta{font:400 24px var(--pz-pincel);color:var(--ec-color)}
+.ec-promedio__total{font:400 13px var(--pz-sys);color:var(--pz-gris)}
+.ec-estrellas{display:flex;gap:2px;font-size:20px;line-height:1;color:#3a3633}
+.ec-estrellas .on{color:var(--ec-color)}
+.ec-estrellas--chicas{font-size:15px}
+
+.ec-dist{display:flex;flex-direction:column;gap:8px}
+.ec-dist__fila{display:grid;grid-template-columns:40px minmax(0,1fr) 44px 44px;gap:10px;align-items:center;font:500 14px var(--pz-sys)}
+.ec-dist__label{color:var(--pz-gis);white-space:nowrap}
+.ec-dist__track{height:12px;border-radius:999px;background:var(--pz-pizarra);overflow:hidden}
+.ec-dist__fill{height:100%;border-radius:999px;background:var(--ec-color)}
+.ec-dist__pct{text-align:right;font-weight:700}
+.ec-dist__cnt{color:var(--pz-gris);font-size:13px}
+
+/* Opiniones */
+.ec-opiniones{display:grid;gap:10px;margin-top:14px}
+@media (min-width:760px){ .ec-opiniones{grid-template-columns:1fr 1fr;align-items:start} }
+.ec-op{padding:14px 16px;border-radius:16px;background:var(--pz-grupo);box-shadow:inset 4px 0 0 var(--ec-color)}
+.ec-op__top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.ec-op__cal{display:flex;align-items:center;gap:10px}
+.ec-op__num{font:400 26px/1 var(--pz-rotulo);color:var(--ec-color)}
+.ec-op__meta{display:flex;flex-direction:column;align-items:flex-end;gap:2px;text-align:right}
+.ec-op__folio{font:600 13px var(--pz-sys);color:var(--pz-estraza-cl)}
+.ec-op__fecha{font:400 12px var(--pz-sys);color:var(--pz-gris)}
+.ec-op__comentario{margin-top:10px!important;font:400 15px/1.5 var(--pz-sys);color:var(--pz-gis);font-style:italic}
+
+/* Sugerencias de plato fuerte */
+.ec-sug-dia + .ec-sug-dia{margin-top:16px}
+.ec-sug-dia__fecha{display:flex;align-items:baseline;gap:8px;margin-bottom:8px!important;font:400 16px var(--pz-rotulo);color:var(--pz-estraza-cl)}
+.ec-sug-dia__fecha small{font:400 13px var(--pz-sys);color:var(--pz-gris)}
+.ec-sug-dia__fecha b{font:700 11px var(--pz-sys);padding:2px 8px;border-radius:999px;background:var(--pz-naranja);color:#111}
+.ec-sug{list-style:none;margin:0;padding:0;border-radius:16px;background:var(--pz-grupo);overflow:hidden}
+.ec-sug li{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;font:500 15px/1.4 var(--pz-sys)}
+.ec-sug li + li{border-top:1px solid var(--pz-linea)}
+.ec-sug li::before{content:"";flex-shrink:0;width:10px;height:18px;margin-top:1px;background:var(--pz-estraza);
+  clip-path:polygon(0 4%,40% 0,100% 3%,92% 50%,100% 97%,55% 100%,0 96%,8% 50%)}
+.ec-op__num small{font:600 13px var(--pz-sys);color:var(--pz-gris);margin-left:2px}

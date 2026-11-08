@@ -30,93 +30,77 @@ function fmtPeso($n) { return "$" . number_format((float)$n, 2, ".", ","); }
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notas de cuenta | Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
-    <link rel="stylesheet" href="../assets/css/styles.css?v=8">
+    <meta name="theme-color" content="#151413">
+    <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=5">
+    <link rel="stylesheet" href="../assets/css/notas-pizarron.css?v=1">
 </head>
-<body>
-<div class="contenedor">
+<body class="pz">
+<?php require __DIR__ . "/../includes/pz_filtros.php"; ?>
 
-    <div class="hero-zabisu">
-        <div class="hero-zabisu__glow"></div>
-        <div class="hero-zabisu__contenido">
-            <p class="hero-zabisu__eyebrow">CLIENTES DE CRÉDITO</p>
-            <h1 class="hero-zabisu__titulo">Notas de cuenta</h1>
-            <p class="hero-zabisu__texto">Para clientes que piden diario y pagan a fin de semana</p>
-            <a href="panel_general.php" class="btn-volver-panel">← Panel general</a>
+<main class="nc">
+    <header class="nc-cab">
+        <div class="pz-marca">
+            <img src="../assets/img/LOGO_N_128.png" alt="">
+            <div>
+                <span class="pz-marca__nombre">Zabisu</span>
+                <span class="pz-marca__lema">Sabor y Servicio</span>
+            </div>
         </div>
-    </div>
+        <h1 class="pz-titulo"><span class="pz-pincel"><span>Notas de cuenta</span></span></h1>
+        <nav class="nc-cab__acc" aria-label="Acciones">
+            <a href="nueva_nota_cuenta.php" class="nc-btn--naranja">+ Nueva nota</a>
+            <a href="panel_general.php" class="nc-btn">← Panel general</a>
+        </nav>
+    </header>
+    <p class="nc-sub">Para clientes que piden diario y pagan a fin de semana</p>
 
     <?php if (isset($_GET["eliminado"])): ?>
-    <div class="nm-exito" style="margin-bottom:0;">
-        <span class="nm-exito__icono">✓</span>
+    <div class="nc-aviso">
+        <span class="nc-aviso__icono">✓</span>
         <div><strong>Nota eliminada correctamente.</strong></div>
     </div>
     <?php endif; ?>
 
-    <div class="bloque-formulario">
-        <div class="cabecera-modulo">
-            <h2>Todas las notas</h2>
-            <a href="nueva_nota_cuenta.php" class="btn-principal">+ Nueva nota</a>
-        </div>
-
-        <?php if (empty($notas)): ?>
-        <div style="text-align:center;padding:48px 20px;color:var(--texto-secundario);">
-            <p style="font-size:32px;margin:0 0 12px;">🧾</p>
-            <p style="margin:0 0 20px;">Aún no hay notas de cuenta registradas.</p>
-            <a href="nueva_nota_cuenta.php" class="btn-principal">Crear primera nota</a>
-        </div>
-        <?php else: ?>
-        <div class="tabla-pedidos-wrapper">
-            <table class="tabla-pedidos">
-                <thead>
-                    <tr>
-                        <th>Folio</th>
-                        <th>Cliente</th>
-                        <th>Creada</th>
-                        <th>Total</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($notas as $n): ?>
-                    <tr>
-                        <td>
-                            <a href="ver_nota_cuenta.php?id=<?php echo (int)$n["id_nota"]; ?>"
-                               class="btn-tabla" style="padding:6px 12px;font-size:13px;">
-                                <?php echo htmlspecialchars($n["folio"]); ?>
-                            </a>
-                        </td>
-                        <td><?php echo htmlspecialchars($n["nombre_cliente"]); ?></td>
-                        <td><?php echo date("d/m/Y", strtotime($n["created_at"])); ?></td>
-                        <td><strong><?php echo fmtPeso($n["total"]); ?></strong></td>
-                        <td>
-                            <span class="estado <?php echo $n["estado"] === "abierta" ? "estado-pendiente" : "estado-pagado"; ?>">
-                                <?php echo $n["estado"] === "abierta" ? "Abierta" : "Cerrada"; ?>
-                            </span>
-                        </td>
-                        <td style="display:flex;gap:8px;flex-wrap:wrap;">
-                            <a href="ver_nota_cuenta.php?id=<?php echo (int)$n["id_nota"]; ?>"
-                               class="btn-limpiar-filtros" style="font-size:12px;padding:5px 10px;">Ver</a>
-                            <form method="POST" style="margin:0;">
-                                <input type="hidden" name="cambiar_estado_id" value="<?php echo (int)$n["id_nota"]; ?>">
-                                <input type="hidden" name="nuevo_estado" value="<?php echo $n["estado"] === "abierta" ? "cerrada" : "abierta"; ?>">
-                                <button type="submit" class="btn-limpiar-filtros" style="font-size:12px;padding:5px 10px;">
-                                    <?php echo $n["estado"] === "abierta" ? "Marcar pagada" : "Reabrir"; ?>
-                                </button>
-                            </form>
-                            <form method="POST" onsubmit="return confirm('¿Eliminar la nota <?php echo htmlspecialchars($n["folio"]); ?>? Esta acción no se puede deshacer.');" style="margin:0;">
-                                <input type="hidden" name="eliminar_id" value="<?php echo (int)$n["id_nota"]; ?>">
-                                <button type="submit" class="btn-tabla" style="font-size:12px;padding:5px 10px;background:#3a1a1a;color:#e57373;border:none;cursor:pointer;">Eliminar</button>
-                            </form>
-                        </td>
-                    </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-        <?php endif; ?>
+    <?php if (empty($notas)): ?>
+    <div class="nc-vacio">
+        <p>Aún no hay notas de cuenta registradas.</p>
+        <a href="nueva_nota_cuenta.php" class="nc-btn--naranja">Crear primera nota</a>
     </div>
+    <?php else: ?>
+    <div class="nc-lista">
+        <?php foreach ($notas as $n): ?>
+        <?php $abierta = $n["estado"] === "abierta"; ?>
+        <article class="nc-item<?php echo $abierta ? ' nc-item--abierta' : ''; ?>">
+            <a href="ver_nota_cuenta.php?id=<?php echo (int)$n["id_nota"]; ?>" class="nc-item__folio">
+                <?php echo htmlspecialchars($n["folio"]); ?>
+            </a>
+            <span class="estado <?php echo $abierta ? "estado-pendiente" : "estado-pagado"; ?>">
+                <?php echo $abierta ? "Abierta" : "Cerrada"; ?>
+            </span>
+            <p class="nc-item__cliente"><?php echo htmlspecialchars($n["nombre_cliente"]); ?></p>
+            <p class="nc-item__meta">Creada el <?php echo date("d/m/Y", strtotime($n["created_at"])); ?></p>
+            <strong class="nc-item__total"><?php echo fmtPeso($n["total"]); ?></strong>
+            <div class="nc-item__acc">
+                <a href="ver_nota_cuenta.php?id=<?php echo (int)$n["id_nota"]; ?>" class="nc-btn nc-btn--chico">Ver</a>
+                <form method="POST">
+                    <input type="hidden" name="cambiar_estado_id" value="<?php echo (int)$n["id_nota"]; ?>">
+                    <input type="hidden" name="nuevo_estado" value="<?php echo $abierta ? "cerrada" : "abierta"; ?>">
+                    <button type="submit" class="nc-btn nc-btn--chico <?php echo $abierta ? 'nc-btn--estraza' : ''; ?>">
+                        <?php echo $abierta ? "Marcar pagada" : "Reabrir"; ?>
+                    </button>
+                </form>
+                <form method="POST" onsubmit="return confirm('¿Eliminar la nota <?php echo htmlspecialchars($n["folio"]); ?>? Esta acción no se puede deshacer.');">
+                    <input type="hidden" name="eliminar_id" value="<?php echo (int)$n["id_nota"]; ?>">
+                    <button type="submit" class="nc-btn nc-btn--chico nc-btn--eliminar">Eliminar</button>
+                </form>
+            </div>
+        </article>
+        <?php endforeach; ?>
+    </div>
+    <?php endif; ?>
 
-</div>
+</main>
 </body>
 </html>

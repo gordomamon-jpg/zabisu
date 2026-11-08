@@ -113,77 +113,30 @@ $fechaHoy = date("Y-m-d");
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nueva nota de cuenta | Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
-    <link rel="stylesheet" href="../assets/css/styles.css?v=8">
-    <style>
-        .cot-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-        @media(max-width:600px) { .cot-grid { grid-template-columns:1fr; } }
-
-        .dia-bloque {
-            border: 1px solid var(--borde,#292929);
-            border-radius: 14px;
-            padding: 16px 18px;
-            margin-bottom: 16px;
-            background: rgba(255,255,255,.02);
-        }
-        .dia-bloque__header {
-            display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
-            flex-wrap: wrap;
-        }
-        .dia-bloque__header label { font-size:12px; color:var(--texto-secundario); font-weight:600; }
-        .dia-bloque__header input[type="date"] {
-            background: var(--fondo-input,#111); border:1px solid var(--borde,#333); border-radius:8px;
-            color: var(--texto-principal,#eee); padding:8px 10px; font-size:14px;
-        }
-        .dia-bloque__remove {
-            margin-left: auto; background:none; border:none; color:#e57373; cursor:pointer;
-            font-size:13px; font-weight:600; padding:4px 8px;
-        }
-        .dia-bloque__remove:hover { color:#ff5252; }
-
-        .dia-fila {
-            display: grid; grid-template-columns: 1.6fr .8fr .8fr .8fr auto;
-            gap: 8px; align-items: center; margin-bottom: 8px;
-        }
-        @media(max-width:640px) { .dia-fila { grid-template-columns: 1fr 1fr; } }
-        .dia-fila__label { font-size: 13px; font-weight: 700; color: var(--texto-principal,#eee); }
-        .dia-fila input {
-            width: 100%; box-sizing: border-box; background: var(--fondo-input,#111);
-            border: 1px solid var(--borde,#333); border-radius: 6px; color: var(--texto-principal,#eee);
-            padding: 7px 9px; font-size: 13px;
-        }
-        .dia-fila input:focus { outline: none; border-color: var(--zabisu-orange); }
-        .dia-fila__subtotal { font-size: 13px; font-weight: 700; color: var(--zabisu-orange); text-align:right; white-space:nowrap; }
-
-        .dia-extras { margin-top: 6px; padding-top: 10px; border-top: 1px dashed var(--borde,#333); }
-        .dia-extras__vacio { font-size:12px; color:var(--texto-secundario); font-style:italic; margin-bottom:8px; }
-        .dia-extra-remove { background:none; border:none; color:#e57373; cursor:pointer; font-size:16px; line-height:1; padding:2px 6px; }
-
-        .dia-add-extra { font-size: 12px; padding: 6px 12px; margin-top: 4px; }
-
-        .dia-subtotal-row {
-            display: flex; justify-content: flex-end; gap: 10px; align-items: baseline;
-            margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--borde,#292929);
-        }
-        .dia-subtotal-row span:first-child { font-size:12px; color:var(--texto-secundario); text-transform:uppercase; letter-spacing:.04em; }
-        .dia-subtotal-row span:last-child { font-size:16px; font-weight:800; color:var(--zabisu-orange); }
-
-        .cot-total-row { display:flex; justify-content:flex-end; align-items:center; gap:16px; margin-top:16px; padding-top:16px; border-top:1px solid var(--borde); }
-        .cot-total-label { font-size:14px; color:var(--texto-secundario); }
-        .cot-total-valor { font-size:22px; font-weight:800; color:var(--zabisu-orange); }
-    </style>
+    <meta name="theme-color" content="#151413">
+    <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=5">
+    <link rel="stylesheet" href="../assets/css/notas-pizarron.css?v=1">
 </head>
-<body>
-<div class="contenedor">
+<body class="pz">
+<?php require __DIR__ . "/../includes/pz_filtros.php"; ?>
 
-    <div class="hero-zabisu">
-        <div class="hero-zabisu__glow"></div>
-        <div class="hero-zabisu__contenido">
-            <p class="hero-zabisu__eyebrow">CLIENTES DE CRÉDITO</p>
-            <h1 class="hero-zabisu__titulo">Nueva nota de cuenta</h1>
-            <p class="hero-zabisu__texto">Para clientes que piden diario y pagan a fin de semana</p>
-            <a href="notas_cuenta.php" class="btn-volver-panel">← Notas de cuenta</a>
+<main class="nc">
+    <header class="nc-cab">
+        <div class="pz-marca">
+            <img src="../assets/img/LOGO_N_128.png" alt="">
+            <div>
+                <span class="pz-marca__nombre">Zabisu</span>
+                <span class="pz-marca__lema">Sabor y Servicio</span>
+            </div>
         </div>
-    </div>
+        <h1 class="pz-titulo"><span class="pz-pincel"><span>Nueva nota</span></span></h1>
+        <nav class="nc-cab__acc" aria-label="Acciones">
+            <a href="notas_cuenta.php" class="nc-btn">← Notas de cuenta</a>
+        </nav>
+    </header>
+    <p class="nc-sub">Para clientes que piden diario y pagan a fin de semana</p>
 
     <?php if (!empty($errores)): ?>
     <div class="mensaje-error">
@@ -194,17 +147,12 @@ $fechaHoy = date("Y-m-d");
     <form method="POST" action="nueva_nota_cuenta.php" id="form-nota">
 
         <!-- DATOS DEL CLIENTE -->
-        <div class="bloque-formulario nm-seccion">
-            <div class="nm-seccion__header">
-                <span class="nm-seccion__icono">👤</span>
-                <div>
-                    <h2>Datos del cliente</h2>
-                    <p class="nota-formulario" style="margin:0;">Solo el nombre es obligatorio.</p>
-                </div>
-            </div>
-            <div class="cot-grid" style="margin-top:20px;">
+        <section class="nc-sec">
+            <h2 class="pz-cinta pz-fibra">Datos del cliente</h2>
+            <p class="nota-formulario">Solo el nombre es obligatorio.</p>
+            <div class="nc-tarjeta nc-grid">
                 <div class="nm-campo">
-                    <label>Nombre del cliente <span style="color:#e57373;">*</span></label>
+                    <label>Nombre del cliente <span>*</span></label>
                     <input type="text" name="nombre_cliente" value="<?php echo htmlspecialchars($_POST["nombre_cliente"] ?? ""); ?>" placeholder="Ej. Comedor Industrial López" required>
                 </div>
                 <div class="nm-campo">
@@ -212,40 +160,32 @@ $fechaHoy = date("Y-m-d");
                     <input type="text" name="telefono" value="<?php echo htmlspecialchars($_POST["telefono"] ?? ""); ?>" placeholder="Opcional">
                 </div>
             </div>
-        </div>
+        </section>
 
         <!-- DÍAS -->
-        <div class="bloque-formulario nm-seccion">
-            <div class="nm-seccion__header">
-                <span class="nm-seccion__icono">📅</span>
-                <div>
-                    <h2>Días y menús</h2>
-                    <p class="nota-formulario" style="margin:0;">Agrega un bloque por cada día que pidió. Puedes seguir agregando días después desde la nota.</p>
-                </div>
-            </div>
+        <section class="nc-sec">
+            <h2 class="pz-cinta pz-fibra">Días y menús</h2>
+            <p class="nota-formulario">Agrega un bloque por cada día que pidió. Puedes seguir agregando días después desde la nota.</p>
 
-            <div id="dias-body" style="margin-top:16px;"></div>
+            <div id="dias-body"></div>
 
             <button type="button" id="btn-add-dia" class="btn-limpiar-filtros">+ Agregar día</button>
 
-            <div class="cot-total-row">
-                <span class="cot-total-label">TOTAL DE LA NOTA</span>
-                <span class="cot-total-valor" id="total-display">$0.00</span>
-            </div>
-        </div>
+        </section>
 
         <!-- NOTAS -->
-        <div class="bloque-formulario nm-seccion">
-            <div class="nm-seccion__header">
-                <span class="nm-seccion__icono">📝</span>
-                <div><h2>Notas</h2></div>
-            </div>
-            <div class="nm-campo" style="margin-top:16px;">
+        <section class="nc-sec">
+            <h2 class="pz-cinta pz-fibra">Notas</h2>
+            <div class="nm-campo">
                 <textarea name="notas" rows="3" placeholder="Opcional"><?php echo htmlspecialchars($_POST["notas"] ?? ""); ?></textarea>
             </div>
-        </div>
+        </section>
 
-        <div class="bloque-formulario nm-seccion">
+        <div class="nc-pie">
+            <div class="cot-total-row">
+                <span class="cot-total-label">Total de la nota</span>
+                <span class="cot-total-valor" id="total-display">$0.00</span>
+            </div>
             <div class="nm-acciones">
                 <button type="submit" class="btn-principal">Guardar nota</button>
                 <a href="notas_cuenta.php" class="btn-link">Cancelar</a>
@@ -253,7 +193,7 @@ $fechaHoy = date("Y-m-d");
         </div>
 
     </form>
-</div>
+</main>
 
 <script>
 var PRECIO_ZABISU    = <?php echo json_encode($precioZabisu); ?>;

@@ -1,0 +1,208 @@
+/* ══════════════════════════════════════════════════════════════
+   Notas de cuenta en estilo Pizarrón: lista, nueva, ver, editar y
+   agregar días. Mismas funciones que antes: solo cambia la piel.
+   Se carga junto con menu-pizarron.css (colores, letras y piezas).
+   El área de impresión de la nota (Imprimir / PDF) va al final.
+   ══════════════════════════════════════════════════════════════ */
+
+.nc{max-width:1080px;margin:0 auto;padding:0 16px 90px;box-sizing:border-box}
+.nc *,.nc *::before,.nc *::after{box-sizing:border-box}
+.nc h2,.nc h3,.nc p{margin:0}
+.nota-formulario{font:400 14px/1.5 var(--pz-sys);color:var(--pz-gris)}
+@media (min-width:600px){ .nc{padding:0 24px 90px} }
+@media (min-width:960px){ .nc{padding:0 32px 90px} }
+
+/* ── Encabezado ── */
+.nc-cab{display:flex;align-items:center;flex-wrap:wrap;gap:12px 18px;padding:20px 0 4px}
+.nc-cab .pz-marca{margin:0}
+.nc-cab .pz-titulo{padding:0;margin:0}
+.nc-cab .pz-pincel span{font-size:34px}
+.nc-cab__acc{display:flex;flex-wrap:wrap;gap:8px;margin-left:auto}
+.nc-sub{margin-top:10px!important;font:400 15px var(--pz-sys);color:var(--pz-gris)}
+@media (max-width:599px){ .nc-cab__acc{margin-left:0;width:100%} .nc-cab__acc > *{flex:1} }
+
+/* ── Botones ── */
+.nc-btn,.btn-limpiar-filtros,.btn-link{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 16px;
+  border-radius:12px;border:1.5px solid var(--pz-linea);background:var(--pz-grupo);color:var(--pz-gis);font:600 15px var(--pz-sys);
+  text-decoration:none;white-space:nowrap;cursor:pointer;transition:border-color .15s,background .15s}
+.nc-btn:hover,.btn-limpiar-filtros:hover,.btn-link:hover{border-color:#4a4540}
+.nc-btn:active,.btn-limpiar-filtros:active{transform:scale(.985)}
+.nc-btn--naranja,.btn-principal{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border:0;
+  border-radius:12px;background:var(--pz-naranja);color:#111;font:700 16px var(--pz-sys);text-decoration:none;cursor:pointer}
+.nc-btn--naranja:hover,.btn-principal:hover{background:#ff8a1f}
+.nc-btn--estraza{background:var(--pz-estraza);border-color:var(--pz-estraza);color:var(--pz-tinta)}
+.nc-btn--estraza:hover{background:var(--pz-estraza-cl);border-color:var(--pz-estraza-cl)}
+.nc-btn--chico{min-height:40px;padding:0 13px;font-size:14px}
+.nc-btn--eliminar{background:transparent;color:#ff8f86;border-color:rgba(229,83,75,.45)}
+.nc-btn--eliminar:hover{background:rgba(229,83,75,.12);border-color:#e5534b}
+.pz a.nc-btn--naranja,.pz a.btn-principal{color:#111}
+.pz a.nc-btn--estraza{color:var(--pz-tinta)}
+
+/* ── Avisos ── */
+.nc-aviso{display:flex;align-items:center;gap:12px;margin-top:16px;padding:12px 16px;border-radius:14px;background:rgba(123,211,137,.12);
+  border:1px solid rgba(123,211,137,.45);color:#a8e6b4;font:500 15px/1.45 var(--pz-sys)}
+.nc-aviso strong{color:#c4f0cd}
+.nc-aviso p{margin:2px 0 0!important;color:var(--pz-gris);font-size:14px}
+.nc-aviso__icono{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#7bd389;color:#111;font-weight:800;flex-shrink:0}
+.mensaje-error{margin-top:16px;padding:12px 16px;border-radius:14px;background:rgba(229,83,75,.1);border:1px solid rgba(229,83,75,.4);color:#ff9a8f;font:500 14px/1.5 var(--pz-sys)}
+.mensaje-error ul{margin:0;padding-left:18px}
+
+/* Estado de la nota */
+.estado{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:999px;font:600 13px var(--pz-sys);white-space:nowrap}
+.estado-pendiente{background:rgba(255,122,0,.16);color:var(--pz-naranja)}
+.estado-pendiente::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--pz-naranja)}
+.estado-pagado{background:rgba(123,211,137,.14);color:#8fdc9c}
+
+/* ── Secciones ── */
+.nc-sec{margin-top:24px}
+.nc-sec > .pz-cinta,.nc-sec__cab .pz-cinta{font-size:16px;margin:0 0 10px}
+.nc-sec:nth-of-type(odd) .pz-cinta{transform:rotate(-1.2deg)}
+.nc-sec:nth-of-type(even) .pz-cinta{transform:rotate(.8deg)}
+.nc-sec > .nota-formulario{margin:-2px 0 12px!important}
+.nc-tarjeta{padding:16px;border-radius:18px;background:var(--pz-grupo)}
+
+/* ══ Lista de notas ══ */
+.nc-lista{display:grid;gap:10px;margin-top:20px}
+@media (min-width:760px){ .nc-lista{grid-template-columns:1fr 1fr} }
+.nc-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;padding:16px;border-radius:18px;background:var(--pz-grupo)}
+.nc-item--abierta{box-shadow:inset 4px 0 0 var(--pz-naranja)}
+.nc-item__folio{font:400 18px var(--pz-rotulo);color:var(--pz-gis);text-decoration:none}
+.nc-item__folio:hover{color:var(--pz-naranja)}
+.nc-item__cliente{grid-column:1 / -1;font:600 16px/1.3 var(--pz-sys);overflow-wrap:anywhere}
+.nc-item__meta{font:400 13px var(--pz-sys);color:var(--pz-gris)}
+.nc-item__total{grid-column:2;grid-row:3;justify-self:end;font:400 24px var(--pz-rotulo);color:var(--pz-gis)}
+.nc-item--abierta .nc-item__total{color:var(--pz-naranja)}
+.nc-item__acc{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:6px;padding-top:10px;border-top:1px dashed var(--pz-linea)}
+.nc-item__acc form{display:contents}
+.nc-vacio{margin-top:20px;padding:48px 20px;border-radius:18px;background:var(--pz-grupo);text-align:center;color:var(--pz-gris)}
+.nc-vacio p{margin:0 0 18px!important;font:500 16px var(--pz-sys)}
+
+/* ══ Ver nota ══ */
+.nc-folio{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;margin-top:16px}
+.nc-folio b{padding:6px 14px 7px;background:var(--pz-estraza-cl);color:var(--pz-tinta);font:400 19px var(--pz-rotulo);
+  clip-path:polygon(0 0,100% 0,100% 30%,97% 50%,100% 70%,100% 100%,0 100%,0 70%,3% 50%,0 30%)}
+.nc-acciones{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}
+.nc-acciones .nc-btn--naranja{grid-column:1 / -1}
+@media (min-width:760px){ .nc-acciones{display:flex;flex-wrap:wrap} .nc-acciones .nc-btn--naranja{grid-column:auto} }
+.nc-cliente{display:grid;gap:4px}
+.nc-cliente__nombre{font:400 22px/1.2 var(--pz-rotulo);overflow-wrap:anywhere}
+.nc-cliente__dato{font:400 15px var(--pz-sys);color:var(--pz-gris)}
+.nc-cliente__dato b{font-weight:600;color:var(--pz-gis)}
+
+/* Desglose en papel de estraza */
+.nc-comanda{padding:6px 16px 14px;border-radius:4px;background:var(--pz-estraza-cl);color:var(--pz-tinta);overflow-x:auto;
+  clip-path:polygon(0 0,100% 0,100% 100%,96% 99.4%,92% 100%,88% 99.4%,84% 100%,80% 99.4%,76% 100%,72% 99.4%,68% 100%,64% 99.4%,60% 100%,56% 99.4%,52% 100%,48% 99.4%,44% 100%,40% 99.4%,36% 100%,32% 99.4%,28% 100%,24% 99.4%,20% 100%,16% 99.4%,12% 100%,8% 99.4%,4% 100%,0 99.4%)}
+.nc-tabla{width:100%;min-width:440px;border-collapse:collapse;font:500 15px var(--pz-sys)}
+.nc-tabla th{padding:10px 8px 8px;text-align:left;font:700 12px var(--pz-sys);color:var(--pz-tinta2);border-bottom:2px solid var(--pz-tinta)}
+.nc-tabla td{padding:8px;border-bottom:1px solid rgba(34,24,15,.16)}
+.nc-tabla .td-num{text-align:right;color:var(--pz-tinta2)}
+.nc-tabla .td-subtotal{text-align:right;font-weight:700;white-space:nowrap}
+.nc-tabla th:nth-child(n+2){text-align:right}
+.nc-dia-header td{padding-top:14px;font:400 16px var(--pz-rotulo);color:var(--pz-tinta);border-bottom:1px solid var(--pz-tinta)}
+.nc-dia-subtotal td{text-align:right;font-weight:700;border-bottom:0;color:var(--pz-tinta2)}
+.nc-dia-subtotal td:last-child{color:var(--pz-tinta)}
+.nc-total-fila{display:flex;justify-content:flex-end;align-items:baseline;gap:16px;margin-top:6px;padding-top:12px;border-top:2px dashed rgba(34,24,15,.35)}
+.nc-total-fila span:first-child{font:700 13px var(--pz-sys);color:var(--pz-tinta2)}
+.nc-total-fila span:last-child{font:400 30px var(--pz-rotulo);color:var(--pz-tinta)}
+.nc-notas{font:400 15px/1.6 var(--pz-sys);white-space:pre-wrap}
+
+/* ══ Formularios: nueva, editar y agregar días ══ */
+.nc-grid{display:grid;gap:14px}
+@media (min-width:600px){ .nc-grid{grid-template-columns:1fr 1fr} }
+.nm-campo{display:flex;flex-direction:column;gap:7px}
+.nm-campo label{font:600 14px var(--pz-sys);color:var(--pz-gis)}
+.nm-campo label span{color:#ff8f86}
+.nc input[type="text"],.nc input[type="number"],.nc input[type="date"],.nc textarea{width:100%;min-height:48px;padding:10px 14px;border-radius:12px;
+  border:1.5px solid var(--pz-linea);background:var(--pz-pizarra);color:var(--pz-gis);font:400 16px/1.4 var(--pz-sys);color-scheme:dark}
+.nc textarea{min-height:90px;resize:vertical}
+.nc input:focus,.nc textarea:focus{outline:none;border-color:var(--pz-naranja)}
+.nc input::placeholder,.nc textarea::placeholder{color:#77736c}
+
+/* Bloque de cada día (lo arma el JS) */
+#dias-body{display:grid;gap:12px;margin-bottom:12px}
+.dia-bloque{padding:14px;border-radius:18px;background:var(--pz-grupo)}
+.dia-bloque__header{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px dashed var(--pz-linea)}
+.dia-bloque__header label{font:400 15px var(--pz-rotulo);color:var(--pz-estraza-cl)}
+.nc .dia-bloque__header input[type="date"]{width:auto;flex:0 1 200px}
+.dia-bloque__remove{margin-left:auto;min-height:40px;padding:0 12px;border-radius:10px;border:1.5px solid rgba(229,83,75,.4);background:transparent;
+  color:#ff8f86;font:600 14px var(--pz-sys);cursor:pointer}
+.dia-bloque__remove:hover{background:rgba(229,83,75,.12)}
+
+.dia-fila{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,.8fr) minmax(0,.9fr) minmax(0,.8fr) 40px;gap:8px;align-items:center;margin-bottom:8px}
+.dia-fila__label{font:600 15px var(--pz-sys);color:var(--pz-gis)}
+.nc .dia-fila input{min-height:44px;padding:8px 10px;font-size:15px}
+.dia-fila__subtotal{font:400 15px var(--pz-rotulo);color:var(--pz-naranja);text-align:right;white-space:nowrap}
+@media (max-width:640px){
+  .dia-fila{grid-template-columns:1fr 1fr}
+  .dia-fila__label{grid-column:1 / -1}
+  .extra-fila{grid-template-columns:1fr 1fr auto 40px}
+  .extra-fila input[type="text"]{grid-column:1 / -1}
+}
+.dia-extras{margin-top:6px;padding-top:10px;border-top:1px dashed var(--pz-linea)}
+.dia-extras__vacio{font:400 14px var(--pz-sys);color:var(--pz-gris);margin:0 0 8px!important}
+.dia-extra-remove{width:40px;height:40px;border-radius:10px;border:1.5px solid rgba(229,83,75,.4);background:transparent;color:#ff8f86;
+  font:600 20px/1 var(--pz-sys);cursor:pointer}
+.dia-add-extra{min-height:40px;font-size:14px;margin-top:4px}
+.dia-subtotal-row{display:flex;justify-content:flex-end;align-items:baseline;gap:12px;margin-top:10px;padding-top:10px;border-top:1px solid var(--pz-linea)}
+.dia-subtotal-row span:first-child{font:600 13px var(--pz-sys);color:var(--pz-gris)}
+.dia-subtotal-row span:last-child{font:400 20px var(--pz-rotulo);color:var(--pz-naranja)}
+
+/* Total al pie, siempre a la vista al llenar la nota */
+.nc-pie{position:sticky;bottom:0;z-index:4;display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-top:24px;padding:12px 16px;
+  border-radius:18px 18px 0 0;background:#1B1917;border:1px solid var(--pz-linea);border-bottom:0;box-shadow:0 -10px 24px rgba(0,0,0,.4)}
+.cot-total-row{display:flex;align-items:baseline;gap:10px;margin-right:auto}
+.cot-total-label{font:600 13px var(--pz-sys);color:var(--pz-gris)}
+.cot-total-valor{font:400 28px var(--pz-rotulo);color:var(--pz-naranja)}
+.nm-acciones{display:flex;flex-wrap:wrap;gap:8px}
+@media (max-width:599px){ .nm-acciones{width:100%} .nm-acciones > *{flex:1} }
+
+@media (prefers-reduced-motion:reduce){ .nc-btn,.btn-limpiar-filtros{transition:none} }
+
+/* ══ Impresión de la nota (Imprimir / PDF): documento en blanco ══ */
+#print-area{display:none}
+@page{margin:0}
+@media print{
+  .no-print{display:none!important}
+  html,body{background:#fff!important;color:#111!important;margin:0;padding:0}
+  .nc{max-width:none;padding:0;margin:0}
+  #print-area{display:block!important}
+  .prt{max-width:100%!important;width:100%}
+}
+.prt{font-family:'Helvetica Neue',Arial,sans-serif;color:#111;max-width:780px;margin:0 auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.prt-topbar{background:#111;height:5px}
+.prt-accent{background:#FF7A00;height:3px}
+.prt-body{padding:20px 36px 26px}
+.prt-header{display:flex;align-items:flex-start;gap:16px;padding-bottom:16px;border-bottom:1px solid #222;margin-bottom:16px}
+.prt-brand{display:flex;align-items:center;gap:14px;flex:none}
+.prt-brand__logo{height:58px;width:auto;object-fit:contain;display:block}
+.prt-brand__texto h1{font-size:17px;font-weight:900;color:#111;margin:0 0 3px;letter-spacing:-.2px;white-space:nowrap}
+.prt-brand__texto p{font-size:10px;color:#555;margin:0;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.prt-doc{text-align:right;flex:none;margin-left:auto}
+.prt-doc__etiqueta{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.16em;color:#777;display:block;margin-bottom:4px}
+.prt-doc__folio{font-size:19px;font-weight:900;color:#111;display:block;margin-bottom:5px}
+.prt-doc p{font-size:11px;color:#444;margin:2px 0}
+.prt-info-bloque{border:1px solid #ccc;border-top:3px solid #111;padding:10px 14px;margin-bottom:16px}
+.prt-info-bloque h4{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#555;margin:0 0 7px}
+.prt-info-bloque p{font-size:12px;margin:0 0 3px;color:#111}
+.prt-info-bloque p strong{font-weight:400;color:#777;min-width:52px;display:inline-block}
+.prt-tabla{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:0}
+.prt-tabla thead tr{background:#111}
+.prt-tabla th{color:#fff;padding:8px 10px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.09em;text-align:left}
+.prt-tabla th:not(:first-child){text-align:right}
+.prt-tabla td{padding:7px 10px;border-bottom:1px solid #ddd;color:#111}
+.prt-tabla td:not(:first-child){text-align:right}
+.prt-dia-header td{background:#f2f2f2;font-weight:800;border-bottom:1px solid #111}
+.prt-dia-subtotal td{font-weight:700;border-bottom:2px solid #111}
+.prt-total-wrap{display:flex;justify-content:flex-end;padding:14px 0 16px}
+.prt-total-box{padding:10px 20px;text-align:right;min-width:190px;border-top:1px solid #ccc;border-bottom:1px solid #ccc}
+.prt-total-box__label{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;color:#555;display:block;margin-bottom:4px}
+.prt-total-box__valor{font-size:28px;font-weight:900;color:#FF7A00;display:block}
+.prt-notas{border:1px solid #ccc;border-top:3px solid #111;padding:10px 14px;margin-bottom:16px}
+.prt-notas h4{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#555;margin:0 0 6px}
+.prt-notas p{font-size:12px;margin:0;line-height:1.6;color:#222}
+.prt-footer{text-align:center;padding-top:14px;border-top:1px solid #ccc}
+.prt-footer p{font-size:11px;color:#555;margin:0}
+
+/* Barra del total en celular: botones sin partirse */
+.nm-acciones .btn-principal,.nm-acciones .btn-link{white-space:nowrap}
+@media (max-width:599px){ .nc-pie{padding:10px 12px} .cot-total-valor{font-size:24px} }
