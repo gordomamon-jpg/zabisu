@@ -32,7 +32,10 @@
   background:none;color:var(--pz-gris);cursor:pointer}
 .rz-ver[aria-pressed="true"]{color:var(--pz-naranja)}
 
-.rz-entrar{width:100%;justify-content:center;margin-top:26px;border:0;cursor:pointer}
+.rz-mantener{display:flex;align-items:center;gap:12px;min-height:48px;margin-top:14px;cursor:pointer;
+  font:500 15px var(--pz-sys);color:var(--pz-gis)}
+.rz-mantener input{width:22px;height:22px;margin:0;flex:none;accent-color:var(--pz-naranja);cursor:pointer}
+.rz-entrar{width:100%;justify-content:center;margin-top:18px;border:0;cursor:pointer}
 .rz-entrar:disabled{background:#3a3633;color:#8d8983;cursor:default}
 
 .rz-login .pz-pie{padding-top:40px}

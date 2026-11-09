@@ -178,13 +178,14 @@ $etiquetasPago = [
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <?php require __DIR__ . "/../includes/rz_app.php"; ?>
     <title>Panel general | Restaurante Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
     <meta name="theme-color" content="#151413">
     <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
-    <link rel="stylesheet" href="../assets/css/restaurante-pizarron.css?v=4">
+    <link rel="stylesheet" href="../assets/css/restaurante-pizarron.css?v=5">
 </head>
 <body class="pz rz">
 <?php require __DIR__ . "/../includes/pz_filtros.php"; ?>

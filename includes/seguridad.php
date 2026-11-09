@@ -12,6 +12,10 @@
 // puede tardar más: al regresar ya no estaba su pedido.
 const DURACION_SESION_SEG = 3 * 60 * 60;
 
+// "Mantener sesión en este celular" del restaurante: 24 h desde que se entra,
+// aunque se cierre la app o el navegador.
+const DURACION_RECORDAR_SEG = 24 * 60 * 60;
+
 function iniciarSesionSegura(): void
 {
     if (session_status() === PHP_SESSION_NONE) {
@@ -22,7 +26,9 @@ function iniciarSesionSegura(): void
         if (!is_dir($dirSesiones)) @mkdir($dirSesiones, 0700, true);
         if (is_dir($dirSesiones) && is_writable($dirSesiones)) {
             ini_set("session.save_path", $dirSesiones);
-            ini_set("session.gc_maxlifetime", (string)DURACION_SESION_SEG);
+            // El servidor guarda la sesión hasta 24 h (por "mantener sesión");
+            // las demás vencen a las 3 h sin actividad, revisado abajo.
+            ini_set("session.gc_maxlifetime", (string)max(DURACION_SESION_SEG, DURACION_RECORDAR_SEG));
             ini_set("session.gc_probability", "1");
             ini_set("session.gc_divisor", "100");
         }
@@ -39,7 +45,38 @@ function iniciarSesionSegura(): void
             "samesite" => "Lax",
         ]);
         session_start();
+
+        // Vencimiento: 24 h exactas si se pidió mantener la sesión; si no, 3 h sin actividad
+        $ahora   = time();
+        $vencida = isset($_SESSION["_recordar_hasta"])
+            ? $ahora > (int)$_SESSION["_recordar_hasta"]
+            : (isset($_SESSION["_ultima_actividad"]) && $ahora - (int)$_SESSION["_ultima_actividad"] > DURACION_SESION_SEG);
+        if ($vencida) {
+            $_SESSION = [];
+            session_regenerate_id(true);
+            setcookie(session_name(), session_id(), [
+                "expires" => 0, "path" => "/", "domain" => "",
+                "secure" => $esHttps, "httponly" => true, "samesite" => "Lax",
+            ]);
+        }
+        $_SESSION["_ultima_actividad"] = $ahora;
     }
+}
+
+/*
+    Deja la sesión iniciada 24 h en este dispositivo: la cookie ya no se borra
+    al cerrar la app o el navegador, y a las 24 h vence sola.
+*/
+function mantenerSesion24h(): void
+{
+    $hasta = time() + DURACION_RECORDAR_SEG;
+    $_SESSION["_recordar_hasta"] = $hasta;
+    $esHttps = (!empty($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] !== "off")
+        || (($_SERVER["HTTP_X_FORWARDED_PROTO"] ?? "") === "https");
+    setcookie(session_name(), session_id(), [
+        "expires" => $hasta, "path" => "/", "domain" => "",
+        "secure" => $esHttps, "httponly" => true, "samesite" => "Lax",
+    ]);
 }
 
 function verificarOrigenPeticion(): void

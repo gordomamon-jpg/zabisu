@@ -1,0 +1,18 @@
+{
+  "id": "./",
+  "name": "Zabisu Restaurante",
+  "short_name": "Zabisu Rest.",
+  "description": "Pedidos, menús, inventario y finanzas de Zabisu",
+  "start_url": "panel_general.php",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#151413",
+  "theme_color": "#151413",
+  "lang": "es",
+  "icons": [
+    { "src": "../assets/img/app/restaurante-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "../assets/img/app/restaurante-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "../assets/img/app/restaurante-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

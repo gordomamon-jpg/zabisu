@@ -40,6 +40,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $_SESSION["restaurante_auth"]    = true;
                 $_SESSION["restaurante_usuario"] = $user["usuario"];
                 $_SESSION["restaurante_nombre"]  = $user["nombre"];
+                if (!empty($_POST["mantener"])) {
+                    mantenerSesion24h();
+                }
                 header("Location: panel_general.php");
                 exit;
             } else {
@@ -55,13 +58,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <?php require __DIR__ . "/../includes/rz_app.php"; ?>
     <title>Acceso | Restaurante Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
     <meta name="theme-color" content="#151413">
     <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
-    <link rel="stylesheet" href="../assets/css/restaurante-pizarron.css?v=4">
+    <link rel="stylesheet" href="../assets/css/restaurante-pizarron.css?v=5">
 </head>
 <body class="pz rz">
 <?php require __DIR__ . "/../includes/pz_filtros.php"; ?>
@@ -124,6 +128,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
                 </button>
             </span>
+        </label>
+
+        <label class="rz-mantener">
+            <input type="checkbox" name="mantener" value="1" <?php echo !empty($_POST["mantener"]) ? "checked" : ""; ?>>
+            <span>Mantener sesión 24 h en este celular</span>
         </label>
 
         <button type="submit" class="pz-btn rz-entrar" id="rz-entrar">Entrar</button>

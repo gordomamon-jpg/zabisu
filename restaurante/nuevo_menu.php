@@ -81,6 +81,7 @@ $peDefault        = $_POST["precio_ejecutivo"] ?? "120";
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <?php require __DIR__ . "/../includes/rz_app.php"; ?>
     <title>Nuevo menú | Restaurante Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
     <meta name="theme-color" content="#151413">
