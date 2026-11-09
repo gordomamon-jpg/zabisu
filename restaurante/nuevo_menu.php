@@ -64,14 +64,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 /*
     El menú se crea un día antes para el siguiente día de servicio (lunes a
     jueves): el domingo se crea el del lunes y de jueves a sábado también el
-    del lunes. Se publica la víspera a las 5:00 pm y cierra ese día a las 11:50 am.
+    del lunes. Se publica la víspera a las 6:30 pm (se activa solo a esa hora) y cierra ese día a las 11:50 am.
 */
 $diaMenu = new DateTime("tomorrow");
 while ((int)$diaMenu->format("N") > 4) $diaMenu->modify("+1 day");
 $vispera = (clone $diaMenu)->modify("-1 day");
 
 $fechaDefault     = $_POST["fecha"]            ?? $diaMenu->format("Y-m-d");
-$pubDefault       = $_POST["publicado_desde"]  ?? $vispera->format("Y-m-d") . "T17:00";
+$pubDefault       = $_POST["publicado_desde"]  ?? $vispera->format("Y-m-d") . "T18:30";
 $hastaDefault     = $_POST["pedido_hasta"]     ?? $diaMenu->format("Y-m-d") . "T11:50";
 $pzDefault        = $_POST["precio_zabisu"]    ?? "110";
 $peDefault        = $_POST["precio_ejecutivo"] ?? "120";
@@ -88,7 +88,7 @@ $peDefault        = $_POST["precio_ejecutivo"] ?? "120";
     <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=5">
-    <link rel="stylesheet" href="../assets/css/menus-pizarron.css?v=3">
+    <link rel="stylesheet" href="../assets/css/menus-pizarron.css?v=4">
 </head>
 <body class="pz">
 <?php require __DIR__ . "/../includes/pz_filtros.php"; ?>
@@ -230,7 +230,7 @@ $peDefault        = $_POST["precio_ejecutivo"] ?? "120";
         var antes = new Date(p[0], p[1] - 1, p[2] - 1);
         var vispera = antes.getFullYear() + "-" + String(antes.getMonth() + 1).padStart(2, "0") + "-" + String(antes.getDate()).padStart(2, "0");
         hasta.value = fecha.value + "T" + hora(hasta, "11:50");
-        pub.value   = vispera + "T" + hora(pub, "17:00");
+        pub.value   = vispera + "T" + hora(pub, "18:30");
     });
 })();
 </script>

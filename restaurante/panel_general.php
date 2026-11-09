@@ -1,5 +1,7 @@
 <?php
 require_once "../config/db.php";
+require_once "../includes/menu_programado.php";
+menuActivarProgramado($conexion);
 require_once "auth_check.php";
 
 $hoy = date("Y-m-d");

@@ -1,5 +1,6 @@
 <?php
 require_once "../config/db.php";
+require_once "../includes/menu_programado.php";
 require_once "auth_check.php";
 require_once "../includes/limite_platos.php";
 require_once "../includes/opciones_plato.php";
@@ -11,12 +12,8 @@ $stmtMP->execute();
 $esPrueba = (int)($stmtMP->fetchColumn() ?? 0);
 
 /* ── Menú activo (sin restricción de ventana) ── */
-// El menú ACTIVO (con productos). Así se pueden dejar cargados los menús de
-// toda la semana: solo cuenta el que se activó. Si no hay ninguno activo,
-// el más reciente con productos (nunca uno vacío por duplicar).
-$stmtMenu = $conexion->prepare("SELECT * FROM menu_dia m WHERE EXISTS (SELECT 1 FROM productos p WHERE p.id_menu = m.id_menu) ORDER BY m.activo DESC, m.fecha DESC, m.id_menu DESC LIMIT 1");
-$stmtMenu->execute();
-$menuActivo = $stmtMenu->fetch(PDO::FETCH_ASSOC);
+// Menú activo; si no hay, el último publicado (ver includes/menu_programado.php)
+$menuActivo = menuActualRestaurante($conexion);
 
 /* ── Fecha formateada ── */
 $fechaMenuFormateada = "";

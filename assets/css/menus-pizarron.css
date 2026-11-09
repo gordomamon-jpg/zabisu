@@ -65,6 +65,8 @@
   background:var(--pz-linea);color:var(--pz-gris);white-space:nowrap}
 .estado-pagado{background:rgba(123,211,137,.14);color:#8fdc9c}
 .estado-pagado::before{content:"";width:8px;height:8px;border-radius:50%;background:#7bd389}
+.estado-programado{background:rgba(255,145,32,.12);color:var(--pz-naranja)}
+.estado-programado::before{content:"";flex:none;width:8px;height:8px;border-radius:50%;border:2px solid currentColor;box-sizing:border-box}
 
 /* ══ Lista de menús (menus.php) ══ */
 .mz-mes{margin-top:30px}
@@ -296,3 +298,5 @@
 /* Botones que son enlaces: menu-pizarron.css pone ".pz a{color:inherit}" */
 .pz a.mz-btn--naranja{color:#111}
 .pz a.btn-tabla--estraza{color:var(--pz-tinta)}
+
+.mz-auto{color:var(--pz-naranja);font-weight:600}

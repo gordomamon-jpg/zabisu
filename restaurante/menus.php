@@ -1,11 +1,16 @@
 <?php
 require_once "../config/db.php";
 require_once "auth_check.php";
+date_default_timezone_set("America/Mexico_City");
 
 /*
     Auto-desactivar menús cuyo pedido_hasta ya pasó
 */
 $conexion->exec("UPDATE menu_dia SET activo = 0 WHERE activo = 1 AND pedido_hasta < NOW()");
+
+// Y activar el siguiente si ya llegó su hora de publicación (ver includes/menu_programado.php)
+require_once "../includes/menu_programado.php";
+menuActivarProgramado($conexion);
 
 /*
     Eliminar menú
@@ -92,12 +97,21 @@ $sqlMenus = "SELECT
                 publicado_desde,
                 pedido_hasta,
                 activo,
-                creado_en
+                creado_en,
+                (publicado_desde > NOW()) AS por_publicar,
+                EXISTS (SELECT 1 FROM productos p WHERE p.id_menu = menu_dia.id_menu) AS con_platillos
              FROM menu_dia
              ORDER BY fecha DESC, id_menu DESC";
 $stmtMenus = $conexion->prepare($sqlMenus);
 $stmtMenus->execute();
 $menus = $stmtMenus->fetchAll(PDO::FETCH_ASSOC);
+
+function formatearDiaCorto($fechaHora)
+{
+    $dias = ["Mon" => "el lunes", "Tue" => "el martes", "Wed" => "el miércoles", "Thu" => "el jueves",
+             "Fri" => "el viernes", "Sat" => "el sábado", "Sun" => "el domingo"];
+    return $dias[date("D", strtotime($fechaHora))] ?? "";
+}
 
 function formatearFechaBonita($fecha)
 {
@@ -148,7 +162,7 @@ function formatearFechaBonita($fecha)
     <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=5">
-    <link rel="stylesheet" href="../assets/css/menus-pizarron.css?v=3">
+    <link rel="stylesheet" href="../assets/css/menus-pizarron.css?v=4">
 </head>
 <body class="pz">
 <?php require __DIR__ . "/../includes/pz_filtros.php"; ?>
@@ -204,10 +218,17 @@ function formatearFechaBonita($fecha)
                         <div class="mz-menu__horas">
                             <span>Publica <b><?php echo htmlspecialchars(date("d/m/Y g:i A", strtotime($menu["publicado_desde"]))); ?></b></span>
                             <span>Cierra <b><?php echo htmlspecialchars(date("d/m/Y g:i A", strtotime($menu["pedido_hasta"]))); ?></b></span>
+                            <?php if (!$activo && (int)$menu["por_publicar"] === 1 && (int)$menu["con_platillos"] === 1): ?>
+                                <span class="mz-auto">Se activa solo <?php echo htmlspecialchars(date("Y-m-d", strtotime($menu["publicado_desde"])) === date("Y-m-d") ? "hoy" : formatearDiaCorto($menu["publicado_desde"])); ?> a las <?php echo htmlspecialchars(date("g:i A", strtotime($menu["publicado_desde"]))); ?></span>
+                            <?php endif; ?>
                         </div>
                         <div class="mz-menu__estado">
                             <?php if ($activo): ?>
                                 <span class="estado estado-pagado">Activo · en uso</span>
+                            <?php elseif ((int)$menu["por_publicar"] === 1 && (int)$menu["con_platillos"] === 1): ?>
+                                <span class="estado estado-programado">Programado</span>
+                            <?php elseif ((int)$menu["por_publicar"] === 1): ?>
+                                <span class="estado estado-pendiente">Sin platillos · no se activará</span>
                             <?php else: ?>
                                 <span class="estado estado-pendiente">Inactivo</span>
                             <?php endif; ?>
