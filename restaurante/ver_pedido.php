@@ -101,7 +101,7 @@ $extrasVer = $stmtExtras->fetchAll(PDO::FETCH_ASSOC);
 $PRECIOS_EXTRA_ED  = ["Sopa" => 25, "Complemento" => 25, "Agua" => 20];
 $extrasDisponibles = [];
 
-$menuRecienteId = $conexion->query("SELECT id_menu FROM menu_dia m WHERE EXISTS (SELECT 1 FROM productos p WHERE p.id_menu = m.id_menu) ORDER BY m.fecha DESC, m.activo DESC, m.id_menu DESC LIMIT 1")->fetchColumn();
+$menuRecienteId = $conexion->query("SELECT id_menu FROM menu_dia m WHERE EXISTS (SELECT 1 FROM productos p WHERE p.id_menu = m.id_menu) ORDER BY m.activo DESC, m.fecha DESC, m.id_menu DESC LIMIT 1")->fetchColumn();
 if ($menuRecienteId) {
     $stmtExtrasDisp = $conexion->prepare(
         "SELECT id_producto, nombre, categoria FROM productos
