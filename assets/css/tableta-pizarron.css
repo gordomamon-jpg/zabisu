@@ -208,3 +208,12 @@ body.tb{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 @media (prefers-reduced-motion:reduce){
   .tb-card:active,.tb-stepper button:active,.tb-hora:active{transform:none}
 }
+
+/* Agua: la del día o natural (la del día viene marcada) */
+.tb-aguas{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tb-agua{position:relative;display:flex;align-items:center;justify-content:center;min-height:60px;padding:8px 12px;box-sizing:border-box;
+  border-radius:14px;border:2px solid var(--pz-linea);background:var(--pz-pizarra);text-align:center;cursor:pointer;font:600 16px/1.25 var(--pz-sys)}
+.tb-agua:active{transform:scale(.97)}
+.tb-agua input{position:absolute;opacity:0;width:1px;height:1px}
+.tb-agua:has(input:checked){background:var(--pz-estraza-cl);border-color:var(--pz-estraza-cl);color:var(--pz-tinta)}
+.tb-agua:has(input:focus-visible){outline:2px solid var(--pz-gis);outline-offset:3px}

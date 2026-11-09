@@ -106,6 +106,7 @@ if ($menuRecienteId) {
     $stmtExtrasDisp = $conexion->prepare(
         "SELECT id_producto, nombre, categoria FROM productos
          WHERE id_menu = :id_menu AND categoria IN ('Sopa','Complemento','Agua') AND disponible = 1
+           AND NOT (categoria = 'Agua' AND nombre = 'Agua natural')
          ORDER BY FIELD(categoria,'Sopa','Complemento','Agua'), nombre"
     );
     $stmtExtrasDisp->execute([":id_menu" => $menuRecienteId]);

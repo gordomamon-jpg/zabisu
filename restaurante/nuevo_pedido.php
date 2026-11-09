@@ -3,6 +3,7 @@ require_once "../config/db.php";
 require_once "auth_check.php";
 require_once "../includes/limite_platos.php";
 require_once "../includes/opciones_plato.php";
+require_once "../includes/agua_natural.php";
 
 /* ── Modo prueba ── */
 $stmtMP = $conexion->prepare("SELECT valor FROM configuracion WHERE clave = 'modo_prueba' LIMIT 1");
@@ -64,6 +65,7 @@ if ($menuActivo) {
         $menusPorTipo[$p["tipo_menu"]][$p["categoria"]][] = $p;
         $productosIndexados[$idP] = $p;
     }
+    aguaOrdenarMenus($menusPorTipo); // aquí va siempre el agua del día
 }
 
 /* ── Precios ── */
@@ -97,6 +99,7 @@ foreach (["Sopa", "Complemento", "Agua"] as $catEx) {
     foreach ($menusPorTipo as $tipoMenu => $cats) {
         if (!empty($cats[$catEx])) {
             foreach ($cats[$catEx] as $prod) {
+                if (aguaEsNatural($prod)) continue;
                 if (!in_array($prod["nombre"], $nombresExtrasForm)) {
                     $nombresExtrasForm[] = $prod["nombre"];
                     $extrasForm[$catEx][] = $prod;

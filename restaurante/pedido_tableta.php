@@ -2,6 +2,7 @@
 require_once "../config/db.php";
 require_once "auth_check.php";
 require_once "../includes/opciones_plato.php";
+require_once "../includes/agua_natural.php";
 date_default_timezone_set("America/Mexico_City");
 
 // Menú más reciente CON productos (si se duplicó un menú y uno quedó vacío,
@@ -22,6 +23,7 @@ $menusPorTipo       = [];
 $productosIndexados = [];
 
 if ($menuActivo) {
+    aguaNaturalAsegurar($conexion, (int)$menuActivo["id_menu"]);
     $stmtProd = $conexion->prepare(
         "SELECT * FROM productos WHERE id_menu = :id_menu AND disponible = 1
          ORDER BY tipo_menu, categoria, nombre"
@@ -49,6 +51,7 @@ if ($menuActivo) {
         $menusPorTipo[$p["tipo_menu"]][$p["categoria"]][] = $p;
         $productosIndexados[$idP] = $p;
     }
+    aguaOrdenarMenus($menusPorTipo); // el agua del día primero, la natural después
 }
 
 $stmtTipos = $conexion->prepare("SELECT nombre_menu, precio FROM tipos_menu WHERE activo = 1");
@@ -66,6 +69,7 @@ foreach (["Sopa", "Complemento", "Agua"] as $catEx) {
     foreach ($menusPorTipo as $tipoM => $cats) {
         if (!empty($cats[$catEx])) {
             foreach ($cats[$catEx] as $prod) {
+                if (aguaEsNatural($prod)) continue; // la natural no se vende como extra
                 if (!in_array($prod["nombre"], $nombresExtrasForm)) {
                     $nombresExtrasForm[] = $prod["nombre"];
                     $extrasForm[$catEx][] = $prod;
@@ -197,11 +201,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
 
         foreach ($menusRecibidos as $num => &$menuData) {
             $tipo = $menuData["tipo_menu"] ?? "";
-            foreach (["Sopa"=>"sopa","Agua"=>"agua","Cortesia"=>"cortesia"] as $cat => $key) {
+            foreach (["Sopa"=>"sopa","Cortesia"=>"cortesia"] as $cat => $key) {
                 if (!empty($menusPorTipo[$tipo][$cat])) {
                     $menuData[$key] = (string)$menusPorTipo[$tipo][$cat][0]["id_producto"];
                 }
             }
+            // Agua: la que se tocó (del día o natural)
+            $menuData["agua"] = aguaElegida($menusPorTipo[$tipo]["Agua"] ?? [], $menuData["agua_tipo"][$tipo] ?? "");
+            unset($menuData["agua_tipo"]);
         }
         unset($menuData);
 
@@ -331,7 +338,7 @@ if ($exito && isset($horariosPorId[(int)$id_horario])) {
 <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
-<link rel="stylesheet" href="../assets/css/tableta-pizarron.css?v=4">
+<link rel="stylesheet" href="../assets/css/tableta-pizarron.css?v=5">
 </head>
 <body class="pz tb">
 <?php require __DIR__ . "/../includes/pz_filtros.php"; ?>
@@ -502,10 +509,24 @@ if ($exito && isset($horariosPorId[(int)$id_horario])) {
             </div>
             <?php endif; ?>
 
+            <?php $aguasTipo = $menusPorTipo[$tipoMenu]["Agua"] ?? []; ?>
+            <?php if (count($aguasTipo) > 1):
+                $aguaSel = aguaElegida($aguasTipo, $_POST["menus"][$i]["agua_tipo"][$tipoMenu] ?? ""); ?>
+            <p class="tb-titulo">Agua</p>
+            <div class="tb-aguas">
+                <?php foreach ($aguasTipo as $agua): ?>
+                <label class="tb-agua<?= aguaEsNatural($agua) ? " tb-agua--natural" : "" ?>">
+                    <input type="radio" name="menus[<?= $i ?>][agua_tipo][<?= $tipoMenu ?>]" value="<?= (int)$agua["id_producto"] ?>"
+                           <?= $aguaSel === (string)$agua["id_producto"] ? "checked" : "" ?><?= $vis ? "" : " disabled" ?>>
+                    <span><?= htmlspecialchars($agua["nombre"]) ?></span>
+                </label>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
             <?php
             $incluye = array_filter([
                 $menusPorTipo[$tipoMenu]["Sopa"][0]["nombre"] ?? "",
-                $menusPorTipo[$tipoMenu]["Agua"][0]["nombre"] ?? "",
+                count($aguasTipo) > 1 ? "" : ($aguasTipo[0]["nombre"] ?? ""),
                 $menusPorTipo[$tipoMenu]["Cortesia"][0]["nombre"] ?? "",
             ]);
             ?>
@@ -587,7 +608,7 @@ if ($exito && isset($horariosPorId[(int)$id_horario])) {
             $("t-tipo-val-" + i).disabled = !visible;
             bloque.querySelectorAll(".tb-ops").forEach(function (ops) {
                 var activo = visible && !ops.hidden;
-                ops.querySelectorAll(".tb-card input").forEach(function (inp) { inp.disabled = !activo; });
+                ops.querySelectorAll(".tb-card input, .tb-agua input").forEach(function (inp) { inp.disabled = !activo; });
             });
         }
         $("t-menos").disabled = cantidadActual <= 0;
@@ -619,6 +640,8 @@ if ($exito && isset($horariosPorId[(int)$id_horario])) {
                 inp.disabled = !visible;
                 if (!visible) inp.checked = false;
             });
+            // El agua no se desmarca: al volver a ese tipo sigue la que estaba
+            ops.querySelectorAll(".tb-agua input").forEach(function (inp) { inp.disabled = !visible; });
         });
         estadoComida(i);
         actualizarTotal();
@@ -635,7 +658,7 @@ if ($exito && isset($horariosPorId[(int)$id_horario])) {
         var ops = document.querySelector(".tb-ops[data-menu='" + i + "']:not([hidden])");
         var faltas = [];
         if (!ops) return ["tipo"];
-        if (!ops.querySelector("input[type=radio]:checked")) faltas.push("guisado");
+        if (!ops.querySelector("input[name$='[plato_fuerte]']:checked")) faltas.push("guisado");
         else {
             var ad = ops.querySelector(".opciones-plato[style*='block']");
             if (ad && !ad.querySelector("input:checked")) faltas.push("aderezo");
@@ -691,6 +714,11 @@ if ($exito && isset($horariosPorId[(int)$id_horario])) {
         origen.querySelectorAll(".tb-grid--comp input:checked").forEach(function (c) {
             destino.querySelector(".tb-grid--comp input[value='" + c.value + "']").checked = true;
         });
+        var aguaOrigen = origen.querySelector(".tb-agua input:checked");
+        if (aguaOrigen) {
+            var aguaDestino = destino.querySelector(".tb-agua input[value='" + aguaOrigen.value + "']");
+            if (aguaDestino) aguaDestino.checked = true;
+        }
         // El aderezo aparece un instante después (lo maneja scriptOpcionesPlato)
         setTimeout(function () {
             var op = origen.querySelector(".opciones-plato input:checked");

@@ -2,6 +2,7 @@
 require_once "../config/db.php";
 require_once "../includes/limite_platos.php";
 require_once "../includes/opciones_plato.php";
+require_once "../includes/agua_natural.php";
 date_default_timezone_set("America/Mexico_City");
 
 /* ── Modo prueba ── */
@@ -78,6 +79,7 @@ if ($menuActivo) {
         } elseif ($p["categoria"] === "Complemento") {
             $complementosPorTipo[$p["tipo_menu"]][] = $p;
         } elseif (in_array($p["categoria"], ["Sopa", "Agua", "Cortesia"])) {
+            if (aguaEsNatural($p)) continue; // El Bigotón lleva el agua del día
             if (!isset($autoIncluirPorTipo[$p["tipo_menu"]][$p["categoria"]])) {
                 $autoIncluirPorTipo[$p["tipo_menu"]][$p["categoria"]] = $p;
             }

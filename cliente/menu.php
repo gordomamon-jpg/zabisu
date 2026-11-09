@@ -4,6 +4,7 @@ require_once "../includes/canal_whatsapp.php";
 date_default_timezone_set("America/Mexico_City");
 
 require_once "../includes/diseno.php";
+require_once "../includes/agua_natural.php";
 
 /* ── Aviso día mundialista (activar: cambiar false por in_array(date('Y-m-d'), ['YYYY-MM-DD', ...])) ── */
 if (false): ?>
@@ -611,6 +612,7 @@ body {
 </html>
 <?php exit; }
 
+aguaNaturalAsegurar($conexion, (int)$menuActivo["id_menu"]);
 $sqlProductos = "SELECT * FROM productos WHERE id_menu = :id_menu AND disponible = 1
                  ORDER BY tipo_menu, categoria, nombre";
 $stmtProductos = $conexion->prepare($sqlProductos);
@@ -641,6 +643,15 @@ foreach ($stmtProductos->fetchAll(PDO::FETCH_ASSOC) as $p) {
     $p["agotado"] = ($p["categoria"] === "Plato fuerte" && $limite > 0 && $totalActual >= $limite)
                  || !empty($p["agotado_manual"]);
     $menusPorTipo[$p["tipo_menu"]][$p["categoria"]][] = $p;
+}
+// En la carta el agua se lee "Agua de Jamaica o agua natural" (una sola línea)
+foreach ($menusPorTipo as $t => $cats) {
+    $aguas = aguaOrdenar($cats["Agua"] ?? []);
+    if (count($aguas) > 1) {
+        $delDia = array_values(array_filter($aguas, fn($a) => !aguaEsNatural($a)));
+        foreach ($delDia as $k => $a) $delDia[$k]["nombre"] = $a["nombre"] . " o agua natural";
+        $menusPorTipo[$t]["Agua"] = $delDia;
+    }
 }
 
 $sqlPrecios = "SELECT nombre_menu, precio FROM tipos_menu WHERE activo = 1";

@@ -5,6 +5,7 @@ require_once "../includes/limite_platos.php";
 require_once "../includes/opciones_plato.php";
 require_once "../includes/modo_notificacion.php";
 require_once "../includes/diseno.php";
+require_once "../includes/agua_natural.php";
 
 // Con la API oficial de WhatsApp se pide el WhatsApp; en modo correo, el correo
 $contactoWA = MODO_NOTIFICACION === 'api';
@@ -282,7 +283,11 @@ if (!empty($menuActivo["fecha"])) {
 
 /*
     2. Obtener productos del menú activo
+    (antes se asegura el "Agua natural" de cada tipo de menú)
 */
+if (!empty($menuActivo["id_menu"])) {
+    aguaNaturalAsegurar($conexion, (int)$menuActivo["id_menu"]);
+}
 $sqlProductos = "SELECT * FROM productos
                  WHERE id_menu = :id_menu
                  AND disponible = 1
@@ -346,6 +351,12 @@ foreach ($productos as $producto) {
 
     $menusPorTipo[$tipoMenu][$categoria][] = $producto;
     $productosIndexados[$idProducto] = $producto;
+}
+aguaOrdenarMenus($menusPorTipo); // el agua del día primero, la natural después
+// Si en Pedidos marcaron un agua como agotada, ya no se ofrece (queda la otra)
+foreach ($menusPorTipo as $t => $cats) {
+    $aguasDisp = array_values(array_filter($cats["Agua"] ?? [], fn($a) => empty($a["agotado"])));
+    if ($aguasDisp) $menusPorTipo[$t]["Agua"] = $aguasDisp;
 }
 
 /*
@@ -524,14 +535,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["guardar_pedido"])) {
     }
 
     if (empty($errores)) {
-        // Auto-asignar sopa, agua y cortesia (el cliente no los elige, están fijos)
+        // Auto-asignar sopa y cortesia (están fijas); el agua la elige el cliente (del día o natural)
         foreach ($menusRecibidos as $num => &$menuData) {
             $tipo = $menuData["tipo_menu"] ?? "";
-            foreach (["Sopa" => "sopa", "Agua" => "agua", "Cortesia" => "cortesia"] as $cat => $key) {
+            foreach (["Sopa" => "sopa", "Cortesia" => "cortesia"] as $cat => $key) {
                 if (!empty($menusPorTipo[$tipo][$cat])) {
                     $menuData[$key] = (string)$menusPorTipo[$tipo][$cat][0]["id_producto"];
                 }
             }
+            $menuData["agua"] = aguaElegida($menusPorTipo[$tipo]["Agua"] ?? [], $menuData["agua_tipo"][$tipo] ?? "");
+            unset($menuData["agua_tipo"]);
         }
         unset($menuData);
 
@@ -1003,6 +1016,29 @@ if ($scrollDestino === "bloque-entrega") {
                                 </div>
                             <?php endif; ?>
 
+                            <?php $aguasTipo = $menusPorTipo[$tipoMenu]["Agua"] ?? []; ?>
+                            <?php if (count($aguasTipo) > 1):
+                                $aguaPost = $_POST["menus"][$i]["agua_tipo"][$tipoMenu] ?? "";
+                                $aguaSel  = aguaElegida($aguasTipo, $aguaPost);
+                            ?>
+                                <div class="grupo-categoria grupo-agua">
+                                    <h3><?php echo $icoAgua; ?> Agua <span class="cat-hint"><?php echo $disenoNuevo ? "elige 1" : "· elige 1"; ?></span></h3>
+                                    <?php foreach ($aguasTipo as $agua): ?>
+                                        <label class="opcion-producto">
+                                            <input type="radio"
+                                                   name="menus[<?php echo $i; ?>][agua_tipo][<?php echo $tipoMenu; ?>]"
+                                                   value="<?php echo (int)$agua["id_producto"]; ?>"
+                                                   data-nombre="<?php echo htmlspecialchars($agua["nombre"]); ?>"
+                                                   <?php echo $aguaSel === (string)$agua["id_producto"] ? "checked" : ""; ?>>
+                                            <strong><?php echo htmlspecialchars($agua["nombre"]); ?></strong>
+                                            <?php $descAgua = aguaEsNatural($agua) ? "Natural, sin sabor" : "El agua del día"; ?>
+                                            <?php if ($disenoNuevo): ?><span class="pp-desc"><?php echo $descAgua; ?></span><?php else: ?>— <?php echo $descAgua; ?><?php endif; ?>
+                                        </label>
+                                    <?php endforeach; ?>
+                                </div>
+                                <?php $aguaIncluida = ""; // ya se eligió arriba: no se repite en "también incluye" ?>
+                            <?php endif; ?>
+
                             <?php if ($sopaIncluida || $aguaIncluida || $cortesiaIncluida): ?>
                             <div class="menu-incluye">
                                 <p class="menu-incluye__titulo">Tu menú también incluye:</p>
@@ -1043,6 +1079,7 @@ if ($scrollDestino === "bloque-entrega") {
                 foreach ($menusPorTipo as $tipoMenu => $cats) {
                     if (!empty($cats[$catEx])) {
                         foreach ($cats[$catEx] as $prod) {
+                            if (aguaEsNatural($prod)) continue; // la natural no se vende como extra
                             if (!in_array($prod["nombre"], $nombresExtrasForm)) {
                                 $nombresExtrasForm[] = $prod["nombre"];
                                 $extrasForm[$catEx][] = $prod;
@@ -1658,7 +1695,8 @@ document.addEventListener("DOMContentLoaded", function () {
             const bloqueActivo = document.querySelector(".opciones-menu-tipo[data-menu='" + numeroMenu + "'][data-tipo='" + tipo + "']");
 
             const sopaNombre   = bloqueActivo ? (bloqueActivo.dataset.sopa   || "—") : "—";
-            const aguaNombre   = bloqueActivo ? (bloqueActivo.dataset.agua   || "—") : "—";
+            const aguaSel      = bloqueActivo ? bloqueActivo.querySelector("input[name*='[agua_tipo]']:checked") : null;
+            const aguaNombre   = aguaSel ? aguaSel.dataset.nombre : (bloqueActivo ? (bloqueActivo.dataset.agua || "—") : "—");
             const cortesiaNombre = bloqueActivo ? (bloqueActivo.dataset.cortesia || "—") : "—";
 
             let complementosTexto = "Sin seleccionar";
@@ -1905,6 +1943,12 @@ function actualizarOpcionesMenu(numeroMenu) {
     document.querySelectorAll(".menu-" + numeroMenu + "-tipo").forEach(function (bloque) {
         if (bloque.getAttribute("data-tipo") === tipoSeleccionado) {
             bloque.style.display = "block";
+            // El agua siempre lleva una elegida: si se borró al cambiar de tipo, vuelve la del día
+            var aguas = bloque.querySelectorAll("input[name*='[agua_tipo]']");
+            if (aguas.length && !bloque.querySelector("input[name*='[agua_tipo]']:checked")) {
+                aguas[0].checked = true;
+                aguas[0].closest(".opcion-producto").classList.add("opcion-seleccionada");
+            }
         } else {
             bloque.style.display = "none";
             bloque.querySelectorAll("input").forEach(function (input) {

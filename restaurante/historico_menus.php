@@ -8,6 +8,7 @@ $rows = $conexion->query(
             p.tipo_menu, p.categoria, p.nombre, p.descripcion
      FROM menu_dia md
      LEFT JOIN productos p ON p.id_menu = md.id_menu
+                          AND NOT (p.categoria = 'Agua' AND p.nombre = 'Agua natural')
      ORDER BY md.fecha DESC, p.tipo_menu, FIELD(p.categoria,'Plato fuerte','Sopa','Complemento','Postre','Agua'), p.nombre"
 )->fetchAll(PDO::FETCH_ASSOC);
 
@@ -41,6 +42,7 @@ $topRows = $conexion->query(
     "SELECT MIN(nombre) AS nombre, categoria, COUNT(*) AS veces
      FROM productos
      WHERE nombre IS NOT NULL AND TRIM(nombre) != ''
+       AND NOT (categoria = 'Agua' AND nombre = 'Agua natural')
      GROUP BY LOWER(TRIM(nombre)), categoria
      ORDER BY veces DESC, MIN(nombre)
      LIMIT 40"

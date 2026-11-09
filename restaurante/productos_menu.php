@@ -82,6 +82,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $stmtEx = $conexion->prepare(
                 "SELECT id_producto, tipo_menu, categoria, nombre, descripcion, limite_pedidos, complementos_max, opciones
                  FROM productos WHERE id_menu = :id_menu
+                   AND NOT (categoria = 'Agua' AND nombre = 'Agua natural') -- la natural se maneja sola (includes/agua_natural.php)
                  ORDER BY tipo_menu, categoria, id_producto"
             );
             $stmtEx->execute([":id_menu" => $id_menu]);
@@ -298,7 +299,10 @@ foreach ($stmtRec->fetchAll(PDO::FETCH_ASSOC) as $r) {
 */
 $productosGuardados = [];
 $postreGuardado     = null;
-$sqlGuardados = "SELECT * FROM productos WHERE id_menu = :id_menu ORDER BY tipo_menu, categoria, nombre";
+// El "Agua natural" no se captura: se agrega sola en cada menú (includes/agua_natural.php)
+$sqlGuardados = "SELECT * FROM productos WHERE id_menu = :id_menu
+                   AND NOT (categoria = 'Agua' AND nombre = 'Agua natural')
+                 ORDER BY tipo_menu, categoria, nombre";
 $stmtGuardados = $conexion->prepare($sqlGuardados);
 $stmtGuardados->bindParam(":id_menu", $id_menu, PDO::PARAM_INT);
 $stmtGuardados->execute();

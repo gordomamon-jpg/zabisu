@@ -3,6 +3,7 @@ require_once "../config/db.php";
 require_once "../includes/opciones_plato.php";
 require_once "../includes/decoracion_ticket.php";
 require_once "auth_check.php";
+require_once "../includes/agua_natural.php";
 
 $id_pedido = isset($_GET["id"]) ? (int)$_GET["id"] : 0;
 
@@ -533,7 +534,8 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
         <?php echo separadorTicket($tema); ?>
 
         <?php foreach ($agrupado as $categoria => $items): ?>
-            <?php $esResaltado = in_array($categoria, ["Plato fuerte", "Complemento"]); ?>
+            <?php $esResaltado = in_array($categoria, ["Plato fuerte", "Complemento"])
+                || ($categoria === "Agua" && aguaEsNatural($items[0] ?? "")); // el agua natural se marca para que no se vaya la del día ?>
             <div class="item-group">
                 <div class="item-label"><?php echo htmlspecialchars($compacto ? (["Plato fuerte" => "Fuerte", "Complemento" => "Compl."][$categoria] ?? $categoria) : $categoria); ?></div>
                 <div class="item-value">
@@ -648,7 +650,8 @@ function obtenerTextoEstadoPagoTicket($estadoPago)
             </div>
 
             <?php foreach ($agrupado as $categoria => $items): ?>
-                <?php $esResaltado = in_array($categoria, ["Plato fuerte", "Complemento"]); ?>
+                <?php $esResaltado = in_array($categoria, ["Plato fuerte", "Complemento"])
+                || ($categoria === "Agua" && aguaEsNatural($items[0] ?? "")); // el agua natural se marca para que no se vaya la del día ?>
                 <div class="item-group">
                     <div class="item-label"><?php echo htmlspecialchars($compacto ? (["Plato fuerte" => "Fuerte", "Complemento" => "Compl."][$categoria] ?? $categoria) : $categoria); ?></div>
                     <div class="item-value">
