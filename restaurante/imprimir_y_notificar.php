@@ -554,25 +554,67 @@ try {
         $stmtExtrasInv->execute([":id_pedido" => $id_pedido]);
         $extrasInv = $stmtExtrasInv->fetchAll(PDO::FETCH_KEY_PAIR);
 
-        $extrasTazon   = (int)($extrasInv["Sopa"]        ?? 0)
-                       + (int)($extrasInv["Complemento"] ?? 0);
-        $extrasBotella = (int)($extrasInv["Agua"]        ?? 0);
+        // Sopa extra va en tazón normal; complemento extra va en tazón chico
+        $extrasTazon      = (int)($extrasInv["Sopa"]        ?? 0);
+        $extrasTazonChico = (int)($extrasInv["Complemento"] ?? 0);
+        $extrasBotella    = (int)($extrasInv["Agua"]        ?? 0);
+
+        /*
+            Revisión de observaciones: si mencionan la sopa es que la cambian
+            por un complemento (sin excepción), y ese complemento va en tazón
+            chico en lugar del tazón normal. Se cuenta uno por pedido.
+        */
+        $cambiosSopa = 0;
+        $obs = mb_strtolower((string)($pedido["observaciones"] ?? ""), "UTF-8");
+        if ($numMenus > 0 && preg_match('/\bsopas?\b/u', $obs)) {
+            $cambiosSopa = 1;
+        }
+
+        // Tazón chico y su tapa se buscan por nombre (si no existen, todo queda como antes)
+        $idsChico = $conexion->query(
+            "SELECT nombre, id_item FROM inventario_desechable
+              WHERE nombre IN ('Tazón chico', 'Tapa tazón chico')"
+        )->fetchAll(PDO::FETCH_KEY_PAIR);
+        $idTazonChico = null;
+        $idTapaChico  = null;
+        foreach ($idsChico as $nombre => $id) {
+            if (mb_strtolower($nombre, "UTF-8") === "tazón chico")      $idTazonChico = (int)$id;
+            if (mb_strtolower($nombre, "UTF-8") === "tapa tazón chico") $idTapaChico  = (int)$id;
+        }
+        if ($idTazonChico === null || $idTapaChico === null) {
+            $extrasTazon     += $extrasTazonChico;
+            $extrasTazonChico = 0;
+            $cambiosSopa      = 0;
+        }
+        $tazonesChicos = $cambiosSopa + $extrasTazonChico;
 
         // Mapa: id_item => cantidad a descontar
         $descuentos = [
-            1  => $numMenus,                      // Contenedor con división 8x8
-            2  => $numMenus + $extrasTazon,        // Tazón
-            3  => $numMenus + $extrasTazon,        // Tapa tazón
-            4  => $numMenus,                      // Tenedor
-            5  => $numMenus,                      // Cuchillo
-            6  => $numMenus,                      // Cuchara
-            7  => $numMenus,                      // Cuchara nevera
-            8  => $numMenus,                      // Servilleta
-            9  => $numMenus,                      // Bolsa con adherible
-            10 => $numMenus + $extrasBotella,      // Botella
-            11 => $numMenus + $extrasBotella,      // Tapa botella
-            12 => $numMenus,                      // Bolsa mediana
+            1  => $numMenus,                                  // Contenedor con división 8x8
+            2  => $numMenus - $cambiosSopa + $extrasTazon,    // Tazón
+            3  => $numMenus - $cambiosSopa + $extrasTazon,    // Tapa tazón
+            4  => $numMenus,                                  // Tenedor
+            5  => $numMenus,                                  // Cuchillo
+            6  => $numMenus,                                  // Cuchara
+            // 7 era la Cuchara nevera: ya no se usa (se quitó de la lista el 2026-11-08)
+            8  => $numMenus,                                  // Servilleta
+            9  => $numMenus,                                  // Bolsa con adherible
+            10 => $numMenus + $extrasBotella,                 // Botella
+            11 => $numMenus + $extrasBotella,                 // Tapa botella
+            12 => $numMenus,                                  // Bolsa mediana
         ];
+        $notas = [];
+        if ($tazonesChicos > 0) {
+            $descuentos[$idTazonChico] = $tazonesChicos;
+            $descuentos[$idTapaChico]  = $tazonesChicos;
+            $partes = [];
+            if ($cambiosSopa > 0)      $partes[] = "cambio de sopa en observaciones";
+            if ($extrasTazonChico > 0) $partes[] = $extrasTazonChico . " complemento(s) extra";
+            $notas[$idTazonChico] = $notas[$idTapaChico] = "Tazón chico: " . implode(" + ", $partes);
+        }
+        if ($cambiosSopa > 0) {
+            $notas[2] = $notas[3] = "Un tazón menos: cambiaron la sopa (observaciones)";
+        }
 
         $stmtDescItem = $conexion->prepare(
             "UPDATE inventario_desechable
@@ -580,8 +622,8 @@ try {
               WHERE id_item = :id_item"
         );
         $stmtInsertMov = $conexion->prepare(
-            "INSERT INTO inventario_movimientos (id_item, tipo, cantidad, id_pedido)
-             VALUES (:id_item, 'descuento', :cantidad, :id_pedido)"
+            "INSERT INTO inventario_movimientos (id_item, tipo, cantidad, id_pedido, notas)
+             VALUES (:id_item, 'descuento', :cantidad, :id_pedido, :notas)"
         );
 
         // Transacción propia para este bloque: si algo falla a la mitad,
@@ -598,6 +640,7 @@ try {
                         ":id_item"   => $id_item,
                         ":cantidad"  => -$cantidad,
                         ":id_pedido" => $id_pedido,
+                        ":notas"     => $notas[$id_item] ?? null,
                     ]);
                 }
             }
