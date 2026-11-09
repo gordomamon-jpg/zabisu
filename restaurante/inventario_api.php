@@ -8,6 +8,7 @@
       borrar_codigo    codigo                         → quita un código mal registrado
       recibir          lineas (JSON: id_item, paquetes, piezas)       → suma al stock (entrada)
       contar           lineas (JSON: id_item, total)                  → deja el stock en lo contado (ajuste)
+      fijar            id_item, total, motivo (opcional)              → corrige la cifra de un producto (ajuste)
 */
 require_once "../config/db.php";
 require_once "auth_check.php";
@@ -44,7 +45,7 @@ if ($accion === "buscar") {
     $fila = $stmt->fetch(PDO::FETCH_ASSOC);
 
     // Una etiqueta propia se reconoce aunque se haya impreso en otro lado
-    if (!$fila && preg_match('/^ZB-(\d{2})-(\d{4})$/', $codigo, $m) && isset($articulos[(int)$m[1]]) && (int)$m[2] > 0) {
+    if (!$fila && preg_match('/^ZB-(\d{2,})-(\d{4,})$/', $codigo, $m) && isset($articulos[(int)$m[1]]) && (int)$m[2] > 0) {
         $fila = ["id_item" => (int)$m[1], "piezas" => (int)$m[2]];
     }
 
@@ -80,6 +81,35 @@ if ($accion === "borrar_codigo") {
     $codigo = inventarioLimpiarCodigo($_POST["codigo"] ?? "");
     $conexion->prepare("DELETE FROM inventario_codigos WHERE codigo = :c")->execute([":c" => $codigo]);
     responder(["ok" => true]);
+}
+
+/* Cambiar la cifra de un solo producto desde su cuadro (cositas sueltas) */
+if ($accion === "fijar") {
+    $idItem = (int)($_POST["id_item"] ?? 0);
+    $total  = filter_var($_POST["total"] ?? "", FILTER_VALIDATE_INT);
+    $motivo = trim(preg_replace('/\s+/', ' ', $_POST["motivo"] ?? ""));
+    if (!isset($articulos[$idItem]) || $total === false || $total < 0 || $total > 10000000) {
+        responder(["ok" => false, "mensaje" => "Pon una cantidad válida (0 o más)."]);
+    }
+    try {
+        $conexion->beginTransaction();
+        $stmt = $conexion->prepare("SELECT stock_actual FROM inventario_desechable WHERE id_item = :i FOR UPDATE");
+        $stmt->execute([":i" => $idItem]);
+        $antes = (int)$stmt->fetchColumn();
+        $delta = $total - $antes;
+        if ($delta !== 0) {
+            $conexion->prepare("UPDATE inventario_desechable SET stock_actual = stock_actual + :d WHERE id_item = :i")
+                     ->execute([":d" => $delta, ":i" => $idItem]);
+            $nota = "Corrección a mano: había " . $antes . ", quedó en " . $total . ($motivo !== "" ? " · " . $motivo : "");
+            $conexion->prepare("INSERT INTO inventario_movimientos (id_item, tipo, cantidad, notas) VALUES (:i, 'ajuste', :c, :n)")
+                     ->execute([":i" => $idItem, ":c" => $delta, ":n" => mb_substr($nota, 0, 255)]);
+        }
+        $conexion->commit();
+        responder(["ok" => true, "id_item" => $idItem, "antes" => $antes, "despues" => $total]);
+    } catch (Exception $e) {
+        $conexion->rollBack();
+        responder(["ok" => false, "mensaje" => "No se pudo guardar. Intenta de nuevo."]);
+    }
 }
 
 if ($accion === "recibir" || $accion === "contar") {

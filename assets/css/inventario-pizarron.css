@@ -260,3 +260,30 @@
   .iv-camara__marco i{animation:none}
   .iv-btn,.iv-accion{transition:none}
 }
+
+/* ══ Cuadros de stock que se tocan para cambiar la cifra ══ */
+button.iv-art{position:relative;width:100%;margin:0;border-left:0;border-right:0;border-bottom:0;text-align:left;color:var(--pz-gis);font:inherit;cursor:pointer;
+  transition:background .15s,transform .12s}
+button.iv-art:hover{background:#2a2725}
+button.iv-art:active{transform:scale(.98)}
+button.iv-art:focus-visible{outline:2px solid var(--pz-naranja);outline-offset:2px}
+.iv-art__nombre{padding-right:22px}
+.iv-art__lapiz{position:absolute;top:10px;right:10px;width:16px;height:16px;color:var(--pz-gris);opacity:.7}
+
+.iv-cifra{display:flex;align-items:center;gap:10px}
+.iv-cifra__btn{width:60px;height:60px;flex-shrink:0;border-radius:14px;border:1.5px solid var(--pz-linea);background:var(--pz-grupo);color:var(--pz-gis);
+  font:600 30px/1 var(--pz-sys);cursor:pointer}
+.iv-cifra__btn--mas{border-color:var(--pz-naranja);color:var(--pz-naranja)}
+.iv-cifra__btn:active{transform:scale(.94)}
+.iv-cifra input[type="number"]{flex:1;min-width:0;text-align:center}
+.iv-cifra__dif{min-height:20px;margin:0 0 12px;font:600 14px var(--pz-sys);color:var(--pz-gris)}
+.iv-cifra__dif--mas{color:#8fdc9c}
+.iv-cifra__dif--menos{color:#ff8f86}
+.iv-hoja .iv-campo{margin-bottom:14px}
+
+/* Texto en los campos (nombre del producto, motivo) */
+.iv-campo--texto input{font:500 17px var(--pz-sys)}
+.iv-nuevo{margin-top:10px}
+.iv-nuevo[hidden]{display:none}
+.iv-nuevo .iv-nota{grid-column:1 / -1;margin-top:0!important}
+.iv-opcion--otro span{border-style:dashed;color:var(--pz-naranja)}

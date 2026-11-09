@@ -111,6 +111,14 @@ $stmtMovs = $conexion->prepare(
 $stmtMovs->execute();
 $movimientos = $stmtMovs->fetchAll(PDO::FETCH_ASSOC);
 
+// Aviso después de cambiar la cifra desde un cuadro
+$ajustado = null;
+if (isset($_GET["ajustado"])) {
+    foreach ($items as $i) {
+        if ((int)$i["id_item"] === (int)$_GET["ajustado"]) $ajustado = $i;
+    }
+}
+
 function fmtFechaInv($ts) {
     return date("d/m/Y g:i A", strtotime($ts));
 }
@@ -126,7 +134,7 @@ function fmtFechaInv($ts) {
     <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=5">
-    <link rel="stylesheet" href="../assets/css/inventario-pizarron.css?v=2">
+    <link rel="stylesheet" href="../assets/css/inventario-pizarron.css?v=3">
 </head>
 <body class="pz">
 <?php require __DIR__ . "/../includes/pz_filtros.php"; ?>
@@ -147,6 +155,10 @@ function fmtFechaInv($ts) {
 
     <?php if ($mensaje !== ""): ?>
         <div class="<?php echo $tipoMensaje === 'ok' ? 'iv-aviso' : 'iv-error'; ?>"><p><?php echo htmlspecialchars($mensaje); ?></p></div>
+    <?php endif; ?>
+
+    <?php if ($ajustado): ?>
+        <div class="iv-aviso"><span>✓</span><div><strong><?php echo htmlspecialchars($ajustado["nombre"]); ?> quedó en <?php echo number_format((int)$ajustado["stock_actual"]); ?>.</strong><p>Quedó anotado en "Entradas y conteos".</p></div></div>
     <?php endif; ?>
 
     <!-- Lo que se hace aquí: grande y a la mano -->
@@ -195,13 +207,17 @@ function fmtFechaInv($ts) {
                         $estado = "ok"; $label = "OK";
                     }
                 ?>
-                <div class="iv-art iv-art--<?php echo $estado; ?>">
+                <button type="button" class="iv-art iv-art--<?php echo $estado; ?>"
+                        data-id="<?php echo (int)$item["id_item"]; ?>" data-nombre="<?php echo htmlspecialchars($item["nombre"]); ?>" data-stock="<?php echo $stock; ?>"
+                        aria-label="<?php echo htmlspecialchars($item["nombre"]); ?>: <?php echo $stock; ?>. Toca para cambiar la cifra">
                     <span class="iv-art__nombre"><?php echo htmlspecialchars($item["nombre"]); ?></span>
                     <strong class="iv-art__stock"><?php echo number_format($stock); ?></strong>
                     <span class="iv-art__pie"><span class="iv-art__estado"><?php echo $label; ?></span> mínimo <?php echo number_format($minimo); ?></span>
-                </div>
+                    <svg class="iv-art__lapiz" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                </button>
             <?php endforeach; ?>
         </div>
+        <p class="iv-nota">Toca un cuadro para cambiar su cifra a mano (por ejemplo, piezas sueltas).</p>
     </section>
 
     <!-- CÓDIGOS -->
@@ -248,7 +264,101 @@ function fmtFechaInv($ts) {
     </section>
 </main>
 
+<!-- Hoja: cambiar la cifra de un producto -->
+<div class="iv-hoja-fondo" id="hoja-cifra" hidden>
+    <form class="iv-hoja" id="form-cifra" role="dialog" aria-modal="true" aria-labelledby="cifra-nombre">
+        <p class="iv-hoja__eyebrow">Cambiar la cifra</p>
+        <h2 class="iv-hoja__titulo" id="cifra-nombre"></h2>
+        <p class="iv-hoja__nota">En el sistema: <b id="cifra-antes"></b>. Pon cuántas hay de verdad.</p>
+        <div class="iv-cifra">
+            <button type="button" class="iv-cifra__btn" data-paso="-1" aria-label="Una menos">−</button>
+            <input type="number" id="cifra-total" min="0" max="10000000" inputmode="numeric" required aria-label="Cuántas hay">
+            <button type="button" class="iv-cifra__btn iv-cifra__btn--mas" data-paso="1" aria-label="Una más">+</button>
+        </div>
+        <div class="iv-hoja__chips">
+            <button type="button" class="iv-chip" data-paso="-10">−10</button>
+            <button type="button" class="iv-chip" data-paso="-5">−5</button>
+            <button type="button" class="iv-chip" data-paso="5">+5</button>
+            <button type="button" class="iv-chip" data-paso="10">+10</button>
+        </div>
+        <p class="iv-cifra__dif" id="cifra-dif"></p>
+        <label class="iv-campo iv-campo--texto">
+            <span>Motivo (opcional)</span>
+            <input type="text" id="cifra-motivo" maxlength="120" placeholder="Ej. piezas sueltas, se rompieron" autocomplete="off">
+        </label>
+        <div class="iv-hecho__acc">
+            <button type="button" class="iv-btn" id="cifra-cancelar">Cancelar</button>
+            <button type="submit" class="iv-btn iv-btn--naranja" id="cifra-guardar">Guardar</button>
+        </div>
+    </form>
+</div>
+
 <script>
+// Cambiar la cifra de un producto tocando su cuadro
+(function () {
+    var hoja = document.getElementById("hoja-cifra");
+    var input = document.getElementById("cifra-total");
+    var dif = document.getElementById("cifra-dif");
+    var guardar = document.getElementById("cifra-guardar");
+    var actual = null;
+
+    function valor() { var n = parseInt(input.value, 10); return isNaN(n) ? null : n; }
+    function pintarDif() {
+        var n = valor();
+        if (n === null || n === actual.stock) { dif.textContent = ""; dif.className = "iv-cifra__dif"; return; }
+        var d = n - actual.stock;
+        dif.textContent = (d > 0 ? "+" : "−") + Math.abs(d).toLocaleString("es-MX") + " contra lo que hay en el sistema";
+        dif.className = "iv-cifra__dif " + (d > 0 ? "iv-cifra__dif--mas" : "iv-cifra__dif--menos");
+    }
+    function abrir(card) {
+        actual = { id: card.dataset.id, nombre: card.dataset.nombre, stock: parseInt(card.dataset.stock, 10) };
+        document.getElementById("cifra-nombre").textContent = actual.nombre;
+        document.getElementById("cifra-antes").textContent = actual.stock.toLocaleString("es-MX");
+        input.value = Math.max(0, actual.stock);
+        document.getElementById("cifra-motivo").value = "";
+        guardar.disabled = false;
+        pintarDif();
+        hoja.hidden = false;
+        input.focus();
+        input.select();
+    }
+    function cerrar() { hoja.hidden = true; actual = null; }
+
+    document.querySelectorAll(".iv-art[data-id]").forEach(function (card) {
+        card.addEventListener("click", function () { abrir(card); });
+    });
+    hoja.querySelectorAll("[data-paso]").forEach(function (b) {
+        b.addEventListener("click", function () {
+            input.value = Math.max(0, (valor() || 0) + parseInt(b.dataset.paso, 10));
+            pintarDif();
+        });
+    });
+    input.addEventListener("input", pintarDif);
+    document.getElementById("cifra-cancelar").addEventListener("click", cerrar);
+    hoja.addEventListener("click", function (e) { if (e.target === hoja) cerrar(); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !hoja.hidden) cerrar(); });
+
+    document.getElementById("form-cifra").addEventListener("submit", function (e) {
+        e.preventDefault();
+        var n = valor();
+        if (n === null || n < 0) { input.focus(); return; }
+        if (n === actual.stock) { cerrar(); return; }
+        guardar.disabled = true;
+        fetch("inventario_api.php", {
+            method: "POST",
+            headers: { "Accept": "application/json", "Content-Type": "application/x-www-form-urlencoded" },
+            body: "accion=fijar&id_item=" + encodeURIComponent(actual.id) + "&total=" + n +
+                  "&motivo=" + encodeURIComponent(document.getElementById("cifra-motivo").value)
+        }).then(function (r) { return r.json(); }).then(function (r) {
+            if (!r.ok) throw new Error(r.mensaje || "");
+            location.href = "inventario.php?ajustado=" + encodeURIComponent(actual.id);
+        }).catch(function (err) {
+            guardar.disabled = false;
+            alert(err.message || "No se pudo guardar. Intenta de nuevo.");
+        });
+    });
+})();
+
 // Quitar un código mal registrado
 document.querySelectorAll("[data-borrar]").forEach(function (btn) {
     btn.addEventListener("click", function () {

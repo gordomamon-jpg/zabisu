@@ -17,14 +17,40 @@ foreach ($articulos as $a) $porId[(int)$a["id_item"]] = $a["nombre"];
 
 $errores   = [];
 $etiqueta  = null;
-$idItem    = (int)($_POST["id_item"] ?? $_GET["id_item"] ?? 0);
+$esNuevo   = ($_POST["id_item"] ?? "") === "nuevo";
+$idItem    = $esNuevo ? 0 : (int)($_POST["id_item"] ?? $_GET["id_item"] ?? 0);
 $piezas    = (int)($_POST["piezas"] ?? $_GET["piezas"] ?? 0);
 $copias    = (int)($_POST["copias"] ?? 1);
+$nombreNuevo = trim(preg_replace('/\s+/u', ' ', $_POST["nombre_nuevo"] ?? ""));
+$minimoNuevo = (int)($_POST["minimo_nuevo"] ?? 20);
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    if (!isset($porId[$idItem]))           $errores[] = "Elige el producto.";
+    if ($esNuevo) {
+        $largo = mb_strlen($nombreNuevo);
+        if ($largo < 2 || $largo > 100)       $errores[] = "Escribe el nombre del producto nuevo (2 a 100 letras).";
+        if ($minimoNuevo < 0 || $minimoNuevo > 100000) $errores[] = "El mínimo para avisar va de 0 a 100,000.";
+    } elseif (!isset($porId[$idItem])) {
+        $errores[] = "Elige el producto.";
+    }
     if ($piezas < 1 || $piezas > 9999)     $errores[] = "Pon cuántas piezas trae el paquete (1 a 9,999).";
     if ($copias < 1 || $copias > 30)       $errores[] = "Las copias van de 1 a 30.";
+
+    // Producto nuevo: se agrega a la lista (si ya existía con ese nombre, se usa ese)
+    if (empty($errores) && $esNuevo) {
+        $stmt = $conexion->prepare("SELECT id_item FROM inventario_desechable WHERE nombre = :n LIMIT 1");
+        $stmt->execute([":n" => $nombreNuevo]);
+        $existente = $stmt->fetchColumn();
+        if ($existente) {
+            $idItem = (int)$existente;
+        } else {
+            $conexion->prepare("INSERT INTO inventario_desechable (nombre, stock_actual, stock_minimo) VALUES (:n, 0, :m)")
+                     ->execute([":n" => $nombreNuevo, ":m" => $minimoNuevo]);
+            $idItem = (int)$conexion->lastInsertId();
+        }
+        $porId[$idItem] = $porId[$idItem] ?? $nombreNuevo;
+        $articulos = $conexion->query("SELECT id_item, nombre FROM inventario_desechable ORDER BY id_item")->fetchAll(PDO::FETCH_ASSOC);
+        $esNuevo = false;
+    }
 
     if (empty($errores)) {
         $codigo = inventarioCodigoPropio($idItem, $piezas);
@@ -32,7 +58,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             "INSERT INTO inventario_codigos (codigo, id_item, piezas, propio) VALUES (:c, :i, :p, 1)
              ON DUPLICATE KEY UPDATE id_item = VALUES(id_item), piezas = VALUES(piezas), propio = 1"
         )->execute([":c" => $codigo, ":i" => $idItem, ":p" => $piezas]);
-        $etiqueta = ["codigo" => $codigo, "nombre" => $porId[$idItem], "piezas" => $piezas, "copias" => $copias];
+        $etiqueta = ["codigo" => $codigo, "nombre" => $porId[$idItem], "piezas" => $piezas, "copias" => $copias,
+                     "agregado" => isset($existente) && !$existente];
     }
 }
 
@@ -54,7 +81,7 @@ $propias = $conexion->query(
     <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=5">
-    <link rel="stylesheet" href="../assets/css/inventario-pizarron.css?v=2">
+    <link rel="stylesheet" href="../assets/css/inventario-pizarron.css?v=3">
     <?php if ($etiqueta): ?>
     <!-- Igual que ticket.php: el rollo de 80 mm lo pone el controlador de la impresora -->
     <style>@media print { @page { margin: 4mm; } }</style>
@@ -82,6 +109,7 @@ $propias = $conexion->query(
         <span>✓</span>
         <div>
             <strong><?php echo $etiqueta["copias"]; ?> etiqueta<?php echo $etiqueta["copias"] !== 1 ? "s" : ""; ?> lista<?php echo $etiqueta["copias"] !== 1 ? "s" : ""; ?>: <?php echo htmlspecialchars($etiqueta["nombre"]); ?>, paquete de <?php echo number_format($etiqueta["piezas"]); ?></strong>
+            <?php if ($etiqueta["agregado"]): ?><p>Se agregó "<?php echo htmlspecialchars($etiqueta["nombre"]); ?>" a la lista del inventario.</p><?php endif; ?>
             <p>Si no se abrió la impresión, toca "Imprimir otra vez". El código <?php echo $etiqueta["codigo"]; ?> ya lo reconoce el escáner.</p>
         </div>
         <button type="button" class="iv-btn iv-btn--estraza" onclick="window.print()">Imprimir otra vez</button>
@@ -101,6 +129,21 @@ $propias = $conexion->query(
                 <span><?php echo htmlspecialchars($a["nombre"]); ?></span>
             </label>
             <?php endforeach; ?>
+            <label class="iv-opcion iv-opcion--otro">
+                <input type="radio" name="id_item" value="nuevo" <?php echo $esNuevo ? "checked" : ""; ?> required>
+                <span>+ Otro producto</span>
+            </label>
+        </div>
+        <div class="iv-tarjeta iv-campos iv-nuevo" id="campos-nuevo" <?php echo $esNuevo ? "" : "hidden"; ?>>
+            <label class="iv-campo iv-campo--texto">
+                <span>Nombre del producto</span>
+                <input type="text" name="nombre_nuevo" maxlength="100" value="<?php echo htmlspecialchars($nombreNuevo); ?>" placeholder="Ej. Popote" autocomplete="off">
+            </label>
+            <label class="iv-campo">
+                <span>Avisar cuando queden menos de</span>
+                <input type="number" name="minimo_nuevo" min="0" max="100000" inputmode="numeric" value="<?php echo max(0, $minimoNuevo); ?>">
+            </label>
+            <p class="iv-nota">Se agrega a la lista del inventario con 0 piezas. Después toca su cuadro en Inventario para poner cuántas hay, o escanea la etiqueta en "Recibir mercancía".</p>
         </div>
 
         <h2 class="pz-cinta pz-fibra iv-sec__sig">2. ¿Cuántas piezas trae el paquete?</h2>
@@ -137,6 +180,23 @@ $propias = $conexion->query(
     </section>
     <?php endif; ?>
 </main>
+
+<script>
+// "Otro producto": mostrar y pedir el nombre solo cuando se elige
+(function () {
+    var campos = document.getElementById("campos-nuevo");
+    var nombre = campos.querySelector('[name="nombre_nuevo"]');
+    function revisar() {
+        var nuevo = document.querySelector('[name="id_item"][value="nuevo"]').checked;
+        campos.hidden = !nuevo;
+        nombre.required = nuevo;
+    }
+    document.querySelectorAll('[name="id_item"]').forEach(function (r) {
+        r.addEventListener("change", function () { revisar(); if (r.value === "nuevo") nombre.focus(); });
+    });
+    revisar();
+})();
+</script>
 
 <?php if ($etiqueta): ?>
 <!-- Lo que sale en la impresora de tickets (80 mm) -->
