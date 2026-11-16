@@ -80,7 +80,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             // Cargar productos existentes ordenados por posición de inserción
             $stmtEx = $conexion->prepare(
-                "SELECT id_producto, tipo_menu, categoria, nombre, descripcion, limite_pedidos, complementos_max, opciones
+                "SELECT id_producto, tipo_menu, categoria, nombre, descripcion, limite_pedidos, complementos_max, opciones, lleva_souffle
                  FROM productos WHERE id_menu = :id_menu
                    AND NOT (categoria = 'Agua' AND nombre = 'Agua natural') -- la natural se maneja sola (includes/agua_natural.php)
                  ORDER BY tipo_menu, categoria, id_producto"
@@ -108,12 +108,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $stmtUpdate = $conexion->prepare(
                 "UPDATE productos SET nombre=:nombre, descripcion=:descripcion,
                  disponible=:disponible, limite_pedidos=:limite_pedidos,
-                 complementos_max=:complementos_max, opciones=:opciones
+                 complementos_max=:complementos_max, opciones=:opciones,
+                 lleva_souffle=:lleva_souffle
                  WHERE id_producto=:id"
             );
             $stmtInsert = $conexion->prepare(
-                "INSERT INTO productos (id_menu, tipo_menu, categoria, nombre, descripcion, disponible, limite_pedidos, complementos_max, opciones)
-                 VALUES (:id_menu, :tipo_menu, :categoria, :nombre, :descripcion, 1, :limite_pedidos, :complementos_max, :opciones)"
+                "INSERT INTO productos (id_menu, tipo_menu, categoria, nombre, descripcion, disponible, limite_pedidos, complementos_max, opciones, lleva_souffle)
+                 VALUES (:id_menu, :tipo_menu, :categoria, :nombre, :descripcion, 1, :limite_pedidos, :complementos_max, :opciones, :lleva_souffle)"
             );
 
             foreach ($productos as $tipo_menu => $categorias) {
@@ -127,8 +128,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         $limiteFinal   = null;
                         $compMaxFinal  = null;
                         $opcionesFinal = null;
+                        $souffleFinal  = 0;
                         if ($categoria === "Plato fuerte") {
                             $opcionesFinal = normalizarOpcionesPlato((string)($item["opciones"] ?? ""));
+                            // Lleva salsa o crema en vaso soufflé no.2 (para el inventario)
+                            $souffleFinal  = !empty($item["lleva_souffle"]) ? 1 : 0;
                             if ($limite !== "" && is_numeric($limite)) {
                                 $limiteFinal = (int)$limite;
                             }
@@ -151,6 +155,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                     ":limite_pedidos"  => $limiteFinal,
                                     ":complementos_max"=> $compMaxFinal,
                                     ":opciones"        => $opcionesFinal,
+                                    ":lleva_souffle"   => $souffleFinal,
                                     ":id"              => $idEx,
                                 ]);
                             } elseif (isset($idsRef[$idEx])) {
@@ -163,6 +168,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                     ":limite_pedidos"  => $exDato["limite_pedidos"],
                                     ":complementos_max"=> $exDato["complementos_max"] ?? null,
                                     ":opciones"        => $exDato["opciones"] ?? null,
+                                    ":lleva_souffle"   => (int)($exDato["lleva_souffle"] ?? 0),
                                     ":id"              => $idEx,
                                 ]);
                             }
@@ -178,6 +184,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                                 ":limite_pedidos"  => $limiteFinal,
                                 ":complementos_max"=> $compMaxFinal,
                                 ":opciones"        => $opcionesFinal,
+                                ":lleva_souffle"   => $souffleFinal,
                             ]);
                         }
                     }
@@ -279,7 +286,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 $platosRecordados = [];
 $vistos = [];
 $stmtRec = $conexion->prepare(
-    "SELECT nombre, opciones, complementos_max FROM productos
+    "SELECT nombre, opciones, complementos_max, lleva_souffle FROM productos
      WHERE categoria = 'Plato fuerte' AND id_menu <> :id_menu
      ORDER BY id_producto DESC LIMIT 3000"
 );
@@ -288,10 +295,10 @@ foreach ($stmtRec->fetchAll(PDO::FETCH_ASSOC) as $r) {
     $clave = mb_strtolower(trim($r["nombre"]), "UTF-8");
     if (isset($vistos[$clave])) continue;
     $vistos[$clave] = true;
-    $rec = [];
+    $rec = ["souffle" => (int)$r["lleva_souffle"]];
     if ((string)$r["opciones"] !== "")   $rec["opciones"] = $r["opciones"];
     if ($r["complementos_max"] !== null) $rec["complementos_max"] = (int)$r["complementos_max"];
-    if ($rec) $platosRecordados[$clave] = $rec;
+    $platosRecordados[$clave] = $rec;
 }
 
 /*
@@ -347,7 +354,7 @@ $esCreacion = !isset($_GET["editar"]) && empty($productosGuardados);
     <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=5">
-    <link rel="stylesheet" href="../assets/css/menus-pizarron.css?v=4">
+    <link rel="stylesheet" href="../assets/css/menus-pizarron.css?v=5">
 </head>
 <body class="pz">
 <?php require __DIR__ . "/../includes/pz_filtros.php"; ?>
@@ -550,6 +557,7 @@ POSTRE: Nombre del postre (descripción)</pre>
                         $limiteVal   = $guardado["limite_pedidos"] ?? "";
                         $compMaxVal  = $guardado["complementos_max"] ?? "";
                         $opcionesVal = $guardado["opciones"] ?? "";
+                        $souffleVal  = (int)($guardado["lleva_souffle"] ?? 0);
                         $inputBase = "productos[" . htmlspecialchars($tipoMenu) . "][" . htmlspecialchars($categoria) . "][" . $i . "]";
                     ?>
                     <div class="pm-producto-card">
@@ -584,7 +592,7 @@ POSTRE: Nombre del postre (descripción)</pre>
                                        value="<?php echo htmlspecialchars($compMaxVal); ?>">
                                 <span class="nm-campo__ayuda">Deja vacío para permitir hasta 2. Pon 1 si este plato solo incluye un complemento.</span>
                             </div>
-                            <div class="pm-limite">
+                            <div class="pm-limite pm-limite--ancho">
                                 <label>Opciones sin costo</label>
                                 <textarea name="<?php echo $inputBase; ?>[opciones]"
                                           class="pm-input-opciones"
@@ -592,6 +600,16 @@ POSTRE: Nombre del postre (descripción)</pre>
                                           placeholder="Una por línea, p. ej. aderezos"><?php echo htmlspecialchars($opcionesVal); ?></textarea>
                                 <span class="nm-campo__ayuda">Si escribes opciones, el cliente tendrá que elegir una (sin costo). Se recuerdan solas para este plato.</span>
                             </div>
+                            <label class="pm-activar-label pm-souffle">
+                                <input type="checkbox" value="1"
+                                       name="<?php echo $inputBase; ?>[lleva_souffle]"
+                                       class="pm-input-souffle"
+                                       data-tipo="<?php echo htmlspecialchars($tipoMenu); ?>"
+                                       <?php echo $guardado ? 'data-guardado="1"' : ''; ?>
+                                       <?php echo $souffleVal ? "checked" : ""; ?>>
+                                <span>Lleva vasito de salsa o crema</span>
+                                <span class="nm-campo__ayuda">Vaso soufflé no.2 con su tapa: se descuenta del inventario uno por cada menú con este plato.</span>
+                            </label>
                             </div>
                             <?php endif; ?>
                         </div>
@@ -808,17 +826,43 @@ document.addEventListener("DOMContentLoaded", function () {
     function llenar(inputNombre) {
         var campos = inputNombre.closest(".pm-producto-card__campos");
         if (!campos) return;
-        var rec = recordados[inputNombre.value.trim().toLowerCase()];
+        var nombre = inputNombre.value.trim().toLowerCase();
+        var rec = recordados[nombre];
+        llenarSouffle(campos, nombre, rec);
         if (!rec) return;
         var area = campos.querySelector(".pm-input-opciones");
         var cmax = campos.querySelector("input[name$='[complementos_max]']");
         if (area && area.value.trim() === "" && rec.opciones) area.value = rec.opciones;
         if (cmax && cmax.value.trim() === "" && rec.complementos_max) cmax.value = rec.complementos_max;
     }
+    /*
+        Casilla del vasito de salsa: lo que tuvo la última vez ese plato; si es
+        nuevo, se sugiere (Ejecutivo salvo ensaladas, y tacos, quesadillas o
+        alambre en cualquier menú). Si la tocan a mano, ya no se cambia sola.
+    */
+    function llenarSouffle(campos, nombre, rec) {
+        var caja = campos.querySelector(".pm-input-souffle");
+        if (!caja || caja.dataset.manual === "1" || nombre === "") return;
+        if (rec && typeof rec.souffle !== "undefined") {
+            caja.checked = rec.souffle === 1;
+        } else {
+            var ensalada = /\bensaladas?\b/.test(nombre);
+            caja.checked = (caja.dataset.tipo === "Ejecutivo" && !ensalada)
+                        || /\b(tacos?|quesadillas?|alambres?)\b/.test(nombre);
+        }
+    }
+    document.querySelectorAll(".pm-input-souffle").forEach(function (caja) {
+        caja.addEventListener("change", function () { caja.dataset.manual = "1"; });
+    });
     document.querySelectorAll(".pm-input-nombre").forEach(function (inp) {
         inp.addEventListener("input",  function () { llenar(inp); });
         inp.addEventListener("change", function () { llenar(inp); });
+        // Los ya guardados conservan su casilla al abrir la página
+        var caja = inp.closest(".pm-producto-card__campos");
+        caja = caja ? caja.querySelector(".pm-input-souffle") : null;
+        if (caja && caja.dataset.guardado === "1") caja.dataset.manual = "1";
         llenar(inp);
+        if (caja && caja.dataset.guardado === "1") delete caja.dataset.manual;
     });
 })();
 </script>

@@ -574,16 +574,18 @@ try {
             Revisión de cada menú (plato fuerte con su opción y postre/cortesía):
             - Ensalada como plato fuerte: su complemento va en tazón chico, y el
               aderezo en vasito 4oz (si eligieron uno; "Sin aderezo" no lleva).
-            - Menú Ejecutivo: lleva salsa en vaso soufflé no.2, salvo ensaladas.
-            - Tacos o quesadillas (cualquier menú): crema en vaso soufflé no.2.
+            - Vaso soufflé no.2 (salsa o crema): el plato fuerte tiene marcada la
+              casilla "Lleva vasito de salsa o crema" al capturar el menú.
             - Flan como postre o cortesía: va en vasito 4oz.
         */
         $stmtDetInv = $conexion->prepare(
-            "SELECT pm.id_pedido_menu, pm.tipo_menu, dp.categoria, dp.nombre_producto, dp.opcion
+            "SELECT pm.id_pedido_menu, pm.tipo_menu, dp.categoria, dp.nombre_producto, dp.opcion,
+                    COALESCE(pr.lleva_souffle, 0) AS lleva_souffle
                FROM pedido_menus pm
                LEFT JOIN detalle_pedido dp
                       ON dp.id_pedido_menu = pm.id_pedido_menu
                      AND dp.categoria IN ('Plato fuerte', 'Postre', 'Cortesia')
+               LEFT JOIN productos pr ON pr.id_producto = dp.id_producto
               WHERE pm.id_pedido = :id_pedido"
         );
         $stmtDetInv->execute([":id_pedido" => $id_pedido]);
@@ -597,13 +599,14 @@ try {
                 $menusInv[$idPm]["platos"][] = [
                     "nombre" => mb_strtolower((string)$fila["nombre_producto"], "UTF-8"),
                     "opcion" => mb_strtolower(trim((string)$fila["opcion"]), "UTF-8"),
+                    "souffle" => (int)$fila["lleva_souffle"] === 1,
                 ];
             } elseif ($fila["categoria"] !== null) {
                 $menusInv[$idPm]["postres"][] = mb_strtolower((string)$fila["nombre_producto"], "UTF-8");
             }
         }
 
-        $ensaladas = 0; $aderezos = 0; $salsasEjecutivo = 0; $cremas = 0; $flanes = 0;
+        $ensaladas = 0; $aderezos = 0; $souffles = 0; $flanes = 0;
         foreach ($menusInv as $m) {
             $esEnsalada = false;
             foreach ($m["platos"] as $plato) {
@@ -613,14 +616,12 @@ try {
                         $aderezos++;
                     }
                 }
-                if (preg_match('/\b(tacos?|quesadillas?)\b/u', $plato["nombre"])) {
-                    $cremas++;
+                if ($plato["souffle"]) {
+                    $souffles++;
                 }
             }
             if ($esEnsalada) {
                 $ensaladas++;
-            } elseif ($m["tipo"] === "Ejecutivo") {
-                $salsasEjecutivo++;
             }
             foreach ($m["postres"] as $postre) {
                 if (preg_match('/\bflan(es)?\b/u', $postre)) {
@@ -650,7 +651,6 @@ try {
         }
         $tazonesChicos = $cambiosSopa + $extrasTazonChico + $ensaladas;
         $vasitos4      = $flanes + $aderezos;
-        $souffles      = $salsasEjecutivo + $cremas;
 
         // Mapa: id_item => cantidad a descontar
         $descuentos = [
@@ -688,10 +688,7 @@ try {
         if ($souffles > 0 && $idSouffle !== null && $idTapaSouffle !== null) {
             $descuentos[$idSouffle]     = $souffles;
             $descuentos[$idTapaSouffle] = $souffles;
-            $partes = [];
-            if ($salsasEjecutivo > 0) $partes[] = $salsasEjecutivo . " salsa(s) de Ejecutivo";
-            if ($cremas > 0)          $partes[] = $cremas . " crema(s) de tacos/quesadillas";
-            $notas[$idSouffle] = $notas[$idTapaSouffle] = "Soufflé: " . implode(" + ", $partes);
+            $notas[$idSouffle] = $notas[$idTapaSouffle] = "Soufflé: " . $souffles . " plato(s) con salsa o crema";
         }
         if ($cambiosSopa > 0) {
             $notas[2] = $notas[3] = "Un tazón menos: cambiaron la sopa (observaciones)";

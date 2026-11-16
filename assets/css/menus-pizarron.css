@@ -196,7 +196,8 @@
 .mz .pm-input-nombre{font-weight:600}
 .pm-limite{margin-top:2px}
 .pm-detalles{display:grid;gap:12px;padding-top:12px;border-top:1px dashed var(--pz-linea)}
-@media (min-width:600px){ .pm-detalles{grid-template-columns:1fr 1fr} .pm-detalles .pm-limite:last-child{grid-column:1 / -1} }
+@media (min-width:600px){ .pm-detalles{grid-template-columns:1fr 1fr} .pm-detalles .pm-limite--ancho,.pm-detalles .pm-souffle{grid-column:1 / -1} }
+.pm-detalles .pm-souffle{margin-top:0}
 
 /* Postre */
 .pm-postre{background:var(--pz-grupo)}
