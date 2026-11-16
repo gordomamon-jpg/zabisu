@@ -570,23 +570,87 @@ try {
             $cambiosSopa = 1;
         }
 
-        // Tazón chico y su tapa se buscan por nombre (si no existen, todo queda como antes)
-        $idsChico = $conexion->query(
-            "SELECT nombre, id_item FROM inventario_desechable
-              WHERE nombre IN ('Tazón chico', 'Tapa tazón chico')"
-        )->fetchAll(PDO::FETCH_KEY_PAIR);
-        $idTazonChico = null;
-        $idTapaChico  = null;
-        foreach ($idsChico as $nombre => $id) {
-            if (mb_strtolower($nombre, "UTF-8") === "tazón chico")      $idTazonChico = (int)$id;
-            if (mb_strtolower($nombre, "UTF-8") === "tapa tazón chico") $idTapaChico  = (int)$id;
+        /*
+            Revisión de cada menú (plato fuerte con su opción y postre/cortesía):
+            - Ensalada como plato fuerte: su complemento va en tazón chico, y el
+              aderezo en vasito 4oz (si eligieron uno; "Sin aderezo" no lleva).
+            - Menú Ejecutivo: lleva salsa en vaso soufflé no.2, salvo ensaladas.
+            - Tacos o quesadillas (cualquier menú): crema en vaso soufflé no.2.
+            - Flan como postre o cortesía: va en vasito 4oz.
+        */
+        $stmtDetInv = $conexion->prepare(
+            "SELECT pm.id_pedido_menu, pm.tipo_menu, dp.categoria, dp.nombre_producto, dp.opcion
+               FROM pedido_menus pm
+               LEFT JOIN detalle_pedido dp
+                      ON dp.id_pedido_menu = pm.id_pedido_menu
+                     AND dp.categoria IN ('Plato fuerte', 'Postre', 'Cortesia')
+              WHERE pm.id_pedido = :id_pedido"
+        );
+        $stmtDetInv->execute([":id_pedido" => $id_pedido]);
+        $menusInv = [];
+        foreach ($stmtDetInv->fetchAll(PDO::FETCH_ASSOC) as $fila) {
+            $idPm = (int)$fila["id_pedido_menu"];
+            if (!isset($menusInv[$idPm])) {
+                $menusInv[$idPm] = ["tipo" => $fila["tipo_menu"], "platos" => [], "postres" => []];
+            }
+            if ($fila["categoria"] === "Plato fuerte") {
+                $menusInv[$idPm]["platos"][] = [
+                    "nombre" => mb_strtolower((string)$fila["nombre_producto"], "UTF-8"),
+                    "opcion" => mb_strtolower(trim((string)$fila["opcion"]), "UTF-8"),
+                ];
+            } elseif ($fila["categoria"] !== null) {
+                $menusInv[$idPm]["postres"][] = mb_strtolower((string)$fila["nombre_producto"], "UTF-8");
+            }
         }
+
+        $ensaladas = 0; $aderezos = 0; $salsasEjecutivo = 0; $cremas = 0; $flanes = 0;
+        foreach ($menusInv as $m) {
+            $esEnsalada = false;
+            foreach ($m["platos"] as $plato) {
+                if (preg_match('/\bensaladas?\b/u', $plato["nombre"])) {
+                    $esEnsalada = true;
+                    if ($plato["opcion"] !== "" && !preg_match('/\bsin\b/u', $plato["opcion"])) {
+                        $aderezos++;
+                    }
+                }
+                if (preg_match('/\b(tacos?|quesadillas?)\b/u', $plato["nombre"])) {
+                    $cremas++;
+                }
+            }
+            if ($esEnsalada) {
+                $ensaladas++;
+            } elseif ($m["tipo"] === "Ejecutivo") {
+                $salsasEjecutivo++;
+            }
+            foreach ($m["postres"] as $postre) {
+                if (preg_match('/\bflan(es)?\b/u', $postre)) {
+                    $flanes++;
+                    break;
+                }
+            }
+        }
+
+        // Tazón chico y vasitos se buscan por nombre (si alguno no existe, se omite)
+        $idsPorNombre = [];
+        foreach ($conexion->query("SELECT nombre, id_item FROM inventario_desechable")->fetchAll(PDO::FETCH_KEY_PAIR) as $nombre => $id) {
+            $idsPorNombre[mb_strtolower(trim($nombre), "UTF-8")] = (int)$id;
+        }
+        $idTazonChico   = $idsPorNombre["tazón chico"]              ?? null;
+        $idTapaChico    = $idsPorNombre["tapa tazón chico"]         ?? null;
+        $idVasito4      = $idsPorNombre["vasito 4oz"]               ?? null;
+        $idTapaVasito4  = $idsPorNombre["tapa vasito 4oz"]          ?? null;
+        $idSouffle      = $idsPorNombre["vasito soufflé no.2"]      ?? null;
+        $idTapaSouffle  = $idsPorNombre["tapa vasito soufflé no.2"] ?? null;
+
         if ($idTazonChico === null || $idTapaChico === null) {
             $extrasTazon     += $extrasTazonChico;
             $extrasTazonChico = 0;
             $cambiosSopa      = 0;
+            $ensaladas        = 0;
         }
-        $tazonesChicos = $cambiosSopa + $extrasTazonChico;
+        $tazonesChicos = $cambiosSopa + $extrasTazonChico + $ensaladas;
+        $vasitos4      = $flanes + $aderezos;
+        $souffles      = $salsasEjecutivo + $cremas;
 
         // Mapa: id_item => cantidad a descontar
         $descuentos = [
@@ -610,7 +674,24 @@ try {
             $partes = [];
             if ($cambiosSopa > 0)      $partes[] = "cambio de sopa en observaciones";
             if ($extrasTazonChico > 0) $partes[] = $extrasTazonChico . " complemento(s) extra";
+            if ($ensaladas > 0)        $partes[] = $ensaladas . " ensalada(s)";
             $notas[$idTazonChico] = $notas[$idTapaChico] = "Tazón chico: " . implode(" + ", $partes);
+        }
+        if ($vasitos4 > 0 && $idVasito4 !== null && $idTapaVasito4 !== null) {
+            $descuentos[$idVasito4]     = $vasitos4;
+            $descuentos[$idTapaVasito4] = $vasitos4;
+            $partes = [];
+            if ($flanes > 0)   $partes[] = $flanes . " flan(es)";
+            if ($aderezos > 0) $partes[] = $aderezos . " aderezo(s) de ensalada";
+            $notas[$idVasito4] = $notas[$idTapaVasito4] = "Vasito 4oz: " . implode(" + ", $partes);
+        }
+        if ($souffles > 0 && $idSouffle !== null && $idTapaSouffle !== null) {
+            $descuentos[$idSouffle]     = $souffles;
+            $descuentos[$idTapaSouffle] = $souffles;
+            $partes = [];
+            if ($salsasEjecutivo > 0) $partes[] = $salsasEjecutivo . " salsa(s) de Ejecutivo";
+            if ($cremas > 0)          $partes[] = $cremas . " crema(s) de tacos/quesadillas";
+            $notas[$idSouffle] = $notas[$idTapaSouffle] = "Soufflé: " . implode(" + ", $partes);
         }
         if ($cambiosSopa > 0) {
             $notas[2] = $notas[3] = "Un tazón menos: cambiaron la sopa (observaciones)";
