@@ -766,11 +766,6 @@ function formatearFechaBonita($fecha)
                                     <?php echo count($listaPedidos) === 1 ? "pedido" : "pedidos"; ?>
                                 </span>
                             </div>
-                            <div class="stat-dia stat-dia--secundario">
-                                <span class="stat-dia__numero">
-                                    $<?php echo number_format(array_sum(array_map(fn($p) => (float)$p["total"], $listaPedidos)), 0); ?>
-                                </span>
-                            </div>
                         </div>
                     </div>
 
