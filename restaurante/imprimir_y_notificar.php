@@ -7,6 +7,7 @@ require_once "../includes/confirmacion_wa.php";
 require_once "../includes/modo_notificacion.php";
 require_once "../includes/whatsapp_api.php";
 require_once "../includes/canal_whatsapp.php";
+require_once "../includes/push.php";
 
 $id_pedido = isset($_GET["id"]) ? (int)$_GET["id"] : 0;
 
@@ -530,6 +531,9 @@ try {
             $pedido["correo_enviado"] = 1;
         }
     }
+
+    /* ── Notificación push "Pedido confirmado" (una sola vez; aparte del WhatsApp) ── */
+    pushAvisoPedido($conexion, $id_pedido, "confirmado");
 
     /*
         6. Descontar inventario de desechable (solo una vez por pedido)

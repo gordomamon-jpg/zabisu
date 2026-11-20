@@ -332,3 +332,20 @@
 .pz-cliente .privacidad ul{padding-left:20px;margin:6px 0 0;font:400 15.5px/1.6 var(--pz-sys);color:var(--pz-gris)}
 .pz-cliente .privacidad li{padding:3px 0}
 .pz-cliente .privacidad .bloque-formulario p{font:400 15.5px/1.6 var(--pz-sys);color:var(--pz-gris);margin:0 0 6px}
+
+/* ── Confirmación: avisos en este celular (notificaciones push) ── */
+.pc-push{display:flex;gap:12px;align-items:flex-start;margin:0 20px;padding:16px;border-radius:16px;background:var(--pz-grupo)}
+.pc-push[hidden],.pc-push [hidden]{display:none!important}
+.pc-push__ico{flex-shrink:0;display:grid;place-items:center;width:40px;height:40px;border-radius:12px;
+  background:rgba(255,122,0,.14);color:var(--pz-naranja)}
+.pc-push__texto{flex:1;min-width:0}
+.pc-push p{margin:0;font:400 14.5px/1.45 var(--pz-sys);color:var(--pz-gris)}
+.pc-push p b{color:var(--pz-gis);font-weight:600}
+.pc-push .pc-push__titulo{margin-bottom:4px;font:600 16px/1.3 var(--pz-sys);color:var(--pz-gis)}
+.pc-push__btn{display:block;width:100%;min-height:48px;margin-top:12px;padding:0 18px;border:0;border-radius:12px;
+  background:var(--pz-naranja);color:#111;font:700 16px var(--pz-sys);cursor:pointer;transition:transform .12s ease}
+.pc-push__btn:active{transform:scale(.985)}
+.pc-push__btn:disabled{opacity:.6;cursor:default}
+.pc-push .pc-push__error{margin-top:10px;color:#FF8A65}
+.pc-push [data-estado="activo"] .pc-push__titulo::before{content:"✓ ";color:var(--pz-naranja)}
+@media (prefers-reduced-motion:reduce){ .pc-push__btn{transition:none} }

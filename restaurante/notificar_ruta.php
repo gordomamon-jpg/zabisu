@@ -5,6 +5,7 @@ require_once "../includes/enviar_correo.php";
 require_once "../includes/enviar_whatsapp.php";
 require_once "../includes/modo_notificacion.php";
 require_once "../includes/whatsapp_api.php";
+require_once "../includes/push.php";
 
 header("Content-Type: application/json; charset=UTF-8");
 
@@ -173,6 +174,11 @@ if (empty($pedidos)) {
         "mensaje" => "No se encontraron pedidos para esa ubicación, horario y fecha."
     ]);
     exit;
+}
+
+/* ── Notificación push "Tu pedido llegó" (aparte del WhatsApp o correo) ── */
+foreach ($pedidos as $p) {
+    pushAvisoPedido($conexion, (int)$p["id_pedido"], "llegada");
 }
 
 /*

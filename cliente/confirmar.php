@@ -115,7 +115,7 @@ function agruparDetallePorCategoria($detalles)
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="../assets/js/sin-zoom.js?v=1"></script>
+    <script src="../assets/js/pwa.js?v=1"></script>
     <title>Pedido confirmado | Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
     <link rel="manifest" href="../manifest.json">
@@ -390,7 +390,7 @@ function agruparDetallePorCategoria($detalles)
     <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
-    <link rel="stylesheet" href="../assets/css/cliente-pizarron.css?v=5">
+    <link rel="stylesheet" href="../assets/css/cliente-pizarron.css?v=6">
     <link rel="stylesheet" href="../assets/css/cliente-fluido.css?v=1">
     <?php endif; ?>
 </head>
@@ -455,6 +455,32 @@ $waPath            = "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.
         <?php endif; ?>
     </div>
 </div>
+<!-- Avisos en este celular (notificaciones push). Lo muestra el JS según el celular. -->
+<section class="pc-push" id="pc-push" data-folio="<?php echo htmlspecialchars($pedido["folio"]); ?>" hidden>
+    <span class="pc-push__ico" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+    </span>
+    <div class="pc-push__texto">
+        <div data-estado="pedir">
+            <p class="pc-push__titulo">¿Te avisamos en este celular?</p>
+            <p>Te llega una notificación cuando confirmemos tu pedido, recibamos tu pago y lleguemos a tu punto.</p>
+            <button type="button" class="pc-push__btn" id="pc-push-btn">Activar avisos</button>
+        </div>
+        <div data-estado="activo" hidden>
+            <p class="pc-push__titulo">Avisos activados</p>
+            <p>Te avisaremos en este celular de este pedido y de los siguientes.</p>
+        </div>
+        <div data-estado="bloqueado" hidden>
+            <p class="pc-push__titulo">Los avisos están bloqueados</p>
+            <p>Para recibirlos, permite las notificaciones de Zabisu en los ajustes de tu celular.</p>
+        </div>
+        <div data-estado="iphone" hidden>
+            <p class="pc-push__titulo">¿Quieres avisos en tu iPhone?</p>
+            <p>Agrega Zabisu a tu inicio: toca <b>Compartir</b> y luego <b>Agregar a inicio</b>. Ábrelo desde ese ícono y activa los avisos.</p>
+        </div>
+        <p class="pc-push__error" hidden>No pudimos activarlos. Intenta de nuevo en un momento.</p>
+    </div>
+</section>
 <?php else: ?>
 <div class="conf-hero">
     <div class="md-hero__glow-top"></div>
@@ -697,6 +723,89 @@ $waPath            = "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.
                 bloque.querySelector(".nota-formulario").style.display = "none";
                 gracias.style.display = "block";
             });
+    });
+})();
+</script>
+
+<script>
+/* ── Avisos en este celular (notificaciones push) ── */
+(function () {
+    var caja = document.getElementById("pc-push");
+    if (!caja) return;
+    var folio = caja.dataset.folio;
+    var btn   = document.getElementById("pc-push-btn");
+    var error = caja.querySelector(".pc-push__error");
+
+    function mostrar(estado) {
+        caja.hidden = false;
+        error.hidden = true;
+        caja.querySelectorAll("[data-estado]").forEach(function (el) {
+            el.hidden = el.dataset.estado !== estado;
+        });
+    }
+
+    var esIOS  = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    var esApp  = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+    var soporta = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+
+    if (!soporta) {
+        // En iPhone solo hay avisos si Zabisu está agregado al inicio
+        if (esIOS && !esApp) mostrar("iphone");
+        return;
+    }
+    if (Notification.permission === "denied") { mostrar("bloqueado"); return; }
+
+    function claveBytes(b64) {
+        var s = atob((b64 + "===".slice((b64.length + 3) % 4)).replace(/-/g, "+").replace(/_/g, "/"));
+        var a = new Uint8Array(s.length);
+        for (var i = 0; i < s.length; i++) a[i] = s.charCodeAt(i);
+        return a;
+    }
+
+    function suscribir() {
+        return navigator.serviceWorker.register("../sw.js")
+            .then(function () { return navigator.serviceWorker.ready; })
+            .then(function (reg) {
+                return reg.pushManager.getSubscription().then(function (sub) {
+                    if (sub) return sub;
+                    return fetch("push_suscribir.php", { cache: "no-store" })
+                        .then(function (r) { return r.json(); })
+                        .then(function (d) {
+                            return reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: claveBytes(d.publica) });
+                        });
+                });
+            })
+            .then(function (sub) {
+                return fetch("push_suscribir.php", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ folio: folio, suscripcion: sub.toJSON() })
+                }).then(function (r) { return r.json(); });
+            })
+            .then(function (d) {
+                if (!d || !d.ok) throw new Error((d && d.mensaje) || "sin respuesta");
+                mostrar("activo");
+            });
+    }
+
+    // Si este celular ya aceptó avisos antes, este pedido se liga solo
+    if (Notification.permission === "granted") {
+        suscribir().catch(function () { mostrar("pedir"); });
+        return;
+    }
+
+    mostrar("pedir");
+    btn.addEventListener("click", function () {
+        btn.disabled = true;
+        Promise.resolve(Notification.requestPermission()).then(function (permiso) {
+            if (permiso === "granted") return suscribir();
+            if (permiso === "denied") { mostrar("bloqueado"); return; }
+            btn.disabled = false;
+        }).catch(function () {
+            error.hidden = false;
+            btn.disabled = false;
+            if (window.zbVibrar) window.zbVibrar("error");
+        });
     });
 })();
 </script>

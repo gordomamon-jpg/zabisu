@@ -1,6 +1,7 @@
 <?php
 require_once "../config/db.php";
 require_once "auth_check.php";
+require_once "../includes/push.php";
 
 /*
     Confirma el pago por transferencia de un pedido.
@@ -43,10 +44,15 @@ if (($pedido["metodo_pago"] ?? "") !== "Transferencia") {
 // Si ya estaba confirmado (por ejemplo, desde otra pestaña), no se toca y se da por bueno
 if (($pedido["estado_pago"] ?? "") === "Pendiente de validación") {
     try {
-        $conexion->prepare(
+        $stPago = $conexion->prepare(
             "UPDATE pedidos SET estado_pago = 'Pagado', fecha_pago = :fecha_pago
              WHERE id_pedido = :id_pedido AND estado_pago = 'Pendiente de validación'"
-        )->execute([":fecha_pago" => date("Y-m-d H:i:s"), ":id_pedido" => $id_pedido]);
+        );
+        $stPago->execute([":fecha_pago" => date("Y-m-d H:i:s"), ":id_pedido" => $id_pedido]);
+        // Notificación push "Recibimos tu pago" (si el cliente activó avisos)
+        if ($stPago->rowCount() > 0) {
+            pushAvisoPedido($conexion, (int)$id_pedido, "pago");
+        }
     } catch (Exception $e) {
         terminar($esAjax, false, "Ocurrió un error al confirmar el pago. Intenta de nuevo.");
     }

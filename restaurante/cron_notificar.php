@@ -12,6 +12,7 @@ if (php_sapi_name() !== "cli") {
 
 require_once __DIR__ . "/../config/db.php";
 require_once __DIR__ . "/../includes/enviar_correo.php";
+require_once __DIR__ . "/../includes/push.php";
 
 date_default_timezone_set("America/Mexico_City");
 
@@ -87,6 +88,9 @@ foreach ($horarios as $horario) {
     $errores   = 0;
 
     foreach ($pedidos as $pedido) {
+        // Notificación push "Tu pedido llegó" (si el cliente activó avisos)
+        pushAvisoPedido($conexion, (int)$pedido["id_pedido"], "llegada");
+
         $correo = trim($pedido["correo_cliente"] ?? "");
 
         if ($correo === "" || !filter_var($correo, FILTER_VALIDATE_EMAIL)) {
