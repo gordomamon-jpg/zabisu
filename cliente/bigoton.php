@@ -326,7 +326,7 @@ $horaEntrega = date("g:i a", strtotime($horarioBigoton["hora_entrega"]));
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <script src="../assets/js/pwa.js?v=1"></script>
+    <script src="../assets/js/pwa.js?v=2"></script>
     <title>Pedido El Bigotón | Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
     <meta name="theme-color" content="#151413">

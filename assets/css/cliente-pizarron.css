@@ -349,3 +349,72 @@
 .pc-push .pc-push__error{margin-top:10px;color:#FF8A65}
 .pc-push [data-estado="activo"] .pc-push__titulo::before{content:"✓ ";color:var(--pz-naranja)}
 @media (prefers-reduced-motion:reduce){ .pc-push__btn{transition:none} }
+
+/* ── Confirmación: invitación a instalar la app ── */
+/* Tarjeta chica (queda en la página) */
+.pc-app{display:flex;gap:12px;align-items:center;margin:12px 20px 0;padding:12px 12px 12px 14px;border-radius:16px;
+  background:var(--pz-grupo);border:1.5px solid var(--pz-estraza)}
+.pc-app[hidden]{display:none!important}
+.pc-app__ico img{display:block;width:44px;height:44px;border-radius:12px}
+.pc-app__texto{flex:1;min-width:0}
+.pc-app__texto p{margin:0;font:400 14px/1.35 var(--pz-sys);color:var(--pz-gris)}
+.pc-app .pc-app__titulo{font:400 15px/1.3 var(--pz-rotulo);color:var(--pz-gis)}
+.pc-app__btn{flex-shrink:0;min-height:44px;padding:0 16px;border:0;border-radius:10px;background:var(--pz-naranja);
+  color:#111;font:700 14px var(--pz-sys);cursor:pointer}
+
+/* Hoja que sube */
+.pc-hoja{position:fixed;inset:auto 0 0 0;margin:auto auto 0;width:100%;max-width:480px;max-height:92vh;max-height:92dvh;
+  overflow:auto;box-sizing:border-box;padding:10px 22px calc(22px + env(safe-area-inset-bottom));border:0;
+  border-radius:26px 26px 0 0;background:var(--pz-grupo);color:var(--pz-gis);box-shadow:0 -12px 40px rgba(0,0,0,.45)}
+.pc-hoja::backdrop{background:rgba(0,0,0,.5)}
+.pc-hoja[open]{animation:pc-hoja-sube .32s cubic-bezier(.2,.9,.3,1) both}
+@keyframes pc-hoja-sube{from{transform:translateY(100%)}to{transform:none}}
+.pc-hoja [hidden]{display:none!important}
+.pc-hoja__asa{width:40px;height:5px;margin:0 auto 14px;border-radius:3px;background:#4A4642}
+.pc-hoja__cinta{display:inline-block;margin-bottom:14px;padding:5px 12px 5px 10px;background:var(--pz-estraza);color:var(--pz-tinta);
+  font:400 13px/1.2 var(--pz-rotulo);transform:rotate(-1.5deg);
+  clip-path:polygon(0 8%,4% 0,30% 6%,62% 0,97% 4%,100% 22%,97% 48%,100% 80%,96% 100%,58% 94%,25% 100%,3% 95%,0 70%,2% 40%)}
+.pc-hoja__cabeza{display:flex;gap:16px;align-items:center}
+.pc-hoja__app{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:6px;font:600 13px var(--pz-sys)}
+.pc-hoja__app img{display:block;width:84px;height:84px;border-radius:22px;border:2px solid var(--pz-naranja);box-shadow:0 8px 22px rgba(255,122,0,.22)}
+.pc-hoja__titulo{margin:0;font:400 24px/1.15 var(--pz-rotulo);color:var(--pz-gis)}
+.pc-hoja__etiquetas{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0;padding:0;list-style:none}
+.pc-hoja__etiquetas li{padding:4px 9px;border-radius:999px;background:var(--pz-linea);font:600 12.5px var(--pz-sys);color:var(--pz-gis)}
+.pc-hoja__nota{display:flex;align-items:center;gap:4px;margin:10px 0 0 2px;font:400 16px/1 var(--pz-pincel);color:var(--pz-naranja)}
+.pc-hoja__lista{display:flex;flex-direction:column;gap:12px;margin:18px 0 0;padding:0;list-style:none}
+.pc-hoja__lista li{display:flex;gap:12px;align-items:center;font:400 15px/1.35 var(--pz-sys)}
+.pc-hoja__lista li > span{flex-shrink:0;display:grid;place-items:center;width:32px;height:32px;border-radius:9px;
+  background:rgba(255,122,0,.14);color:var(--pz-naranja)}
+.pc-hoja__acciones{display:flex;flex-direction:column;gap:4px;margin-top:22px}
+.pc-hoja__btn{display:flex;align-items:center;justify-content:center;gap:10px;min-height:54px;border:0;border-radius:14px;
+  background:var(--pz-naranja);color:#111;font:700 17px var(--pz-sys);cursor:pointer}
+.pc-hoja__btn:active{transform:scale(.985)}
+.pc-hoja__luego{min-height:44px;border:0;background:none;color:var(--pz-gris);font:500 15px var(--pz-sys);cursor:pointer}
+.pc-hoja__sub{margin:4px 0 0;font:400 14.5px/1.4 var(--pz-sys);color:var(--pz-gris)}
+.pc-hoja__sub b{color:var(--pz-gis);font-weight:600}
+
+/* Pasos de iPhone */
+.pc-hoja__cabeza--chica{gap:14px;margin-bottom:14px}
+.pc-hoja__app-chica{flex-shrink:0;width:60px;height:60px;border-radius:16px;border:2px solid var(--pz-naranja)}
+.pc-hoja__cabeza--chica .pc-hoja__titulo{font-size:21px}
+.pc-pasos{display:flex;flex-direction:column;gap:10px;margin:0 0 12px;padding:0;list-style:none}
+.pc-pasos li{display:flex;flex-direction:column;gap:8px;padding:14px;border-radius:16px;background:var(--pz-pizarra)}
+.pc-pasos p{margin:0;font:600 15px/1.35 var(--pz-sys)}
+.pc-pasos p b{color:var(--pz-naranja)}
+.pc-pasos__barra{display:flex;align-items:center;justify-content:space-around;height:50px;border-radius:10px;background:#2A2A2C;color:#4A9DFF}
+.pc-pasos__marca{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;box-shadow:0 0 0 2.5px var(--pz-naranja)}
+.pc-pasos__fila{display:flex;align-items:center;justify-content:space-between;min-height:48px;padding:0 14px;border-radius:10px;
+  background:#2C2C2E;color:#F2F2F7;font:400 15px var(--pz-sys)}
+.pc-pasos__fila b{font-weight:600}
+.pc-pasos__fila--marca{box-shadow:0 0 0 2.5px var(--pz-naranja)}
+.pc-pasos__azul{color:#4A9DFF}
+.pc-pasos__marca-txt{font-weight:600;padding:4px 8px;border-radius:8px;box-shadow:0 0 0 2.5px var(--pz-naranja)}
+
+/* Listo */
+.pc-hoja__listo{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+.pc-hoja__listo-ico{position:relative;margin:6px 0 4px}
+.pc-hoja__listo-ico img{display:block;width:76px;height:76px;border-radius:20px}
+.pc-hoja__listo-ico span{position:absolute;right:-10px;bottom:-10px;display:grid;place-items:center;width:32px;height:32px;
+  border-radius:50%;background:var(--pz-naranja);color:#111;border:3px solid var(--pz-grupo)}
+
+@media (prefers-reduced-motion:reduce){ .pc-hoja[open]{animation:none} .pc-hoja__btn:active{transform:none} }

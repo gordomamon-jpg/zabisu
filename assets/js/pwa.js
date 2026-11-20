@@ -46,6 +46,16 @@
         }, { passive: false });
     }
 
+    /* ── Instalar la app (Android) ──
+       Chrome avisa una sola vez que se puede instalar; se guarda el aviso para
+       que la invitación de la confirmación (cliente/confirmar.php) lo use.
+       Solo ahí se evita la barrita propia de Chrome. */
+    window.addEventListener("beforeinstallprompt", function (e) {
+        if (document.getElementById("pc-app")) e.preventDefault();
+        window.zbAvisoInstalar = e;
+        document.dispatchEvent(new Event("zb-instalable"));
+    });
+
     /* ── 2. Vibración ── */
     var patrones = { toque: 8, paso: 14, listo: [14, 60, 14], error: [30, 50, 30] };
     var sinMovimiento = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;

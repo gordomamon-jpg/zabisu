@@ -15,14 +15,14 @@ if (false): ?>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="../assets/js/pwa.js?v=1"></script>
+    <script src="../assets/js/pwa.js?v=2"></script>
     <title>Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
     <link rel="manifest" href="../manifest.json">
     <meta name="theme-color" content="#FF7A00">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Zabisu">
-    <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
+    <link rel="apple-touch-icon" href="../assets/img/app/cliente-180.png">
     <link rel="stylesheet" href="../assets/css/styles.css?v=8">
     <style>
     *, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
@@ -196,14 +196,14 @@ if (!$menuActivo) {
 <script>document.documentElement.classList.add("md-js");</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="../assets/js/pwa.js?v=1"></script>
+    <script src="../assets/js/pwa.js?v=2"></script>
     <title>Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
     <link rel="manifest" href="../manifest.json">
     <meta name="theme-color" content="#FF7A00">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Zabisu">
-    <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
+    <link rel="apple-touch-icon" href="../assets/img/app/cliente-180.png">
     <link rel="stylesheet" href="../assets/css/cliente-rediseno.css?v=4">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -748,14 +748,14 @@ if ($disenoNuevo) { require __DIR__ . "/menu_pizarron.php"; exit; }
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="../assets/js/pwa.js?v=1"></script>
+    <script src="../assets/js/pwa.js?v=2"></script>
     <title>Menú del día · Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
     <link rel="manifest" href="../manifest.json">
     <meta name="theme-color" content="#FF7A00">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Zabisu">
-    <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
+    <link rel="apple-touch-icon" href="../assets/img/app/cliente-180.png">
     <link rel="stylesheet" href="../assets/css/styles.css?v=8">
     <link rel="stylesheet" href="../assets/css/cliente-rediseno.css?v=4">
 </head>

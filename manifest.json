@@ -1,18 +1,17 @@
 {
+  "id": "/cliente/menu.php",
   "name": "Zabisu",
   "short_name": "Zabisu",
   "description": "Ordena tu menú del día",
   "start_url": "/cliente/menu.php",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#0f0f0f",
+  "background_color": "#151413",
   "theme_color": "#FF7A00",
   "lang": "es",
   "icons": [
-    {
-      "src": "/assets/img/LOGO_NARA.png",
-      "sizes": "any",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
+    { "src": "/assets/img/app/cliente-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/img/app/cliente-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/assets/img/app/cliente-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }

@@ -74,19 +74,19 @@ function textoEstado($estado) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="../assets/js/pwa.js?v=1"></script>
+    <script src="../assets/js/pwa.js?v=2"></script>
     <title>Estado de pedido · Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
     <meta name="theme-color" content="#FF7A00">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
+    <link rel="apple-touch-icon" href="../assets/img/app/cliente-180.png">
     <link rel="stylesheet" href="../assets/css/styles.css?v=8">
     <?php if ($disenoNuevo): ?>
     <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
     <link rel="stylesheet" href="../assets/css/pedido-pizarron.css?v=2">
-    <link rel="stylesheet" href="../assets/css/cliente-pizarron.css?v=6">
+    <link rel="stylesheet" href="../assets/css/cliente-pizarron.css?v=7">
     <link rel="stylesheet" href="../assets/css/cliente-fluido.css?v=1">
     <?php endif; ?>
 </head>

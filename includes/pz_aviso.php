@@ -27,18 +27,18 @@ function pzPantallaAviso(array $a): void
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <script src="../assets/js/pwa.js?v=1"></script>
+    <script src="../assets/js/pwa.js?v=2"></script>
     <title><?php echo htmlspecialchars(strip_tags($titulo)); ?> | Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
     <link rel="manifest" href="../manifest.json">
     <meta name="theme-color" content="#151413">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Zabisu">
-    <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
+    <link rel="apple-touch-icon" href="../assets/img/app/cliente-180.png">
     <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
-    <link rel="stylesheet" href="../assets/css/cliente-pizarron.css?v=6">
+    <link rel="stylesheet" href="../assets/css/cliente-pizarron.css?v=7">
     <link rel="stylesheet" href="../assets/css/cliente-fluido.css?v=1">
 </head>
 <body class="pz pz-cliente pz-aviso">

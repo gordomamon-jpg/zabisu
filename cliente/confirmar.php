@@ -115,14 +115,14 @@ function agruparDetallePorCategoria($detalles)
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="../assets/js/pwa.js?v=1"></script>
+    <script src="../assets/js/pwa.js?v=2"></script>
     <title>Pedido confirmado | Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
     <link rel="manifest" href="../manifest.json">
     <meta name="theme-color" content="#FF7A00">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Zabisu">
-    <link rel="apple-touch-icon" href="../assets/img/LOGO_NARA.png">
+    <link rel="apple-touch-icon" href="../assets/img/app/cliente-180.png">
     <link rel="stylesheet" href="../assets/css/styles.css?v=8">
     <link rel="stylesheet" href="../assets/css/cliente-rediseno.css?v=4">
     <style>
@@ -390,7 +390,7 @@ function agruparDetallePorCategoria($detalles)
     <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
-    <link rel="stylesheet" href="../assets/css/cliente-pizarron.css?v=6">
+    <link rel="stylesheet" href="../assets/css/cliente-pizarron.css?v=7">
     <link rel="stylesheet" href="../assets/css/cliente-fluido.css?v=1">
     <?php endif; ?>
 </head>
@@ -474,13 +474,111 @@ $waPath            = "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.
             <p class="pc-push__titulo">Los avisos están bloqueados</p>
             <p>Para recibirlos, permite las notificaciones de Zabisu en los ajustes de tu celular.</p>
         </div>
-        <div data-estado="iphone" hidden>
-            <p class="pc-push__titulo">¿Quieres avisos en tu iPhone?</p>
-            <p>Agrega Zabisu a tu inicio: toca <b>Compartir</b> y luego <b>Agregar a inicio</b>. Ábrelo desde ese ícono y activa los avisos.</p>
-        </div>
         <p class="pc-push__error" hidden>No pudimos activarlos. Intenta de nuevo en un momento.</p>
     </div>
 </section>
+
+<!-- Invitación a instalar la app: tarjeta chica (siempre que se pueda instalar) -->
+<section class="pc-app" id="pc-app" hidden>
+    <span class="pc-app__ico"><img src="../assets/img/app/cliente-192.png" alt="" width="44" height="44"></span>
+    <div class="pc-app__texto">
+        <p class="pc-app__titulo">Instala la app de Zabisu</p>
+        <p>Avisos del menú del día y de tu pedido</p>
+    </div>
+    <button type="button" class="pc-app__btn" data-app-abrir>Instalar</button>
+</section>
+
+<!-- Invitación a instalar la app: hoja que sube (máx. una vez por semana) -->
+<dialog class="pc-hoja" id="pc-app-hoja" aria-labelledby="pc-hoja-titulo">
+    <div class="pc-hoja__asa" aria-hidden="true"></div>
+
+    <div data-paso="invitar">
+        <span class="pc-hoja__cinta">¡Nueva app!</span>
+        <div class="pc-hoja__cabeza">
+            <div class="pc-hoja__app">
+                <img src="../assets/img/app/cliente-192.png" alt="" width="84" height="84">
+                <span>Zabisu</span>
+            </div>
+            <div>
+                <h2 class="pc-hoja__titulo" id="pc-hoja-titulo">Instala la app de Zabisu</h2>
+                <ul class="pc-hoja__etiquetas">
+                    <li>Gratis</li><li>Sin tienda de apps</li><li>Casi no ocupa espacio</li>
+                </ul>
+            </div>
+        </div>
+        <p class="pc-hoja__nota">
+            <svg width="20" height="16" viewBox="0 0 30 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M27 18C18 19 10 14 7 4"/><path d="M3 8l4-5 4 5"/></svg>
+            queda en tu celular junto a tus otras apps
+        </p>
+        <ul class="pc-hoja__lista">
+            <li><span aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span>Te avisamos cuando suba el menú del día</li>
+            <li><span aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>Y cuando tu pedido llegue a tu punto</li>
+            <li><span aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg></span>Se abre directo al menú, a pantalla completa</li>
+        </ul>
+        <div class="pc-hoja__acciones">
+            <button type="button" class="pc-hoja__btn" data-app-instalar>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+                <span>Instalar la app</span>
+            </button>
+            <button type="button" class="pc-hoja__luego" data-app-ahora-no>Ahora no</button>
+        </div>
+    </div>
+
+    <div data-paso="ios" hidden>
+        <div class="pc-hoja__cabeza pc-hoja__cabeza--chica">
+            <img class="pc-hoja__app-chica" src="../assets/img/app/cliente-192.png" alt="" width="60" height="60">
+            <div>
+                <h2 class="pc-hoja__titulo">Instala la app en 3 toques</h2>
+                <p class="pc-hoja__sub" id="pc-ios-sub">Desde Safari, solo una vez.</p>
+            </div>
+        </div>
+        <ol class="pc-pasos">
+            <li>
+                <p><b>1.</b> <span id="pc-ios-paso1">Toca Compartir, abajo al centro</span></p>
+                <div class="pc-pasos__barra" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m15 18-6-6 6-6"/></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5A5A5E" stroke-width="2" stroke-linecap="round"><path d="m9 18 6-6-6-6"/></svg>
+                    <span class="pc-pasos__marca"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m8 7 4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg></span>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h6a2 2 0 0 1 2 2v12a2 2 0 0 0-2-2H4zM20 5h-6a2 2 0 0 0-2 2v12a2 2 0 0 1 2-2h6z"/></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="11" height="11" rx="2"/><rect x="9" y="9" width="11" height="11" rx="2"/></svg>
+                </div>
+            </li>
+            <li>
+                <p><b>2.</b> Baja y elige "Agregar a inicio"</p>
+                <div class="pc-pasos__fila pc-pasos__fila--marca" aria-hidden="true">
+                    Agregar a inicio
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M12 8v8M8 12h8"/></svg>
+                </div>
+            </li>
+            <li>
+                <p><b>3.</b> Toca "Agregar", arriba a la derecha</p>
+                <div class="pc-pasos__fila" aria-hidden="true">
+                    <span class="pc-pasos__azul">Cancelar</span>
+                    <b>Agregar a inicio</b>
+                    <span class="pc-pasos__azul pc-pasos__marca-txt">Agregar</span>
+                </div>
+            </li>
+        </ol>
+        <p class="pc-hoja__sub">Al abrirla desde el ícono, entra a <b>Mi pedido</b> y activa los avisos.</p>
+        <div class="pc-hoja__acciones">
+            <button type="button" class="pc-hoja__btn" data-app-cerrar><span>Entendido</span></button>
+        </div>
+    </div>
+
+    <div data-paso="listo" hidden>
+        <div class="pc-hoja__listo">
+            <span class="pc-hoja__listo-ico">
+                <img src="../assets/img/app/cliente-192.png" alt="" width="76" height="76">
+                <span aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+            </span>
+            <h2 class="pc-hoja__titulo">¡App instalada!</h2>
+            <p class="pc-hoja__sub">La app de Zabisu ya está en tu celular. Ábrela desde ahí y pide en 2 toques.</p>
+        </div>
+        <div class="pc-hoja__acciones">
+            <button type="button" class="pc-hoja__btn" data-app-cerrar><span>Ver mi pedido</span></button>
+        </div>
+    </div>
+</dialog>
 <?php else: ?>
 <div class="conf-hero">
     <div class="md-hero__glow-top"></div>
@@ -748,11 +846,8 @@ $waPath            = "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.
     var esApp  = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
     var soporta = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
 
-    if (!soporta) {
-        // En iPhone solo hay avisos si Zabisu está agregado al inicio
-        if (esIOS && !esApp) mostrar("iphone");
-        return;
-    }
+    // En iPhone solo hay avisos con la app instalada: ahí lo explica la invitación (pc-app)
+    if (!soporta) return;
     if (Notification.permission === "denied") { mostrar("bloqueado"); return; }
 
     function claveBytes(b64) {
@@ -807,6 +902,129 @@ $waPath            = "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.
             if (window.zbVibrar) window.zbVibrar("error");
         });
     });
+})();
+</script>
+
+<script>
+/* ── Invitación a instalar la app ──
+   - Android: botón real "Instalar la app" (aviso de Chrome guardado en pwa.js).
+   - iPhone: Apple no deja instalar con un botón; la hoja explica los 3 pasos.
+   - Nada si ya la abrió como app, o si el navegador no permite instalarla.
+   - La hoja sube sola 2 s después de confirmar, máximo una vez por semana y
+     hasta que diga "Ahora no" 3 veces; la tarjeta chica queda siempre. */
+(function () {
+    var hoja    = document.getElementById("pc-app-hoja");
+    var tarjeta = document.getElementById("pc-app");
+    if (!hoja || !tarjeta) return;
+
+    var ua    = navigator.userAgent;
+    var esApp = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+    var esIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    if (esApp) return;
+
+    var CLAVE = "zb_invitacion_app";
+    var SEMANA = 7 * 24 * 3600 * 1000;
+    function leer()   { try { return JSON.parse(localStorage.getItem(CLAVE)) || {}; } catch (e) { return {}; } }
+    function guardar(d) { try { localStorage.setItem(CLAVE, JSON.stringify(d)); } catch (e) {} }
+
+    var modo = null; // "android" | "ios"
+
+    function paso(nombre) {
+        hoja.querySelectorAll("[data-paso]").forEach(function (el) { el.hidden = el.dataset.paso !== nombre; });
+    }
+    function abrir(nombre) {
+        paso(nombre);
+        if (hoja.open) return;
+        if (typeof hoja.showModal === "function") hoja.showModal(); else hoja.setAttribute("open", "");
+    }
+    function cerrar() {
+        if (!hoja.open) return;
+        if (typeof hoja.close === "function") hoja.close(); else hoja.removeAttribute("open");
+    }
+
+    function preparar() {
+        var ios = modo === "ios";
+        hoja.querySelector("[data-app-instalar] span").textContent = ios ? "Cómo instalar la app" : "Instalar la app";
+        tarjeta.querySelector("[data-app-abrir]").textContent = ios ? "Cómo" : "Instalar";
+        tarjeta.hidden = false;
+
+        var d = leer();
+        if ((d.veces || 0) < 3 && (!d.ultima || Date.now() - d.ultima > SEMANA)) {
+            setTimeout(function () {
+                if (hoja.open) return;
+                abrir("invitar");
+                d.ultima = Date.now();
+                guardar(d);
+            }, 2000);
+        }
+    }
+
+    function instalar() {
+        if (modo === "ios") { abrir("ios"); return; }
+        var aviso = window.zbAvisoInstalar;
+        if (!aviso) return;
+        window.zbAvisoInstalar = null; // Chrome deja usarlo una sola vez
+        aviso.prompt();
+        aviso.userChoice.then(function (r) {
+            if (r && r.outcome === "accepted") {
+                tarjeta.hidden = true;
+                abrir("listo");
+            } else {
+                // Sin aviso nuevo de Chrome no se puede volver a ofrecer
+                tarjeta.hidden = true;
+                cerrar();
+            }
+        }).catch(function () { cerrar(); });
+    }
+
+    hoja.addEventListener("click", function (e) {
+        // Toque en el fondo oscuro (fuera de la hoja): se cierra
+        if (e.target === hoja) {
+            var r = hoja.getBoundingClientRect();
+            if (e.clientY < r.top) cerrar();
+            return;
+        }
+        var b = e.target.closest("button");
+        if (!b) return;
+        if (b.hasAttribute("data-app-instalar")) {
+            instalar();
+        } else if (b.hasAttribute("data-app-ahora-no")) {
+            var d = leer();
+            d.veces = (d.veces || 0) + 1;
+            d.ultima = Date.now();
+            guardar(d);
+            cerrar();
+        } else if (b.hasAttribute("data-app-cerrar")) {
+            cerrar();
+        }
+    });
+
+    tarjeta.querySelector("[data-app-abrir]").addEventListener("click", function () {
+        if (modo === "ios") abrir("ios"); else instalar();
+    });
+
+    window.addEventListener("appinstalled", function () {
+        tarjeta.hidden = true;
+        abrir("listo");
+    });
+
+    if (esIOS) {
+        modo = "ios";
+        // En Chrome, Firefox o Edge del iPhone, Compartir está arriba, junto a la dirección
+        if (/CriOS|FxiOS|EdgiOS/.test(ua)) {
+            document.getElementById("pc-ios-paso1").textContent = "Toca Compartir, arriba junto a la dirección";
+            document.getElementById("pc-ios-sub").textContent = "Desde tu navegador, solo una vez.";
+        }
+        preparar();
+    } else if (/Android/i.test(ua)) {
+        var listo = function () {
+            if (!window.zbAvisoInstalar) return;
+            if (!modo) { modo = "android"; preparar(); }
+            else tarjeta.hidden = false;
+        };
+        if (window.zbAvisoInstalar) listo();
+        document.addEventListener("zb-instalable", listo);
+    }
 })();
 </script>
 
