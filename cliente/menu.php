@@ -15,6 +15,7 @@ if (false): ?>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../assets/js/sin-zoom.js?v=1"></script>
     <title>Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
     <link rel="manifest" href="../manifest.json">
@@ -195,6 +196,7 @@ if (!$menuActivo) {
 <script>document.documentElement.classList.add("md-js");</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../assets/js/sin-zoom.js?v=1"></script>
     <title>Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
     <link rel="manifest" href="../manifest.json">
@@ -746,6 +748,7 @@ if ($disenoNuevo) { require __DIR__ . "/menu_pizarron.php"; exit; }
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../assets/js/sin-zoom.js?v=1"></script>
     <title>Menú del día · Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
     <link rel="manifest" href="../manifest.json">

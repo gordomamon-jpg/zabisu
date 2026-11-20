@@ -14,6 +14,7 @@ $waContacto     = "https://wa.me/" . WHATSAPP_DUDAS;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../assets/js/sin-zoom.js?v=1"></script>
     <title>Aviso de privacidad · Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
     <meta name="theme-color" content="#FF7A00">

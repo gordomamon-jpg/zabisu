@@ -5,6 +5,7 @@
 */
 ?>
     <link rel="manifest" href="manifest.json">
+    <script src="../assets/js/sin-zoom.js?v=1"></script>
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">

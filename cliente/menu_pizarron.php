@@ -28,6 +28,7 @@ $pzSecciones = ["Plato fuerte" => "Plato fuerte", "Sopa" => "Sopa", "Complemento
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <script src="../assets/js/sin-zoom.js?v=1"></script>
     <title>Menú del día · Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
     <link rel="manifest" href="../manifest.json">

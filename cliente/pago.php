@@ -32,7 +32,7 @@ if (empty($_SESSION["pedido_temporal"])) {
         exit;
     }
     ?><!DOCTYPE html>
-<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><script src="../assets/js/sin-zoom.js?v=1"></script>
 <title>Tu pedido no está activo | Zabisu</title>
 <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
 <link rel="stylesheet" href="../assets/css/styles.css?v=8">
@@ -348,6 +348,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["finalizar_pedido"])) 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../assets/js/sin-zoom.js?v=1"></script>
     <title>Pago | Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
     <link rel="manifest" href="../manifest.json">
