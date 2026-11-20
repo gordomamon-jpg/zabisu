@@ -27,7 +27,7 @@ function pzPantallaAviso(array $a): void
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <script src="../assets/js/sin-zoom.js?v=1"></script>
+    <script src="../assets/js/pwa.js?v=1"></script>
     <title><?php echo htmlspecialchars(strip_tags($titulo)); ?> | Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
     <link rel="manifest" href="../manifest.json">
@@ -38,7 +38,7 @@ function pzPantallaAviso(array $a): void
     <link rel="preload" href="../assets/fonts/kaushan-script-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="../assets/fonts/alfa-slab-one-400.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="../assets/css/menu-pizarron.css?v=2">
-    <link rel="stylesheet" href="../assets/css/cliente-pizarron.css?v=5">
+    <link rel="stylesheet" href="../assets/css/cliente-pizarron.css?v=6">
     <link rel="stylesheet" href="../assets/css/cliente-fluido.css?v=1">
 </head>
 <body class="pz pz-cliente pz-aviso">

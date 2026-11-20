@@ -95,7 +95,7 @@ if (!$menuActivo) {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <script src="../assets/js/sin-zoom.js?v=1"></script>
+        <script src="../assets/js/pwa.js?v=1"></script>
         <title>Sin menú disponible | Zabisu</title>
         <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
         <link rel="manifest" href="../manifest.json">
@@ -204,7 +204,7 @@ if (!$recibiendoPedidos) {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <script src="../assets/js/sin-zoom.js?v=1"></script>
+        <script src="../assets/js/pwa.js?v=1"></script>
         <title>Pedidos pausados | Zabisu</title>
         <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
     <link rel="manifest" href="../manifest.json">
@@ -636,7 +636,7 @@ if ($scrollDestino === "bloque-entrega") {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="../assets/js/sin-zoom.js?v=1"></script>
+    <script src="../assets/js/pwa.js?v=1"></script>
     <title>Realizar pedido | Zabisu</title>
     <link rel="icon" type="image/png" href="../assets/img/LOGO_NARA.png">
     <link rel="manifest" href="../manifest.json">
@@ -1386,7 +1386,10 @@ document.addEventListener("DOMContentLoaded", function () {
             contenedor.style.display = "none";
             contenedor.innerHTML = "";
         }
-        if (mensajes.length) mostrarToast(mensajes);
+        if (mensajes.length) {
+            mostrarToast(mensajes);
+            if (window.zbVibrar) window.zbVibrar("error");
+        }
     }
 
     function validarPaso(n) {
