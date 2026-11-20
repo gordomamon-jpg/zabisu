@@ -306,16 +306,15 @@ function pushAvisoPedido(PDO $c, int $idPedido, string $tipo): int
         $folio  = strtoupper($p["folio"]);
         $hora   = date("g:i a", strtotime($p["hora_entrega"]));
         $punto  = $p["nombre_ubicacion"];
-        $nombre = trim(explode(" ", trim((string)$p["nombre_cliente"]))[0] ?? "");
-        $hola   = $nombre !== "" ? $nombre . ", " : "";
+        $nombre = trim((string)$p["nombre_cliente"]);
+        $hola   = "Hola" . ($nombre !== "" ? " " . $nombre : "");
         $url    = "/cliente/estado_pedido.php?folio=" . rawurlencode($p["folio"]);
 
+        // Mismos textos que los WhatsApp (sin negritas: la notificación no las muestra)
         switch ($tipo) {
             case "confirmado":
-                // Mismo texto que el WhatsApp de confirmación (sin negritas: la notificación no las muestra)
-                $nombreCompleto = trim((string)$p["nombre_cliente"]);
                 $msg = ["titulo" => "¡Pedido confirmado!",
-                        "cuerpo" => "Hola" . ($nombreCompleto !== "" ? " " . $nombreCompleto : "") . ", gracias por tu pedido en Zabisu 🍽️\n\n"
+                        "cuerpo" => $hola . ", gracias por tu pedido en Zabisu 🍽️\n\n"
                                   . "📦 Folio: " . $folio . "\n"
                                   . "📍 Entrega: " . $punto . "\n"
                                   . "🕑 Hora: " . $hora . "\n\n"
@@ -323,13 +322,18 @@ function pushAvisoPedido(PDO $c, int $idPedido, string $tipo): int
                 $ttl = 6 * 3600; $urg = "normal";
                 break;
             case "pago":
-                $msg = ["titulo" => "Recibimos tu pago",
-                        "cuerpo" => "Tu transferencia del pedido " . $folio . " ya quedó confirmada. ¡Gracias!"];
+                // No hay WhatsApp de este aviso: mismo tono que los otros dos
+                $msg = ["titulo" => "¡Pago recibido!",
+                        "cuerpo" => $hola . ", ya confirmamos tu transferencia del pedido " . $folio . " de Zabisu. ✅\n\n"
+                                  . "📍 Entrega: " . $punto . "\n"
+                                  . "🕑 Hora: " . $hora . "\n\n"
+                                  . "¡Gracias! Te avisaremos por aquí en cuanto lleguemos a tu punto de entrega."];
                 $ttl = 6 * 3600; $urg = "normal";
                 break;
             case "llegada":
                 $msg = ["titulo" => "¡Tu pedido llegó!",
-                        "cuerpo" => $hola . "tu pedido ya está en " . $punto . ". Pasa a recogerlo con tu folio " . $folio . "."];
+                        "cuerpo" => $hola . ", ya estamos en 📍 " . $punto . " con tu pedido " . $folio . " de Zabisu.\n\n"
+                                  . "Pasa a recogerlo cuando puedas. ¡Buen provecho! 🍽️"];
                 $ttl = 2 * 3600; $urg = "high";
                 break;
             default:
