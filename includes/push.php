@@ -312,8 +312,14 @@ function pushAvisoPedido(PDO $c, int $idPedido, string $tipo): int
 
         switch ($tipo) {
             case "confirmado":
+                // Mismo texto que el WhatsApp de confirmación (sin negritas: la notificación no las muestra)
+                $nombreCompleto = trim((string)$p["nombre_cliente"]);
                 $msg = ["titulo" => "¡Pedido confirmado!",
-                        "cuerpo" => $hola . "ya estamos preparando tu pedido. Te lo entregamos en " . $punto . " a las " . $hora . ". Folio " . $folio . "."];
+                        "cuerpo" => "Hola" . ($nombreCompleto !== "" ? " " . $nombreCompleto : "") . ", gracias por tu pedido en Zabisu 🍽️\n\n"
+                                  . "📦 Folio: " . $folio . "\n"
+                                  . "📍 Entrega: " . $punto . "\n"
+                                  . "🕑 Hora: " . $hora . "\n\n"
+                                  . "Te avisaremos por aquí en cuanto lleguemos a tu punto de entrega."];
                 $ttl = 6 * 3600; $urg = "normal";
                 break;
             case "pago":
