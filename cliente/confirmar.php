@@ -463,12 +463,12 @@ $waPath            = "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.
     <div class="pc-push__texto">
         <div data-estado="pedir">
             <p class="pc-push__titulo">¿Te avisamos en este celular?</p>
-            <p>Te llega una notificación cuando confirmemos tu pedido, recibamos tu pago y lleguemos a tu punto.</p>
+            <p>Te llega una notificación cuando suba el menú del día y cuando confirmemos tu pedido, recibamos tu pago y lleguemos a tu punto.</p>
             <button type="button" class="pc-push__btn" id="pc-push-btn">Activar avisos</button>
         </div>
         <div data-estado="activo" hidden>
             <p class="pc-push__titulo">Avisos activados</p>
-            <p>Te avisaremos en este celular de este pedido y de los siguientes.</p>
+            <p>Te avisaremos en este celular del menú del día y de tus pedidos.</p>
         </div>
         <div data-estado="bloqueado" hidden>
             <p class="pc-push__titulo">Los avisos están bloqueados</p>
@@ -910,8 +910,11 @@ $waPath            = "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.
    - Android: botón real "Instalar la app" (aviso de Chrome guardado en pwa.js).
    - iPhone: Apple no deja instalar con un botón; la hoja explica los 3 pasos.
    - Nada si ya la abrió como app, o si el navegador no permite instalarla.
-   - La hoja sube sola 2 s después de confirmar, máximo una vez por semana y
-     hasta que diga "Ahora no" 3 veces; la tarjeta chica queda siempre. */
+   - La hoja sube casi junto con la confirmación (0.7 s, cuando cae el boleto),
+     para que la vean antes de salirse.
+   - Semana de inauguración (hasta INAUGURACION_HASTA): sale en cada pedido.
+     Después: máximo una vez por semana y hasta que diga "Ahora no" 3 veces.
+   - La tarjeta chica queda siempre mientras no la instale. */
 (function () {
     var hoja    = document.getElementById("pc-app-hoja");
     var tarjeta = document.getElementById("pc-app");
@@ -924,6 +927,8 @@ $waPath            = "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.
 
     var CLAVE = "zb_invitacion_app";
     var SEMANA = 7 * 24 * 3600 * 1000;
+    var INAUGURACION_HASTA = new Date("2026-11-29T23:59:59-06:00").getTime();
+    var RETRASO_HOJA = 700;
     function leer()   { try { return JSON.parse(localStorage.getItem(CLAVE)) || {}; } catch (e) { return {}; } }
     function guardar(d) { try { localStorage.setItem(CLAVE, JSON.stringify(d)); } catch (e) {} }
 
@@ -949,13 +954,14 @@ $waPath            = "M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.
         tarjeta.hidden = false;
 
         var d = leer();
-        if ((d.veces || 0) < 3 && (!d.ultima || Date.now() - d.ultima > SEMANA)) {
+        var inauguracion = Date.now() <= INAUGURACION_HASTA;
+        if (inauguracion || ((d.veces || 0) < 3 && (!d.ultima || Date.now() - d.ultima > SEMANA))) {
             setTimeout(function () {
                 if (hoja.open) return;
                 abrir("invitar");
                 d.ultima = Date.now();
                 guardar(d);
-            }, 2000);
+            }, RETRASO_HOJA);
         }
     }
 

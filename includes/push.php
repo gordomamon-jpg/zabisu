@@ -8,11 +8,14 @@
     - push_suscripciones: cada celular/navegador que aceptó avisos.
     - push_pedido:        qué suscripción recibe avisos de qué pedido.
     - push_enviados:      candado para no mandar dos veces el mismo aviso.
+    - push_menu_enviados: candado del aviso "ya está el menú" (uno por menú).
 
     Cuándo se avisa (pushAvisoPedido):
     - 'confirmado' al imprimir el ticket (imprimir_y_notificar.php)
     - 'pago'       al confirmar una transferencia (confirmar_pago.php)
     - 'llegada'    al avisar que el pedido llegó al punto (notificar_ruta.php / cron)
+    Y a todos los celulares con avisos, cuando se publica el menú (pushAvisoMenu,
+    desde restaurante/cron_menu.php cada 5 minutos).
     Un error aquí nunca detiene lo demás: todo va dentro de try/catch.
 */
 
@@ -61,6 +64,11 @@ function pushPrepararTablas(PDO $c): void
         enviados   INT         NOT NULL DEFAULT 0,
         creado_en  TIMESTAMP   DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (id_pedido, tipo)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    $c->exec("CREATE TABLE IF NOT EXISTS push_menu_enviados (
+        id_menu    INT       NOT NULL PRIMARY KEY,
+        enviados   INT       NOT NULL DEFAULT 0,
+        creado_en  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
     $hecho = true;
 }
@@ -263,7 +271,6 @@ function pushEnviar(PDO $c, array $subs, array $mensaje, int $ttl = 86400, strin
             error_log("Push: respuesta " . $codigo . " del servicio para la suscripción " . $idSub);
         }
         curl_multi_remove_handle($multi, $ch);
-        curl_close($ch);
     }
     curl_multi_close($multi);
     return $ok;
@@ -348,6 +355,99 @@ function pushAvisoPedido(PDO $c, int $idPedido, string $tipo): int
         return $enviados;
     } catch (Throwable $e) {
         error_log("Push (" . $tipo . ", pedido " . $idPedido . "): " . $e->getMessage());
+        return 0;
+    }
+}
+
+/*
+    "Ya está el menú": cuando el menú del día ya se ve en la página
+    (activo y dentro de su horario), se avisa una sola vez a todos los
+    celulares con avisos. La primera vez que corre (tabla vacía) solo marca
+    el menú que ya estaba publicado, para no avisar tarde de uno viejo.
+    Devuelve cuántos celulares lo recibieron.
+*/
+function pushAvisoMenu(PDO $c): int
+{
+    try {
+        pushPrepararTablas($c);
+
+        $menu = $c->query(
+            "SELECT m.id_menu, m.fecha, m.pedido_hasta
+               FROM menu_dia m
+              WHERE m.activo = 1
+                AND m.publicado_desde <= NOW() AND m.pedido_hasta > NOW()
+                AND EXISTS (SELECT 1 FROM productos p WHERE p.id_menu = m.id_menu)
+              ORDER BY m.publicado_desde DESC
+              LIMIT 1"
+        )->fetch(PDO::FETCH_ASSOC);
+
+        // Primera vez: marca (fila 0) y el menú que ya estaba publicado, sin avisar
+        $candado = $c->prepare("INSERT IGNORE INTO push_menu_enviados (id_menu) VALUES (:id)");
+        if ((int)$c->query("SELECT COUNT(*) FROM push_menu_enviados")->fetchColumn() === 0) {
+            $candado->execute([":id" => 0]);
+            if ($menu) $candado->execute([":id" => (int)$menu["id_menu"]]);
+            return 0;
+        }
+        if (!$menu) return 0;
+        $idMenu = (int)$menu["id_menu"];
+
+        // Candado: un aviso por menú
+        $candado->execute([":id" => $idMenu]);
+        if ($candado->rowCount() === 0) return 0;
+
+        // Texto: día, platos fuertes del menú Zabisu y hora de cierre
+        $dias   = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+        $fecha  = strtotime($menu["fecha"]);
+        $hoy    = strtotime(date("Y-m-d"));
+        if ($fecha === $hoy)              $cuando = "de hoy";
+        elseif ($fecha === $hoy + 86400)  $cuando = "de mañana";
+        else                              $cuando = "del " . $dias[(int)date("w", $fecha)] . " " . date("j", $fecha);
+
+        $st = $c->prepare(
+            "SELECT nombre FROM productos
+              WHERE id_menu = :id AND categoria = 'Plato fuerte' AND disponible = 1
+              ORDER BY tipo_menu = 'Zabisu' DESC, id_producto
+              LIMIT 3"
+        );
+        $st->execute([":id" => $idMenu]);
+        $platos = $st->fetchAll(PDO::FETCH_COLUMN);
+        if (count($platos) > 1) {
+            $ultimo = array_pop($platos);
+            $lista  = implode(", ", $platos) . " y " . $ultimo;
+        } else {
+            $lista = $platos[0] ?? "";
+        }
+
+        $cierre = strtotime($menu["pedido_hasta"]);
+        $horaCierre = date("g:i", $cierre) . " " . (date("A", $cierre) === "AM" ? "am" : "pm");
+        $diaCierre  = date("Y-m-d", $cierre) === date("Y-m-d") ? "hoy" : ($dias[(int)date("w", $cierre)]);
+
+        $msg = [
+            "titulo" => "¡Ya está el menú " . $cuando . "! 🍽️",
+            "cuerpo" => ($lista !== "" ? $lista . ".\n\n" : "")
+                      . "Pide antes de las " . $horaCierre . " (" . $diaCierre . ").",
+            "url"    => "/cliente/menu.php",
+            "tag"    => "menu-" . $idMenu,
+        ];
+        $ttl = max(600, min(86400, $cierre - time()));
+
+        // A todos, en grupos de 100
+        $enviados = 0;
+        $desde = 0;
+        $st = $c->prepare("SELECT * FROM push_suscripciones WHERE id_suscripcion > :desde ORDER BY id_suscripcion LIMIT 100");
+        while (true) {
+            $st->execute([":desde" => $desde]);
+            $grupo = $st->fetchAll(PDO::FETCH_ASSOC);
+            if (!$grupo) break;
+            $enviados += pushEnviar($c, $grupo, $msg, $ttl, "normal");
+            $desde = (int)end($grupo)["id_suscripcion"];
+        }
+
+        $c->prepare("UPDATE push_menu_enviados SET enviados = :n WHERE id_menu = :id")
+          ->execute([":n" => $enviados, ":id" => $idMenu]);
+        return $enviados;
+    } catch (Throwable $e) {
+        error_log("Push (menú): " . $e->getMessage());
         return 0;
     }
 }
