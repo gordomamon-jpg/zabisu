@@ -80,3 +80,38 @@ function inventarioCode128Svg(string $texto, int $alto = 60): string
     return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' . $total . ' ' . $alto . '" preserveAspectRatio="none" shape-rendering="crispEdges" role="img" aria-label="' . htmlspecialchars($texto) . '">'
          . '<rect width="' . $total . '" height="' . $alto . '" fill="#fff"/><g fill="#000">' . $barras . '</g></svg>';
 }
+
+/*
+    Qué dicen las observaciones del pedido sobre la sopa (reglas de la cocina):
+    - 'cambio': piden otra cosa EN LUGAR de la sopa ("en vez de sopa ensalada",
+      "sin sopa, mejor arroz") → sin tazón grande y con un tazón chico.
+    - 'sin':    solo no quieren sopa ("sin sopa", "NO SOPA", "no enviar sopa")
+      → sin tazón grande y sin tazón chico.
+    - '':       no mencionan quitar la sopa.
+    Se cuenta una vez por pedido.
+*/
+function inventarioSopaEnObservaciones(string $obs): string
+{
+    $t = mb_strtolower($obs, "UTF-8");
+    $t = strtr($t, ["á" => "a", "é" => "e", "í" => "i", "ó" => "o", "ú" => "u"]);
+    if (!preg_match('/\bsopas?\b/u', $t)) return "";
+
+    $complemento = '(ensalada|arroz|nopales|verduras?|vegetales|pure|frijoles|espagueti|spaghetti|chayotes?|calabazas?)';
+    $cambio = [
+        '/\ben\s+(vez|ves)\s+(de|se)\b/u',                 // "en vez de" (y "en ves de", "en vez se")
+        '/\ben\s+lugar\s+de\b/u',
+        '/\bcambi\w*\s+(de\s+)?(la\s+|mi\s+|el\s+)?sopas?\b/u', // "cambiar la sopa", "cambiarme la sopa" (no "traer cambio")
+        '/\bsopas?\s+por\s+(un|una|el|la|' . substr($complemento, 1, -1) . ')\b/u',
+        '/\bsustitu|\breemplaz/u',
+        '/\bmejor\s+(?!sin\b)\w+/u',                      // "sin sopa, mejor ensalada"
+        '/\bsopas?\b[^.\n]{0,20}\b(mas|m\x{e1}s)\s+' . $complemento . '\b/u', // "sin sopa, más ensalada"
+    ];
+    foreach ($cambio as $re) {
+        if (preg_match($re, $t)) return "cambio";
+    }
+
+    $sin = '/\b(sin|no|nada\s+de|quit\w*)\b[^.\n]{0,25}\bsopas?\b|\bsopas?\s+no\b/u';
+    if (preg_match($sin, $t)) return "sin";
+
+    return "";
+}

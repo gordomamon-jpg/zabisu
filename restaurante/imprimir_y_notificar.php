@@ -8,6 +8,7 @@ require_once "../includes/modo_notificacion.php";
 require_once "../includes/whatsapp_api.php";
 require_once "../includes/canal_whatsapp.php";
 require_once "../includes/push.php";
+require_once "../includes/inventario.php";
 
 $id_pedido = isset($_GET["id"]) ? (int)$_GET["id"] : 0;
 
@@ -564,14 +565,16 @@ try {
         $extrasBotella    = (int)($extrasInv["Agua"]        ?? 0);
 
         /*
-            Revisión de observaciones: si mencionan la sopa es que la cambian
-            por un complemento (sin excepción), y ese complemento va en tazón
-            chico en lugar del tazón normal. Se cuenta uno por pedido.
+            Observaciones sobre la sopa (includes/inventario.php), uno por pedido:
+            - "sin sopa" → un tazón grande menos, sin tazón chico.
+            - "en vez de sopa, X" → un tazón grande menos y un tazón chico.
         */
-        $cambiosSopa = 0;
-        $obs = mb_strtolower((string)($pedido["observaciones"] ?? ""), "UTF-8");
-        if ($numMenus > 0 && preg_match('/\bsopas?\b/u', $obs)) {
-            $cambiosSopa = 1;
+        $sinSopa     = 0; // menos tazón grande (sin sopa o cambio)
+        $cambiosSopa = 0; // más tazón chico (solo cambio)
+        if ($numMenus > 0) {
+            $sopaObs = inventarioSopaEnObservaciones((string)($pedido["observaciones"] ?? ""));
+            if ($sopaObs !== "")        $sinSopa = 1;
+            if ($sopaObs === "cambio")  $cambiosSopa = 1;
         }
 
         /*
@@ -659,8 +662,8 @@ try {
         // Mapa: id_item => cantidad a descontar
         $descuentos = [
             1  => $numMenus,                                  // Contenedor con división 8x8
-            2  => $numMenus - $cambiosSopa + $extrasTazon,    // Tazón
-            3  => $numMenus - $cambiosSopa + $extrasTazon,    // Tapa tazón
+            2  => $numMenus - $sinSopa + $extrasTazon,        // Tazón
+            3  => $numMenus - $sinSopa + $extrasTazon,        // Tapa tazón
             4  => $numMenus,                                  // Tenedor
             5  => $numMenus,                                  // Cuchillo
             6  => $numMenus,                                  // Cuchara
@@ -694,8 +697,10 @@ try {
             $descuentos[$idTapaSouffle] = $souffles;
             $notas[$idSouffle] = $notas[$idTapaSouffle] = "Soufflé: " . $souffles . " plato(s) con salsa o crema";
         }
-        if ($cambiosSopa > 0) {
-            $notas[2] = $notas[3] = "Un tazón menos: cambiaron la sopa (observaciones)";
+        if ($sinSopa > 0) {
+            $notas[2] = $notas[3] = $cambiosSopa > 0
+                ? "Un tazón menos: cambiaron la sopa por otro complemento (observaciones)"
+                : "Un tazón menos: sin sopa (observaciones)";
         }
 
         $stmtDescItem = $conexion->prepare(
