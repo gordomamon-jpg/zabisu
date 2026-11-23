@@ -242,6 +242,9 @@ function formatearFechaBonita($fecha)
                             <a class="btn-tabla" href="productos_menu.php?id_menu=<?php echo (int)$menu["id_menu"]; ?>&editar=1">
                                 Editar
                             </a>
+                            <a class="btn-tabla" href="menu_imagen.php?id_menu=<?php echo (int)$menu["id_menu"]; ?>">
+                                Imagen para redes
+                            </a>
                             <?php if (!$activo): ?>
                             <form method="POST" action="" class="form-eliminar-menu"
                                   data-fecha="<?php echo htmlspecialchars(formatearFechaBonita($menu["fecha"])); ?>">
